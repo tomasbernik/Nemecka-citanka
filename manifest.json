@@ -1,0 +1,21 @@
+{
+  "name": "Deutsch Lesen",
+  "short_name": "Lesen",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#fff8ed",
+  "theme_color": "#f6b73c",
+  "description": "Krátke nemecké texty na čítanie offline.",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

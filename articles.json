@@ -1,0 +1,76 @@
+[
+  {
+    "id": "spaziergang-am-see",
+    "title": "Ein Spaziergang am See",
+    "level": "A2",
+    "category": "Alltag",
+    "minutes": 5,
+    "summary": "Anna geht nach der Arbeit an den See und genießt einen ruhigen Abend.",
+    "text": [
+      "Anna arbeitet den ganzen Tag im Büro. Nach der Arbeit ist sie müde, aber sie möchte nicht sofort nach Hause gehen. Das Wetter ist schön. Die Sonne scheint, und es ist warm. Deshalb nimmt Anna ihre Tasche und geht zu Fuß zum See.",
+      "Am See sind viele Menschen. Ein Mann fährt mit dem Fahrrad. Zwei Kinder spielen mit einem Ball. Eine alte Frau sitzt auf einer Bank und liest ein Buch. Anna setzt sich auf die Wiese. Sie zieht ihre Schuhe aus und schaut auf das Wasser.",
+      "Nach ein paar Minuten fühlt sie sich besser. Sie hört die Vögel und den Wind in den Bäumen. Sie denkt: „Ich brauche nicht viel. Ein ruhiger Ort und ein bisschen Zeit sind genug.“ Dann schreibt sie ihrer Freundin eine Nachricht: „Ich bin am See. Kommst du auch?“",
+      "Ihre Freundin antwortet schnell: „Ja, ich komme in zwanzig Minuten.“ Anna lächelt. Der Abend ist noch nicht vorbei."
+    ],
+    "vocabulary": [
+      {
+        "de": "der See",
+        "sk": "jazero"
+      },
+      {
+        "de": "die Wiese",
+        "sk": "lúka"
+      },
+      {
+        "de": "müde",
+        "sk": "unavená/unavený"
+      },
+      {
+        "de": "genug",
+        "sk": "dosť"
+      }
+    ],
+    "questions": [
+      "Wohin geht Anna nach der Arbeit?",
+      "Was macht die alte Frau auf der Bank?",
+      "Warum fühlt Anna sich besser?"
+    ]
+  },
+  {
+    "id": "kleines-fruehstueck",
+    "title": "Ein kleines Frühstück",
+    "level": "A2",
+    "category": "Essen",
+    "minutes": 4,
+    "summary": "Mira macht ein einfaches Frühstück und startet langsam in den Tag.",
+    "text": [
+      "Mira steht am Samstag nicht früh auf. Sie bleibt noch zehn Minuten im Bett und hört Musik. Dann geht sie in die Küche. Sie hat Hunger, aber sie möchte nichts Kompliziertes kochen.",
+      "Im Kühlschrank findet sie Joghurt, Milch und Erdbeeren. Auf dem Tisch liegt Brot. Mira macht Kaffee und schneidet die Erdbeeren klein. Dann mischt sie Joghurt mit Obst und ein bisschen Honig.",
+      "Sie setzt sich ans Fenster. Draußen gehen Menschen mit Hunden spazieren. Ein Bus fährt vorbei. Mira trinkt ihren Kaffee langsam. Heute hat sie keinen Stress. Sie möchte später einkaufen gehen und vielleicht ihre Schwester anrufen.",
+      "Das Frühstück ist einfach, aber gut. Mira denkt: „So kann der Tag anfangen.“"
+    ],
+    "vocabulary": [
+      {
+        "de": "der Kühlschrank",
+        "sk": "chladnička"
+      },
+      {
+        "de": "der Honig",
+        "sk": "med"
+      },
+      {
+        "de": "spazieren gehen",
+        "sk": "ísť sa prejsť"
+      },
+      {
+        "de": "einfach",
+        "sk": "jednoduchý"
+      }
+    ],
+    "questions": [
+      "Wann steht Mira auf?",
+      "Was findet Mira im Kühlschrank?",
+      "Was möchte Mira später machen?"
+    ]
+  }
+]

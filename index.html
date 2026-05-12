@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="sk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f6b73c" />
+  <title>Deutsch Lesen</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">A2 Deutsch</p>
+        <h1>Deutsch Lesen</h1>
+      </div>
+      <button id="settingsBtn" class="icon-btn" aria-label="Nastavenia">Aa</button>
+    </header>
+
+    <main>
+      <section id="homeView">
+        <div class="hero">
+          <h2>Krátke texty na každý deň</h2>
+          <p>Články v jednoduchej nemčine, slovíčka a otázky po prečítaní.</p>
+        </div>
+
+        <div class="filters" id="categoryFilters"></div>
+
+        <div class="section-title">
+          <h3>Články</h3>
+          <button id="refreshBtn" class="text-btn">Aktualizovať</button>
+        </div>
+
+        <div id="articleList" class="article-list"></div>
+      </section>
+
+      <section id="articleView" class="hidden">
+        <button id="backBtn" class="back-btn">← Späť</button>
+        <article class="reader-card">
+          <p id="articleMeta" class="eyebrow"></p>
+          <h2 id="articleTitle"></h2>
+          <div id="articleText" class="article-text"></div>
+
+          <details class="panel">
+            <summary>Slovíčka</summary>
+            <ul id="vocabList"></ul>
+          </details>
+
+          <details class="panel">
+            <summary>Otázky</summary>
+            <ol id="questionList"></ol>
+          </details>
+
+          <button id="markReadBtn" class="primary-btn">Označiť ako prečítané</button>
+        </article>
+      </section>
+
+      <section id="settingsView" class="hidden">
+        <button id="settingsBackBtn" class="back-btn">← Späť</button>
+        <div class="reader-card">
+          <h2>Nastavenia</h2>
+          <label class="setting-row">
+            Veľkosť písma
+            <select id="fontSizeSelect">
+              <option value="normal">Normálne</option>
+              <option value="large">Veľké</option>
+              <option value="xlarge">Veľmi veľké</option>
+            </select>
+          </label>
+          <label class="setting-row">
+            Tmavý režim
+            <input id="darkModeToggle" type="checkbox">
+          </label>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
