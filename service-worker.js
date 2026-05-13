@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "deutsch-lesen-v1";
+const CACHE_NAME = "nemecka-citanka-v2";
 const APP_FILES = [
   "./",
   "./index.html",

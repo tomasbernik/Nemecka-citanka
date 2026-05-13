@@ -1,6 +1,6 @@
 {
-  "name": "Deutsch Lesen",
-  "short_name": "Lesen",
+  "name": "Nemecká čítanka",
+  "short_name": "Čítanka",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#fff8ed",

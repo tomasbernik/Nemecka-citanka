@@ -3,7 +3,7 @@
     "id": "spaziergang-am-see",
     "title": "Ein Spaziergang am See",
     "level": "A2",
-    "category": "Alltag",
+    "category": "Každodenný život",
     "minutes": 5,
     "summary": "Anna geht nach der Arbeit an den See und genießt einen ruhigen Abend.",
     "text": [
@@ -30,6 +30,52 @@
         "sk": "dosť"
       }
     ],
+    "inlineVocabulary": [
+      {
+        "de": "Büro",
+        "sk": "kancelária"
+      },
+      {
+        "de": "sofort",
+        "sk": "hneď, okamžite"
+      },
+      {
+        "de": "zu Fuß",
+        "sk": "pešo"
+      },
+      {
+        "de": "Fahrrad",
+        "sk": "bicykel"
+      },
+      {
+        "de": "Bank",
+        "sk": "lavička"
+      },
+      {
+        "de": "setzt sich",
+        "sk": "sadá si"
+      },
+      {
+        "de": "schaut",
+        "sk": "pozerá"
+      },
+      {
+        "de": "Vögel",
+        "sk": "vtáky"
+      },
+      {
+        "de": "Bäumen",
+        "sk": "stromoch"
+      },
+      {
+        "de": "Nachricht",
+        "sk": "správa"
+      },
+      {
+        "de": "lächelt",
+        "sk": "usmieva sa"
+      }
+    ],
     "questions": [
       "Wohin geht Anna nach der Arbeit?",
       "Was macht die alte Frau auf der Bank?",
@@ -40,7 +86,7 @@
     "id": "kleines-fruehstueck",
     "title": "Ein kleines Frühstück",
     "level": "A2",
-    "category": "Essen",
+    "category": "Jedlo",
     "minutes": 4,
     "summary": "Mira macht ein einfaches Frühstück und startet langsam in den Tag.",
     "text": [
@@ -65,6 +111,52 @@
       {
         "de": "einfach",
         "sk": "jednoduchý"
+      }
+    ],
+    "inlineVocabulary": [
+      {
+        "de": "Samstag",
+        "sk": "sobota"
+      },
+      {
+        "de": "Bett",
+        "sk": "posteľ"
+      },
+      {
+        "de": "Küche",
+        "sk": "kuchyňa"
+      },
+      {
+        "de": "Hunger",
+        "sk": "hlad"
+      },
+      {
+        "de": "nichts",
+        "sk": "nič"
+      },
+      {
+        "de": "schneidet",
+        "sk": "krája"
+      },
+      {
+        "de": "mischt",
+        "sk": "mieša"
+      },
+      {
+        "de": "Fenster",
+        "sk": "okno"
+      },
+      {
+        "de": "Draußen",
+        "sk": "vonku"
+      },
+      {
+        "de": "später",
+        "sk": "neskôr"
+      },
+      {
+        "de": "einkaufen gehen",
+        "sk": "ísť nakupovať"
       }
     ],
     "questions": [

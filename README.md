@@ -1,4 +1,4 @@
-# Deutsch Lesen – PWA prototyp
+# Nemecká čítanka – PWA prototyp
 
 Jednoduchá offline čítanka pre Android.
 
