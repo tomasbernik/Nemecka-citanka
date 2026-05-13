@@ -1,5 +1,90 @@
 [
   {
+    "id": "garten-nachmittag-kika",
+    "title": "Ein Nachmittag im Garten",
+    "level": "A2-B1",
+    "category": "Voľný čas",
+    "minutes": 10,
+    "summary": "Kristina erzählt ihrer Mutter, was sie mit Tomas vor einer Woche im Garten gemacht haben.",
+    "text": [
+      "Mama, ich möchte dir erzählen, was wir letzte Woche im Garten gemacht haben. Ich weiß nicht mehr genau, welcher Tag es war, aber irgendwann am Nachmittag.",
+      "Wir sind erst gegen drei Uhr im Garten angekommen. Tomas hat sich zuerst hingesetzt und eine Zigarette geraucht.",
+      "Danach hat er gleich angefangen zu arbeiten. Er hat den Boden vor dem Zaun vorbereitet. Dort wollte er Tagetes pflanzen.",
+      "Er wollte sie auch zu den Beeten mit Gurken und Tomaten pflanzen, aber nur am Rand. Dort werden später noch Pflanzen wachsen.",
+      "Am Ende hatte er noch ein paar Blumen übrig, also hat er sie auch zu den Sonnenblumen und in den Steingarten gepflanzt.",
+      "Während Tomas gearbeitet hat, habe ich die kleine Hütte vorbereitet. Wir wollten dort eine Luftmatratze legen, deshalb habe ich zuerst den Boden gefegt und dann gewischt.",
+      "Danach habe ich noch aufgeräumt und Ordnung gemacht. Später habe ich die Fische gefüttert.",
+      "Die Frösche beim Teich haben laut gequakt. Das war sehr lustig, ich musste wirklich lachen.",
+      "Wir haben auch Eidechsen beobachtet, die schnell hin und her gelaufen sind.",
+      "Dann sind zwei Libellen zum Teich geflogen. Sie sahen aus, als ob sie spielen oder sich jagen.",
+      "Später haben wir herausgefunden, dass das Männchen das Weibchen verfolgt. Es war also keine Spielerei.",
+      "Danach haben wir etwas gegessen und uns ein bisschen ausgeruht. Am Abend sind wir nach Hause gefahren.",
+      "Zu Hause haben wir noch eine Folge von der Serie geschaut. Danach bin ich schlafen gegangen, aber Tomas bleibt länger wach."
+    ],
+    "vocabulary": [
+      {
+        "de": "der Baggersee",
+        "sk": "štrkoviskové jazero"
+      },
+      {
+        "de": "die Hütte",
+        "sk": "chatka"
+      },
+      {
+        "de": "der Teich",
+        "sk": "jazierko"
+      },
+      {
+        "de": "die Libelle",
+        "sk": "vážka"
+      },
+      {
+        "de": "die Folge",
+        "sk": "epizóda"
+      }
+    ],
+    "inlineVocabulary": [
+      { "de": "erzählen", "sk": "rozprávať" },
+      { "de": "irgendwann", "sk": "niekedy" },
+      { "de": "gegen drei Uhr", "sk": "okolo 15:00" },
+      { "de": "zuerst", "sk": "najskôr" },
+      { "de": "hingesetzt", "sk": "posadil sa" },
+      { "de": "Boden", "sk": "pôda" },
+      { "de": "Zaun", "sk": "plot" },
+      { "de": "Tagetes", "sk": "aksamietnice" },
+      { "de": "pflanzen", "sk": "sadiť" },
+      { "de": "Beeten", "sk": "záhony" },
+      { "de": "am Rand", "sk": "na okraji" },
+      { "de": "wachsen", "sk": "rásť" },
+      { "de": "übrig", "sk": "zvyšné" },
+      { "de": "Während", "sk": "počas" },
+      { "de": "Hütte", "sk": "chatka" },
+      { "de": "vorbereitet", "sk": "pripravil" },
+      { "de": "legen", "sk": "položiť" },
+      { "de": "gefüttert", "sk": "nakŕmil" },
+      { "de": "Frösche", "sk": "žaby" },
+      { "de": "Teich", "sk": "jazierko" },
+      { "de": "gequakt", "sk": "kvákali" },
+      { "de": "lustig", "sk": "zábavné" },
+      { "de": "Eidechsen", "sk": "jašterice" },
+      { "de": "beobachtet", "sk": "pozorovali" },
+      { "de": "Libellen", "sk": "vážky" },
+      { "de": "geflogen", "sk": "leteli" },
+      { "de": "herausgefunden", "sk": "zistili" },
+      { "de": "Spielerei", "sk": "hra" },
+      { "de": "ausgeruht", "sk": "oddýchli si" },
+      { "de": "Folge", "sk": "epizóda" },
+      { "de": "wach", "sk": "hore" }
+    ],
+    "questions": [
+      "Wann sind sie im Garten angekommen?",
+      "Was hat Tomas zuerst gemacht?",
+      "Welche Blumen hat Tomas gepflanzt?",
+      "Was hat Kristina in der Hütte gemacht?",
+      "Was haben sie am Abend gemacht?"
+    ]
+  },
+  {
     "id": "nachmittag-baggersee-tomas",
     "title": "Ein sonniger Nachmittag mit Tomas",
     "level": "A2-B1",
