@@ -169,4 +169,97 @@
       "Was möchte Mira später machen?"
     ]
   }
+  {
+    "id": "einkaufen-bei-temu",
+    "title": "Einkaufen bei Temu",
+    "level": "B1",
+    "category": "Nakupovanie",
+    "minutes": 5,
+    "summary": "Marko möchte online günstig einkaufen, ist aber zuerst unsicher wegen der Qualität.",
+    "text": [
+      "Marko sitzt am Abend auf dem Sofa und schaut auf sein Handy. Er möchte neue Kopfhörer kaufen, aber er will nicht zu viel Geld ausgeben. Ein Freund hat ihm die App Temu empfohlen. Dort sollen viele Produkte sehr günstig sein.",
+      "Marko öffnet die App und beginnt zu suchen. Er sieht Kleidung, Elektronik, Küchenartikel und viele kleine Dinge für die Wohnung. Die Preise sind niedrig, aber Marko ist skeptisch. Er fragt sich, ob die Qualität wirklich gut ist.",
+      "Am nächsten Tag trifft Marko seine Freundin Lena in einem Café. „Hast du schon einmal bei Temu bestellt?“, fragt er. Lena nickt. „Ja, ein paar Mal. Manche Sachen waren gut, andere nicht so. Du musst immer die Bewertungen lesen.“",
+      "„Und wie lange dauert die Lieferung?“, fragt Marko weiter. „Manchmal eine Woche, manchmal länger“, antwortet Lena. „Aber wenn etwas sehr günstig ist, finde ich das okay. Bestell am Anfang lieber nur etwas Kleines.“",
+      "Am Abend liest Marko viele Bewertungen und schaut sich Fotos von anderen Kunden an. Schließlich bestellt er Kopfhörer und eine Handyhülle. Beide Produkte haben gute Bewertungen und kosten nicht viel.",
+      "Nach einigen Tagen kommt das Paket an. Marko öffnet es neugierig. Die Kopfhörer funktionieren gut, und die Hülle passt perfekt. Marko ist zufrieden und denkt: „Diesmal war der Einkauf günstig und trotzdem gut.“"
+    ],
+    "vocabulary": [
+      {
+        "de": "günstig",
+        "sk": "výhodný, lacný"
+      },
+      {
+        "de": "die Qualität",
+        "sk": "kvalita"
+      },
+      {
+        "de": "die Bewertung",
+        "sk": "hodnotenie, recenzia"
+      },
+      {
+        "de": "die Lieferung",
+        "sk": "doručenie"
+      },
+      {
+        "de": "das Paket",
+        "sk": "balík"
+      }
+    ],
+    "inlineVocabulary": [
+      {
+        "de": "Kopfhörer",
+        "sk": "slúchadlá"
+      },
+      {
+        "de": "ausgeben",
+        "sk": "minúť"
+      },
+      {
+        "de": "empfohlen",
+        "sk": "odporučil"
+      },
+      {
+        "de": "Kleidung",
+        "sk": "oblečenie"
+      },
+      {
+        "de": "Küchenartikel",
+        "sk": "kuchynské potreby"
+      },
+      {
+        "de": "Wohnung",
+        "sk": "byt"
+      },
+      {
+        "de": "skeptisch",
+        "sk": "skeptický"
+      },
+      {
+        "de": "nickt",
+        "sk": "prikývne"
+      },
+      {
+        "de": "bestellt",
+        "sk": "objednal / objednáva"
+      },
+      {
+        "de": "Handyhülle",
+        "sk": "obal na mobil"
+      },
+      {
+        "de": "neugierig",
+        "sk": "zvedavý"
+      },
+      {
+        "de": "zufrieden",
+        "sk": "spokojný"
+      }
+    ],
+    "questions": [
+      "Warum möchte Marko bei Temu einkaufen?",
+      "Was sagt Lena über die Produkte bei Temu?",
+      "Welche Produkte bestellt Marko am Ende?"
+    ]
+  }
 ]
