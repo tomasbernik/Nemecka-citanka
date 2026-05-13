@@ -1,5 +1,162 @@
 [
   {
+    "id": "nachmittag-baggersee-tomas",
+    "title": "Ein sonniger Nachmittag mit Tomas",
+    "level": "A2-B1",
+    "category": "Voľný čas",
+    "minutes": 10,
+    "summary": "Kristina erzählt von einem ruhigen Nachmittag mit ihrem Mann Tomas am Baggersee und von ihren Plänen für Urlaub und Arbeit.",
+    "text": [
+      "Ich möchte dir von einem schönen Nachmittag erzählen, den ich mit meinem Mann Tomas am Baggersee in Hockenheim verbracht habe. Es war ein sonniger Tag, nicht zu heiß, einfach perfekt für einen kleinen Ausflug.",
+      "Wir haben uns entschieden, mit dem Fahrrad zum Baggersee zu fahren. Auf dem Weg haben wir noch beim Penny angehalten. Dort haben wir eine Flasche Wein, ein paar Bier und eine deutsche Zeitschrift gekauft.",
+      "Dann sind wir weitergefahren und nach kurzer Zeit am Baggersee angekommen. Wir haben unsere Fahrräder abgestellt und uns auf eine Bank gesetzt. Es war ruhig, das Wasser war schön, und die Sonne hat gescheint.",
+      "Zuerst haben wir lange über meine Arbeit gesprochen. Ich arbeite in der Küche im Parkkindergarten. In den letzten Tagen haben wir Suppe, Nudeln mit Soße und Reis mit Gemüse gekocht. Die Kinder sind sehr lieb und freundlich, und es schmeckt ihnen fast immer sehr gut.",
+      "Oft sagen sie: „Das ist sehr lecker!“, und das freut mich sehr. Am Montag gehe ich mit meiner Kollegin Anja einkaufen. Wir kaufen alles für die ganze Woche – Gemüse, Obst und viele andere Sachen.",
+      "Mir gefällt meine Arbeit auch, weil sie ganz nah ist. Ich kann oft zu Fuß zur Arbeit gehen. Das ist sehr praktisch, und ich habe morgens ein bisschen Bewegung.",
+      "Dann haben wir über elektro Fahrräder gesprochen. Tomas denkt, dass ein E-Bike eine gute Idee ist, besonders für längere Strecken. Ich finde das auch interessant, aber ich bin mir noch nicht ganz sicher.",
+      "Später haben wir über unseren Urlaub gesprochen. Ich freue mich sehr auf Kreta. Meine beste Freundin Natalia lebt dort schon seit vielen Jahren. Sie hat einen Mann und Kinder, und ich möchte sie endlich wiedersehen.",
+      "Wir möchten ans Meer gehen, schwimmen und vielleicht Ausflüge machen. Vielleicht fahren wir in die Berge oder besuchen eine schöne Stadt. Ich möchte auch griechisches Essen probieren.",
+      "Wir fliegen am 27. Mai, aber ich habe ein bisschen Angst, dass es nicht warm genug ist. Tomas sagt, dass ich mir keine Sorgen machen soll. Danach habe ich laut aus der Zeitschrift gelesen und versucht, alles ins Slowakische zu übersetzen.",
+      "Am Abend ist die Sonne langsam untergegangen. Es wurde kühler, und wir sind wieder nach Hause gefahren. Es war ein sehr schöner Tag."
+    ],
+    "vocabulary": [
+      {
+        "de": "ruhig",
+        "sk": "kľudný, pokojný"
+      },
+      {
+        "de": "die Zeitschrift",
+        "sk": "časopis"
+      },
+      {
+        "de": "sich entscheiden",
+        "sk": "rozhodnúť sa"
+      },
+      {
+        "de": "die Bewegung",
+        "sk": "pohyb"
+      },
+      {
+        "de": "Ich freue mich sehr darauf, sie endlich wiederzusehen.",
+        "sk": "Veľmi sa těším, až ju konečne znovu uvidím."
+      },
+      {
+        "de": "Die Zeit ist sehr schnell vergangen.",
+        "sk": "Čas ubehol veľmi rýchlo."
+      },
+      {
+        "de": "Ich habe die Zeit mit meinem Mann sehr genossen.",
+        "sk": "Veľmi som si užila čas, ktorý som strávila s mojím mužom."
+      }
+    ],
+    "inlineVocabulary": [
+      {
+        "de": "verbracht habe",
+        "sk": "strávila som"
+      },
+      {
+        "de": "der Ausflug",
+        "sk": "výlet"
+      },
+      {
+        "de": "anhalten",
+        "sk": "zastaviť"
+      },
+      {
+        "de": "ankommen",
+        "sk": "prísť"
+      },
+      {
+        "de": "entschieden",
+        "sk": "rozhodli sme sa"
+      },
+      {
+        "de": "ruhigen Fahrten",
+        "sk": "kľudné jazdy"
+      },
+      {
+        "de": "Zeitschrift",
+        "sk": "časopis"
+      },
+      {
+        "de": "üben",
+        "sk": "cvičiť, precvičovať"
+      },
+      {
+        "de": "die Strecke",
+        "sk": "trasa"
+      },
+      {
+        "de": "abgestellt",
+        "sk": "odstavili"
+      },
+      {
+        "de": "hat gescheint",
+        "sk": "svietilo"
+      },
+      {
+        "de": "Zuerst",
+        "sk": "najskôr, najprv"
+      },
+      {
+        "de": "lieb",
+        "sk": "milý, milá, milé"
+      },
+      {
+        "de": "Mir gefällt",
+        "sk": "Páči sa mi"
+      },
+      {
+        "de": "nah",
+        "sk": "blízko"
+      },
+      {
+        "de": "Bewegung",
+        "sk": "pohyb"
+      },
+      {
+        "de": "Besonders",
+        "sk": "najviac, obzvlášť"
+      },
+      {
+        "de": "seit einigen Jahren",
+        "sk": "od niekoľkých rokov"
+      },
+      {
+        "de": "Ausflug in die Berge",
+        "sk": "výlet do hôr"
+      },
+      {
+        "de": "verbringen",
+        "sk": "stráviť"
+      },
+      {
+        "de": "keine Sorgen machen",
+        "sk": "nerobiť si starosti"
+      },
+      {
+        "de": "laut",
+        "sk": "nahlas"
+      },
+      {
+        "de": "lachen",
+        "sk": "smiať sa"
+      },
+      
+      {
+        "de": "die Bank",
+        "sk": "lavička"
+      }
+    ],
+    "questions": [
+      "Wohin fahren Tomas und Kristina am Nachmittag?",
+      "Was kauft Kristina im Penny?",
+      "Was kocht Kristina in der Arbeit?",
+      "Warum gefällt ihr die Arbeit im Kindergarten?",
+      "Worauf freut sich Kristina im Urlaub auf Kreta?"
+    ]
+  },
+  {
     "id": "spaziergang-am-see",
     "title": "Ein Spaziergang am See",
     "level": "A2",

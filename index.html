@@ -15,11 +15,64 @@
         <p class="eyebrow">A2 nemčina</p>
         <h1>Nemecká čítanka</h1>
       </div>
-      <button id="settingsBtn" class="icon-btn" aria-label="Nastavenia">Aa</button>
+      <div class="top-actions">
+        <button id="teacherBtn" class="icon-btn hidden" aria-label="Prehľad">◎</button>
+        <button id="settingsBtn" class="icon-btn hidden" aria-label="Nastavenia">Aa</button>
+      </div>
     </header>
 
     <main>
-      <section id="homeView">
+      <section id="setupView" class="hidden">
+        <div class="reader-card">
+          <p class="eyebrow">Prvé spustenie</p>
+          <h2>Vytvoriť dva profily</h2>
+          <p class="muted">PIN slúži len na oddelenie profilov v tejto súkromnej appke.</p>
+
+          <label class="field-row">
+            Tvoje meno
+            <input id="teacherNameInput" autocomplete="given-name" value="Tomas">
+          </label>
+          <label class="field-row">
+            Tvoj PIN
+            <input id="teacherPinInput" inputmode="numeric" type="password" autocomplete="new-password">
+          </label>
+          <label class="field-row">
+            Meno žiačky
+            <input id="studentNameInput" autocomplete="given-name">
+          </label>
+          <label class="field-row">
+            PIN žiačky
+            <input id="studentPinInput" inputmode="numeric" type="password" autocomplete="new-password">
+          </label>
+
+          <p id="setupError" class="form-error"></p>
+          <button id="createProfilesBtn" class="primary-btn">Uložiť profily</button>
+        </div>
+      </section>
+
+      <section id="loginView" class="hidden">
+        <div class="reader-card">
+          <p class="eyebrow">Prihlásenie</p>
+          <h2>Kto číta?</h2>
+          <label class="field-row">
+            Meno
+            <input id="loginNameInput" autocomplete="username">
+          </label>
+          <label class="field-row">
+            PIN
+            <input id="loginPinInput" inputmode="numeric" type="password" autocomplete="current-password">
+          </label>
+          <p id="loginError" class="form-error"></p>
+          <button id="loginBtn" class="primary-btn">Prihlásiť sa</button>
+        </div>
+      </section>
+
+      <section id="homeView" class="hidden">
+        <div class="profile-strip">
+          <span id="currentProfileLabel"></span>
+          <button id="logoutBtn" class="text-btn">Odhlásiť</button>
+        </div>
+
         <div class="hero">
           <h2>Krátke texty na každý deň</h2>
           <p>Články v jednoduchej nemčine, slovíčka a otázky po prečítaní.</p>
@@ -74,9 +127,19 @@
           </label>
         </div>
       </section>
+
+      <section id="teacherView" class="hidden">
+        <button id="teacherBackBtn" class="back-btn">← Späť</button>
+        <div class="reader-card">
+          <p class="eyebrow">Učiteľský pohľad</p>
+          <h2>Prehľad žiačky</h2>
+          <div id="teacherOverview"></div>
+        </div>
+      </section>
     </main>
   </div>
 
+  <script src="config.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

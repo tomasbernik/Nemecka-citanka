@@ -1,13 +1,104 @@
+const PROFILE_KEY = "profiles";
+const CURRENT_PROFILE_KEY = "currentProfileId";
+const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
+const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 
 const state = {
   articles: [],
+  profiles: [],
   selectedCategory: "Všetky",
   currentArticle: null,
-  readIds: JSON.parse(localStorage.getItem("readIds") || "[]"),
-  discoveredVocabulary: JSON.parse(localStorage.getItem("discoveredVocabulary") || "{}")
+  currentProfile: null,
+  profileData: emptyProfileData(),
+  remoteReady: Boolean(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey)
 };
 
 const $ = (id) => document.getElementById(id);
+
+function normalizeName(value) {
+  return value.trim().toLocaleLowerCase("sk");
+}
+
+function makeProfileId(name) {
+  return normalizeName(name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function profileDataKey(profileId) {
+  return `profileData:${profileId}`;
+}
+
+function emptyProfileData() {
+  return {
+    readIds: [],
+    discoveredVocabulary: {},
+    answers: {}
+  };
+}
+
+function showView(viewId) {
+  ["setupView", "loginView", "homeView", "articleView", "settingsView", "teacherView"].forEach(id => {
+    $(id).classList.toggle("hidden", id !== viewId);
+  });
+}
+
+async function supabaseRequest(path, options = {}) {
+  if (!state.remoteReady) return null;
+
+  const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_CONFIG.anonKey,
+      Authorization: `Bearer ${SUPABASE_CONFIG.anonKey}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase ${response.status}: ${await response.text()}`);
+  }
+
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function loadProfiles() {
+  state.profiles = JSON.parse(localStorage.getItem(PROFILE_KEY) || "[]");
+
+  if (!state.remoteReady) return;
+
+  try {
+    const profiles = await supabaseRequest("app_profiles?select=id,name,pin,role&order=role.desc,name.asc");
+    if (profiles?.length) {
+      state.profiles = profiles;
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
+    } else if (state.profiles.length) {
+      await saveProfiles();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function saveProfiles() {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
+
+  if (!state.remoteReady || !state.profiles.length) return;
+
+  try {
+    await supabaseRequest("app_profiles?on_conflict=id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify(state.profiles)
+    });
+  } catch (error) {
+    console.error(error);
+  }
+}
 
 async function loadArticles() {
   try {
@@ -50,16 +141,16 @@ function renderArticles() {
   root.innerHTML = "";
 
   articles.forEach(article => {
-    const isRead = state.readIds.includes(article.id);
+    const isRead = state.profileData.readIds.includes(article.id);
     const btn = document.createElement("button");
     btn.className = "article-card";
     btn.innerHTML = `
-      <h4>${article.title}</h4>
-      <p>${article.summary}</p>
+      <h4>${escapeHtml(article.title)}</h4>
+      <p>${escapeHtml(article.summary)}</p>
       <div class="badges">
-        <span class="badge">${article.level}</span>
-        <span class="badge">${article.category}</span>
-        <span class="badge">${article.minutes} min</span>
+        <span class="badge">${escapeHtml(article.level)}</span>
+        <span class="badge">${escapeHtml(article.category)}</span>
+        <span class="badge">${escapeHtml(article.minutes)} min</span>
         ${isRead ? '<span class="badge">✓ prečítané</span>' : ""}
       </div>
     `;
@@ -87,7 +178,7 @@ function getInlineVocabulary(article) {
 
 function getSavedVocabulary(article) {
   if (!article) return [];
-  return state.discoveredVocabulary[article.id] || [];
+  return state.profileData.discoveredVocabulary[article.id] || [];
 }
 
 function getVisibleVocabulary(article) {
@@ -103,8 +194,26 @@ function getVisibleVocabulary(article) {
   });
 }
 
-function saveDiscoveredVocabulary() {
-  localStorage.setItem("discoveredVocabulary", JSON.stringify(state.discoveredVocabulary));
+async function saveProfileData() {
+  if (!state.currentProfile) return;
+
+  localStorage.setItem(profileDataKey(state.currentProfile.id), JSON.stringify(state.profileData));
+
+  if (!state.remoteReady) return;
+
+  try {
+    await supabaseRequest("app_profile_data?on_conflict=profile_id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify({
+        profile_id: state.currentProfile.id,
+        data: state.profileData,
+        updated_at: new Date().toISOString()
+      })
+    });
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function renderVocabulary() {
@@ -134,11 +243,27 @@ function renderArticleText(article) {
       const vocab = lookup.get(word.toLocaleLowerCase("de"));
       if (!vocab) return match;
 
-      return `${prefix}<button class="inline-word" type="button" data-word="${escapeHtml(vocab.de)}" data-translation="${escapeHtml(vocab.sk)}">${word}</button>`;
+      return `${prefix}<button class="inline-word" type="button" data-word="${escapeHtml(vocab.de)}" data-translation="${escapeHtml(vocab.sk)}" aria-expanded="false">${word}</button>`;
     });
 
     return `<p>${html}</p>`;
   }).join("");
+}
+
+function getArticleAnswers(articleId) {
+  return state.profileData.answers[articleId] || {};
+}
+
+function renderQuestions(article) {
+  const answers = getArticleAnswers(article.id);
+  $("questionList").innerHTML = article.questions
+    .map((question, index) => `
+      <li>
+        <div class="question-text">${escapeHtml(question)}</div>
+        <textarea class="answer-input" data-question-index="${index}" placeholder="Moja odpoveď">${escapeHtml(answers[index] || "")}</textarea>
+      </li>
+    `)
+    .join("");
 }
 
 function openArticle(id) {
@@ -146,20 +271,15 @@ function openArticle(id) {
   if (!article) return;
 
   state.currentArticle = article;
-  $("homeView").classList.add("hidden");
-  $("settingsView").classList.add("hidden");
-  $("articleView").classList.remove("hidden");
+  showView("articleView");
 
   $("articleMeta").textContent = `${article.level} • ${article.category} • ${article.minutes} min`;
   $("articleTitle").textContent = article.title;
   renderArticleText(article);
   renderVocabulary();
+  renderQuestions(article);
 
-  $("questionList").innerHTML = article.questions
-    .map(q => `<li>${escapeHtml(q)}</li>`)
-    .join("");
-
-  $("markReadBtn").textContent = state.readIds.includes(article.id)
+  $("markReadBtn").textContent = state.profileData.readIds.includes(article.id)
     ? "Prečítané ✓"
     : "Označiť ako prečítané";
 }
@@ -170,11 +290,11 @@ function addDiscoveredVocabulary(word, translation) {
 
   const exists = getVisibleVocabulary(article).some(v => v.de.toLocaleLowerCase("de") === word.toLocaleLowerCase("de"));
   if (!exists) {
-    state.discoveredVocabulary[article.id] = [
+    state.profileData.discoveredVocabulary[article.id] = [
       ...getSavedVocabulary(article),
       { de: word, sk: translation }
     ];
-    saveDiscoveredVocabulary();
+    saveProfileData();
     renderVocabulary();
   }
 }
@@ -194,20 +314,177 @@ function showInlineTranslation(button) {
 }
 
 function showHome() {
-  $("articleView").classList.add("hidden");
-  $("settingsView").classList.add("hidden");
-  $("homeView").classList.remove("hidden");
+  state.currentArticle = null;
+  showView("homeView");
   renderArticles();
 }
 
 function showSettings() {
-  $("homeView").classList.add("hidden");
-  $("articleView").classList.add("hidden");
-  $("settingsView").classList.remove("hidden");
+  showView("settingsView");
 }
 
-function saveReadState() {
-  localStorage.setItem("readIds", JSON.stringify(state.readIds));
+async function loadProfileData(profile) {
+  const localData = JSON.parse(localStorage.getItem(profileDataKey(profile.id)) || "null");
+  state.profileData = localData ? { ...emptyProfileData(), ...localData } : emptyProfileData();
+
+  if (localStorage.getItem(LEGACY_MIGRATION_KEY) !== "true") {
+    state.profileData.readIds = JSON.parse(localStorage.getItem("readIds") || "[]");
+    state.profileData.discoveredVocabulary = JSON.parse(localStorage.getItem("discoveredVocabulary") || "{}");
+    localStorage.setItem(LEGACY_MIGRATION_KEY, "true");
+  }
+
+  if (!state.remoteReady) {
+    localStorage.setItem(profileDataKey(profile.id), JSON.stringify(state.profileData));
+    return;
+  }
+
+  try {
+    const rows = await supabaseRequest(`app_profile_data?profile_id=eq.${encodeURIComponent(profile.id)}&select=data`);
+    if (rows?.[0]?.data) {
+      state.profileData = { ...emptyProfileData(), ...rows[0].data };
+      localStorage.setItem(profileDataKey(profile.id), JSON.stringify(state.profileData));
+    } else {
+      await saveProfileData();
+    }
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function setCurrentProfile(profile) {
+  state.currentProfile = profile;
+  localStorage.setItem(CURRENT_PROFILE_KEY, profile.id);
+  await loadProfileData(profile);
+  $("currentProfileLabel").textContent = `${profile.name} • ${profile.role === "teacher" ? "učiteľ" : "žiačka"}${state.remoteReady ? " • online" : " • lokálne"}`;
+  $("settingsBtn").classList.remove("hidden");
+  $("teacherBtn").classList.toggle("hidden", profile.role !== "teacher");
+  showHome();
+}
+
+function showLogin() {
+  $("settingsBtn").classList.add("hidden");
+  $("teacherBtn").classList.add("hidden");
+  showView(state.profiles.length ? "loginView" : "setupView");
+}
+
+async function login() {
+  const name = normalizeName($("loginNameInput").value);
+  const pin = $("loginPinInput").value.trim();
+  const profile = state.profiles.find(item => normalizeName(item.name) === name && item.pin === pin);
+
+  if (!profile) {
+    $("loginError").textContent = "Meno alebo PIN nesedí.";
+    return;
+  }
+
+  $("loginError").textContent = "";
+  $("loginPinInput").value = "";
+  await setCurrentProfile(profile);
+}
+
+async function createProfiles() {
+  const teacherName = $("teacherNameInput").value.trim();
+  const teacherPin = $("teacherPinInput").value.trim();
+  const studentName = $("studentNameInput").value.trim();
+  const studentPin = $("studentPinInput").value.trim();
+
+  if (!teacherName || !teacherPin || !studentName || !studentPin) {
+    $("setupError").textContent = "Vyplň obe mená aj oba PINy.";
+    return;
+  }
+
+  if (normalizeName(teacherName) === normalizeName(studentName)) {
+    $("setupError").textContent = "Profily musia mať rozdielne mená.";
+    return;
+  }
+
+  state.profiles = [
+    { id: makeProfileId(teacherName), name: teacherName, pin: teacherPin, role: "teacher" },
+    { id: makeProfileId(studentName), name: studentName, pin: studentPin, role: "student" }
+  ];
+  await saveProfiles();
+  $("setupError").textContent = "";
+  await setCurrentProfile(state.profiles[0]);
+}
+
+function logout() {
+  state.currentProfile = null;
+  state.profileData = emptyProfileData();
+  state.currentArticle = null;
+  localStorage.removeItem(CURRENT_PROFILE_KEY);
+  $("loginNameInput").value = "";
+  $("loginPinInput").value = "";
+  showLogin();
+}
+
+async function showTeacherOverview() {
+  if (!state.currentProfile || state.currentProfile.role !== "teacher") return;
+  await renderTeacherOverview();
+  showView("teacherView");
+}
+
+async function getProfileData(profile) {
+  if (state.remoteReady) {
+    try {
+      const rows = await supabaseRequest(`app_profile_data?profile_id=eq.${encodeURIComponent(profile.id)}&select=data`);
+      if (rows?.[0]?.data) return { ...emptyProfileData(), ...rows[0].data };
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  return JSON.parse(localStorage.getItem(profileDataKey(profile.id)) || "null") || emptyProfileData();
+}
+
+async function renderTeacherOverview() {
+  const students = state.profiles.filter(profile => profile.role === "student");
+  const root = $("teacherOverview");
+  const sections = await Promise.all(students.map(async student => {
+    const data = await getProfileData(student);
+    const readArticles = data.readIds
+      .map(id => state.articles.find(article => article.id === id)?.title || id);
+    const clickedCount = Object.values(data.discoveredVocabulary || {}).reduce((sum, items) => sum + items.length, 0);
+    const answerCards = Object.entries(data.answers || {}).flatMap(([articleId, answers]) => {
+      const article = state.articles.find(item => item.id === articleId);
+      if (!article) return [];
+
+      return Object.entries(answers)
+        .filter(([, answer]) => answer.trim())
+        .map(([index, answer]) => `
+          <div class="answer-card">
+            <p><strong>${escapeHtml(article.title)}</strong></p>
+            <p>${escapeHtml(article.questions[Number(index)] || "")}</p>
+            <p>${escapeHtml(answer)}</p>
+          </div>
+        `);
+    }).join("");
+
+    return `
+      <section class="overview-section">
+        <h3>${escapeHtml(student.name)}</h3>
+        <p class="muted">Prečítané texty: ${readArticles.length} • Kliknuté slovíčka/frázy: ${clickedCount}</p>
+        <ul class="overview-list">
+          ${readArticles.length ? readArticles.map(title => `<li>${escapeHtml(title)}</li>`).join("") : "<li>Zatiaľ nič prečítané.</li>"}
+        </ul>
+        <h3>Odpovede</h3>
+        ${answerCards || '<p class="muted">Zatiaľ nie sú uložené odpovede.</p>'}
+      </section>
+    `;
+  }));
+
+  root.innerHTML = sections.join("");
+}
+
+function saveAnswer(input) {
+  const article = state.currentArticle;
+  if (!article) return;
+
+  const index = input.dataset.questionIndex;
+  state.profileData.answers[article.id] = {
+    ...getArticleAnswers(article.id),
+    [index]: input.value
+  };
+  saveProfileData();
 }
 
 function loadSettings() {
@@ -224,14 +501,23 @@ function loadSettings() {
 
 $("backBtn").onclick = showHome;
 $("settingsBackBtn").onclick = showHome;
+$("teacherBackBtn").onclick = showHome;
 $("settingsBtn").onclick = showSettings;
+$("teacherBtn").onclick = showTeacherOverview;
 $("refreshBtn").onclick = loadArticles;
+$("loginBtn").onclick = login;
+$("createProfilesBtn").onclick = createProfiles;
+$("logoutBtn").onclick = logout;
+
+$("loginPinInput").addEventListener("keydown", event => {
+  if (event.key === "Enter") login();
+});
 
 $("markReadBtn").onclick = () => {
   const article = state.currentArticle;
-  if (!article || state.readIds.includes(article.id)) return;
-  state.readIds.push(article.id);
-  saveReadState();
+  if (!article || state.profileData.readIds.includes(article.id)) return;
+  state.profileData.readIds.push(article.id);
+  saveProfileData();
   $("markReadBtn").textContent = "Prečítané ✓";
 };
 
@@ -240,6 +526,12 @@ $("articleText").onclick = (event) => {
   if (!button) return;
   showInlineTranslation(button);
 };
+
+$("questionList").addEventListener("input", event => {
+  const input = event.target.closest(".answer-input");
+  if (!input) return;
+  saveAnswer(input);
+});
 
 $("fontSizeSelect").onchange = (e) => {
   localStorage.setItem("fontSize", e.target.value);
@@ -257,5 +549,18 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-loadSettings();
-loadArticles();
+async function init() {
+  loadSettings();
+  await loadProfiles();
+  await loadArticles();
+
+  const savedProfileId = localStorage.getItem(CURRENT_PROFILE_KEY);
+  const savedProfile = state.profiles.find(profile => profile.id === savedProfileId);
+  if (savedProfile) {
+    await setCurrentProfile(savedProfile);
+  } else {
+    showLogin();
+  }
+}
+
+init();
