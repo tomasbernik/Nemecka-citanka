@@ -37,6 +37,11 @@
       { "de": "meiner Meinung nach", "sk": "podľa môjho názoru" }
     ],
     "inlineVocabulary": [
+      { "de": "Erfahrung", "sk": "skúsenosť" },
+      { "de": "erledigen", "sk": "vybaviť" },
+      { "de": "obwohl", "sk": "aj keď" },
+      { "de": "wahrscheinlich", "sk": "pravdepodobne" },
+      { "de": "Meiner Meinung nach", "sk": "podľa môjho názoru" },
       { "de": "entschieden", "sk": "rozhodli sa" },
       { "de": "erleben", "sk": "zažiť" },
       { "de": "Sie sind durch die Stadt gelaufen", "sk": "prešli sa mestom" },
