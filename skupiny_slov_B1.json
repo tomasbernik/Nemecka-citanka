@@ -1,0 +1,82 @@
+[
+  {
+    "group": 1,
+    "noun": "die Erfahrung",
+    "verb": "erledigen",
+    "connector": "obwohl",
+    "adjective_adverb": "wahrscheinlich",
+    "phrase": "meiner Meinung nach"
+  },
+  {
+    "group": 2,
+    "noun": "die Möglichkeit",
+    "verb": "sich kümmern um",
+    "connector": "trotzdem",
+    "adjective_adverb": "besonders",
+    "phrase": "ich glaube, dass"
+  },
+  {
+    "group": 3,
+    "noun": "die Entscheidung",
+    "verb": "vermeiden",
+    "connector": "deshalb",
+    "adjective_adverb": "wichtig",
+    "phrase": "es ist wichtig, dass"
+  },
+  {
+    "group": 4,
+    "noun": "die Meinung",
+    "verb": "gehören",
+    "connector": "außerdem",
+    "adjective_adverb": "möglich",
+    "phrase": "ich habe vor, ... zu ..."
+  },
+  {
+    "group": 5,
+    "noun": "das Verhalten",
+    "verb": "erlauben",
+    "connector": "während",
+    "adjective_adverb": "unterschiedlich",
+    "phrase": "es hängt davon ab"
+  },
+  {
+    "group": 6,
+    "noun": "die Situation",
+    "verb": "verbessern",
+    "connector": "damit",
+    "adjective_adverb": "gemeinsam",
+    "phrase": "meiner Meinung nach"
+  },
+  {
+    "group": 7,
+    "noun": "der Unterschied",
+    "verb": "erklären",
+    "connector": "falls",
+    "adjective_adverb": "sofort",
+    "phrase": "ich glaube, dass"
+  },
+  {
+    "group": 8,
+    "noun": "die Entwicklung",
+    "verb": "beschreiben",
+    "connector": "obwohl",
+    "adjective_adverb": "wahrscheinlich",
+    "phrase": "es ist wichtig, dass"
+  },
+  {
+    "group": 9,
+    "noun": "die Erfahrung",
+    "verb": "entscheiden",
+    "connector": "trotzdem",
+    "adjective_adverb": "besonders",
+    "phrase": "ich habe vor, ... zu ..."
+  },
+  {
+    "group": 10,
+    "noun": "die Möglichkeit",
+    "verb": "versuchen",
+    "connector": "deshalb",
+    "adjective_adverb": "wichtig",
+    "phrase": "es hängt davon ab"
+  }
+]
