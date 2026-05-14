@@ -15,7 +15,8 @@ const state = {
     sentenceIndex: 0,
     isReading: false,
     utterance: null,
-    mode: "text"
+    mode: "text",
+    runId: 0
   },
   articleReadTimer: null,
   startupQuiz: {
@@ -396,7 +397,8 @@ function stopReading() {
     sentenceIndex: 0,
     isReading: false,
     utterance: null,
-    mode: "text"
+    mode: "text",
+    runId: state.speech.runId + 1
   };
   $("readAloudBtn").textContent = "Prečítať text";
   $("pauseReadBtn").textContent = "Pauza";
@@ -411,6 +413,7 @@ function finishReading(message = "Dočítané.") {
   state.speech.isReading = false;
   state.speech.utterance = null;
   state.speech.sentenceIndex = 0;
+  state.speech.runId += 1;
   $("readAloudBtn").textContent = "Prečítať text";
   $("pauseReadBtn").textContent = "Pauza";
   $("listenOnlyBtn").textContent = "Počúvať bez textu";
@@ -442,9 +445,11 @@ async function readSentence(index = 0, mode = "text") {
   }
 
   window.speechSynthesis.cancel();
+  const runId = state.speech.runId + 1;
   state.speech.sentenceIndex = index;
   state.speech.isReading = true;
   state.speech.mode = mode;
+  state.speech.runId = runId;
   if (mode === "audioOnly") {
     setAudioOnlyMode(true);
   } else {
@@ -457,10 +462,13 @@ async function readSentence(index = 0, mode = "text") {
   utterance.rate = Number($("speechRateSelect").value || 1);
   utterance.voice = getGermanVoice();
   utterance.onend = () => {
-    if (state.speech.isReading && state.speech.utterance === utterance) readSentence(index + 1, state.speech.mode);
+    if (state.speech.isReading && state.speech.utterance === utterance && state.speech.runId === runId) {
+      readSentence(index + 1, state.speech.mode);
+    }
   };
   utterance.onerror = (event) => {
     if (state.speech.utterance !== utterance) return;
+    if (state.speech.runId !== runId) return;
     if (event.error === "interrupted" || event.error === "canceled") return;
 
     state.speech.isReading = false;
@@ -488,10 +496,28 @@ function forceStopSpeech() {
 
   state.speech.isReading = false;
   state.speech.utterance = null;
+  state.speech.runId += 1;
 
   if ("speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }
+}
+
+function changeSpeechRate() {
+  if (!state.speech.isReading) return;
+
+  const index = state.speech.sentenceIndex;
+  const mode = state.speech.mode;
+
+  if (state.speech.utterance) {
+    state.speech.utterance.onend = null;
+    state.speech.utterance.onerror = null;
+  }
+
+  state.speech.runId += 1;
+  window.speechSynthesis.cancel();
+  setSpeechStatus("Mením rýchlosť...");
+  setTimeout(() => readSentence(index, mode), 80);
 }
 
 function togglePauseReading() {
@@ -1044,8 +1070,7 @@ $("matchGameBoard").addEventListener("click", event => {
 });
 
 $("speechRateSelect").onchange = () => {
-  if (!state.speech.isReading) return;
-  readSentence(state.speech.sentenceIndex, state.speech.mode);
+  changeSpeechRate();
 };
 
 $("startupQuizOptions").addEventListener("click", event => {
