@@ -35,6 +35,14 @@ const state = {
     selectedIds: [],
     matchedIds: []
   },
+  vocabChoiceGame: null,
+  clozeGame: null,
+  mistakeGame: null,
+  wordSearchGame: {
+    words: [],
+    found: [],
+    selected: []
+  },
   remoteReady: Boolean(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey)
 };
 
@@ -249,6 +257,44 @@ function getAllVocabulary() {
   });
 }
 
+function getPracticeVocabulary(article) {
+  const seen = new Set();
+  return [
+    ...(article?.vocabulary || []),
+    ...getInlineVocabulary(article),
+    ...getSavedVocabulary(article)
+  ]
+    .filter(item => item.de && item.sk)
+    .filter(item => getSentenceWords(item.de).length <= 2)
+    .filter(item => item.de.length <= 18 && item.sk.length <= 32)
+    .filter(item => {
+      const key = item.de.toLocaleLowerCase("de");
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function normalizeSearchWord(value) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^A-Za-zÄÖÜäöüß]/g, "")
+    .toLocaleUpperCase("de")
+    .replaceAll("Ä", "AE")
+    .replaceAll("Ö", "OE")
+    .replaceAll("Ü", "UE")
+    .replaceAll("ẞ", "SS")
+    .replaceAll("ß", "SS");
+}
+
+function getWordSearchVocabulary(article) {
+  return getPracticeVocabulary(article)
+    .map(item => ({ ...item, search: normalizeSearchWord(item.de) }))
+    .filter(item => item.search.length >= 4 && item.search.length <= 10)
+    .slice(0, 24);
+}
+
 async function saveProfileData() {
   if (!state.currentProfile) return;
 
@@ -343,9 +389,13 @@ function renderQuestions(article) {
   const answers = getArticleAnswers(article.id);
   $("questionList").innerHTML = article.questions
     .map((question, index) => `
-      <li>
-        <div class="question-text">${escapeHtml(question)}</div>
-        <textarea class="answer-input" data-question-index="${index}" placeholder="Moja odpoveď">${escapeHtml(answers[index] || "")}</textarea>
+      <li class="true-false-item">
+        <div class="question-text">${escapeHtml(question.statement || question)}</div>
+        <div class="true-false-actions">
+          <button class="choice-btn ${answers[index] === true ? "selected" : ""}" type="button" data-question-index="${index}" data-answer="true">Pravda</button>
+          <button class="choice-btn ${answers[index] === false ? "selected" : ""}" type="button" data-question-index="${index}" data-answer="false">Nepravda</button>
+        </div>
+        <p class="practice-feedback">${typeof answers[index] === "boolean" ? (answers[index] === Boolean(question.answer) ? "Správne." : "Správne je: " + (question.answer ? "pravda" : "nepravda")) : ""}</p>
       </li>
     `)
     .join("");
@@ -620,7 +670,8 @@ function startMatchGame() {
   state.matchGame = {
     cards: shuffle(cards),
     selectedIds: [],
-    matchedIds: []
+    matchedIds: [],
+    loggedComplete: false
   };
   renderMatchGame();
 }
@@ -638,7 +689,10 @@ function renderMatchGame() {
     $("matchGameFeedback").textContent = "Na dvojice treba najprv slovíčka v článku.";
   } else if (game.matchedIds.length === game.cards.length) {
     $("matchGameFeedback").textContent = "Hotovo, všetky dvojice sedia.";
-    logPractice("match-pairs", { pairs: game.cards.length / 2 });
+    if (!game.loggedComplete) {
+      game.loggedComplete = true;
+      logPractice("match-pairs", { pairs: game.cards.length / 2 });
+    }
   } else {
     $("matchGameFeedback").textContent = "";
   }
@@ -666,6 +720,242 @@ function chooseMatchCard(id) {
       renderMatchGame();
     }, 800);
   }
+}
+
+function startVocabChoiceGame() {
+  const vocabulary = getPracticeVocabulary(state.currentArticle);
+  if (vocabulary.length < 4) {
+    state.vocabChoiceGame = null;
+    $("vocabChoicePrompt").textContent = "";
+    $("vocabChoiceOptions").innerHTML = "";
+    $("vocabChoiceFeedback").textContent = "Na túto hru treba aspoň 4 slovíčka.";
+    return;
+  }
+
+  const correct = shuffle(vocabulary)[0];
+  const options = shuffle([
+    correct.sk,
+    ...shuffle(vocabulary.filter(item => item.sk !== correct.sk)).slice(0, 3).map(item => item.sk)
+  ]);
+  state.vocabChoiceGame = { correct, options, answered: false };
+  $("vocabChoicePrompt").textContent = correct.de;
+  $("vocabChoiceOptions").innerHTML = options
+    .map(option => `<button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
+    .join("");
+  $("vocabChoiceFeedback").textContent = "";
+}
+
+function answerVocabChoice(answer) {
+  const game = state.vocabChoiceGame;
+  if (!game || game.answered) return;
+  game.answered = true;
+
+  document.querySelectorAll("#vocabChoiceOptions .quiz-option").forEach(button => {
+    const isCorrect = button.dataset.answer === game.correct.sk;
+    const isChosen = button.dataset.answer === answer;
+    button.classList.toggle("correct", isCorrect);
+    button.classList.toggle("wrong", isChosen && !isCorrect);
+    button.disabled = true;
+  });
+
+  const isCorrect = answer === game.correct.sk;
+  $("vocabChoiceFeedback").textContent = isCorrect ? "Správne." : `Správne je: ${game.correct.sk}`;
+  logPractice("vocab-choice", { correct: isCorrect, prompt: game.correct.de, answer, expected: game.correct.sk });
+}
+
+function findSentenceWithVocabulary(article) {
+  const sentences = getArticleSentences(article);
+  const vocabulary = getPracticeVocabulary(article);
+  const candidates = [];
+
+  vocabulary.forEach(item => {
+    if (getSentenceWords(item.de).length !== 1) return;
+    const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])(${escapeRegExp(item.de)})(?=$|[^\\p{L}\\p{N}_])`, "iu");
+    sentences.forEach(sentence => {
+      if (pattern.test(sentence)) candidates.push({ sentence, item, pattern });
+    });
+  });
+
+  return shuffle(candidates)[0] || null;
+}
+
+function startClozeGame() {
+  const candidate = findSentenceWithVocabulary(state.currentArticle);
+  const vocabulary = getPracticeVocabulary(state.currentArticle).filter(item => getSentenceWords(item.de).length === 1);
+  if (!candidate || vocabulary.length < 4) {
+    state.clozeGame = null;
+    $("clozeSentence").textContent = "";
+    $("clozeOptions").innerHTML = "";
+    $("clozeFeedback").textContent = "Na túto hru treba viac krátkych slovíčok v texte.";
+    return;
+  }
+
+  const options = shuffle([
+    candidate.item.de,
+    ...shuffle(vocabulary.filter(item => item.de !== candidate.item.de)).slice(0, 3).map(item => item.de)
+  ]);
+  const sentence = candidate.sentence.replace(candidate.pattern, (match, prefix) => `${prefix}_____`);
+  state.clozeGame = { answer: candidate.item.de, sentence, options, answered: false };
+  $("clozeSentence").textContent = sentence;
+  $("clozeOptions").innerHTML = options
+    .map(option => `<button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
+    .join("");
+  $("clozeFeedback").textContent = "";
+}
+
+function answerClozeGame(answer) {
+  const game = state.clozeGame;
+  if (!game || game.answered) return;
+  game.answered = true;
+  document.querySelectorAll("#clozeOptions .quiz-option").forEach(button => {
+    const isCorrect = button.dataset.answer === game.answer;
+    const isChosen = button.dataset.answer === answer;
+    button.classList.toggle("correct", isCorrect);
+    button.classList.toggle("wrong", isChosen && !isCorrect);
+    button.disabled = true;
+  });
+  const isCorrect = answer === game.answer;
+  $("clozeFeedback").textContent = isCorrect ? "Správne." : `Správne je: ${game.answer}`;
+  logPractice("cloze-word", { correct: isCorrect, answer, expected: game.answer });
+}
+
+function startMistakeGame() {
+  const candidate = findSentenceWithVocabulary(state.currentArticle);
+  const vocabulary = getPracticeVocabulary(state.currentArticle)
+    .filter(item => getSentenceWords(item.de).length === 1 && item.de !== candidate?.item.de);
+  if (!candidate || !vocabulary.length) {
+    state.mistakeGame = null;
+    $("mistakeSentence").textContent = "";
+    $("mistakeOptions").innerHTML = "";
+    $("mistakeFeedback").textContent = "Na túto hru treba viac krátkych slovíčok v texte.";
+    return;
+  }
+
+  const wrongWord = shuffle(vocabulary)[0].de;
+  const sentence = candidate.sentence.replace(candidate.pattern, (match, prefix) => `${prefix}${wrongWord}`);
+  const options = shuffle([...new Set(getSentenceWords(sentence))]).slice(0, 5);
+  if (!options.includes(wrongWord)) options[0] = wrongWord;
+  state.mistakeGame = { wrongWord, correctWord: candidate.item.de, sentence, answered: false };
+  $("mistakeSentence").textContent = sentence;
+  $("mistakeOptions").innerHTML = shuffle(options)
+    .map(option => `<button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
+    .join("");
+  $("mistakeFeedback").textContent = "";
+}
+
+function answerMistakeGame(answer) {
+  const game = state.mistakeGame;
+  if (!game || game.answered) return;
+  game.answered = true;
+  document.querySelectorAll("#mistakeOptions .quiz-option").forEach(button => {
+    const isCorrect = button.dataset.answer === game.wrongWord;
+    const isChosen = button.dataset.answer === answer;
+    button.classList.toggle("correct", isCorrect);
+    button.classList.toggle("wrong", isChosen && !isCorrect);
+    button.disabled = true;
+  });
+  const isCorrect = answer === game.wrongWord;
+  $("mistakeFeedback").textContent = isCorrect
+    ? `Správne. Vo vete má byť: ${game.correctWord}`
+    : `Chybné slovo je: ${game.wrongWord}. Vo vete má byť: ${game.correctWord}`;
+  logPractice("find-mistake", { correct: isCorrect, answer, expected: game.wrongWord });
+}
+
+function createWordSearchGrid(words) {
+  const size = 12;
+  const grid = Array.from({ length: size }, () => Array(size).fill(""));
+  const directions = [
+    [1, 0], [0, 1], [1, 1], [-1, 1],
+    [-1, 0], [0, -1], [-1, -1], [1, -1]
+  ];
+
+  const placeWord = (word) => {
+    for (let attempt = 0; attempt < 120; attempt += 1) {
+      const [dx, dy] = shuffle(directions)[0];
+      const x = Math.floor(Math.random() * size);
+      const y = Math.floor(Math.random() * size);
+      const endX = x + dx * (word.length - 1);
+      const endY = y + dy * (word.length - 1);
+      if (endX < 0 || endX >= size || endY < 0 || endY >= size) continue;
+
+      let fits = true;
+      for (let index = 0; index < word.length; index += 1) {
+        const cell = grid[y + dy * index][x + dx * index];
+        if (cell && cell !== word[index]) fits = false;
+      }
+      if (!fits) continue;
+
+      for (let index = 0; index < word.length; index += 1) {
+        grid[y + dy * index][x + dx * index] = word[index];
+      }
+      return true;
+    }
+    return false;
+  };
+
+  const placed = words.filter(item => placeWord(item.search));
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for (let row = 0; row < size; row += 1) {
+    for (let col = 0; col < size; col += 1) {
+      if (!grid[row][col]) grid[row][col] = letters[Math.floor(Math.random() * letters.length)];
+    }
+  }
+
+  return { grid, placed };
+}
+
+function startWordSearchGame() {
+  const vocabulary = shuffle(getWordSearchVocabulary(state.currentArticle)).slice(0, 6);
+  if (vocabulary.length < 3) {
+    state.wordSearchGame = { words: [], found: [], selected: [], grid: [] };
+    $("wordSearchHints").innerHTML = "";
+    $("wordSearchGrid").innerHTML = "";
+    $("wordSearchFeedback").textContent = "Na osemsmerovku treba aspoň 3 kratšie slovíčka.";
+    return;
+  }
+
+  const { grid, placed } = createWordSearchGrid(vocabulary);
+  state.wordSearchGame = { words: placed, found: [], selected: [], grid };
+  renderWordSearchGame();
+}
+
+function renderWordSearchGame() {
+  const game = state.wordSearchGame;
+  $("wordSearchHints").innerHTML = game.words
+    .map(item => `<li class="${game.found.includes(item.search) ? "found" : ""}">${escapeHtml(item.sk)}</li>`)
+    .join("");
+  $("wordSearchGrid").innerHTML = game.grid.flatMap((row, rowIndex) =>
+    row.map((letter, colIndex) => {
+      const key = `${rowIndex}-${colIndex}`;
+      const selected = game.selected.some(item => item.key === key);
+      return `<button class="letter-cell ${selected ? "selected" : ""}" type="button" data-row="${rowIndex}" data-col="${colIndex}">${letter}</button>`;
+    })
+  ).join("");
+  $("wordSearchFeedback").textContent = game.found.length === game.words.length && game.words.length
+    ? "Hotovo, všetky slová sú nájdené."
+    : game.selected.length ? game.selected.map(item => item.letter).join("") : "";
+}
+
+function chooseWordSearchLetter(row, col) {
+  const game = state.wordSearchGame;
+  if (!game.grid?.length) return;
+  const key = `${row}-${col}`;
+  if (game.selected.some(item => item.key === key)) return;
+  game.selected.push({ key, letter: game.grid[row][col] });
+  const selectedWord = game.selected.map(item => item.letter).join("");
+  const foundWord = game.words.find(item => item.search === selectedWord && !game.found.includes(item.search));
+
+  if (foundWord) {
+    game.found.push(foundWord.search);
+    game.selected = [];
+    logPractice("word-search", { word: foundWord.de });
+  } else if (!game.words.some(item => item.search.startsWith(selectedWord))) {
+    setTimeout(() => {
+      game.selected = [];
+      renderWordSearchGame();
+    }, 450);
+  }
+  renderWordSearchGame();
 }
 
 function markCurrentArticleRead(source = "manual") {
@@ -712,6 +1002,10 @@ function openArticle(id) {
   renderQuestions(article);
   startSentenceGame();
   startMatchGame();
+  startVocabChoiceGame();
+  startClozeGame();
+  startMistakeGame();
+  startWordSearchGame();
 
   $("markReadBtn").textContent = state.profileData.readIds.includes(article.id)
     ? "Prečítané ✓"
@@ -883,7 +1177,12 @@ function formatPracticeType(type) {
   return {
     "sentence-order": "Zoraď vetu",
     "match-pairs": "Nájdi dvojice",
-    "startup-vocabulary": "Úvodné slovíčko"
+    "startup-vocabulary": "Úvodné slovíčko",
+    "true-false": "Pravda/nepravda",
+    "vocab-choice": "4 možnosti",
+    "cloze-word": "Doplň slovo",
+    "find-mistake": "Nájdi chybu",
+    "word-search": "Osemsmerovka"
   }[type] || type;
 }
 
@@ -919,12 +1218,12 @@ async function renderTeacherOverview() {
       if (!article) return [];
 
       return Object.entries(answers)
-        .filter(([, answer]) => answer.trim())
+        .filter(([, answer]) => answer !== null && answer !== undefined && answer !== "")
         .map(([index, answer]) => `
           <div class="answer-card">
             <p><strong>${escapeHtml(article.title)}</strong></p>
-            <p>${escapeHtml(article.questions[Number(index)] || "")}</p>
-            <p>${escapeHtml(answer)}</p>
+            <p>${escapeHtml(article.questions[Number(index)]?.statement || article.questions[Number(index)] || "")}</p>
+            <p>${answer === true ? "Pravda" : answer === false ? "Nepravda" : escapeHtml(answer)}</p>
           </div>
         `);
     }).join("");
@@ -949,16 +1248,22 @@ async function renderTeacherOverview() {
   root.innerHTML = sections.join("");
 }
 
-function saveAnswer(input) {
+function saveTrueFalseAnswer(index, answer) {
   const article = state.currentArticle;
   if (!article) return;
 
-  const index = input.dataset.questionIndex;
   state.profileData.answers[article.id] = {
     ...getArticleAnswers(article.id),
-    [index]: input.value
+    [index]: answer
   };
   saveProfileData();
+  renderQuestions(article);
+  const question = article.questions[Number(index)];
+  logPractice("true-false", {
+    correct: answer === Boolean(question.answer),
+    answer,
+    expected: Boolean(question.answer)
+  });
 }
 
 function buildStartupQuizQuestions() {
@@ -1143,6 +1448,10 @@ $("stopReadBtn").onclick = stopReading;
 $("showTextAfterListeningBtn").onclick = showArticleText;
 $("newSentenceGameBtn").onclick = startSentenceGame;
 $("newMatchGameBtn").onclick = startMatchGame;
+$("newVocabChoiceBtn").onclick = startVocabChoiceGame;
+$("newClozeGameBtn").onclick = startClozeGame;
+$("newMistakeGameBtn").onclick = startMistakeGame;
+$("newWordSearchBtn").onclick = startWordSearchGame;
 $("skipStartupQuizBtn").onclick = closeStartupQuiz;
 $("nextStartupQuizBtn").onclick = nextStartupQuizQuestion;
 $("testNotificationBtn").onclick = showTestNotification;
@@ -1161,10 +1470,10 @@ $("articleText").onclick = (event) => {
   showInlineTranslation(button);
 };
 
-$("questionList").addEventListener("input", event => {
-  const input = event.target.closest(".answer-input");
-  if (!input) return;
-  saveAnswer(input);
+$("questionList").addEventListener("click", event => {
+  const button = event.target.closest(".choice-btn");
+  if (!button) return;
+  saveTrueFalseAnswer(button.dataset.questionIndex, button.dataset.answer === "true");
 });
 
 $("sentenceWordBank").addEventListener("click", event => {
@@ -1183,6 +1492,30 @@ $("matchGameBoard").addEventListener("click", event => {
   const button = event.target.closest(".match-card");
   if (!button) return;
   chooseMatchCard(button.dataset.cardId);
+});
+
+$("vocabChoiceOptions").addEventListener("click", event => {
+  const button = event.target.closest(".quiz-option");
+  if (!button) return;
+  answerVocabChoice(button.dataset.answer);
+});
+
+$("clozeOptions").addEventListener("click", event => {
+  const button = event.target.closest(".quiz-option");
+  if (!button) return;
+  answerClozeGame(button.dataset.answer);
+});
+
+$("mistakeOptions").addEventListener("click", event => {
+  const button = event.target.closest(".quiz-option");
+  if (!button) return;
+  answerMistakeGame(button.dataset.answer);
+});
+
+$("wordSearchGrid").addEventListener("click", event => {
+  const button = event.target.closest(".letter-cell");
+  if (!button) return;
+  chooseWordSearchLetter(Number(button.dataset.row), Number(button.dataset.col));
 });
 
 $("speechRateSelect").onchange = () => {

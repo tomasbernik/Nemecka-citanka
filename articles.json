@@ -30,43 +30,138 @@
       "Tomas lachte. „Das ist wahrscheinlich eine gute Idee.“"
     ],
     "vocabulary": [
-      { "de": "die Erfahrung", "sk": "skúsenosť" },
-      { "de": "erledigen", "sk": "vybaviť" },
-      { "de": "obwohl", "sk": "aj keď" },
-      { "de": "wahrscheinlich", "sk": "pravdepodobne" },
-      { "de": "meiner Meinung nach", "sk": "podľa môjho názoru" }
+      {
+        "de": "die Erfahrung",
+        "sk": "skúsenosť"
+      },
+      {
+        "de": "erledigen",
+        "sk": "vybaviť"
+      },
+      {
+        "de": "obwohl",
+        "sk": "aj keď"
+      },
+      {
+        "de": "wahrscheinlich",
+        "sk": "pravdepodobne"
+      },
+      {
+        "de": "meiner Meinung nach",
+        "sk": "podľa môjho názoru"
+      }
     ],
     "inlineVocabulary": [
-      { "de": "Erfahrung", "sk": "skúsenosť" },
-      { "de": "erledigen", "sk": "vybaviť" },
-      { "de": "obwohl", "sk": "aj keď" },
-      { "de": "wahrscheinlich", "sk": "pravdepodobne" },
-      { "de": "Meiner Meinung nach", "sk": "podľa môjho názoru" },
-      { "de": "entschieden", "sk": "rozhodli sa" },
-      { "de": "erleben", "sk": "zažiť" },
-      { "de": "Sie sind durch die Stadt gelaufen", "sk": "prešli sa mestom" },
-      { "de": "Orte", "sk": "miesta" },
-      { "de": "besondere", "sk": "špeciálna / výnimočná" },
-      { "de": "Das ist wahrscheinlich einer der schönsten Orte, die ich je gesehen habe", "sk": "To je pravdepodobne jedno z najkrajších miest, ktoré som kedy videl" },
-      { "de": "Ausflug", "sk": "výlet" },
-      { "de": "aufgestanden", "sk": "vstali" },
-      { "de": "unbedingt", "sk": "určite / bezpodmienečne" },
-      { "de": "Sonst", "sk": "inak" },
-      { "de": "ruhig", "sk": "pokojný" },
-      { "de": "entspannend", "sk": "relaxačný" },
-      { "de": "genießen", "sk": "užívať si" },
-      { "de": "gesessen", "sk": "sedeli" },
-      { "de": "gegessen", "sk": "jedli" },
-      { "de": "Entscheidungen", "sk": "rozhodnutia" },
-      { "de": "einig", "sk": "jednotní / zhodli sa" },
-      { "de": "erlebt", "sk": "zažili" }
+      {
+        "de": "Erfahrung",
+        "sk": "skúsenosť"
+      },
+      {
+        "de": "erledigen",
+        "sk": "vybaviť"
+      },
+      {
+        "de": "obwohl",
+        "sk": "aj keď"
+      },
+      {
+        "de": "wahrscheinlich",
+        "sk": "pravdepodobne"
+      },
+      {
+        "de": "Meiner Meinung nach",
+        "sk": "podľa môjho názoru"
+      },
+      {
+        "de": "entschieden",
+        "sk": "rozhodli sa"
+      },
+      {
+        "de": "erleben",
+        "sk": "zažiť"
+      },
+      {
+        "de": "Sie sind durch die Stadt gelaufen",
+        "sk": "prešli sa mestom"
+      },
+      {
+        "de": "Orte",
+        "sk": "miesta"
+      },
+      {
+        "de": "besondere",
+        "sk": "špeciálna / výnimočná"
+      },
+      {
+        "de": "Das ist wahrscheinlich einer der schönsten Orte, die ich je gesehen habe",
+        "sk": "To je pravdepodobne jedno z najkrajších miest, ktoré som kedy videl"
+      },
+      {
+        "de": "Ausflug",
+        "sk": "výlet"
+      },
+      {
+        "de": "aufgestanden",
+        "sk": "vstali"
+      },
+      {
+        "de": "unbedingt",
+        "sk": "určite / bezpodmienečne"
+      },
+      {
+        "de": "Sonst",
+        "sk": "inak"
+      },
+      {
+        "de": "ruhig",
+        "sk": "pokojný"
+      },
+      {
+        "de": "entspannend",
+        "sk": "relaxačný"
+      },
+      {
+        "de": "genießen",
+        "sk": "užívať si"
+      },
+      {
+        "de": "gesessen",
+        "sk": "sedeli"
+      },
+      {
+        "de": "gegessen",
+        "sk": "jedli"
+      },
+      {
+        "de": "Entscheidungen",
+        "sk": "rozhodnutia"
+      },
+      {
+        "de": "einig",
+        "sk": "jednotní / zhodli sa"
+      },
+      {
+        "de": "erlebt",
+        "sk": "zažili"
+      }
     ],
     "questions": [
-      "Wohin sind Tomas und Kristina gereist?",
-      "Was mussten sie am ersten Tag erledigen?",
-      "Was haben sie am Strand gemacht?",
-      "Warum war die Reise eine wichtige Erfahrung?",
-      "Was wollen sie beim nächsten Mal besser machen?"
+      {
+        "statement": "Tomas und Kristina sind nach Südspanien gereist.",
+        "answer": true
+      },
+      {
+        "statement": "Am ersten Tag sind sie in Berlin angekommen.",
+        "answer": false
+      },
+      {
+        "statement": "Am Strand haben sie lange geredet.",
+        "answer": true
+      },
+      {
+        "statement": "Sie waren am Ende der Reise unzufrieden.",
+        "answer": false
+      }
     ]
   },
   {
@@ -131,36 +226,116 @@
       }
     ],
     "inlineVocabulary": [
-      { "de": "ruhig", "sk": "pokojný" },
-      { "de": "genießen", "sk": "užívať si" },
-      { "de": "aufgestanden", "sk": "vstal" },
-      { "de": "Spaziergang", "sk": "prechádzka" },
-      { "de": "lebendig", "sk": "živý" },
-      { "de": "überall", "sk": "všade" },
-      { "de": "Geschäfte", "sk": "obchody" },
-      { "de": "Bootsfahrt", "sk": "plavba loďou" },
-      { "de": "entspannte", "sk": "uvoľnená" },
-      { "de": "entdecken", "sk": "objavovať" },
-      { "de": "besichtigen", "sk": "navštíviť (pamiatku)" },
-      { "de": "bewundert", "sk": "obdivovali" },
-      { "de": "angenehm", "sk": "príjemný" },
-      { "de": "ausruhen", "sk": "oddýchnuť si" },
-      { "de": "belegte Baguette", "sk": "obložená bageta" },
-      { "de": "Sie haben sich auf eine Bank gesetzt", "sk": "sadli si na lavičku" },
-      { "de": "Eiffelturm", "sk": "Eiffelova veža" },
-      { "de": "beeindruckend", "sk": "pôsobivý" },
-      { "de": "gemütlich", "sk": "útulný" },
-      { "de": "sie haben die Atmosphäre genossen", "sk": "užívali si atmosféru" },
-      { "de": "Später haben sie auch elektrische Roller ausprobiert", "sk": "neskôr si vyskúšali elektrické kolobežky" },
-      { "de": "Verkehr", "sk": "doprava" },
-      { "de": "Erlebnisse", "sk": "zážitky" }
+      {
+        "de": "ruhig",
+        "sk": "pokojný"
+      },
+      {
+        "de": "genießen",
+        "sk": "užívať si"
+      },
+      {
+        "de": "aufgestanden",
+        "sk": "vstal"
+      },
+      {
+        "de": "Spaziergang",
+        "sk": "prechádzka"
+      },
+      {
+        "de": "lebendig",
+        "sk": "živý"
+      },
+      {
+        "de": "überall",
+        "sk": "všade"
+      },
+      {
+        "de": "Geschäfte",
+        "sk": "obchody"
+      },
+      {
+        "de": "Bootsfahrt",
+        "sk": "plavba loďou"
+      },
+      {
+        "de": "entspannte",
+        "sk": "uvoľnená"
+      },
+      {
+        "de": "entdecken",
+        "sk": "objavovať"
+      },
+      {
+        "de": "besichtigen",
+        "sk": "navštíviť (pamiatku)"
+      },
+      {
+        "de": "bewundert",
+        "sk": "obdivovali"
+      },
+      {
+        "de": "angenehm",
+        "sk": "príjemný"
+      },
+      {
+        "de": "ausruhen",
+        "sk": "oddýchnuť si"
+      },
+      {
+        "de": "belegte Baguette",
+        "sk": "obložená bageta"
+      },
+      {
+        "de": "Sie haben sich auf eine Bank gesetzt",
+        "sk": "sadli si na lavičku"
+      },
+      {
+        "de": "Eiffelturm",
+        "sk": "Eiffelova veža"
+      },
+      {
+        "de": "beeindruckend",
+        "sk": "pôsobivý"
+      },
+      {
+        "de": "gemütlich",
+        "sk": "útulný"
+      },
+      {
+        "de": "sie haben die Atmosphäre genossen",
+        "sk": "užívali si atmosféru"
+      },
+      {
+        "de": "Später haben sie auch elektrische Roller ausprobiert",
+        "sk": "neskôr si vyskúšali elektrické kolobežky"
+      },
+      {
+        "de": "Verkehr",
+        "sk": "doprava"
+      },
+      {
+        "de": "Erlebnisse",
+        "sk": "zážitky"
+      }
     ],
     "questions": [
-      "Was haben Tomas und Kristina am Morgen gemacht?",
-      "Warum konnten sie die Notre-Dame nicht besuchen?",
-      "Was haben sie zu Mittag gegessen?",
-      "Was haben sie am Nachmittag beim Eiffelturm gemacht?",
-      "Wie haben sie den Abend verbracht?"
+      {
+        "statement": "Tomas und Kristina haben einen Tag in Paris verbracht.",
+        "answer": true
+      },
+      {
+        "statement": "Sie konnten die Notre-Dame von innen besichtigen.",
+        "answer": false
+      },
+      {
+        "statement": "Zu Mittag haben sie eine belegte Baguette gegessen.",
+        "answer": true
+      },
+      {
+        "statement": "Am Abend sind sie in eine Bar mit Terrasse gegangen.",
+        "answer": true
+      }
     ]
   },
   {
@@ -185,7 +360,6 @@
       "Zu Hause haben wir noch eine Folge von der Serie geschaut. Danach bin ich schlafen gegangen, aber Tomas bleibt länger wach."
     ],
     "vocabulary": [
-      
       {
         "de": "die Hütte",
         "sk": "chatka"
@@ -204,44 +378,148 @@
       }
     ],
     "inlineVocabulary": [
-      { "de": "erzählen", "sk": "rozprávať" },
-      { "de": "irgendwann", "sk": "niekedy" },
-      { "de": "gegen drei Uhr", "sk": "okolo 15:00" },
-      { "de": "zuerst", "sk": "najskôr" },
-      { "de": "hingesetzt", "sk": "posadil sa" },
-      { "de": "Boden", "sk": "pôda" },
-      { "de": "Zaun", "sk": "plot" },
-      { "de": "Tagetes", "sk": "aksamietnice" },
-      { "de": "pflanzen", "sk": "sadiť" },
-      { "de": "Beeten", "sk": "záhony" },
-      { "de": "am Rand", "sk": "na okraji" },
-      { "de": "wachsen", "sk": "rásť" },
-      { "de": "übrig", "sk": "zvyšné" },
-      { "de": "Während", "sk": "počas" },
-      { "de": "Hütte", "sk": "chatka" },
-      { "de": "vorbereitet", "sk": "pripravil" },
-      { "de": "legen", "sk": "položiť" },
-      { "de": "gefüttert", "sk": "nakŕmil" },
-      { "de": "Frösche", "sk": "žaby" },
-      { "de": "Teich", "sk": "jazierko" },
-      { "de": "gequakt", "sk": "kvákali" },
-      { "de": "lustig", "sk": "zábavné" },
-      { "de": "Eidechsen", "sk": "jašterice" },
-      { "de": "beobachtet", "sk": "pozorovali" },
-      { "de": "Libellen", "sk": "vážky" },
-      { "de": "geflogen", "sk": "leteli" },
-      { "de": "herausgefunden", "sk": "zistili" },
-      { "de": "Spielerei", "sk": "hra" },
-      { "de": "ausgeruht", "sk": "oddýchli si" },
-      { "de": "Folge", "sk": "epizóda" },
-      { "de": "wach", "sk": "hore" }
+      {
+        "de": "erzählen",
+        "sk": "rozprávať"
+      },
+      {
+        "de": "irgendwann",
+        "sk": "niekedy"
+      },
+      {
+        "de": "gegen drei Uhr",
+        "sk": "okolo 15:00"
+      },
+      {
+        "de": "zuerst",
+        "sk": "najskôr"
+      },
+      {
+        "de": "hingesetzt",
+        "sk": "posadil sa"
+      },
+      {
+        "de": "Boden",
+        "sk": "pôda"
+      },
+      {
+        "de": "Zaun",
+        "sk": "plot"
+      },
+      {
+        "de": "Tagetes",
+        "sk": "aksamietnice"
+      },
+      {
+        "de": "pflanzen",
+        "sk": "sadiť"
+      },
+      {
+        "de": "Beeten",
+        "sk": "záhony"
+      },
+      {
+        "de": "am Rand",
+        "sk": "na okraji"
+      },
+      {
+        "de": "wachsen",
+        "sk": "rásť"
+      },
+      {
+        "de": "übrig",
+        "sk": "zvyšné"
+      },
+      {
+        "de": "Während",
+        "sk": "počas"
+      },
+      {
+        "de": "Hütte",
+        "sk": "chatka"
+      },
+      {
+        "de": "vorbereitet",
+        "sk": "pripravil"
+      },
+      {
+        "de": "legen",
+        "sk": "položiť"
+      },
+      {
+        "de": "gefüttert",
+        "sk": "nakŕmil"
+      },
+      {
+        "de": "Frösche",
+        "sk": "žaby"
+      },
+      {
+        "de": "Teich",
+        "sk": "jazierko"
+      },
+      {
+        "de": "gequakt",
+        "sk": "kvákali"
+      },
+      {
+        "de": "lustig",
+        "sk": "zábavné"
+      },
+      {
+        "de": "Eidechsen",
+        "sk": "jašterice"
+      },
+      {
+        "de": "beobachtet",
+        "sk": "pozorovali"
+      },
+      {
+        "de": "Libellen",
+        "sk": "vážky"
+      },
+      {
+        "de": "geflogen",
+        "sk": "leteli"
+      },
+      {
+        "de": "herausgefunden",
+        "sk": "zistili"
+      },
+      {
+        "de": "Spielerei",
+        "sk": "hra"
+      },
+      {
+        "de": "ausgeruht",
+        "sk": "oddýchli si"
+      },
+      {
+        "de": "Folge",
+        "sk": "epizóda"
+      },
+      {
+        "de": "wach",
+        "sk": "hore"
+      }
     ],
     "questions": [
-      "Wann sind sie im Garten angekommen?",
-      "Was hat Tomas zuerst gemacht?",
-      "Welche Blumen hat Tomas gepflanzt?",
-      "Was hat Kristina in der Hütte gemacht?",
-      "Was haben sie am Abend gemacht?"
+      {
+        "statement": "Tomas und Kristina sind gegen drei Uhr im Garten angekommen.",
+        "answer": true
+      },
+      {
+        "statement": "Tomas hat zuerst die Fische gefüttert.",
+        "answer": false
+      },
+      {
+        "statement": "Kristina hat die kleine Hütte vorbereitet.",
+        "answer": true
+      },
+      {
+        "statement": "Am Abend sind sie im Garten geblieben.",
+        "answer": false
+      }
     ]
   },
   {
@@ -386,18 +664,28 @@
         "de": "lachen",
         "sk": "smiať sa"
       },
-      
       {
         "de": "die Bank",
         "sk": "lavička"
       }
     ],
     "questions": [
-      "Wohin fahren Tomas und Kristina am Nachmittag?",
-      "Was kauft Kristina im Penny?",
-      "Was kocht Kristina in der Arbeit?",
-      "Warum gefällt ihr die Arbeit im Kindergarten?",
-      "Worauf freut sich Kristina im Urlaub auf Kreta?"
+      {
+        "statement": "Kristina und Tomas sind mit dem Fahrrad zum Baggersee gefahren.",
+        "answer": true
+      },
+      {
+        "statement": "Im Penny haben sie nur Wasser gekauft.",
+        "answer": false
+      },
+      {
+        "statement": "Kristina arbeitet in der Küche im Parkkindergarten.",
+        "answer": true
+      },
+      {
+        "statement": "Kristina freut sich auf Kreta.",
+        "answer": true
+      }
     ]
   },
   {
@@ -481,9 +769,22 @@
       }
     ],
     "questions": [
-      "Wohin geht Anna nach der Arbeit?",
-      "Was macht die alte Frau auf der Bank?",
-      "Warum fühlt Anna sich besser?"
+      {
+        "statement": "Anna geht nach der Arbeit zu Fuß zum See.",
+        "answer": true
+      },
+      {
+        "statement": "Am See sind keine Menschen.",
+        "answer": false
+      },
+      {
+        "statement": "Eine alte Frau sitzt auf einer Bank und liest ein Buch.",
+        "answer": true
+      },
+      {
+        "statement": "Annas Freundin antwortet schnell.",
+        "answer": true
+      }
     ]
   },
   {
@@ -563,9 +864,22 @@
       }
     ],
     "questions": [
-      "Wann steht Mira auf?",
-      "Was findet Mira im Kühlschrank?",
-      "Was möchte Mira später machen?"
+      {
+        "statement": "Mira steht am Samstag sehr früh auf.",
+        "answer": false
+      },
+      {
+        "statement": "Mira findet Joghurt, Milch und Erdbeeren im Kühlschrank.",
+        "answer": true
+      },
+      {
+        "statement": "Mira trinkt ihren Kaffee langsam.",
+        "answer": true
+      },
+      {
+        "statement": "Mira möchte später schwimmen gehen.",
+        "answer": false
+      }
     ]
   },
   {
@@ -655,9 +969,22 @@
       }
     ],
     "questions": [
-      "Warum möchte Marko bei Temu einkaufen?",
-      "Was sagt Lena über die Produkte bei Temu?",
-      "Welche Produkte bestellt Marko am Ende?"
+      {
+        "statement": "Marko möchte neue Kopfhörer kaufen.",
+        "answer": true
+      },
+      {
+        "statement": "Lena sagt, dass bei Temu immer alles perfekt ist.",
+        "answer": false
+      },
+      {
+        "statement": "Marko bestellt Kopfhörer und eine Handyhülle.",
+        "answer": true
+      },
+      {
+        "statement": "Die Kopfhörer funktionieren nicht.",
+        "answer": false
+      }
     ]
   }
 ]
