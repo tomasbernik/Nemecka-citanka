@@ -910,9 +910,9 @@ async function renderTeacherOverview() {
     const practiceCards = practiceLog.slice(0, 8).map(entry => `
       <li>
         <strong>${escapeHtml(formatPracticeType(entry.type))}</strong>
-        ${entry.articleTitle ? ` â€¢ ${escapeHtml(entry.articleTitle)}` : ""}
-        ${typeof entry.correct === "boolean" ? ` â€¢ ${entry.correct ? "správne" : "nesprávne"}` : ""}
-        <span class="muted"> â€¢ ${escapeHtml(formatDateTime(entry.at))}</span>
+        ${entry.articleTitle ? ` &bull; ${escapeHtml(entry.articleTitle)}` : ""}
+        ${typeof entry.correct === "boolean" ? ` &bull; ${entry.correct ? "správne" : "nesprávne"}` : ""}
+        <span class="muted"> &bull; ${escapeHtml(formatDateTime(entry.at))}</span>
       </li>
     `).join("");
     const answerCards = Object.entries(data.answers || {}).flatMap(([articleId, answers]) => {
