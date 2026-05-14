@@ -207,6 +207,27 @@ h3 { font-size: 1.1rem; }
   margin-bottom: 1.1em;
 }
 
+.task-progress {
+  margin: 16px 0 4px;
+}
+
+.task-progress-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 12px 14px;
+  background: rgba(127, 127, 127, 0.07);
+  font-weight: 850;
+}
+
+.task-progress-line.complete {
+  border-color: rgba(62, 139, 91, 0.52);
+  background: rgba(62, 139, 91, 0.16);
+}
+
 .listen-panel {
   display: grid;
   gap: 12px;
@@ -337,11 +358,6 @@ h3 { font-size: 1.1rem; }
   padding-top: 14px;
 }
 
-.panel summary {
-  font-weight: 850;
-  cursor: pointer;
-}
-
 .panel li {
   margin: 10px 0;
   line-height: 1.45;
@@ -365,6 +381,31 @@ h3 { font-size: 1.1rem; }
   line-height: 1.45;
 }
 
+.article-editor {
+  margin-top: 18px;
+}
+
+.editor-textarea {
+  width: 100%;
+  min-height: 128px;
+  resize: vertical;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  line-height: 1.45;
+}
+
+.editor-textarea.compact {
+  min-height: 76px;
+}
+
+.editor-textarea.tall {
+  min-height: 220px;
+}
+
 .true-false-actions {
   display: flex;
   flex-wrap: wrap;
@@ -385,6 +426,12 @@ h3 { font-size: 1.1rem; }
 .choice-btn.selected {
   background: var(--accent);
   color: #241a10;
+}
+
+.true-false-item.task-complete {
+  border-radius: 16px;
+  padding: 10px;
+  background: rgba(62, 139, 91, 0.1);
 }
 
 .practice-panel {

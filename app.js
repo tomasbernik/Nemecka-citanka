@@ -60,6 +60,10 @@ function makeProfileId(name) {
     .replace(/^-|-$/g, "");
 }
 
+function makeArticleId(title) {
+  return makeProfileId(title);
+}
+
 function profileDataKey(profileId) {
   return `profileData:${profileId}`;
 }
@@ -69,7 +73,8 @@ function emptyProfileData() {
     readIds: [],
     discoveredVocabulary: {},
     answers: {},
-    practiceLog: []
+    practiceLog: [],
+    completedTasks: {}
   };
 }
 
@@ -135,15 +140,103 @@ async function saveProfiles() {
 }
 
 async function loadArticles() {
+  let localArticles = [];
+
   try {
     const response = await fetch("articles.json", { cache: "no-store" });
-    state.articles = await response.json();
+    localArticles = await response.json();
   } catch (error) {
     console.error(error);
-    state.articles = [];
+    localArticles = [];
+  }
+
+  state.articles = localArticles;
+
+  if (state.remoteReady) {
+    try {
+      let remoteArticles = await loadRemoteArticles();
+      if (!remoteArticles.length && localArticles.length) {
+        await saveRemoteArticles(localArticles);
+        remoteArticles = await loadRemoteArticles();
+      }
+
+      if (remoteArticles.length) {
+        state.articles = remoteArticles;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  renderCategories();
+  renderArticles();
+}
+
+async function loadRemoteArticles() {
+  const rows = await supabaseRequest("app_articles?select=*&published=eq.true&order=updated_at.desc,title.asc");
+  return (rows || []).map(rowToArticle);
+}
+
+async function saveRemoteArticles(articles) {
+  if (!state.remoteReady || !articles.length) return;
+
+  await supabaseRequest("app_articles?on_conflict=id", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify(articles.map(articleToRow))
+  });
+}
+
+function rowToArticle(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    level: row.level,
+    category: row.category,
+    summary: row.summary,
+    text: row.text || [],
+    vocabulary: row.vocabulary || [],
+    inlineVocabulary: row.inline_vocabulary || [],
+    questions: row.questions || []
+  };
+}
+
+function articleToRow(article) {
+  return {
+    id: article.id,
+    title: article.title,
+    level: article.level,
+    category: article.category,
+    summary: article.summary,
+    text: article.text || [],
+    vocabulary: article.vocabulary || [],
+    inline_vocabulary: getInlineVocabulary(article),
+    questions: article.questions || [],
+    published: article.published !== false,
+    updated_at: new Date().toISOString()
+  };
+}
+
+async function saveArticle(article) {
+  if (!state.remoteReady) {
+    throw new Error("Editor článkov potrebuje zapnutý Supabase.");
+  }
+
+  await supabaseRequest("app_articles?on_conflict=id", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify([articleToRow(article)])
+  });
+
+  const index = state.articles.findIndex(item => item.id === article.id);
+  if (index >= 0) {
+    state.articles[index] = article;
+  } else {
+    state.articles = [article, ...state.articles];
   }
   renderCategories();
   renderArticles();
+  renderArticleEditorList(article.id);
 }
 
 function getCategories() {
@@ -271,10 +364,6 @@ function getPracticeVocabulary(article) {
       const key = item.de.toLocaleLowerCase("de");
       if (seen.has(key)) return false;
       seen.add(key);
-      item.cells = Array.from({ length: word.length }, (_, index) => ({
-        row: y + dy * index,
-        col: x + dx * index
-      }));
       return true;
     });
 }
@@ -339,6 +428,80 @@ function logPractice(type, details = {}) {
   saveProfileData();
 }
 
+function getQuestionTaskId(index) {
+  return `question:${index}`;
+}
+
+function getTaskDefinitions(article) {
+  if (!article) return [];
+
+  const tasks = (article.questions || []).map((question, index) => ({
+    id: getQuestionTaskId(index),
+    label: `Otázka ${index + 1}`,
+    section: "Otázky"
+  }));
+
+  if (hasSentenceOrderTask(article)) tasks.push({ id: "sentence-order", label: "Zoraď vetu", section: "Hry" });
+  if (getVisibleVocabulary(article).length) tasks.push({ id: "match-pairs", label: "Nájdi dvojice", section: "Hry" });
+  if (getPracticeVocabulary(article).length >= 4) tasks.push({ id: "vocab-choice", label: "4 možnosti", section: "Hry" });
+  if (hasClozeTask(article)) tasks.push({ id: "cloze-word", label: "Doplň slovo", section: "Hry" });
+  if (hasMistakeTask(article)) tasks.push({ id: "find-mistake", label: "Nájdi chybu", section: "Hry" });
+  if (getWordSearchVocabulary(article).length >= 3) tasks.push({ id: "word-search", label: "Osemsmerovka", section: "Hry" });
+
+  return tasks;
+}
+
+function getArticleCompletedTasks(articleId) {
+  return state.profileData.completedTasks?.[articleId] || [];
+}
+
+function isTaskCompleted(articleId, taskId) {
+  return getArticleCompletedTasks(articleId).includes(taskId);
+}
+
+function markTaskCompleted(taskId) {
+  const article = state.currentArticle;
+  if (!article || !taskId) return;
+
+  const completed = new Set(getArticleCompletedTasks(article.id));
+  if (completed.has(taskId)) {
+    renderArticleTaskProgress();
+    return;
+  }
+
+  completed.add(taskId);
+  state.profileData.completedTasks = {
+    ...(state.profileData.completedTasks || {}),
+    [article.id]: [...completed]
+  };
+  saveProfileData();
+  renderArticleTaskProgress();
+}
+
+function getArticleTaskProgress(article, data = state.profileData) {
+  const tasks = getTaskDefinitions(article);
+  const completed = data.completedTasks?.[article.id] || [];
+  return {
+    total: tasks.length,
+    done: tasks.filter(task => completed.includes(task.id)).length,
+    tasks
+  };
+}
+
+function renderArticleTaskProgress() {
+  const article = state.currentArticle;
+  if (!article) return;
+
+  const progress = getArticleTaskProgress(article);
+  const allDone = progress.total > 0 && progress.done === progress.total;
+  $("articleTaskProgress").innerHTML = `
+    <div class="task-progress-line ${allDone ? "complete" : ""}">
+      <strong>${allDone ? "Všetky úlohy splnené" : "Splnené úlohy"}</strong>
+      <span>${progress.done}/${progress.total}</span>
+    </div>
+  `;
+}
+
 function renderVocabulary() {
   const article = state.currentArticle;
   $("vocabList").innerHTML = getVisibleVocabulary(article)
@@ -393,7 +556,7 @@ function renderQuestions(article) {
   const answers = getArticleAnswers(article.id);
   $("questionList").innerHTML = article.questions
     .map((question, index) => `
-      <li class="true-false-item">
+      <li class="true-false-item ${isTaskCompleted(article.id, getQuestionTaskId(index)) ? "task-complete" : ""}">
         <div class="question-text">${escapeHtml(question.statement || question)}</div>
         <div class="true-false-actions">
           <button class="choice-btn ${answers[index] === true ? "selected" : ""}" type="button" data-question-index="${index}" data-answer="true">Pravda</button>
@@ -620,6 +783,12 @@ function startSentenceGame() {
   renderSentenceGame();
 }
 
+function hasSentenceOrderTask(article) {
+  return getArticleSentences(article)
+    .map(sentence => getSentenceWords(sentence))
+    .some(words => words.length >= 4 && words.length <= 10);
+}
+
 function renderSentenceGame() {
   const game = state.sentenceGame;
   $("sentenceTarget").innerHTML = game.chosen.length
@@ -646,6 +815,7 @@ function renderSentenceGame() {
     ? "Výborne, veta sedí."
     : "Skús prehodiť poradie ešte raz.";
   logPractice("sentence-order", { correct: isCorrect, answer, solution });
+  if (isCorrect) markTaskCompleted("sentence-order");
 }
 
 function chooseSentenceWord(id) {
@@ -696,6 +866,7 @@ function renderMatchGame() {
     if (!game.loggedComplete) {
       game.loggedComplete = true;
       logPractice("match-pairs", { pairs: game.cards.length / 2 });
+      markTaskCompleted("match-pairs");
     }
   } else {
     $("matchGameFeedback").textContent = "";
@@ -765,6 +936,7 @@ function answerVocabChoice(answer) {
   const isCorrect = answer === game.correct.sk;
   $("vocabChoiceFeedback").textContent = isCorrect ? "Správne." : `Správne je: ${game.correct.sk}`;
   logPractice("vocab-choice", { correct: isCorrect, prompt: game.correct.de, answer, expected: game.correct.sk });
+  if (isCorrect) markTaskCompleted("vocab-choice");
 }
 
 function findSentenceWithVocabulary(article) {
@@ -781,6 +953,18 @@ function findSentenceWithVocabulary(article) {
   });
 
   return shuffle(candidates)[0] || null;
+}
+
+function hasClozeTask(article) {
+  const vocabulary = getPracticeVocabulary(article).filter(item => getSentenceWords(item.de).length === 1);
+  return vocabulary.length >= 4 && Boolean(findSentenceWithVocabulary(article));
+}
+
+function hasMistakeTask(article) {
+  const candidate = findSentenceWithVocabulary(article);
+  const vocabulary = getPracticeVocabulary(article)
+    .filter(item => getSentenceWords(item.de).length === 1 && item.de !== candidate?.item.de);
+  return Boolean(candidate && vocabulary.length);
 }
 
 function startClozeGame() {
@@ -821,6 +1005,7 @@ function answerClozeGame(answer) {
   const isCorrect = answer === game.answer;
   $("clozeFeedback").textContent = isCorrect ? "Správne." : `Správne je: ${game.answer}`;
   logPractice("cloze-word", { correct: isCorrect, answer, expected: game.answer });
+  if (isCorrect) markTaskCompleted("cloze-word");
 }
 
 function startMistakeGame() {
@@ -863,6 +1048,7 @@ function answerMistakeGame(answer) {
     ? `Správne. Vo vete má byť: ${game.correctWord}`
     : `Chybné slovo je: ${game.wrongWord}. Vo vete má byť: ${game.correctWord}`;
   logPractice("find-mistake", { correct: isCorrect, answer, expected: game.wrongWord });
+  if (isCorrect) markTaskCompleted("find-mistake");
 }
 
 function createWordSearchGrid(words) {
@@ -873,7 +1059,8 @@ function createWordSearchGrid(words) {
     [-1, 0], [0, -1], [-1, -1], [1, -1]
   ];
 
-  const placeWord = (word) => {
+  const placeWord = (item) => {
+    const word = item.search;
     for (let attempt = 0; attempt < 120; attempt += 1) {
       const [dx, dy] = shuffle(directions)[0];
       const x = Math.floor(Math.random() * size);
@@ -892,12 +1079,16 @@ function createWordSearchGrid(words) {
       for (let index = 0; index < word.length; index += 1) {
         grid[y + dy * index][x + dx * index] = word[index];
       }
+      item.cells = Array.from({ length: word.length }, (_, index) => ({
+        row: y + dy * index,
+        col: x + dx * index
+      }));
       return true;
     }
     return false;
   };
 
-  const placed = words.filter(item => placeWord(item.search));
+  const placed = words.filter(item => placeWord(item));
   const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
   for (let row = 0; row < size; row += 1) {
     for (let col = 0; col < size; col += 1) {
@@ -958,6 +1149,7 @@ function chooseWordSearchLetter(row, col) {
     ];
     game.selected = [];
     logPractice("word-search", { word: foundWord.de });
+    if (game.found.length === game.words.length) markTaskCompleted("word-search");
   } else if (!game.words.some(item => item.search.startsWith(selectedWord))) {
     setTimeout(() => {
       game.selected = [];
@@ -1009,6 +1201,7 @@ function openArticle(id) {
   renderArticleText(article);
   renderVocabulary();
   renderQuestions(article);
+  renderArticleTaskProgress();
   startSentenceGame();
   startMatchGame();
   startVocabChoiceGame();
@@ -1165,6 +1358,7 @@ function logout() {
 async function showTeacherOverview() {
   if (!state.currentProfile || state.currentProfile.role !== "teacher") return;
   await renderTeacherOverview();
+  renderArticleEditorList();
   showView("teacherView");
 }
 
@@ -1205,6 +1399,104 @@ function formatDateTime(value) {
   });
 }
 
+function linesToList(value) {
+  return value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+}
+
+function parseVocabularyLines(value) {
+  return linesToList(value).map(line => {
+    const [de, ...rest] = line.split("=");
+    return {
+      de: (de || "").trim(),
+      sk: rest.join("=").trim()
+    };
+  }).filter(item => item.de && item.sk);
+}
+
+function formatVocabularyLines(items = []) {
+  return items.map(item => `${item.de} = ${item.sk}`).join("\n");
+}
+
+function parseQuestionLines(value) {
+  return linesToList(value).map(line => {
+    const [statement, ...rest] = line.split("=");
+    const answerValue = rest.join("=").trim().toLocaleLowerCase("sk");
+    return {
+      statement: (statement || "").trim(),
+      answer: ["true", "pravda", "p", "1", "ano", "áno"].includes(answerValue)
+    };
+  }).filter(item => item.statement);
+}
+
+function formatQuestionLines(items = []) {
+  return items.map(item => `${item.statement || item} = ${item.answer ? "true" : "false"}`).join("\n");
+}
+
+function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
+  const select = $("articleEditorSelect");
+  if (!select) return;
+
+  select.innerHTML = [
+    '<option value="">-- nový článok --</option>',
+    ...state.articles.map(article => `<option value="${escapeHtml(article.id)}">${escapeHtml(article.title)}</option>`)
+  ].join("");
+  select.value = selectedId && state.articles.some(article => article.id === selectedId) ? selectedId : "";
+
+  const article = state.articles.find(item => item.id === select.value);
+  fillArticleEditor(article || null);
+}
+
+function fillArticleEditor(article) {
+  $("articleTitleInput").value = article?.title || "";
+  $("articleIdInput").value = article?.id || "";
+  $("articleLevelInput").value = article?.level || "A2-B1";
+  $("articleCategoryInput").value = article?.category || "";
+  $("articleSummaryInput").value = article?.summary || "";
+  $("articleTextInput").value = (article?.text || []).join("\n");
+  $("articleVocabularyInput").value = formatVocabularyLines(article?.vocabulary || []);
+  $("articleInlineVocabularyInput").value = formatVocabularyLines(getInlineVocabulary(article || {}));
+  $("articleQuestionsInput").value = formatQuestionLines(article?.questions || []);
+  $("articleEditorStatus").textContent = state.remoteReady
+    ? ""
+    : "Editor vie ukladať až po zapnutí Supabase.";
+}
+
+function readArticleEditor() {
+  const title = $("articleTitleInput").value.trim();
+  const id = ($("articleIdInput").value.trim() || makeArticleId(title));
+  const article = {
+    id,
+    title,
+    level: $("articleLevelInput").value.trim(),
+    category: $("articleCategoryInput").value.trim(),
+    summary: $("articleSummaryInput").value.trim(),
+    text: linesToList($("articleTextInput").value),
+    vocabulary: parseVocabularyLines($("articleVocabularyInput").value),
+    inlineVocabulary: parseVocabularyLines($("articleInlineVocabularyInput").value),
+    questions: parseQuestionLines($("articleQuestionsInput").value)
+  };
+
+  if (!article.title || !article.id || !article.level || !article.category || !article.summary || !article.text.length) {
+    throw new Error("Vyplň názov, ID, úroveň, kategóriu, popis a aspoň jeden odsek textu.");
+  }
+
+  if (!article.questions.length) {
+    throw new Error("Pridaj aspoň jednu pravda/nepravda vetu.");
+  }
+
+  return article;
+}
+
+async function saveArticleFromEditor() {
+  try {
+    const article = readArticleEditor();
+    await saveArticle(article);
+    $("articleEditorStatus").textContent = "Článok je uložený.";
+  } catch (error) {
+    $("articleEditorStatus").textContent = error.message;
+  }
+}
+
 async function renderTeacherOverview() {
   const students = state.profiles.filter(profile => profile.role === "student");
   const root = $("teacherOverview");
@@ -1214,6 +1506,18 @@ async function renderTeacherOverview() {
       .map(id => state.articles.find(article => article.id === id)?.title || id);
     const clickedCount = Object.values(data.discoveredVocabulary || {}).reduce((sum, items) => sum + items.length, 0);
     const practiceLog = data.practiceLog || [];
+    const articleProgress = state.articles.map(article => {
+      const progress = getArticleTaskProgress(article, data);
+      return { article, ...progress };
+    });
+    const totalTasks = articleProgress.reduce((sum, item) => sum + item.total, 0);
+    const doneTasks = articleProgress.reduce((sum, item) => sum + item.done, 0);
+    const progressCards = articleProgress.map(item => `
+      <li>
+        <strong>${escapeHtml(item.article.title)}</strong>
+        <span class="muted"> &bull; ${item.done}/${item.total}</span>
+      </li>
+    `).join("");
     const practiceCards = practiceLog.slice(0, 8).map(entry => `
       <li>
         <strong>${escapeHtml(formatPracticeType(entry.type))}</strong>
@@ -1240,9 +1544,13 @@ async function renderTeacherOverview() {
     return `
       <section class="overview-section">
         <h3>${escapeHtml(student.name)}</h3>
-        <p class="muted">Prečítané texty: ${readArticles.length} • Kliknuté slovíčka/frázy: ${clickedCount} • Cvičenia: ${practiceLog.length}</p>
+        <p class="muted">Prečítané texty: ${readArticles.length} • Kliknuté slovíčka/frázy: ${clickedCount} • Cvičenia: ${practiceLog.length} • Splnené úlohy: ${doneTasks}/${totalTasks}</p>
         <ul class="overview-list">
           ${readArticles.length ? readArticles.map(title => `<li>${escapeHtml(title)}</li>`).join("") : "<li>Zatiaľ nič prečítané.</li>"}
+        </ul>
+        <h3>Progres úloh</h3>
+        <ul class="overview-list">
+          ${progressCards}
         </ul>
         <h3>Cvičenia</h3>
         <ul class="overview-list">
@@ -1265,9 +1573,12 @@ function saveTrueFalseAnswer(index, answer) {
     ...getArticleAnswers(article.id),
     [index]: answer
   };
+  const question = article.questions[Number(index)];
+  if (answer === Boolean(question.answer)) {
+    markTaskCompleted(getQuestionTaskId(index));
+  }
   saveProfileData();
   renderQuestions(article);
-  const question = article.questions[Number(index)];
   logPractice("true-false", {
     correct: answer === Boolean(question.answer),
     answer,
@@ -1464,6 +1775,20 @@ $("newWordSearchBtn").onclick = startWordSearchGame;
 $("skipStartupQuizBtn").onclick = closeStartupQuiz;
 $("nextStartupQuizBtn").onclick = nextStartupQuizQuestion;
 $("testNotificationBtn").onclick = showTestNotification;
+$("newArticleBtn").onclick = () => {
+  $("articleEditorSelect").value = "";
+  fillArticleEditor(null);
+};
+$("saveArticleBtn").onclick = saveArticleFromEditor;
+$("articleEditorSelect").onchange = () => {
+  const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
+  fillArticleEditor(article || null);
+};
+$("articleTitleInput").addEventListener("input", () => {
+  if (!$("articleEditorSelect").value) {
+    $("articleIdInput").value = makeArticleId($("articleTitleInput").value);
+  }
+});
 
 $("loginPinInput").addEventListener("keydown", event => {
   if (event.key === "Enter") login();
