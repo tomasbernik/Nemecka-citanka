@@ -1,5 +1,100 @@
 [
   {
+    "id": "paris-ein-tag",
+    "title": "Ein Tag in Paris",
+    "level": "B1",
+    "category": "Cestovanie",
+    "minutes": 10,
+    "summary": "Tomas und Kristina verbringen einen schönen Tag als Touristen in Paris und entdecken viele bekannte Orte.",
+    "text": [
+      "Tomas und seine Frau Kristina haben einen schönen Tag in Paris verbracht. Sie waren als Touristen in der Stadt und wollten so viel wie möglich sehen, aber trotzdem alles ruhig genießen.",
+      "Am Morgen sind sie früh aufgestanden und haben zuerst einen Spaziergang durch die Stadt gemacht. Die Straßen waren schon lebendig, und überall waren Cafés und kleine Geschäfte geöffnet.",
+      "Danach haben sie eine Bootsfahrt auf der Seine gemacht. Vom Wasser aus konnten sie viele bekannte Gebäude sehen, und es war eine entspannte Art, die Stadt zu entdecken.",
+      "Später sind sie zur Notre-Dame gegangen. Sie wollten die Kathedrale besichtigen, aber leider war sie geschlossen. Trotzdem haben sie sie von außen bewundert und ein paar Fotos gemacht.",
+      "Danach haben sie ein botanisches Museum besucht. Dort haben sie viele interessante Pflanzen gesehen. Es war ruhig und angenehm, und sie konnten sich ein bisschen ausruhen.",
+      "Zu Mittag haben sie sich eine belegte Baguette gekauft. Sie haben sich auf eine Bank gesetzt und dort gegessen. Das Essen war einfach, aber sehr lecker.",
+      "Am Nachmittag sind sie zum Eiffelturm gegangen. Sie sind nicht nach oben gefahren, sondern haben ihn nur von unten angeschaut. Der Turm war sehr beeindruckend, und sie haben viele Fotos gemacht.",
+      "In der Nähe vom Eiffelturm haben sie in einem kleinen Café gesessen und Kaffee getrunken. Es war sehr gemütlich, und sie haben die Atmosphäre genossen.",
+      "Später haben sie auch elektrische Roller ausprobiert. Die Roller waren sehr schnell, und es hat ihnen Spaß gemacht, durch die Straßen zu fahren. Es war aber auch ein bisschen stressig wegen dem Verkehr.",
+      "Am Abend sind sie in eine Bar mit Terrasse gegangen. Dort haben sie Wein getrunken und den Tag ruhig beendet. Sie haben über ihre Erlebnisse gesprochen und waren sehr zufrieden mit ihrem Tag.",
+      "Es war ein schöner Tag in Paris, den sie sicher nicht vergessen werden."
+    ],
+    "vocabulary": [
+      {
+        "de": "genießen",
+        "sk": "užívať si"
+      },
+      {
+        "de": "entspannt",
+        "sk": "uvoľnený"
+      },
+      {
+        "de": "gestresst",
+        "sk": "stresovaný"
+      },
+      {
+        "de": "angenehm",
+        "sk": "príjemný"
+      },
+      {
+        "de": "sich ausruhen",
+        "sk": "oddýchnuť si"
+      },
+      {
+        "de": "entdecken",
+        "sk": "objavovať"
+      },
+      {
+        "de": "gemütlich",
+        "sk": "útulný"
+      },
+      {
+        "de": "der Verkehr",
+        "sk": "doprava"
+      },
+      {
+        "de": "besichtigen",
+        "sk": "navštíviť (pamiatku)"
+      },
+      {
+        "de": "die Bank",
+        "sk": "lavička"
+      }
+    ],
+    "inlineVocabulary": [
+      { "de": "ruhig", "sk": "pokojný" },
+      { "de": "genießen", "sk": "užívať si" },
+      { "de": "aufgestanden", "sk": "vstal" },
+      { "de": "Spaziergang", "sk": "prechádzka" },
+      { "de": "lebendig", "sk": "živý" },
+      { "de": "überall", "sk": "všade" },
+      { "de": "Geschäfte", "sk": "obchody" },
+      { "de": "Bootsfahrt", "sk": "plavba loďou" },
+      { "de": "entspannte", "sk": "uvoľnená" },
+      { "de": "entdecken", "sk": "objavovať" },
+      { "de": "besichtigen", "sk": "navštíviť (pamiatku)" },
+      { "de": "bewundert", "sk": "obdivovali" },
+      { "de": "angenehm", "sk": "príjemný" },
+      { "de": "ausruhen", "sk": "oddýchnuť si" },
+      { "de": "belegte Baguette", "sk": "obložená bageta" },
+      { "de": "Sie haben sich auf eine Bank gesetzt", "sk": "sadli si na lavičku" },
+      { "de": "Eiffelturm", "sk": "Eiffelova veža" },
+      { "de": "beeindruckend", "sk": "pôsobivý" },
+      { "de": "gemütlich", "sk": "útulný" },
+      { "de": "sie haben die Atmosphäre genossen", "sk": "užívali si atmosféru" },
+      { "de": "Später haben sie auch elektrische Roller ausprobiert", "sk": "neskôr si vyskúšali elektrické kolobežky" },
+      { "de": "Verkehr", "sk": "doprava" },
+      { "de": "Erlebnisse", "sk": "zážitky" }
+    ],
+    "questions": [
+      "Was haben Tomas und Kristina am Morgen gemacht?",
+      "Warum konnten sie die Notre-Dame nicht besuchen?",
+      "Was haben sie zu Mittag gegessen?",
+      "Was haben sie am Nachmittag beim Eiffelturm gemacht?",
+      "Wie haben sie den Abend verbracht?"
+    ]
+  },
+  {
     "id": "garten-nachmittag-kika",
     "title": "Ein Nachmittag im Garten",
     "level": "A2-B1",
