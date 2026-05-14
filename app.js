@@ -271,6 +271,10 @@ function getPracticeVocabulary(article) {
       const key = item.de.toLocaleLowerCase("de");
       if (seen.has(key)) return false;
       seen.add(key);
+      item.cells = Array.from({ length: word.length }, (_, index) => ({
+        row: y + dy * index,
+        col: x + dx * index
+      }));
       return true;
     });
 }
@@ -915,7 +919,7 @@ function startWordSearchGame() {
   }
 
   const { grid, placed } = createWordSearchGrid(vocabulary);
-  state.wordSearchGame = { words: placed, found: [], selected: [], grid };
+  state.wordSearchGame = { words: placed, found: [], selected: [], foundCells: [], grid };
   renderWordSearchGame();
 }
 
@@ -928,7 +932,8 @@ function renderWordSearchGame() {
     row.map((letter, colIndex) => {
       const key = `${rowIndex}-${colIndex}`;
       const selected = game.selected.some(item => item.key === key);
-      return `<button class="letter-cell ${selected ? "selected" : ""}" type="button" data-row="${rowIndex}" data-col="${colIndex}">${letter}</button>`;
+      const found = game.foundCells?.includes(key);
+      return `<button class="letter-cell ${selected ? "selected" : ""} ${found ? "found" : ""}" type="button" data-row="${rowIndex}" data-col="${colIndex}">${letter}</button>`;
     })
   ).join("");
   $("wordSearchFeedback").textContent = game.found.length === game.words.length && game.words.length
@@ -947,6 +952,10 @@ function chooseWordSearchLetter(row, col) {
 
   if (foundWord) {
     game.found.push(foundWord.search);
+    game.foundCells = [
+      ...(game.foundCells || []),
+      ...foundWord.cells.map(cell => `${cell.row}-${cell.col}`)
+    ];
     game.selected = [];
     logPractice("word-search", { word: foundWord.de });
   } else if (!game.words.some(item => item.search.startsWith(selectedWord))) {

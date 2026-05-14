@@ -526,6 +526,16 @@ h3 { font-size: 1.1rem; }
   color: #241a10;
 }
 
+.letter-cell.found {
+  border-color: rgba(62, 139, 91, 0.6);
+  background: rgba(62, 139, 91, 0.2);
+  color: var(--text);
+}
+
+.letter-cell.found.selected {
+  background: var(--accent);
+}
+
 .field-row {
   display: grid;
   gap: 8px;
