@@ -368,7 +368,26 @@ function getGermanVoice() {
     || null;
 }
 
+function loadSpeechVoices() {
+  if (!("speechSynthesis" in window) || window.speechSynthesis.getVoices().length) {
+    return Promise.resolve();
+  }
+
+  return new Promise(resolve => {
+    const timeout = setTimeout(resolve, 350);
+    window.speechSynthesis.onvoiceschanged = () => {
+      clearTimeout(timeout);
+      resolve();
+    };
+  });
+}
+
 function stopReading() {
+  if (state.speech.utterance) {
+    state.speech.utterance.onend = null;
+    state.speech.utterance.onerror = null;
+  }
+
   if ("speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }
@@ -403,16 +422,23 @@ function finishReading(message = "Dočítané.") {
   }
 }
 
-function readSentence(index = 0, mode = "text") {
+async function readSentence(index = 0, mode = "text") {
   if (!("speechSynthesis" in window)) {
     setSpeechStatus("Tento prehliadač nepodporuje čítanie nahlas.");
     return;
   }
 
+  await loadSpeechVoices();
+
   const sentences = getArticleSentences(state.currentArticle);
   if (!sentences.length || index >= sentences.length) {
     finishReading();
     return;
+  }
+
+  if (state.speech.utterance) {
+    state.speech.utterance.onend = null;
+    state.speech.utterance.onerror = null;
   }
 
   window.speechSynthesis.cancel();
@@ -433,7 +459,10 @@ function readSentence(index = 0, mode = "text") {
   utterance.onend = () => {
     if (state.speech.isReading && state.speech.utterance === utterance) readSentence(index + 1, state.speech.mode);
   };
-  utterance.onerror = () => {
+  utterance.onerror = (event) => {
+    if (state.speech.utterance !== utterance) return;
+    if (event.error === "interrupted" || event.error === "canceled") return;
+
     state.speech.isReading = false;
     setSpeechStatus("Čítanie sa nepodarilo spustiť.");
   };
@@ -449,6 +478,20 @@ function readSentence(index = 0, mode = "text") {
 
 function listenWithoutText() {
   readSentence(0, "audioOnly");
+}
+
+function forceStopSpeech() {
+  if (state.speech.utterance) {
+    state.speech.utterance.onend = null;
+    state.speech.utterance.onerror = null;
+  }
+
+  state.speech.isReading = false;
+  state.speech.utterance = null;
+
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
 }
 
 function togglePauseReading() {
@@ -1020,6 +1063,12 @@ $("darkModeToggle").onchange = (e) => {
   localStorage.setItem("darkMode", e.target.checked);
   loadSettings();
 };
+
+window.addEventListener("pagehide", forceStopSpeech);
+window.addEventListener("beforeunload", forceStopSpeech);
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) forceStopSpeech();
+});
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
