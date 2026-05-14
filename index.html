@@ -96,6 +96,7 @@
           <div class="listen-panel" aria-label="Čítanie článku nahlas">
             <div class="listen-actions">
               <button id="readAloudBtn" class="secondary-btn" type="button">Prečítať text</button>
+              <button id="listenOnlyBtn" class="secondary-btn quiet" type="button">Počúvať bez textu</button>
               <button id="pauseReadBtn" class="text-btn" type="button">Pauza</button>
               <button id="stopReadBtn" class="text-btn" type="button">Stop</button>
             </div>
@@ -108,6 +109,7 @@
               </select>
             </label>
             <p id="speechStatus" class="muted listen-status"></p>
+            <button id="showTextAfterListeningBtn" class="primary-btn compact hidden" type="button">Ukázať text</button>
           </div>
           <div id="articleText" class="article-text"></div>
 
@@ -178,6 +180,20 @@
         </div>
       </section>
     </main>
+
+    <div id="startupQuiz" class="quiz-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="startupQuizTitle">
+      <div class="quiz-card">
+        <p class="eyebrow">Krátke rozcvičenie</p>
+        <h2 id="startupQuizTitle">Jedno slovíčko na zahriatie</h2>
+        <p id="startupQuizPrompt" class="quiz-prompt"></p>
+        <div id="startupQuizOptions" class="quiz-options"></div>
+        <p id="startupQuizFeedback" class="practice-feedback"></p>
+        <div class="quiz-actions">
+          <button id="skipStartupQuizBtn" class="text-btn" type="button">Preskočiť</button>
+          <button id="nextStartupQuizBtn" class="primary-btn compact hidden" type="button">Ďalej</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="config.js"></script>

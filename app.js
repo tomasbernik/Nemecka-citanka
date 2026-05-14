@@ -2,6 +2,7 @@ const PROFILE_KEY = "profiles";
 const CURRENT_PROFILE_KEY = "currentProfileId";
 const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
+const AUTO_READ_DELAY_MS = 2 * 60 * 1000;
 
 const state = {
   articles: [],
@@ -13,7 +14,15 @@ const state = {
   speech: {
     sentenceIndex: 0,
     isReading: false,
-    utterance: null
+    utterance: null,
+    mode: "text"
+  },
+  articleReadTimer: null,
+  startupQuiz: {
+    questions: [],
+    index: 0,
+    answered: false,
+    shown: false
   },
   sentenceGame: {
     solution: [],
@@ -225,6 +234,20 @@ function getVisibleVocabulary(article) {
   });
 }
 
+function getAllVocabulary() {
+  const seen = new Set();
+  return state.articles.flatMap(article => [
+    ...(article.vocabulary || []),
+    ...getInlineVocabulary(article)
+  ]).filter(item => {
+    if (!item.de || !item.sk) return false;
+    const key = `${item.de.toLocaleLowerCase("de")}|${item.sk.toLocaleLowerCase("sk")}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 async function saveProfileData() {
   if (!state.currentProfile) return;
 
@@ -313,6 +336,17 @@ function setSpeechStatus(message = "") {
   $("speechStatus").textContent = message;
 }
 
+function setAudioOnlyMode(isAudioOnly) {
+  $("articleView").classList.toggle("audio-only", isAudioOnly);
+  $("showTextAfterListeningBtn").classList.add("hidden");
+}
+
+function showArticleText() {
+  $("articleView").classList.remove("audio-only");
+  $("showTextAfterListeningBtn").classList.add("hidden");
+  setSpeechStatus("");
+}
+
 function clearReadingHighlight() {
   document.querySelectorAll(".reading-sentence.active").forEach(sentence => {
     sentence.classList.remove("active");
@@ -342,15 +376,34 @@ function stopReading() {
   state.speech = {
     sentenceIndex: 0,
     isReading: false,
-    utterance: null
+    utterance: null,
+    mode: "text"
   };
   $("readAloudBtn").textContent = "Prečítať text";
   $("pauseReadBtn").textContent = "Pauza";
+  $("listenOnlyBtn").textContent = "Počúvať bez textu";
   clearReadingHighlight();
+  showArticleText();
   setSpeechStatus("");
 }
 
-function readSentence(index = 0) {
+function finishReading(message = "Dočítané.") {
+  const mode = state.speech.mode;
+  state.speech.isReading = false;
+  state.speech.utterance = null;
+  state.speech.sentenceIndex = 0;
+  $("readAloudBtn").textContent = "Prečítať text";
+  $("pauseReadBtn").textContent = "Pauza";
+  $("listenOnlyBtn").textContent = "Počúvať bez textu";
+  clearReadingHighlight();
+  setSpeechStatus(message);
+
+  if (mode === "audioOnly") {
+    $("showTextAfterListeningBtn").classList.remove("hidden");
+  }
+}
+
+function readSentence(index = 0, mode = "text") {
   if (!("speechSynthesis" in window)) {
     setSpeechStatus("Tento prehliadač nepodporuje čítanie nahlas.");
     return;
@@ -358,22 +411,27 @@ function readSentence(index = 0) {
 
   const sentences = getArticleSentences(state.currentArticle);
   if (!sentences.length || index >= sentences.length) {
-    stopReading();
-    setSpeechStatus("Dočítané.");
+    finishReading();
     return;
   }
 
   window.speechSynthesis.cancel();
   state.speech.sentenceIndex = index;
   state.speech.isReading = true;
-  highlightSentence(index);
+  state.speech.mode = mode;
+  if (mode === "audioOnly") {
+    setAudioOnlyMode(true);
+  } else {
+    setAudioOnlyMode(false);
+    highlightSentence(index);
+  }
 
   const utterance = new SpeechSynthesisUtterance(sentences[index]);
   utterance.lang = "de-DE";
   utterance.rate = Number($("speechRateSelect").value || 1);
   utterance.voice = getGermanVoice();
   utterance.onend = () => {
-    if (state.speech.isReading && state.speech.utterance === utterance) readSentence(index + 1);
+    if (state.speech.isReading && state.speech.utterance === utterance) readSentence(index + 1, state.speech.mode);
   };
   utterance.onerror = () => {
     state.speech.isReading = false;
@@ -382,8 +440,15 @@ function readSentence(index = 0) {
 
   state.speech.utterance = utterance;
   $("readAloudBtn").textContent = "Od začiatku";
-  setSpeechStatus(`Čítam vetu ${index + 1} z ${sentences.length}.`);
+  $("listenOnlyBtn").textContent = mode === "audioOnly" ? "Počúvam..." : "Počúvať bez textu";
+  setSpeechStatus(mode === "audioOnly"
+    ? `Počúvaj vetu ${index + 1} z ${sentences.length}.`
+    : `Čítam vetu ${index + 1} z ${sentences.length}.`);
   window.speechSynthesis.speak(utterance);
+}
+
+function listenWithoutText() {
+  readSentence(0, "audioOnly");
 }
 
 function togglePauseReading() {
@@ -513,10 +578,39 @@ function chooseMatchCard(id) {
   }
 }
 
+function markCurrentArticleRead(source = "manual") {
+  const article = state.currentArticle;
+  if (!article || state.profileData.readIds.includes(article.id)) return;
+
+  state.profileData.readIds.push(article.id);
+  saveProfileData();
+  $("markReadBtn").textContent = source === "auto"
+    ? "Označené ako prečítané"
+    : "Prečítané ✓";
+}
+
+function clearArticleReadTimer() {
+  if (!state.articleReadTimer) return;
+  clearTimeout(state.articleReadTimer);
+  state.articleReadTimer = null;
+}
+
+function startArticleReadTimer() {
+  clearArticleReadTimer();
+  const article = state.currentArticle;
+  if (!article || state.profileData.readIds.includes(article.id)) return;
+
+  state.articleReadTimer = setTimeout(() => {
+    if (state.currentArticle?.id !== article.id || $("articleView").classList.contains("hidden")) return;
+    markCurrentArticleRead("auto");
+  }, AUTO_READ_DELAY_MS);
+}
+
 function openArticle(id) {
   const article = state.articles.find(a => a.id === id);
   if (!article) return;
 
+  clearArticleReadTimer();
   stopReading();
   state.currentArticle = article;
   showView("articleView");
@@ -532,6 +626,7 @@ function openArticle(id) {
   $("markReadBtn").textContent = state.profileData.readIds.includes(article.id)
     ? "Prečítané ✓"
     : "Označiť ako prečítané";
+  startArticleReadTimer();
 }
 
 function addDiscoveredVocabulary(word, translation) {
@@ -564,6 +659,7 @@ function showInlineTranslation(button) {
 }
 
 function showHome() {
+  clearArticleReadTimer();
   stopReading();
   state.currentArticle = null;
   showView("homeView");
@@ -610,9 +706,11 @@ async function setCurrentProfile(profile) {
   $("settingsBtn").classList.remove("hidden");
   $("teacherBtn").classList.toggle("hidden", profile.role !== "teacher");
   showHome();
+  showStartupQuiz();
 }
 
 function showLogin() {
+  clearArticleReadTimer();
   stopReading();
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
@@ -660,6 +758,7 @@ async function createProfiles() {
 }
 
 function logout() {
+  clearArticleReadTimer();
   stopReading();
   state.currentProfile = null;
   state.profileData = emptyProfileData();
@@ -740,6 +839,98 @@ function saveAnswer(input) {
   saveProfileData();
 }
 
+function buildStartupQuizQuestions() {
+  const vocabulary = getAllVocabulary();
+  if (vocabulary.length < 4) return [];
+
+  const makeQuestion = (direction) => {
+    const correct = shuffle(vocabulary)[0];
+    const optionKey = direction === "de-sk" ? "sk" : "de";
+    const promptKey = direction === "de-sk" ? "de" : "sk";
+    const wrongOptions = shuffle(vocabulary.filter(item => item[optionKey] !== correct[optionKey]))
+      .slice(0, 3)
+      .map(item => item[optionKey]);
+
+    return {
+      direction,
+      prompt: correct[promptKey],
+      answer: correct[optionKey],
+      options: shuffle([correct[optionKey], ...wrongOptions])
+    };
+  };
+
+  return [makeQuestion("de-sk"), makeQuestion("sk-de")];
+}
+
+function renderStartupQuiz() {
+  const quiz = state.startupQuiz;
+  const question = quiz.questions[quiz.index];
+  if (!question) {
+    closeStartupQuiz();
+    return;
+  }
+
+  quiz.answered = false;
+  $("startupQuizTitle").textContent = quiz.index === 0
+    ? "Čo znamená toto nemecké slovíčko?"
+    : "Ako sa to povie po nemecky?";
+  $("startupQuizPrompt").textContent = question.prompt;
+  $("startupQuizFeedback").textContent = "";
+  $("nextStartupQuizBtn").classList.add("hidden");
+  $("startupQuizOptions").innerHTML = question.options
+    .map(option => `<button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
+    .join("");
+  $("startupQuiz").classList.remove("hidden");
+}
+
+function showStartupQuiz() {
+  if (state.startupQuiz.shown || !state.currentProfile || !state.articles.length) return;
+  const questions = buildStartupQuizQuestions();
+  if (!questions.length) return;
+
+  state.startupQuiz = {
+    questions,
+    index: 0,
+    answered: false,
+    shown: true
+  };
+  renderStartupQuiz();
+}
+
+function closeStartupQuiz() {
+  $("startupQuiz").classList.add("hidden");
+}
+
+function answerStartupQuiz(answer) {
+  const quiz = state.startupQuiz;
+  const question = quiz.questions[quiz.index];
+  if (!question || quiz.answered) return;
+
+  quiz.answered = true;
+  document.querySelectorAll(".quiz-option").forEach(button => {
+    const isCorrect = button.dataset.answer === question.answer;
+    const isChosen = button.dataset.answer === answer;
+    button.classList.toggle("correct", isCorrect);
+    button.classList.toggle("wrong", isChosen && !isCorrect);
+    button.disabled = true;
+  });
+
+  $("startupQuizFeedback").textContent = answer === question.answer
+    ? "Správne."
+    : `Správne je: ${question.answer}`;
+  $("nextStartupQuizBtn").textContent = quiz.index + 1 >= quiz.questions.length ? "Hotovo" : "Ďalej";
+  $("nextStartupQuizBtn").classList.remove("hidden");
+}
+
+function nextStartupQuizQuestion() {
+  state.startupQuiz.index += 1;
+  if (state.startupQuiz.index >= state.startupQuiz.questions.length) {
+    closeStartupQuiz();
+    return;
+  }
+  renderStartupQuiz();
+}
+
 function loadSettings() {
   const fontSize = localStorage.getItem("fontSize") || "normal";
   const dark = localStorage.getItem("darkMode") === "true";
@@ -762,21 +953,21 @@ $("loginBtn").onclick = login;
 $("createProfilesBtn").onclick = createProfiles;
 $("logoutBtn").onclick = logout;
 $("readAloudBtn").onclick = () => readSentence(0);
+$("listenOnlyBtn").onclick = listenWithoutText;
 $("pauseReadBtn").onclick = togglePauseReading;
 $("stopReadBtn").onclick = stopReading;
+$("showTextAfterListeningBtn").onclick = showArticleText;
 $("newSentenceGameBtn").onclick = startSentenceGame;
 $("newMatchGameBtn").onclick = startMatchGame;
+$("skipStartupQuizBtn").onclick = closeStartupQuiz;
+$("nextStartupQuizBtn").onclick = nextStartupQuizQuestion;
 
 $("loginPinInput").addEventListener("keydown", event => {
   if (event.key === "Enter") login();
 });
 
 $("markReadBtn").onclick = () => {
-  const article = state.currentArticle;
-  if (!article || state.profileData.readIds.includes(article.id)) return;
-  state.profileData.readIds.push(article.id);
-  saveProfileData();
-  $("markReadBtn").textContent = "Prečítané ✓";
+  markCurrentArticleRead("manual");
 };
 
 $("articleText").onclick = (event) => {
@@ -811,8 +1002,14 @@ $("matchGameBoard").addEventListener("click", event => {
 
 $("speechRateSelect").onchange = () => {
   if (!state.speech.isReading) return;
-  readSentence(state.speech.sentenceIndex);
+  readSentence(state.speech.sentenceIndex, state.speech.mode);
 };
+
+$("startupQuizOptions").addEventListener("click", event => {
+  const button = event.target.closest(".quiz-option");
+  if (!button) return;
+  answerStartupQuiz(button.dataset.answer);
+});
 
 $("fontSizeSelect").onchange = (e) => {
   localStorage.setItem("fontSize", e.target.value);
