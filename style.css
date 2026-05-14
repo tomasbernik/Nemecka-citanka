@@ -593,6 +593,15 @@ h3 { font-size: 1.1rem; }
   border-top: 1px solid var(--border);
 }
 
+.setting-row.stacked {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.setting-note {
+  margin: 6px 0 0;
+}
+
 select {
   font: inherit;
   padding: 8px 10px;

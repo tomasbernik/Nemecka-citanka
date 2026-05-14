@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "nemecka-citanka-v4";
+const CACHE_NAME = "nemecka-citanka-v5";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -37,5 +37,39 @@ self.addEventListener("fetch", event => {
         return response;
       })
       .catch(() => caches.match(event.request))
+  );
+});
+
+self.addEventListener("notificationclick", event => {
+  event.notification.close();
+
+  const targetUrl = new URL(event.notification.data?.url || "./index.html", self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(clientList => {
+      const existingClient = clientList.find(client => client.url.startsWith(self.location.origin));
+      if (existingClient) {
+        return existingClient.focus();
+      }
+
+      return clients.openWindow(targetUrl);
+    })
+  );
+});
+
+self.addEventListener("push", event => {
+  const data = event.data?.json?.() || {
+    title: "Nemecká čítanka",
+    body: "Dnes stačí pár minút nemčiny.",
+    url: "./index.html"
+  };
+
+  event.waitUntil(
+    self.registration.showNotification(data.title || "Nemecká čítanka", {
+      body: data.body || "Dnes stačí pár minút nemčiny.",
+      icon: "icons/icon-192.png",
+      badge: "icons/icon-192.png",
+      data: { url: data.url || "./index.html" }
+    })
   );
 });

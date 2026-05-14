@@ -60,7 +60,8 @@ function emptyProfileData() {
   return {
     readIds: [],
     discoveredVocabulary: {},
-    answers: {}
+    answers: {},
+    practiceLog: []
   };
 }
 
@@ -269,6 +270,24 @@ async function saveProfileData() {
   } catch (error) {
     console.error(error);
   }
+}
+
+function logPractice(type, details = {}) {
+  if (!state.currentProfile) return;
+
+  const entry = {
+    type,
+    articleId: state.currentArticle?.id || null,
+    articleTitle: state.currentArticle?.title || null,
+    at: new Date().toISOString(),
+    ...details
+  };
+
+  state.profileData.practiceLog = [
+    entry,
+    ...(state.profileData.practiceLog || [])
+  ].slice(0, 80);
+  saveProfileData();
 }
 
 function renderVocabulary() {
@@ -569,9 +588,11 @@ function renderSentenceGame() {
 
   const answer = game.chosen.map(item => item.word).join(" ");
   const solution = game.solution.join(" ");
-  $("sentenceGameFeedback").textContent = answer === solution
+  const isCorrect = answer === solution;
+  $("sentenceGameFeedback").textContent = isCorrect
     ? "Výborne, veta sedí."
     : "Skús prehodiť poradie ešte raz.";
+  logPractice("sentence-order", { correct: isCorrect, answer, solution });
 }
 
 function chooseSentenceWord(id) {
@@ -618,6 +639,7 @@ function renderMatchGame() {
     $("matchGameFeedback").textContent = "Na dvojice treba najprv slovíčka v článku.";
   } else if (game.matchedIds.length === game.cards.length) {
     $("matchGameFeedback").textContent = "Hotovo, všetky dvojice sedia.";
+    logPractice("match-pairs", { pairs: game.cards.length / 2 });
   } else {
     $("matchGameFeedback").textContent = "";
   }
@@ -854,7 +876,26 @@ async function getProfileData(profile) {
     }
   }
 
-  return JSON.parse(localStorage.getItem(profileDataKey(profile.id)) || "null") || emptyProfileData();
+  const localData = JSON.parse(localStorage.getItem(profileDataKey(profile.id)) || "null");
+  return localData ? { ...emptyProfileData(), ...localData } : emptyProfileData();
+}
+
+function formatPracticeType(type) {
+  return {
+    "sentence-order": "Zoraď vetu",
+    "match-pairs": "Nájdi dvojice",
+    "startup-vocabulary": "Úvodné slovíčko"
+  }[type] || type;
+}
+
+function formatDateTime(value) {
+  if (!value) return "";
+  return new Date(value).toLocaleString("sk-SK", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 async function renderTeacherOverview() {
@@ -865,6 +906,15 @@ async function renderTeacherOverview() {
     const readArticles = data.readIds
       .map(id => state.articles.find(article => article.id === id)?.title || id);
     const clickedCount = Object.values(data.discoveredVocabulary || {}).reduce((sum, items) => sum + items.length, 0);
+    const practiceLog = data.practiceLog || [];
+    const practiceCards = practiceLog.slice(0, 8).map(entry => `
+      <li>
+        <strong>${escapeHtml(formatPracticeType(entry.type))}</strong>
+        ${entry.articleTitle ? ` â€¢ ${escapeHtml(entry.articleTitle)}` : ""}
+        ${typeof entry.correct === "boolean" ? ` â€¢ ${entry.correct ? "správne" : "nesprávne"}` : ""}
+        <span class="muted"> â€¢ ${escapeHtml(formatDateTime(entry.at))}</span>
+      </li>
+    `).join("");
     const answerCards = Object.entries(data.answers || {}).flatMap(([articleId, answers]) => {
       const article = state.articles.find(item => item.id === articleId);
       if (!article) return [];
@@ -883,9 +933,13 @@ async function renderTeacherOverview() {
     return `
       <section class="overview-section">
         <h3>${escapeHtml(student.name)}</h3>
-        <p class="muted">Prečítané texty: ${readArticles.length} • Kliknuté slovíčka/frázy: ${clickedCount}</p>
+        <p class="muted">Prečítané texty: ${readArticles.length} • Kliknuté slovíčka/frázy: ${clickedCount} • Cvičenia: ${practiceLog.length}</p>
         <ul class="overview-list">
           ${readArticles.length ? readArticles.map(title => `<li>${escapeHtml(title)}</li>`).join("") : "<li>Zatiaľ nič prečítané.</li>"}
+        </ul>
+        <h3>Cvičenia</h3>
+        <ul class="overview-list">
+          ${practiceCards || "<li>Zatiaľ žiadne cvičenie.</li>"}
         </ul>
         <h3>Odpovede</h3>
         ${answerCards || '<p class="muted">Zatiaľ nie sú uložené odpovede.</p>'}
@@ -987,6 +1041,13 @@ function answerStartupQuiz(answer) {
   $("startupQuizFeedback").textContent = answer === question.answer
     ? "Správne."
     : `Správne je: ${question.answer}`;
+  logPractice("startup-vocabulary", {
+    correct: answer === question.answer,
+    direction: question.direction,
+    prompt: question.prompt,
+    answer,
+    expected: question.answer
+  });
   $("nextStartupQuizBtn").textContent = quiz.index + 1 >= quiz.questions.length ? "Hotovo" : "Ďalej";
   $("nextStartupQuizBtn").classList.remove("hidden");
 }
@@ -1010,6 +1071,61 @@ function loadSettings() {
   document.body.classList.toggle("font-large", fontSize === "large");
   document.body.classList.toggle("font-xlarge", fontSize === "xlarge");
   document.body.classList.toggle("dark", dark);
+  updateNotificationStatus();
+}
+
+function updateNotificationStatus(message = "") {
+  if (!("Notification" in window)) {
+    $("notificationStatus").textContent = "Tento prehliadač nepodporuje notifikácie.";
+    return;
+  }
+
+  if (message) {
+    $("notificationStatus").textContent = message;
+    return;
+  }
+
+  const labels = {
+    default: "Notifikácie ešte nie sú povolené.",
+    granted: "Notifikácie sú povolené pre toto zariadenie.",
+    denied: "Notifikácie sú zablokované v prehliadači."
+  };
+  $("notificationStatus").textContent = labels[Notification.permission] || "";
+}
+
+async function showTestNotification() {
+  if (!("Notification" in window)) {
+    updateNotificationStatus();
+    return;
+  }
+
+  let permission = Notification.permission;
+  if (permission === "default") {
+    permission = await Notification.requestPermission();
+  }
+
+  if (permission !== "granted") {
+    updateNotificationStatus("Notifikácie nie sú povolené.");
+    return;
+  }
+
+  const registration = await navigator.serviceWorker?.ready;
+  if (!registration?.showNotification) {
+    new Notification("Nemecká čítanka", {
+      body: "Skúšobná pripomienka funguje.",
+      icon: "icons/icon-192.png"
+    });
+    updateNotificationStatus("Skúšobná notifikácia odoslaná.");
+    return;
+  }
+
+  await registration.showNotification("Nemecká čítanka", {
+    body: "Dnes stačí pár minút nemčiny.",
+    icon: "icons/icon-192.png",
+    badge: "icons/icon-192.png",
+    data: { url: "./index.html" }
+  });
+  updateNotificationStatus("Skúšobná notifikácia odoslaná.");
 }
 
 $("backBtn").onclick = showHome;
@@ -1030,6 +1146,7 @@ $("newSentenceGameBtn").onclick = startSentenceGame;
 $("newMatchGameBtn").onclick = startMatchGame;
 $("skipStartupQuizBtn").onclick = closeStartupQuiz;
 $("nextStartupQuizBtn").onclick = nextStartupQuizQuestion;
+$("testNotificationBtn").onclick = showTestNotification;
 
 $("loginPinInput").addEventListener("keydown", event => {
   if (event.key === "Enter") login();
