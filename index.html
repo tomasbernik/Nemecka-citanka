@@ -93,6 +93,22 @@
         <article class="reader-card">
           <p id="articleMeta" class="eyebrow"></p>
           <h2 id="articleTitle"></h2>
+          <div class="listen-panel" aria-label="Čítanie článku nahlas">
+            <div class="listen-actions">
+              <button id="readAloudBtn" class="secondary-btn" type="button">Prečítať text</button>
+              <button id="pauseReadBtn" class="text-btn" type="button">Pauza</button>
+              <button id="stopReadBtn" class="text-btn" type="button">Stop</button>
+            </div>
+            <label class="speed-control">
+              Rýchlosť
+              <select id="speechRateSelect">
+                <option value="0.8">Pomalšie</option>
+                <option value="1" selected>Normálne</option>
+                <option value="1.15">Rýchlejšie</option>
+              </select>
+            </label>
+            <p id="speechStatus" class="muted listen-status"></p>
+          </div>
           <div id="articleText" class="article-text"></div>
 
           <details class="panel">
@@ -104,6 +120,31 @@
             <summary>Otázky</summary>
             <ol id="questionList"></ol>
           </details>
+
+          <section class="panel practice-panel" aria-labelledby="sentenceGameTitle">
+            <div class="practice-heading">
+              <div>
+                <p class="eyebrow">Hra</p>
+                <h3 id="sentenceGameTitle">Zoraď vetu</h3>
+              </div>
+              <button id="newSentenceGameBtn" class="text-btn" type="button">Nová veta</button>
+            </div>
+            <div id="sentenceTarget" class="sentence-target"></div>
+            <div id="sentenceWordBank" class="word-bank"></div>
+            <p id="sentenceGameFeedback" class="practice-feedback"></p>
+          </section>
+
+          <section class="panel practice-panel" aria-labelledby="matchGameTitle">
+            <div class="practice-heading">
+              <div>
+                <p class="eyebrow">Hra</p>
+                <h3 id="matchGameTitle">Nájdi dvojice</h3>
+              </div>
+              <button id="newMatchGameBtn" class="text-btn" type="button">Zamiešať</button>
+            </div>
+            <div id="matchGameBoard" class="match-board"></div>
+            <p id="matchGameFeedback" class="practice-feedback"></p>
+          </section>
 
           <button id="markReadBtn" class="primary-btn">Označiť ako prečítané</button>
         </article>

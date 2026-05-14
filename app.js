@@ -10,6 +10,21 @@ const state = {
   currentArticle: null,
   currentProfile: null,
   profileData: emptyProfileData(),
+  speech: {
+    sentenceIndex: 0,
+    isReading: false,
+    utterance: null
+  },
+  sentenceGame: {
+    solution: [],
+    chosen: [],
+    bank: []
+  },
+  matchGame: {
+    cards: [],
+    selectedIds: [],
+    matchedIds: []
+  },
   remoteReady: Boolean(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey)
 };
 
@@ -172,6 +187,22 @@ function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function shuffle(items) {
+  return [...items].sort(() => Math.random() - 0.5);
+}
+
+function getArticleSentences(article) {
+  if (!article) return [];
+
+  return article.text.flatMap(paragraph =>
+    paragraph.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [paragraph]
+  ).map(sentence => sentence.trim()).filter(Boolean);
+}
+
+function getSentenceWords(sentence) {
+  return sentence.match(/[\p{L}\p{N}]+(?:[-'][\p{L}\p{N}]+)?/gu) || [];
+}
+
 function getInlineVocabulary(article) {
   return article.inlineVocabulary || article.clickVocabulary || [];
 }
@@ -230,24 +261,36 @@ function renderArticleText(article) {
     .map(v => v.de)
     .filter(Boolean)
     .sort((a, b) => b.length - a.length);
+  let sentenceIndex = 0;
 
-  if (!words.length) {
-    $("articleText").innerHTML = article.text.map(p => `<p>${escapeHtml(p)}</p>`).join("");
-    return;
-  }
+  const renderSentence = (sentence) => {
+    const index = sentenceIndex++;
 
-  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])(${words.map(escapeRegExp).join("|")})(?=$|[^\\p{L}\\p{N}_])`, "giu");
+    if (!words.length) {
+      return `<span class="reading-sentence" data-sentence-index="${index}">${escapeHtml(sentence)}</span>`;
+    }
 
-  $("articleText").innerHTML = article.text.map(paragraph => {
-    const html = escapeHtml(paragraph).replace(pattern, (match, prefix, word) => {
+    const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])(${words.map(escapeRegExp).join("|")})(?=$|[^\\p{L}\\p{N}_])`, "giu");
+    const html = escapeHtml(sentence).replace(pattern, (match, prefix, word) => {
       const vocab = lookup.get(word.toLocaleLowerCase("de"));
       if (!vocab) return match;
 
       return `${prefix}<button class="inline-word" type="button" data-word="${escapeHtml(vocab.de)}" data-translation="${escapeHtml(vocab.sk)}" aria-expanded="false">${word}</button>`;
     });
 
-    return `<p>${html}</p>`;
-  }).join("");
+    return `<span class="reading-sentence" data-sentence-index="${index}">${html}</span>`;
+  };
+
+  if (!words.length) {
+    $("articleText").innerHTML = article.text
+      .map(paragraph => `<p>${(paragraph.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [paragraph]).map(sentence => renderSentence(sentence.trim())).join(" ")}</p>`)
+      .join("");
+    return;
+  }
+
+  $("articleText").innerHTML = article.text
+    .map(paragraph => `<p>${(paragraph.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [paragraph]).map(sentence => renderSentence(sentence.trim())).join(" ")}</p>`)
+    .join("");
 }
 
 function getArticleAnswers(articleId) {
@@ -266,10 +309,215 @@ function renderQuestions(article) {
     .join("");
 }
 
+function setSpeechStatus(message = "") {
+  $("speechStatus").textContent = message;
+}
+
+function clearReadingHighlight() {
+  document.querySelectorAll(".reading-sentence.active").forEach(sentence => {
+    sentence.classList.remove("active");
+  });
+}
+
+function highlightSentence(index) {
+  clearReadingHighlight();
+  const sentence = document.querySelector(`.reading-sentence[data-sentence-index="${index}"]`);
+  if (!sentence) return;
+  sentence.classList.add("active");
+  sentence.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function getGermanVoice() {
+  const voices = window.speechSynthesis?.getVoices?.() || [];
+  return voices.find(voice => voice.lang?.toLocaleLowerCase("de").startsWith("de"))
+    || voices.find(voice => voice.lang?.toLocaleLowerCase().startsWith("de"))
+    || null;
+}
+
+function stopReading() {
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+
+  state.speech = {
+    sentenceIndex: 0,
+    isReading: false,
+    utterance: null
+  };
+  $("readAloudBtn").textContent = "Prečítať text";
+  $("pauseReadBtn").textContent = "Pauza";
+  clearReadingHighlight();
+  setSpeechStatus("");
+}
+
+function readSentence(index = 0) {
+  if (!("speechSynthesis" in window)) {
+    setSpeechStatus("Tento prehliadač nepodporuje čítanie nahlas.");
+    return;
+  }
+
+  const sentences = getArticleSentences(state.currentArticle);
+  if (!sentences.length || index >= sentences.length) {
+    stopReading();
+    setSpeechStatus("Dočítané.");
+    return;
+  }
+
+  window.speechSynthesis.cancel();
+  state.speech.sentenceIndex = index;
+  state.speech.isReading = true;
+  highlightSentence(index);
+
+  const utterance = new SpeechSynthesisUtterance(sentences[index]);
+  utterance.lang = "de-DE";
+  utterance.rate = Number($("speechRateSelect").value || 1);
+  utterance.voice = getGermanVoice();
+  utterance.onend = () => {
+    if (state.speech.isReading && state.speech.utterance === utterance) readSentence(index + 1);
+  };
+  utterance.onerror = () => {
+    state.speech.isReading = false;
+    setSpeechStatus("Čítanie sa nepodarilo spustiť.");
+  };
+
+  state.speech.utterance = utterance;
+  $("readAloudBtn").textContent = "Od začiatku";
+  setSpeechStatus(`Čítam vetu ${index + 1} z ${sentences.length}.`);
+  window.speechSynthesis.speak(utterance);
+}
+
+function togglePauseReading() {
+  if (!("speechSynthesis" in window) || !state.speech.isReading) return;
+
+  if (window.speechSynthesis.paused) {
+    window.speechSynthesis.resume();
+    $("pauseReadBtn").textContent = "Pauza";
+    setSpeechStatus("Pokračujem v čítaní.");
+  } else {
+    window.speechSynthesis.pause();
+    $("pauseReadBtn").textContent = "Pokračovať";
+    setSpeechStatus("Čítanie je pozastavené.");
+  }
+}
+
+function startSentenceGame() {
+  const candidates = getArticleSentences(state.currentArticle)
+    .map(sentence => ({ sentence, words: getSentenceWords(sentence) }))
+    .filter(item => item.words.length >= 4 && item.words.length <= 10);
+  const selected = shuffle(candidates)[0] || { words: [] };
+
+  state.sentenceGame = {
+    solution: selected.words,
+    chosen: [],
+    bank: shuffle(selected.words.map((word, index) => ({ id: `${index}-${word}`, word })))
+  };
+  renderSentenceGame();
+}
+
+function renderSentenceGame() {
+  const game = state.sentenceGame;
+  $("sentenceTarget").innerHTML = game.chosen.length
+    ? game.chosen.map(item => `<button class="word-chip selected" type="button" data-word-id="${escapeHtml(item.id)}">${escapeHtml(item.word)}</button>`).join("")
+    : '<span class="muted">Ťukaj slová v správnom poradí.</span>';
+  $("sentenceWordBank").innerHTML = game.bank
+    .map(item => `<button class="word-chip" type="button" data-word-id="${escapeHtml(item.id)}">${escapeHtml(item.word)}</button>`)
+    .join("");
+
+  if (!game.solution.length) {
+    $("sentenceGameFeedback").textContent = "Na túto hru treba aspoň jednu kratšiu vetu.";
+    return;
+  }
+
+  if (game.chosen.length !== game.solution.length) {
+    $("sentenceGameFeedback").textContent = "";
+    return;
+  }
+
+  const answer = game.chosen.map(item => item.word).join(" ");
+  const solution = game.solution.join(" ");
+  $("sentenceGameFeedback").textContent = answer === solution
+    ? "Výborne, veta sedí."
+    : "Skús prehodiť poradie ešte raz.";
+}
+
+function chooseSentenceWord(id) {
+  const item = state.sentenceGame.bank.find(word => word.id === id);
+  if (!item) return;
+  state.sentenceGame.bank = state.sentenceGame.bank.filter(word => word.id !== id);
+  state.sentenceGame.chosen.push(item);
+  renderSentenceGame();
+}
+
+function returnSentenceWord(id) {
+  const item = state.sentenceGame.chosen.find(word => word.id === id);
+  if (!item) return;
+  state.sentenceGame.chosen = state.sentenceGame.chosen.filter(word => word.id !== id);
+  state.sentenceGame.bank.push(item);
+  renderSentenceGame();
+}
+
+function startMatchGame() {
+  const vocabulary = shuffle(getVisibleVocabulary(state.currentArticle)).slice(0, 6);
+  const cards = vocabulary.flatMap((item, index) => [
+    { id: `${index}-de`, pairId: String(index), label: item.de, type: "de" },
+    { id: `${index}-sk`, pairId: String(index), label: item.sk, type: "sk" }
+  ]);
+
+  state.matchGame = {
+    cards: shuffle(cards),
+    selectedIds: [],
+    matchedIds: []
+  };
+  renderMatchGame();
+}
+
+function renderMatchGame() {
+  const game = state.matchGame;
+  $("matchGameBoard").innerHTML = game.cards.map(card => {
+    const isSelected = game.selectedIds.includes(card.id);
+    const isMatched = game.matchedIds.includes(card.id);
+    const classes = ["match-card", isSelected ? "selected" : "", isMatched ? "matched" : ""].filter(Boolean).join(" ");
+    return `<button class="${classes}" type="button" data-card-id="${escapeHtml(card.id)}" ${isMatched ? "disabled" : ""}>${escapeHtml(card.label)}</button>`;
+  }).join("");
+
+  if (!game.cards.length) {
+    $("matchGameFeedback").textContent = "Na dvojice treba najprv slovíčka v článku.";
+  } else if (game.matchedIds.length === game.cards.length) {
+    $("matchGameFeedback").textContent = "Hotovo, všetky dvojice sedia.";
+  } else {
+    $("matchGameFeedback").textContent = "";
+  }
+}
+
+function chooseMatchCard(id) {
+  const game = state.matchGame;
+  const card = game.cards.find(item => item.id === id);
+  if (!card || game.selectedIds.length === 2 || game.matchedIds.includes(id) || game.selectedIds.includes(id)) return;
+
+  game.selectedIds = [...game.selectedIds, id].slice(-2);
+  renderMatchGame();
+
+  if (game.selectedIds.length < 2) return;
+
+  const [first, second] = game.selectedIds.map(selectedId => game.cards.find(item => item.id === selectedId));
+  if (first.pairId === second.pairId && first.type !== second.type) {
+    game.matchedIds.push(first.id, second.id);
+    game.selectedIds = [];
+    renderMatchGame();
+  } else {
+    $("matchGameFeedback").textContent = "Toto ešte nie je dvojica.";
+    setTimeout(() => {
+      game.selectedIds = [];
+      renderMatchGame();
+    }, 800);
+  }
+}
+
 function openArticle(id) {
   const article = state.articles.find(a => a.id === id);
   if (!article) return;
 
+  stopReading();
   state.currentArticle = article;
   showView("articleView");
 
@@ -278,6 +526,8 @@ function openArticle(id) {
   renderArticleText(article);
   renderVocabulary();
   renderQuestions(article);
+  startSentenceGame();
+  startMatchGame();
 
   $("markReadBtn").textContent = state.profileData.readIds.includes(article.id)
     ? "Prečítané ✓"
@@ -314,6 +564,7 @@ function showInlineTranslation(button) {
 }
 
 function showHome() {
+  stopReading();
   state.currentArticle = null;
   showView("homeView");
   renderArticles();
@@ -362,6 +613,7 @@ async function setCurrentProfile(profile) {
 }
 
 function showLogin() {
+  stopReading();
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
   showView(state.profiles.length ? "loginView" : "setupView");
@@ -408,6 +660,7 @@ async function createProfiles() {
 }
 
 function logout() {
+  stopReading();
   state.currentProfile = null;
   state.profileData = emptyProfileData();
   state.currentArticle = null;
@@ -508,6 +761,11 @@ $("refreshBtn").onclick = loadArticles;
 $("loginBtn").onclick = login;
 $("createProfilesBtn").onclick = createProfiles;
 $("logoutBtn").onclick = logout;
+$("readAloudBtn").onclick = () => readSentence(0);
+$("pauseReadBtn").onclick = togglePauseReading;
+$("stopReadBtn").onclick = stopReading;
+$("newSentenceGameBtn").onclick = startSentenceGame;
+$("newMatchGameBtn").onclick = startMatchGame;
 
 $("loginPinInput").addEventListener("keydown", event => {
   if (event.key === "Enter") login();
@@ -532,6 +790,29 @@ $("questionList").addEventListener("input", event => {
   if (!input) return;
   saveAnswer(input);
 });
+
+$("sentenceWordBank").addEventListener("click", event => {
+  const button = event.target.closest(".word-chip");
+  if (!button) return;
+  chooseSentenceWord(button.dataset.wordId);
+});
+
+$("sentenceTarget").addEventListener("click", event => {
+  const button = event.target.closest(".word-chip");
+  if (!button) return;
+  returnSentenceWord(button.dataset.wordId);
+});
+
+$("matchGameBoard").addEventListener("click", event => {
+  const button = event.target.closest(".match-card");
+  if (!button) return;
+  chooseMatchCard(button.dataset.cardId);
+});
+
+$("speechRateSelect").onchange = () => {
+  if (!state.speech.isReading) return;
+  readSentence(state.speech.sentenceIndex);
+};
 
 $("fontSizeSelect").onchange = (e) => {
   localStorage.setItem("fontSize", e.target.value);
