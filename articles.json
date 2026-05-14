@@ -4,7 +4,6 @@
     "title": "Eine Reise nach Südspanien",
     "level": "B1",
     "category": "Cestovanie",
-    "minutes": 10,
     "summary": "Tomas und Kristina machen eine Reise nach Südspanien und erleben viele neue Dinge.",
     "text": [
       "Tomas und Kristina haben sich entschieden, eine Reise nach Südspanien zu machen. Für beide war das eine neue Erfahrung, und sie wollten so viel wie möglich sehen und erleben.",
@@ -70,7 +69,6 @@
     "title": "Ein Tag in Paris",
     "level": "B1",
     "category": "Cestovanie",
-    "minutes": 10,
     "summary": "Tomas und Kristina verbringen einen schönen Tag als Touristen in Paris und entdecken viele bekannte Orte.",
     "text": [
       "Tomas und seine Frau Kristina haben einen schönen Tag in Paris verbracht. Sie waren als Touristen in der Stadt und wollten so viel wie möglich sehen, aber trotzdem alles ruhig genießen.",
@@ -165,7 +163,6 @@
     "title": "Ein Nachmittag im Garten",
     "level": "A2-B1",
     "category": "Voľný čas",
-    "minutes": 10,
     "summary": "Kristina erzählt ihrer Mutter, was sie mit Tomas vor einer Woche im Garten gemacht haben.",
     "text": [
       "Mama, ich möchte dir erzählen, was wir letzte Woche im Garten gemacht haben. Ich weiß nicht mehr genau, welcher Tag es war, aber irgendwann am Nachmittag.",
@@ -247,7 +244,6 @@
     "title": "Ein sonniger Nachmittag mit Tomas",
     "level": "A2-B1",
     "category": "Voľný čas",
-    "minutes": 5,
     "summary": "Kristina erzählt von einem ruhigen Nachmittag mit ihrem Mann Tomas am Baggersee und von ihren Plänen für Urlaub und Arbeit.",
     "text": [
       "Ich möchte dir von einem schönen Nachmittag erzählen, den ich mit meinem Mann Tomas am Baggersee in Hockenheim verbracht habe. Es war ein sonniger Tag, nicht zu heiß, einfach perfekt für einen kleinen Ausflug.",
@@ -404,7 +400,6 @@
     "title": "Ein Spaziergang am See",
     "level": "A2",
     "category": "Každodenný život",
-    "minutes": 5,
     "summary": "Anna geht nach der Arbeit an den See und genießt einen ruhigen Abend.",
     "text": [
       "Anna arbeitet den ganzen Tag im Büro. Nach der Arbeit ist sie müde, aber sie möchte nicht sofort nach Hause gehen. Das Wetter ist schön. Die Sonne scheint, und es ist warm. Deshalb nimmt Anna ihre Tasche und geht zu Fuß zum See.",
@@ -491,7 +486,6 @@
     "title": "Ein kleines Frühstück",
     "level": "A2",
     "category": "Jedlo",
-    "minutes": 4,
     "summary": "Mira macht ein einfaches Frühstück und startet langsam in den Tag.",
     "text": [
       "Mira steht am Samstag nicht früh auf. Sie bleibt noch zehn Minuten im Bett und hört Musik. Dann geht sie in die Küche. Sie hat Hunger, aber sie möchte nichts Kompliziertes kochen.",
@@ -574,7 +568,6 @@
     "title": "Einkaufen bei Temu",
     "level": "B1",
     "category": "Nakupovanie",
-    "minutes": 5,
     "summary": "Marko möchte online günstig einkaufen, ist aber zuerst unsicher wegen der Qualität.",
     "text": [
       "Marko sitzt am Abend auf dem Sofa und schaut auf sein Handy. Er möchte neue Kopfhörer kaufen, aber er will nicht zu viel Geld ausgeben. Ein Freund hat ihm die App Temu empfohlen. Dort sollen viele Produkte sehr günstig sein.",

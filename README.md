@@ -34,7 +34,6 @@ Uprav súbor `articles.json`. Každý článok má:
 - title
 - level
 - category
-- minutes
 - summary
 - text
 - vocabulary

@@ -176,7 +176,6 @@ function renderArticles() {
       <div class="badges">
         <span class="badge">${escapeHtml(article.level)}</span>
         <span class="badge">${escapeHtml(article.category)}</span>
-        <span class="badge">${escapeHtml(article.minutes)} min</span>
         ${isRead ? '<span class="badge">✓ prečítané</span>' : ""}
       </div>
     `;
@@ -706,7 +705,7 @@ function openArticle(id) {
   state.currentArticle = article;
   showView("articleView");
 
-  $("articleMeta").textContent = `${article.level} • ${article.category} • ${article.minutes} min`;
+  $("articleMeta").textContent = `${article.level} • ${article.category}`;
   $("articleTitle").textContent = article.title;
   renderArticleText(article);
   renderVocabulary();
