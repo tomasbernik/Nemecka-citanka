@@ -1473,6 +1473,16 @@ function parseVocabularyLines(value) {
   }).filter(item => item.de && item.sk);
 }
 
+function parseVocabularyDraftLines(value) {
+  return linesToList(value).map(line => {
+    const [de, ...rest] = line.split("=");
+    return {
+      de: (de || "").trim(),
+      sk: rest.join("=").trim()
+    };
+  }).filter(item => item.de);
+}
+
 function formatVocabularyLines(items = []) {
   return items.map(item => `${item.de} = ${item.sk}`).join("\n");
 }
@@ -1490,6 +1500,113 @@ function parseQuestionLines(value) {
 
 function formatQuestionLines(items = []) {
   return items.map(item => `${item.statement || item} = ${item.answer ? "true" : "false"}`).join("\n");
+}
+
+async function copyTextToClipboard(text, successMessage = "Skopírované.") {
+  if (!text.trim()) {
+    $("articleEditorStatus").textContent = "Nie je čo kopírovať.";
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(text);
+    $("articleEditorStatus").textContent = successMessage;
+  } catch (error) {
+    $("articleEditorStatus").textContent = "Kopírovanie zlyhalo. Označ text ručne a skopíruj ho.";
+  }
+}
+
+function getSelectedArticleText() {
+  const input = $("articleTextInput");
+  return input.value.slice(input.selectionStart, input.selectionEnd).trim();
+}
+
+function appendUniqueLine(textareaId, line) {
+  const textarea = $(textareaId);
+  const normalizedLine = line.trim();
+  if (!normalizedLine) return false;
+
+  const key = normalizeVocabularyKey(normalizedLine.split("=")[0]);
+  const existingKeys = linesToList(textarea.value)
+    .map(item => normalizeVocabularyKey(item.split("=")[0]));
+  if (existingKeys.includes(key)) return false;
+
+  textarea.value = [...linesToList(textarea.value), normalizedLine].join("\n");
+  return true;
+}
+
+function addSelectedTextToVocabulary(addToVocabulary) {
+  const selected = getSelectedArticleText();
+  if (!selected) {
+    $("articleEditorStatus").textContent = "Najprv označ slovo alebo frázu v texte článku.";
+    return;
+  }
+
+  const line = `${selected} =`;
+  const inlineAdded = appendUniqueLine("articleInlineVocabularyInput", line);
+  const vocabAdded = addToVocabulary ? appendUniqueLine("articleVocabularyInput", line) : false;
+  $("articleEditorStatus").textContent = inlineAdded || vocabAdded
+    ? "Označený text je pridaný."
+    : "Tento výraz už v zozname je.";
+}
+
+function buildArticlePrompt() {
+  const topic = $("articlePromptInput").value.trim();
+  const level = $("articleLevelInput").value.trim() || "A2-B1";
+  const category = $("articleCategoryInput").value.trim() || "bežný život";
+  const requiredWords = linesToList($("articleRequiredWordsInput").value);
+
+  return [
+    `Napíš krátky článok v nemčine pre úroveň ${level}.`,
+    `Kategória/téma: ${category}.`,
+    topic ? `Konkrétne zadanie: ${topic}` : "",
+    requiredWords.length
+      ? `Tieto slová alebo frázy musia byť v texte použité každé minimálne 2x a maximálne 4x: ${requiredWords.join(", ")}.`
+      : "",
+    "Text má byť prirodzený, vhodný pre čítanku, bez príliš ťažkých viet.",
+    "Vráť iba názov, krátky slovenský popis a nemecký text rozdelený na odseky."
+  ].filter(Boolean).join("\n");
+}
+
+function buildTranslationPrompt() {
+  const words = [
+    ...parseVocabularyDraftLines($("articleVocabularyInput").value),
+    ...parseVocabularyDraftLines($("articleInlineVocabularyInput").value)
+  ];
+  const seen = new Set();
+  const missing = words
+    .filter(item => !item.sk)
+    .filter(item => {
+      const key = normalizeVocabularyKey(item.de);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map(item => `${item.de} =`);
+
+  return [
+    "Prelož tieto nemecké slová a frázy do slovenčiny.",
+    "Vráť presne formát: nemecky = slovensky.",
+    "Nepíš vysvetlenia navyše.",
+    "",
+    missing.join("\n")
+  ].join("\n");
+}
+
+function buildQuestionsPrompt() {
+  const title = $("articleTitleInput").value.trim();
+  const text = $("articleTextInput").value.trim();
+
+  return [
+    "Vytvor pravda/nepravda vety k tomuto nemeckému článku.",
+    "Vráť 6 až 8 riadkov vo formáte:",
+    "nemecká veta = true",
+    "nemecká veta = false",
+    "Použi mix pravdivých a nepravdivých viet. Nepíš nič navyše.",
+    title ? `Názov: ${title}` : "",
+    "",
+    text
+  ].filter(Boolean).join("\n");
 }
 
 function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
@@ -1849,6 +1966,11 @@ $("articleTitleInput").addEventListener("input", () => {
     $("articleIdInput").value = makeArticleId($("articleTitleInput").value);
   }
 });
+$("addSelectedVocabularyBtn").onclick = () => addSelectedTextToVocabulary(true);
+$("addSelectedInlineBtn").onclick = () => addSelectedTextToVocabulary(false);
+$("copyArticlePromptBtn").onclick = () => copyTextToClipboard(buildArticlePrompt(), "Prompt pre článok je skopírovaný.");
+$("copyTranslationPromptBtn").onclick = () => copyTextToClipboard(buildTranslationPrompt(), "Slovíčka na preklad sú skopírované.");
+$("copyQuestionsPromptBtn").onclick = () => copyTextToClipboard(buildQuestionsPrompt(), "Prompt pre otázky je skopírovaný.");
 
 $("loginPinInput").addEventListener("keydown", event => {
   if (event.key === "Enter") login();

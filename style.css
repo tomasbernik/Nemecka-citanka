@@ -380,6 +380,22 @@ h3 { font-size: 1.1rem; }
   margin-top: 18px;
 }
 
+.editor-helper {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(127, 127, 127, 0.06);
+}
+
+.editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .editor-textarea {
   width: 100%;
   min-height: 128px;

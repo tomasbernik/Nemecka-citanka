@@ -258,6 +258,23 @@
             <select id="articleEditorSelect"></select>
           </label>
 
+          <section class="editor-helper">
+            <p class="eyebrow">ChatGPT pomocník</p>
+            <label class="field-row">
+              Zadanie pre článok
+              <textarea id="articlePromptInput" class="editor-textarea compact" placeholder="Napr. článok o balení na dovolenku, úroveň B1, použi tieto slová 2-4 krát..."></textarea>
+            </label>
+            <label class="field-row">
+              Povinné slová, jedno slovo alebo fráza na riadok
+              <textarea id="articleRequiredWordsInput" class="editor-textarea compact"></textarea>
+            </label>
+            <div class="editor-actions">
+              <button id="copyArticlePromptBtn" class="secondary-btn" type="button">Kopírovať prompt pre článok</button>
+              <button id="copyTranslationPromptBtn" class="secondary-btn quiet" type="button">Kopírovať slovíčka na preklad</button>
+              <button id="copyQuestionsPromptBtn" class="secondary-btn quiet" type="button">Kopírovať prompt pre otázky</button>
+            </div>
+          </section>
+
           <label class="field-row">
             Názov
             <input id="articleTitleInput">
@@ -282,6 +299,10 @@
             Text článku, každý odsek na nový riadok
             <textarea id="articleTextInput" class="editor-textarea tall"></textarea>
           </label>
+          <div class="editor-actions">
+            <button id="addSelectedVocabularyBtn" class="secondary-btn" type="button">Označené do slovíčok aj inline</button>
+            <button id="addSelectedInlineBtn" class="secondary-btn quiet" type="button">Označené iba inline</button>
+          </div>
           <label class="field-row">
             Slovíčka, jeden riadok: nemecky = slovensky
             <textarea id="articleVocabularyInput" class="editor-textarea"></textarea>
