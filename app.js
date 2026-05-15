@@ -5,6 +5,7 @@ const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 const AUTO_READ_DELAY_MS = 2 * 60 * 1000;
 const VISIBLE_CATEGORY_LIMIT = 6;
 const DEFAULT_NATIVE_LANGUAGE = "sk";
+const DEFAULT_PRELOGIN_LANGUAGE = "de";
 const DEFAULT_ARTICLE_VISIBILITY = "private";
 const DEFAULT_ARTICLE_APPROVAL_STATUS = "draft";
 const PUBLIC_ARTICLE_APPROVAL_STATUS = "pending";
@@ -17,6 +18,155 @@ const NATIVE_LANGUAGES = {
 };
 
 const UI_TEXT = {
+  de: {
+    appTitle: "Lesebuch",
+    languageLabel: "A2 Deutsch",
+    overview: "Übersicht",
+    settings: "Einstellungen",
+    loginEyebrow: "Anmeldung",
+    loginTitle: "Wer liest?",
+    name: "Name",
+    pin: "PIN",
+    nativeLanguage: "Muttersprache",
+    login: "Anmelden",
+    newProfile: "Neues Profil erstellen",
+    setupPair: "Zwei Profile einrichten",
+    logout: "Abmelden",
+    articles: "Artikel",
+    refresh: "Aktualisieren",
+    all: "Alle",
+    lessTopics: "Weniger Themen",
+    moreTopics: "Weitere Themen",
+    teacher: "Lehrer/in",
+    student: "Schüler/in",
+    online: "online",
+    local: "lokal",
+    private: "privat",
+    pendingApproval: "wartet auf Freigabe",
+    read: "gelesen",
+    setupEyebrow: "Einrichtung",
+    setupTitle: "Zwei Profile erstellen",
+    setupNote: "Der PIN trennt die Profile in dieser privaten App.",
+    profile1Name: "Name Profil 1",
+    profile1Pin: "PIN Profil 1",
+    profile1Role: "Rolle Profil 1",
+    profile1Language: "Muttersprache Profil 1",
+    profile2Name: "Name Profil 2",
+    profile2Pin: "PIN Profil 2",
+    profile2Role: "Rolle Profil 2",
+    profile2Language: "Muttersprache Profil 2",
+    teacherRole: "Lehrer/in",
+    studentRole: "Schüler/in",
+    saveProfiles: "Profile speichern",
+    backToLogin: "Zur Anmeldung",
+    fontSize: "Schriftgröße",
+    normal: "Normal",
+    large: "Groß",
+    xlarge: "Sehr groß",
+    profileRole: "Profilrolle",
+    darkMode: "Dunkler Modus",
+    notifications: "Benachrichtigungen",
+    notificationNote: "Sende eine Testbenachrichtigung an dieses Gerät.",
+    testNotification: "Testbenachrichtigung",
+    back: "← Zurück",
+    readText: "Text vorlesen",
+    listenOnly: "Ohne Text hören",
+    pause: "Pause",
+    stop: "Stop",
+    speed: "Tempo",
+    slower: "Langsamer",
+    speedNormal: "Normal",
+    faster: "Schneller",
+    showText: "Text zeigen",
+    vocabulary: "Wörter und Phrasen",
+    practice: "Übung",
+    questions: "Fragen",
+    game: "Spiel",
+    sentenceOrder: "Satz ordnen",
+    newSentence: "Neuer Satz",
+    matchPairs: "Paare finden",
+    shuffle: "Mischen",
+    vocabChoice: "4 Möglichkeiten",
+    newVocab: "Neues Wort",
+    cloze: "Fehlendes Wort ergänzen",
+    mistake: "Falsches Wort finden",
+    wordSearch: "Wortsuche",
+    newGame: "Neu",
+    markRead: "Als gelesen markieren",
+    settingsTitle: "Einstellungen",
+    taskAllDone: "Alle Aufgaben erledigt",
+    taskDone: "Erledigte Aufgaben",
+    trueLabel: "Richtig",
+    falseLabel: "Falsch",
+    correct: "Richtig.",
+    correctIs: "Richtig ist:",
+    browserNoSpeech: "Dieser Browser unterstützt kein Vorlesen.",
+    readingFailed: "Vorlesen konnte nicht gestartet werden.",
+    restart: "Von Anfang an",
+    listening: "Ich höre...",
+    listenSentence: "Höre Satz {current} von {total}.",
+    readingSentence: "Ich lese Satz {current} von {total}.",
+    changingSpeed: "Tempo wird geändert...",
+    continueReading: "Fortsetzen",
+    continuingReading: "Ich lese weiter.",
+    readingPaused: "Vorlesen ist pausiert.",
+    finishedReading: "Fertig gelesen.",
+    tapWords: "Tippe die Wörter in der richtigen Reihenfolge an.",
+    sentenceNoTask: "Für dieses Spiel braucht man mindestens einen kürzeren Satz.",
+    sentenceCorrect: "Sehr gut, der Satz stimmt.",
+    sentenceRetry: "Versuche die Reihenfolge noch einmal.",
+    matchNoVocab: "Für Paare braucht man zuerst Wörter im Artikel.",
+    matchDone: "Fertig, alle Paare passen.",
+    noPair: "Das ist noch kein Paar.",
+    vocabNeed4: "Für dieses Spiel braucht man mindestens 4 Wörter.",
+    clozeNeedMore: "Für dieses Spiel braucht man mehr kurze Wörter im Text.",
+    mistakeNeedMore: "Für dieses Spiel braucht man mehr kurze Wörter im Text.",
+    mistakeCorrect: "Richtig. Im Satz soll stehen:",
+    mistakeWrong: "Das falsche Wort ist: {wrong}. Im Satz soll stehen: {correct}",
+    wordSearchNeed3: "Für die Wortsuche braucht man mindestens 3 kürzere Wörter.",
+    wordSearchDone: "Fertig, alle Wörter sind gefunden.",
+    markedRead: "Als gelesen markiert",
+    readDone: "Gelesen ✓",
+    teacherView: "Lehreransicht",
+    studentOverview: "Schülerübersicht",
+    teacherArticles: "Artikel",
+    articleEditor: "Artikeleditor",
+    newArticle: "Neuer Artikel",
+    editArticle: "Artikel bearbeiten",
+    visibility: "Sichtbarkeit",
+    privateArticle: "Privater Artikel",
+    publicAfterApproval: "Öffentlich nach Freigabe",
+    approvalStatus: "Freigabestatus",
+    draft: "Entwurf",
+    pending: "Wartet auf Freigabe",
+    approved: "Freigegeben",
+    rejected: "Abgelehnt",
+    chatGptHelper: "ChatGPT-Helfer",
+    articleTask: "Aufgabe für den Artikel",
+    requiredWords: "Pflichtwörter, ein Wort oder eine Phrase pro Zeile",
+    copyArticlePrompt: "Prompt für Artikel kopieren",
+    copyTranslationPrompt: "Wörter zum Übersetzen kopieren",
+    copyQuestionsPrompt: "Prompt für Fragen kopieren",
+    generatedPrompt: "Generierter Prompt",
+    title: "Titel",
+    level: "Niveau",
+    category: "Kategorie",
+    summary: "Kurze Beschreibung",
+    articleTextLabel: "Artikeltext, jeder Absatz in einer neuen Zeile",
+    addSelectedVocabulary: "Auswahl zu Wörtern und inline hinzufügen",
+    addSelectedInline: "Auswahl nur inline hinzufügen",
+    vocabInputLabel: "Wörter: JSON aus dem Prompt oder Zeilen Deutsch = Übersetzung",
+    inlineVocabInputLabel: "Inline-Wörter: JSON aus dem Prompt oder Zeilen Deutsch = Übersetzung",
+    questionsInputLabel: "Richtig/falsch, eine Zeile: deutscher Satz = true/false",
+    saveArticle: "Artikel speichern",
+    startupWarmup: "Kurzes Aufwärmen",
+    startupTitle: "Ein Wort zum Aufwärmen",
+    startupQ1: "Was bedeutet dieses deutsche Wort?",
+    startupQ2: "Wie sagt man das auf Deutsch?",
+    skip: "Überspringen",
+    next: "Weiter",
+    done: "Fertig"
+  },
   sk: {
     appTitle: "Čítanka",
     languageLabel: "A2 nemčina",
@@ -646,6 +796,37 @@ Object.assign(UI_TEXT.sk, {
   pushBody: "Dnes stačí pár minút nemčiny."
 });
 
+Object.assign(UI_TEXT.de, {
+  loginMismatch: "Name oder PIN stimmt nicht. Wenn du neu bist, erstelle ein neues Profil.",
+  loginFill: "Gib bitte Name und PIN ein.",
+  profileExists: "Dieses Profil gibt es schon. Melde dich mit dem passenden PIN an.",
+  setupFill: "Gib bitte beide Namen und beide PINs ein.",
+  setupDifferentNames: "Die Profile brauchen unterschiedliche Namen.",
+  setupDifferentRoles: "Wähle einmal Lehrer/in und einmal Schüler/in.",
+  setupNameExists: "Mindestens ein Profilname existiert schon.",
+  editorNeedsSupabase: "Der Editor kann erst nach aktiviertem Supabase speichern.",
+  articleSaved: "Der Artikel ist gespeichert.",
+  validationFillArticle: "Fülle Titel, ID, Niveau, Kategorie, Beschreibung und mindestens einen Textabsatz aus.",
+  validationQuestion: "Füge mindestens einen richtig/falsch-Satz hinzu.",
+  copied: "Kopiert.",
+  nothingToCopy: "Es gibt nichts zu kopieren.",
+  copyFailed: "Automatisches Kopieren ist fehlgeschlagen. Der Prompt ist unten sichtbar, kopiere ihn manuell.",
+  selectWordFirst: "Markiere zuerst ein Wort oder eine Phrase im Artikeltext.",
+  selectedAdded: "Der markierte Text wurde hinzugefügt.",
+  expressionExists: "Dieser Ausdruck ist schon in der Liste.",
+  promptArticleCopied: "Prompt für den Artikel kopiert.",
+  promptTranslationCopied: "Wörter zum Übersetzen kopiert.",
+  promptQuestionsCopied: "Prompt für Fragen kopiert.",
+  notificationUnsupported: "Dieser Browser unterstützt keine Benachrichtigungen.",
+  notificationDefault: "Benachrichtigungen sind noch nicht erlaubt.",
+  notificationGranted: "Benachrichtigungen sind für dieses Gerät erlaubt.",
+  notificationDenied: "Benachrichtigungen sind im Browser blockiert.",
+  notificationNotAllowed: "Benachrichtigungen sind nicht erlaubt.",
+  notificationSent: "Testbenachrichtigung gesendet.",
+  notificationBody: "Die Testerinnerung funktioniert.",
+  pushBody: "Heute reichen ein paar Minuten Deutsch."
+});
+
 Object.assign(UI_TEXT.ru, {
   loginMismatch: "Имя или PIN не совпадают. Если вы новый пользователь, создайте новый профиль.",
   loginFill: "Введите имя и PIN.",
@@ -742,6 +923,7 @@ Object.assign(UI_TEXT.hu, {
 const state = {
   articles: [],
   profiles: [],
+  preLoginLanguage: DEFAULT_PRELOGIN_LANGUAGE,
   selectedCategory: ALL_CATEGORIES,
   currentArticle: null,
   currentProfile: null,
@@ -786,12 +968,11 @@ const $ = (id) => document.getElementById(id);
 
 function getUiLanguage() {
   if (state.currentProfile) return getNativeLanguage(state.currentProfile);
-  const selectedLoginLanguage = $("loginNativeLanguageSelect")?.value;
-  return isSupportedNativeLanguage(selectedLoginLanguage) ? selectedLoginLanguage : DEFAULT_NATIVE_LANGUAGE;
+  return state.preLoginLanguage || DEFAULT_PRELOGIN_LANGUAGE;
 }
 
 function t(key, language = getUiLanguage()) {
-  return UI_TEXT[language]?.[key] || UI_TEXT[DEFAULT_NATIVE_LANGUAGE][key] || key;
+  return UI_TEXT[language]?.[key] || UI_TEXT[DEFAULT_PRELOGIN_LANGUAGE][key] || UI_TEXT[DEFAULT_NATIVE_LANGUAGE][key] || key;
 }
 
 function setText(id, key) {
@@ -2774,6 +2955,133 @@ function addSelectedTextToVocabulary(addToVocabulary) {
     : t("expressionExists");
 }
 
+const PROMPT_TEXT = {
+  sk: {
+    article: ({ level, category, topic, requiredWords }) => [
+      `Napíš krátky článok v nemčine pre úroveň ${level}.`,
+      category ? `Kategória/téma: ${category}.` : "",
+      topic ? `Konkrétne zadanie: ${topic}` : "",
+      requiredWords.length
+        ? `Tieto slová alebo frázy musia byť v texte použité každé minimálne 2x a maximálne 4x: ${requiredWords.join(", ")}.`
+        : "",
+      "Vráť iba názov, krátky nemecký popis a nemecký text rozdelený na odseky."
+    ],
+    translation: (missing) => [
+      "Prelož tieto nemecké slová a frázy do slovenčiny, ruštiny, poľštiny a maďarčiny.",
+      "Vráť iba validné JSON pole. Nepíš vysvetlenia navyše.",
+      "Každá položka musí mať presne tieto kľúče: de, sk, ru, pl, hu.",
+      "Formát jednej položky:",
+      "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",
+      "",
+      missing.join("\n")
+    ],
+    questions: ({ title, text }) => [
+      "Vytvor pravda/nepravda vety k tomuto nemeckému článku.",
+      "Vráť 6 až 8 riadkov vo formáte:",
+      "nemecká veta = true",
+      "nemecká veta = false",
+      "Použi mix pravdivých a nepravdivých viet. Nepíš nič navyše.",
+      title ? `Názov: ${title}` : "",
+      "",
+      text
+    ]
+  },
+  ru: {
+    article: ({ level, category, topic, requiredWords }) => [
+      `Напиши короткую статью на немецком языке для уровня ${level}.`,
+      category ? `Категория/тема: ${category}.` : "",
+      topic ? `Конкретное задание: ${topic}` : "",
+      requiredWords.length
+        ? `Эти немецкие слова или фразы должны быть использованы в тексте каждое минимум 2 раза и максимум 4 раза: ${requiredWords.join(", ")}.`
+        : "",
+      "Верни только название, короткое немецкое описание и немецкий текст, разделенный на абзацы."
+    ],
+    translation: (missing) => [
+      "Переведи эти немецкие слова и фразы на словацкий, русский, польский и венгерский.",
+      "Верни только валидный JSON-массив. Не добавляй никаких объяснений.",
+      "Каждый объект должен иметь ровно эти ключи: de, sk, ru, pl, hu.",
+      "Формат одного объекта:",
+      "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",
+      "",
+      missing.join("\n")
+    ],
+    questions: ({ title, text }) => [
+      "Создай предложения true/false к этой немецкой статье.",
+      "Верни 6-8 строк в формате:",
+      "немецкое предложение = true",
+      "немецкое предложение = false",
+      "Используй смесь правдивых и ложных предложений. Не добавляй ничего лишнего.",
+      title ? `Название: ${title}` : "",
+      "",
+      text
+    ]
+  },
+  pl: {
+    article: ({ level, category, topic, requiredWords }) => [
+      `Napisz krótki artykuł po niemiecku dla poziomu ${level}.`,
+      category ? `Kategoria/temat: ${category}.` : "",
+      topic ? `Konkretne zadanie: ${topic}` : "",
+      requiredWords.length
+        ? `Te niemieckie słowa albo frazy muszą zostać użyte w tekście każde minimum 2 razy i maksimum 4 razy: ${requiredWords.join(", ")}.`
+        : "",
+      "Zwróć tylko tytuł, krótki niemiecki opis i niemiecki tekst podzielony na akapity."
+    ],
+    translation: (missing) => [
+      "Przetłumacz te niemieckie słowa i frazy na słowacki, rosyjski, polski i węgierski.",
+      "Zwróć tylko poprawną tablicę JSON. Nie dodawaj żadnych wyjaśnień.",
+      "Każdy obiekt musi mieć dokładnie te klucze: de, sk, ru, pl, hu.",
+      "Format jednego obiektu:",
+      "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",
+      "",
+      missing.join("\n")
+    ],
+    questions: ({ title, text }) => [
+      "Utwórz zdania true/false do tego niemieckiego artykułu.",
+      "Zwróć 6-8 wierszy w formacie:",
+      "niemieckie zdanie = true",
+      "niemieckie zdanie = false",
+      "Użyj mieszanki zdań prawdziwych i fałszywych. Nie dodawaj niczego więcej.",
+      title ? `Tytuł: ${title}` : "",
+      "",
+      text
+    ]
+  },
+  hu: {
+    article: ({ level, category, topic, requiredWords }) => [
+      `Írj egy rövid német cikket ${level} szintre.`,
+      category ? `Kategória/téma: ${category}.` : "",
+      topic ? `Konkrét feladat: ${topic}` : "",
+      requiredWords.length
+        ? `Ezeket a német szavakat vagy kifejezéseket a szövegben mindegyiket legalább 2-szer és legfeljebb 4-szer kell használni: ${requiredWords.join(", ")}.`
+        : "",
+      "Csak a címet, egy rövid német leírást és a bekezdésekre tagolt német szöveget add vissza."
+    ],
+    translation: (missing) => [
+      "Fordítsd le ezeket a német szavakat és kifejezéseket szlovákra, oroszra, lengyelre és magyarra.",
+      "Csak érvényes JSON tömböt adj vissza. Ne írj semmilyen magyarázatot.",
+      "Minden objektumnak pontosan ezek a kulcsai legyenek: de, sk, ru, pl, hu.",
+      "Egy objektum formátuma:",
+      "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",
+      "",
+      missing.join("\n")
+    ],
+    questions: ({ title, text }) => [
+      "Készíts true/false mondatokat ehhez a német cikkhez.",
+      "Adj vissza 6-8 sort ebben a formátumban:",
+      "német mondat = true",
+      "német mondat = false",
+      "Legyen benne igaz és hamis mondat is. Ne írj semmi mást.",
+      title ? `Cím: ${title}` : "",
+      "",
+      text
+    ]
+  }
+};
+
+function getPromptText() {
+  return PROMPT_TEXT[getUiLanguage()] || PROMPT_TEXT[DEFAULT_NATIVE_LANGUAGE];
+}
+
 function buildArticlePrompt() {
   const topic = $("articlePromptInput").value.trim();
   const level = $("articleLevelInput").value.trim() || "A2-B1";
@@ -2781,15 +3089,7 @@ function buildArticlePrompt() {
   const requiredWords = linesToList($("articleRequiredWordsInput").value);
   addRequiredWordsToVocabulary();
 
-  return [
-    `Napíš krátky článok v nemčine pre úroveň ${level}.`,
-    category ? `Kategória/téma: ${category}.` : "",
-    topic ? `Konkrétne zadanie: ${topic}` : "",
-    requiredWords.length
-      ? `Tieto slová alebo frázy musia byť v texte použité každé minimálne 2x a maximálne 4x: ${requiredWords.join(", ")}.`
-      : "",
-    "Vráť iba názov, krátky nemecký popis a nemecký text rozdelený na odseky."
-  ].filter(Boolean).join("\n");
+  return getPromptText().article({ level, category, topic, requiredWords }).filter(Boolean).join("\n");
 }
 
 function addRequiredWordsToVocabulary() {
@@ -2817,31 +3117,14 @@ function buildTranslationPrompt() {
     })
     .map(item => `${item.de} =`);
 
-  return [
-    "Prelož tieto nemecké slová a frázy do slovenčiny, ruštiny, poľštiny a maďarčiny.",
-    "Vráť iba validné JSON pole. Nepíš vysvetlenia navyše.",
-    "Každá položka musí mať presne tieto kľúče: de, sk, ru, pl, hu.",
-    "Formát jednej položky:",
-    "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",
-    "",
-    missing.join("\n")
-  ].join("\n");
+  return getPromptText().translation(missing).join("\n");
 }
 
 function buildQuestionsPrompt() {
   const title = $("articleTitleInput").value.trim();
   const text = $("articleTextInput").value.trim();
 
-  return [
-    "Vytvor pravda/nepravda vety k tomuto nemeckému článku.",
-    "Vráť 6 až 8 riadkov vo formáte:",
-    "nemecká veta = true",
-    "nemecká veta = false",
-    "Použi mix pravdivých a nepravdivých viet. Nepíš nič navyše.",
-    title ? `Názov: ${title}` : "",
-    "",
-    text
-  ].filter(Boolean).join("\n");
+  return getPromptText().questions({ title, text }).filter(Boolean).join("\n");
 }
 
 function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
@@ -3244,7 +3527,10 @@ $("loginPinInput").addEventListener("keydown", event => {
   if (event.key === "Enter") login();
 });
 
-$("loginNativeLanguageSelect").onchange = updateStaticTexts;
+$("loginNativeLanguageSelect").onchange = (event) => {
+  state.preLoginLanguage = event.target.value;
+  updateStaticTexts();
+};
 
 $("markReadBtn").onclick = () => {
   markCurrentArticleRead("manual");
