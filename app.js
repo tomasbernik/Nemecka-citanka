@@ -3,6 +3,7 @@ const CURRENT_PROFILE_KEY = "currentProfileId";
 const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 const AUTO_READ_DELAY_MS = 2 * 60 * 1000;
+const VISIBLE_CATEGORY_LIMIT = 6;
 
 const state = {
   articles: [],
@@ -43,6 +44,7 @@ const state = {
     found: [],
     selected: []
   },
+  showAllCategories: false,
   remoteReady: Boolean(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey)
 };
 
@@ -159,7 +161,7 @@ async function loadArticles() {
       const missingLocalArticles = localArticles.filter(article => !remoteIds.has(article.id));
 
       if (missingLocalArticles.length) {
-        await saveRemoteArticles(missingLocalArticles);
+        await saveRemoteArticles(missingLocalArticles, { preserveUpdatedAt: true });
         remoteArticles = await loadRemoteArticles();
       }
 
@@ -180,13 +182,13 @@ async function loadRemoteArticles() {
   return (rows || []).map(rowToArticle);
 }
 
-async function saveRemoteArticles(articles) {
+async function saveRemoteArticles(articles, options = {}) {
   if (!state.remoteReady || !articles.length) return;
 
   await supabaseRequest("app_articles?on_conflict=id", {
     method: "POST",
     headers: { Prefer: "resolution=merge-duplicates" },
-    body: JSON.stringify(articles.map(articleToRow))
+    body: JSON.stringify(articles.map(article => articleToRow(article, options)))
   });
 }
 
@@ -200,12 +202,13 @@ function rowToArticle(row) {
     text: row.text || [],
     vocabulary: row.vocabulary || [],
     inlineVocabulary: row.inline_vocabulary || [],
-    questions: row.questions || []
+    questions: row.questions || [],
+    updatedAt: row.updated_at || null
   };
 }
 
-function articleToRow(article) {
-  return {
+function articleToRow(article, options = {}) {
+  const row = {
     id: article.id,
     title: article.title,
     level: article.level,
@@ -215,9 +218,14 @@ function articleToRow(article) {
     vocabulary: article.vocabulary || [],
     inline_vocabulary: getInlineVocabulary(article),
     questions: article.questions || [],
-    published: article.published !== false,
-    updated_at: new Date().toISOString()
+    published: article.published !== false
   };
+
+  if (!options.preserveUpdatedAt) {
+    row.updated_at = new Date().toISOString();
+  }
+
+  return row;
 }
 
 async function saveArticle(article) {
@@ -243,13 +251,28 @@ async function saveArticle(article) {
 }
 
 function getCategories() {
-  return ["Všetky", ...new Set(state.articles.map(a => a.category))];
+  const categories = [];
+  const seen = new Set();
+
+  state.articles.forEach(article => {
+    if (!article.category || seen.has(article.category)) return;
+    seen.add(article.category);
+    categories.push(article.category);
+  });
+
+  return ["Všetky", ...categories];
 }
 
 function renderCategories() {
   const root = $("categoryFilters");
+  const categories = getCategories();
+  const visibleCategories = state.showAllCategories
+    ? categories
+    : categories.slice(0, VISIBLE_CATEGORY_LIMIT);
+  const hasMore = categories.length > VISIBLE_CATEGORY_LIMIT;
+
   root.innerHTML = "";
-  getCategories().forEach(category => {
+  visibleCategories.forEach(category => {
     const btn = document.createElement("button");
     btn.className = "chip" + (category === state.selectedCategory ? " active" : "");
     btn.textContent = category;
@@ -260,13 +283,24 @@ function renderCategories() {
     };
     root.appendChild(btn);
   });
+
+  if (hasMore) {
+    const btn = document.createElement("button");
+    btn.className = "chip more-chip";
+    btn.textContent = state.showAllCategories ? "Menej tém" : "Ďalšie témy";
+    btn.onclick = () => {
+      state.showAllCategories = !state.showAllCategories;
+      renderCategories();
+    };
+    root.appendChild(btn);
+  }
 }
 
 function renderArticles() {
   const root = $("articleList");
-  const articles = state.selectedCategory === "Všetky"
+  const articles = (state.selectedCategory === "Všetky"
     ? state.articles
-    : state.articles.filter(a => a.category === state.selectedCategory);
+    : state.articles.filter(a => a.category === state.selectedCategory));
 
   root.innerHTML = "";
 
