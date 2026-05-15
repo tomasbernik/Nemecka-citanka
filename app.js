@@ -1508,11 +1508,20 @@ async function copyTextToClipboard(text, successMessage = "Skopírované.") {
     return;
   }
 
+  $("generatedPromptOutput").value = text;
+  $("generatedPromptWrap").classList.remove("hidden");
+
   try {
+    if (!navigator.clipboard?.writeText) {
+      throw new Error("Clipboard API nie je dostupné.");
+    }
+
     await navigator.clipboard.writeText(text);
     $("articleEditorStatus").textContent = successMessage;
   } catch (error) {
-    $("articleEditorStatus").textContent = "Kopírovanie zlyhalo. Označ text ručne a skopíruj ho.";
+    $("generatedPromptOutput").focus();
+    $("generatedPromptOutput").select();
+    $("articleEditorStatus").textContent = "Automatické kopírovanie zlyhalo. Prompt je zobrazený nižšie, skopíruj ho ručne.";
   }
 }
 
