@@ -37,7 +37,8 @@ create table if not exists public.app_articles (
   updated_at timestamptz not null default now()
 );
 
-create or replace view public.app_vocabulary_missing_translations as
+create or replace view public.app_vocabulary_missing_translations
+with (security_invoker = true) as
 with article_vocabulary as (
   select
     article.id as article_id,
@@ -87,6 +88,10 @@ select
 from missing
 where array_length(missing_languages, 1) > 0
 order by article_title, source, item_index;
+
+revoke all on public.app_vocabulary_missing_translations from anon;
+revoke all on public.app_vocabulary_missing_translations from authenticated;
+grant select on public.app_vocabulary_missing_translations to service_role;
 
 alter table public.app_articles
 add column if not exists owner_profile_id text references public.app_profiles(id) on delete set null;
