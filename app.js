@@ -2,7 +2,6 @@ const PROFILE_KEY = "profiles";
 const CURRENT_PROFILE_KEY = "currentProfileId";
 const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
-const AUTO_READ_DELAY_MS = 2 * 60 * 1000;
 const VISIBLE_CATEGORY_LIMIT = 6;
 const DEFAULT_NATIVE_LANGUAGE = "sk";
 const DEFAULT_PRELOGIN_LANGUAGE = "de";
@@ -21,7 +20,7 @@ const NATIVE_LANGUAGES = {
 const UI_TEXT = {
   de: {
     appTitle: "Lesebuch",
-    languageLabel: "A2 Deutsch",
+    languageLabel: "Nemčina",
     overview: "Übersicht",
     settings: "Einstellungen",
     loginEyebrow: "Anmeldung",
@@ -172,7 +171,7 @@ const UI_TEXT = {
   },
   sk: {
     appTitle: "Čítanka",
-    languageLabel: "A2 nemčina",
+    languageLabel: "Nemčina",
     overview: "Prehľad",
     settings: "Nastavenia",
     loginEyebrow: "Prihlásenie",
@@ -323,7 +322,7 @@ const UI_TEXT = {
   },
   ru: {
     appTitle: "Книга для чтения",
-    languageLabel: "Немецкий A2",
+    languageLabel: "Немецкий",
     overview: "Обзор",
     settings: "Настройки",
     loginEyebrow: "Вход",
@@ -474,7 +473,7 @@ const UI_TEXT = {
   },
   pl: {
     appTitle: "Czytanka",
-    languageLabel: "Niemiecki A2",
+    languageLabel: "Niemiecki",
     overview: "Przegląd",
     settings: "Ustawienia",
     loginEyebrow: "Logowanie",
@@ -625,7 +624,7 @@ const UI_TEXT = {
   },
   hu: {
     appTitle: "Olvasókönyv",
-    languageLabel: "A2 német",
+    languageLabel: "Német",
     overview: "Áttekintés",
     settings: "Beállítások",
     loginEyebrow: "Bejelentkezés",
@@ -788,6 +787,7 @@ Object.assign(UI_TEXT.sk, {
   articleSaved: "Článok je uložený.",
   validationFillArticle: "Vyplň názov, ID, úroveň, kategóriu, popis a aspoň jeden odsek textu.",
   validationQuestion: "Pridaj aspoň jednu pravda/nepravda vetu.",
+  validationVocabulary: "Pridaj aspoň jedno slovíčko s prekladom.",
   copied: "Skopírované.",
   nothingToCopy: "Nie je čo kopírovať.",
   copyFailed: "Automatické kopírovanie zlyhalo. Prompt je zobrazený nižšie, skopíruj ho ručne.",
@@ -946,7 +946,6 @@ const state = {
     mode: "text",
     runId: 0
   },
-  articleReadTimer: null,
   startupQuiz: {
     questions: [],
     index: 0,
@@ -1000,6 +999,14 @@ function setLabelText(inputId, key) {
 function setOptionText(selectId, value, key) {
   const option = $(`${selectId}`)?.querySelector(`option[value="${value}"]`);
   if (option) option.textContent = t(key);
+}
+
+function setButtonLabel(id, key) {
+  const button = $(id);
+  if (!button) return;
+  const label = t(key);
+  button.setAttribute("aria-label", label);
+  button.setAttribute("title", label);
 }
 
 function isSupportedNativeLanguage(language) {
@@ -1121,15 +1128,9 @@ function updateStaticTexts() {
   setText("refreshBtn", "refresh");
 
   setText("backBtn", "back");
-  setText("readAloudBtn", "readText");
-  setText("listenOnlyBtn", "listenOnly");
-  setText("pauseReadBtn", "pause");
-  setText("stopReadBtn", "stop");
-  setLabelText("speechRateSelect", "speed");
-  setOptionText("speechRateSelect", "0.65", "slower");
-  setOptionText("speechRateSelect", "1", "speedNormal");
-  setOptionText("speechRateSelect", "1.35", "faster");
-  setText("showTextAfterListeningBtn", "showText");
+  setButtonLabel("readAloudBtn", "readText");
+  setButtonLabel("pauseReadBtn", "pause");
+  setButtonLabel("stopReadBtn", "stop");
   setText("markReadBtn", "markRead");
 
   document.querySelectorAll("#articleView .practice-heading .eyebrow").forEach(item => item.textContent = t("game"));
@@ -1942,17 +1943,6 @@ function setSpeechStatus(message = "") {
   $("speechStatus").textContent = message;
 }
 
-function setAudioOnlyMode(isAudioOnly) {
-  $("articleView").classList.toggle("audio-only", isAudioOnly);
-  $("showTextAfterListeningBtn").classList.add("hidden");
-}
-
-function showArticleText() {
-  $("articleView").classList.remove("audio-only");
-  $("showTextAfterListeningBtn").classList.add("hidden");
-  setSpeechStatus("");
-}
-
 function clearReadingHighlight() {
   document.querySelectorAll(".reading-sentence.active").forEach(sentence => {
     sentence.classList.remove("active");
@@ -2005,32 +1995,24 @@ function stopReading() {
     mode: "text",
     runId: state.speech.runId + 1
   };
-  $("readAloudBtn").textContent = t("readText");
-  $("pauseReadBtn").textContent = t("pause");
-  $("listenOnlyBtn").textContent = t("listenOnly");
   clearReadingHighlight();
-  showArticleText();
   setSpeechStatus("");
+  setButtonLabel("readAloudBtn", "readText");
+  setButtonLabel("pauseReadBtn", "pause");
 }
 
 function finishReading(message = t("finishedReading")) {
-  const mode = state.speech.mode;
   state.speech.isReading = false;
   state.speech.utterance = null;
   state.speech.sentenceIndex = 0;
   state.speech.runId += 1;
-  $("readAloudBtn").textContent = t("readText");
-  $("pauseReadBtn").textContent = t("pause");
-  $("listenOnlyBtn").textContent = t("listenOnly");
   clearReadingHighlight();
   setSpeechStatus(message);
-
-  if (mode === "audioOnly") {
-    $("showTextAfterListeningBtn").classList.remove("hidden");
-  }
+  setButtonLabel("readAloudBtn", "readText");
+  setButtonLabel("pauseReadBtn", "pause");
 }
 
-async function readSentence(index = 0, mode = "text") {
+async function readSentence(index = 0) {
   if (!("speechSynthesis" in window)) {
     setSpeechStatus(t("browserNoSpeech"));
     return;
@@ -2053,22 +2035,17 @@ async function readSentence(index = 0, mode = "text") {
   const runId = state.speech.runId + 1;
   state.speech.sentenceIndex = index;
   state.speech.isReading = true;
-  state.speech.mode = mode;
+  state.speech.mode = "text";
   state.speech.runId = runId;
-  if (mode === "audioOnly") {
-    setAudioOnlyMode(true);
-  } else {
-    setAudioOnlyMode(false);
-    highlightSentence(index);
-  }
+  highlightSentence(index);
 
   const utterance = new SpeechSynthesisUtterance(sentences[index]);
   utterance.lang = "de-DE";
-  utterance.rate = Number($("speechRateSelect").value || 1);
+  utterance.rate = 1;
   utterance.voice = getGermanVoice();
   utterance.onend = () => {
     if (state.speech.isReading && state.speech.utterance === utterance && state.speech.runId === runId) {
-      readSentence(index + 1, state.speech.mode);
+      readSentence(index + 1);
     }
   };
   utterance.onerror = (event) => {
@@ -2081,16 +2058,9 @@ async function readSentence(index = 0, mode = "text") {
   };
 
   state.speech.utterance = utterance;
-  $("readAloudBtn").textContent = t("restart");
-  $("listenOnlyBtn").textContent = mode === "audioOnly" ? t("listening") : t("listenOnly");
-  setSpeechStatus(mode === "audioOnly"
-    ? t("listenSentence").replace("{current}", index + 1).replace("{total}", sentences.length)
-    : t("readingSentence").replace("{current}", index + 1).replace("{total}", sentences.length));
+  setButtonLabel("readAloudBtn", "restart");
+  setSpeechStatus(t("readingSentence").replace("{current}", index + 1).replace("{total}", sentences.length));
   window.speechSynthesis.speak(utterance);
-}
-
-function listenWithoutText() {
-  readSentence(0, "audioOnly");
 }
 
 function forceStopSpeech() {
@@ -2108,33 +2078,16 @@ function forceStopSpeech() {
   }
 }
 
-function changeSpeechRate() {
-  if (!state.speech.isReading) return;
-
-  const index = state.speech.sentenceIndex;
-  const mode = state.speech.mode;
-
-  if (state.speech.utterance) {
-    state.speech.utterance.onend = null;
-    state.speech.utterance.onerror = null;
-  }
-
-  state.speech.runId += 1;
-  window.speechSynthesis.cancel();
-  setSpeechStatus(t("changingSpeed"));
-  setTimeout(() => readSentence(index, mode), 80);
-}
-
 function togglePauseReading() {
   if (!("speechSynthesis" in window) || !state.speech.isReading) return;
 
   if (window.speechSynthesis.paused) {
     window.speechSynthesis.resume();
-    $("pauseReadBtn").textContent = t("pause");
+    setButtonLabel("pauseReadBtn", "pause");
     setSpeechStatus(t("continuingReading"));
   } else {
     window.speechSynthesis.pause();
-    $("pauseReadBtn").textContent = t("continueReading");
+    setButtonLabel("pauseReadBtn", "continueReading");
     setSpeechStatus(t("readingPaused"));
   }
 }
@@ -2543,31 +2496,14 @@ function markCurrentArticleRead(source = "manual") {
   renderArticles();
 }
 
-function clearArticleReadTimer() {
-  if (!state.articleReadTimer) return;
-  clearTimeout(state.articleReadTimer);
-  state.articleReadTimer = null;
-}
-
-function startArticleReadTimer() {
-  clearArticleReadTimer();
-  const article = state.currentArticle;
-  if (!article || state.profileData.readIds.includes(article.id)) return;
-
-  state.articleReadTimer = setTimeout(() => {
-    if (state.currentArticle?.id !== article.id || $("articleView").classList.contains("hidden")) return;
-    markCurrentArticleRead("auto");
-  }, AUTO_READ_DELAY_MS);
-}
-
 function openArticle(id) {
   const article = state.articles.find(a => a.id === id);
   if (!article || !canViewArticle(article)) return;
 
-  clearArticleReadTimer();
   stopReading();
   state.currentArticle = article;
   showView("articleView");
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 
   $("articleMeta").textContent = `${article.level} • ${getCategoryLabel(article.category)}`;
   $("articleTitle").textContent = article.title;
@@ -2587,7 +2523,6 @@ function openArticle(id) {
   $("markReadBtn").textContent = state.profileData.readIds.includes(article.id)
     ? t("readDone")
     : t("markRead");
-  startArticleReadTimer();
 }
 
 function addDiscoveredVocabulary(word, translation) {
@@ -2621,7 +2556,6 @@ function showInlineTranslation(button) {
 }
 
 function showHome() {
-  clearArticleReadTimer();
   stopReading();
   state.currentArticle = null;
   showView("homeView");
@@ -2676,7 +2610,6 @@ async function setCurrentProfile(profile) {
 }
 
 function showLogin() {
-  clearArticleReadTimer();
   stopReading();
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
@@ -2686,7 +2619,6 @@ function showLogin() {
 }
 
 function showSetup() {
-  clearArticleReadTimer();
   stopReading();
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
@@ -2792,7 +2724,6 @@ async function createProfiles() {
 }
 
 function logout() {
-  clearArticleReadTimer();
   stopReading();
   state.currentProfile = null;
   state.profileData = emptyProfileData();
@@ -3251,6 +3182,33 @@ function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
   fillArticleEditor(article || null);
 }
 
+function hasTranslatedVocabulary() {
+  try {
+    return parseVocabularyLines($("articleVocabularyInput").value).length > 0;
+  } catch (error) {
+    return false;
+  }
+}
+
+function updateArticleEditorFlow() {
+  const isEditing = Boolean($("articleEditorSelect")?.value);
+  const hasGeneratedPrompt = Boolean($("generatedPromptOutput")?.value.trim());
+  const hasContent = Boolean(
+    $("articleTitleInput").value.trim()
+    || $("articleTextInput").value.trim()
+    || $("articleSummaryInput").value.trim()
+    || $("articleCategoryInput").value.trim()
+  );
+  const hasText = Boolean($("articleTextInput").value.trim());
+  const hasQuestions = Boolean($("articleQuestionsInput").value.trim());
+  const hasVocabulary = hasTranslatedVocabulary();
+
+  $("articleContentStep").classList.toggle("hidden", !(isEditing || hasGeneratedPrompt || hasContent));
+  $("articleQuestionsStep").classList.toggle("hidden", !hasText);
+  $("articleVocabularyStep").classList.toggle("hidden", !hasQuestions);
+  $("saveArticleBtn").classList.toggle("hidden", !(hasQuestions && hasVocabulary));
+}
+
 function fillArticleEditor(article) {
   $("articleTitleInput").value = article?.title || "";
   $("articleIdInput").value = article?.id || "";
@@ -3263,9 +3221,12 @@ function fillArticleEditor(article) {
   $("articleVocabularyInput").value = formatVocabularyLines(article?.vocabulary || []);
   $("articleInlineVocabularyInput").value = formatVocabularyLines(getInlineVocabulary(article || {}));
   $("articleQuestionsInput").value = formatQuestionLines(article?.questions || []);
+  $("generatedPromptOutput").value = "";
+  $("generatedPromptWrap").classList.add("hidden");
   $("articleEditorStatus").textContent = state.remoteReady
     ? ""
     : t("editorNeedsSupabase");
+  updateArticleEditorFlow();
 }
 
 function readArticleEditor() {
@@ -3302,6 +3263,10 @@ function readArticleEditor() {
 
   if (!article.questions.length) {
     throw new Error(t("validationQuestion"));
+  }
+
+  if (!parsedVocabulary.length) {
+    throw new Error(t("validationVocabulary"));
   }
 
   return article;
@@ -3597,10 +3562,8 @@ $("setupBackBtn").onclick = showLogin;
 $("createProfilesBtn").onclick = createProfiles;
 $("logoutBtn").onclick = logout;
 $("readAloudBtn").onclick = () => readSentence(0);
-$("listenOnlyBtn").onclick = listenWithoutText;
 $("pauseReadBtn").onclick = togglePauseReading;
 $("stopReadBtn").onclick = stopReading;
-$("showTextAfterListeningBtn").onclick = showArticleText;
 $("newSentenceGameBtn").onclick = startSentenceGame;
 $("newMatchGameBtn").onclick = startMatchGame;
 $("newVocabChoiceBtn").onclick = startVocabChoiceGame;
@@ -3631,10 +3594,26 @@ $("articleTitleInput").addEventListener("input", () => {
   if (!$("articleEditorSelect").value) {
     $("articleIdInput").value = makeArticleId($("articleTitleInput").value);
   }
+  updateArticleEditorFlow();
 });
-$("addSelectedVocabularyBtn").onclick = () => addSelectedTextToVocabulary(true);
-$("addSelectedInlineBtn").onclick = () => addSelectedTextToVocabulary(false);
-$("copyArticlePromptBtn").onclick = () => copyTextToClipboard(buildArticlePrompt(), t("promptArticleCopied"));
+$("articleCategoryInput").addEventListener("input", updateArticleEditorFlow);
+$("articleSummaryInput").addEventListener("input", updateArticleEditorFlow);
+$("articleTextInput").addEventListener("input", updateArticleEditorFlow);
+$("articleQuestionsInput").addEventListener("input", updateArticleEditorFlow);
+$("articleVocabularyInput").addEventListener("input", updateArticleEditorFlow);
+$("articleInlineVocabularyInput").addEventListener("input", updateArticleEditorFlow);
+$("addSelectedVocabularyBtn").onclick = () => {
+  addSelectedTextToVocabulary(true);
+  updateArticleEditorFlow();
+};
+$("addSelectedInlineBtn").onclick = () => {
+  addSelectedTextToVocabulary(false);
+  updateArticleEditorFlow();
+};
+$("copyArticlePromptBtn").onclick = async () => {
+  await copyTextToClipboard(buildArticlePrompt(), t("promptArticleCopied"));
+  updateArticleEditorFlow();
+};
 $("copyTranslationPromptBtn").onclick = () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied"));
 $("copyQuestionsPromptBtn").onclick = () => copyTextToClipboard(buildQuestionsPrompt(), t("promptQuestionsCopied"));
 
@@ -3704,10 +3683,6 @@ $("wordSearchGrid").addEventListener("click", event => {
   if (!button) return;
   chooseWordSearchLetter(Number(button.dataset.row), Number(button.dataset.col));
 });
-
-$("speechRateSelect").onchange = () => {
-  changeSpeechRate();
-};
 
 $("startupQuizOptions").addEventListener("click", event => {
   const button = event.target.closest(".quiz-option");

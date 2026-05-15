@@ -12,7 +12,7 @@
   <div id="app">
     <header class="topbar">
       <div>
-        <p class="eyebrow">A2 Deutsch</p>
+        <p class="eyebrow">Nemčina</p>
         <h1>Lesebuch</h1>
       </div>
       <div class="top-actions">
@@ -119,21 +119,11 @@
           <h2 id="articleTitle"></h2>
           <div class="listen-panel" aria-label="Čítanie článku nahlas">
             <div class="listen-actions">
-              <button id="readAloudBtn" class="secondary-btn" type="button">Prečítať text</button>
-              <button id="listenOnlyBtn" class="secondary-btn quiet" type="button">Počúvať bez textu</button>
-              <button id="pauseReadBtn" class="text-btn" type="button">Pauza</button>
-              <button id="stopReadBtn" class="text-btn" type="button">Stop</button>
+              <button id="readAloudBtn" class="audio-btn" type="button" aria-label="Prehrať" title="Prehrať">▶</button>
+              <button id="pauseReadBtn" class="audio-btn" type="button" aria-label="Pauza" title="Pauza">⏸</button>
+              <button id="stopReadBtn" class="audio-btn" type="button" aria-label="Stop" title="Stop">■</button>
             </div>
-            <label class="speed-control">
-              Rýchlosť
-              <select id="speechRateSelect">
-                <option value="0.65">Pomalšie</option>
-                <option value="1" selected>Normálne</option>
-                <option value="1.35">Rýchlejšie</option>
-              </select>
-            </label>
             <p id="speechStatus" class="muted listen-status"></p>
-            <button id="showTextAfterListeningBtn" class="primary-btn compact hidden" type="button">Ukázať text</button>
           </div>
           <div id="articleImageWrap" class="article-image-wrap hidden"></div>
           <div id="articleText" class="article-text"></div>
@@ -323,8 +313,12 @@
           <section class="editor-helper">
             <p class="eyebrow">ChatGPT pomocník</p>
             <label class="field-row">
-              Zadanie pre článok
-              <textarea id="articlePromptInput" class="editor-textarea compact" placeholder="Napr. článok o balení na dovolenku, úroveň B1, použi tieto slová 2-4 krát..."></textarea>
+              Úroveň nemčiny
+              <input id="articleLevelInput" placeholder="A2, A2-B1, B1">
+            </label>
+            <label class="field-row">
+              Informácie pre generovanie promptu
+              <textarea id="articlePromptInput" class="editor-textarea compact" placeholder="Napr. článok o balení na dovolenku, použi jednoduché vety..."></textarea>
             </label>
             <label class="field-row">
               Povinné slová, jedno slovo alebo fráza na riadok
@@ -339,55 +333,59 @@
             </label>
           </section>
 
-          <label class="field-row">
-            Názov
-            <input id="articleTitleInput">
-          </label>
-          <label class="field-row">
-            ID
-            <input id="articleIdInput">
-          </label>
-          <label class="field-row">
-            Úroveň
-            <input id="articleLevelInput" placeholder="A2, A2-B1, B1">
-          </label>
-          <label class="field-row">
-            Kategória
-            <input id="articleCategoryInput">
-          </label>
-          <label class="field-row">
-            Krátky popis
-            <textarea id="articleSummaryInput" class="editor-textarea compact"></textarea>
-          </label>
-          <label class="field-row">
-            Text článku, každý odsek na nový riadok
-            <textarea id="articleTextInput" class="editor-textarea tall"></textarea>
-          </label>
-          <div class="editor-actions">
-            <button id="addSelectedVocabularyBtn" class="secondary-btn" type="button">Označené do slovíčok aj inline</button>
-            <button id="addSelectedInlineBtn" class="secondary-btn quiet" type="button">Označené iba inline</button>
+          <div id="articleContentStep" class="editor-step hidden">
+            <label class="field-row">
+              Názov
+              <input id="articleTitleInput">
+            </label>
+            <label class="field-row">
+              ID
+              <input id="articleIdInput">
+            </label>
+            <label class="field-row">
+              Kategória
+              <input id="articleCategoryInput">
+            </label>
+            <label class="field-row">
+              Krátky popis
+              <textarea id="articleSummaryInput" class="editor-textarea compact"></textarea>
+            </label>
+            <label class="field-row">
+              Text článku, každý odsek na nový riadok
+              <textarea id="articleTextInput" class="editor-textarea tall"></textarea>
+            </label>
           </div>
-          <div class="editor-actions">
-            <button id="copyTranslationPromptBtn" class="secondary-btn quiet" type="button">Kopírovať slovíčka na preklad</button>
+
+          <div id="articleQuestionsStep" class="editor-step hidden">
+            <div class="editor-actions">
+              <button id="copyQuestionsPromptBtn" class="secondary-btn quiet" type="button">Kopírovať prompt pre otázky</button>
+            </div>
+            <label class="field-row">
+              Pravda/nepravda, jeden riadok: nemecká veta = true/false
+              <textarea id="articleQuestionsInput" class="editor-textarea"></textarea>
+            </label>
           </div>
-          <label class="field-row">
-            Slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad
-            <textarea id="articleVocabularyInput" class="editor-textarea"></textarea>
-          </label>
-          <label class="field-row">
-            Inline slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad
-            <textarea id="articleInlineVocabularyInput" class="editor-textarea"></textarea>
-          </label>
-          <div class="editor-actions">
-            <button id="copyQuestionsPromptBtn" class="secondary-btn quiet" type="button">Kopírovať prompt pre otázky</button>
+
+          <div id="articleVocabularyStep" class="editor-step hidden">
+            <div class="editor-actions">
+              <button id="addSelectedVocabularyBtn" class="secondary-btn" type="button">Označené do slovíčok aj inline</button>
+              <button id="addSelectedInlineBtn" class="secondary-btn quiet" type="button">Označené iba inline</button>
+            </div>
+            <div class="editor-actions">
+              <button id="copyTranslationPromptBtn" class="secondary-btn quiet" type="button">Kopírovať slovíčka na preklad</button>
+            </div>
+            <label class="field-row">
+              Slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad
+              <textarea id="articleVocabularyInput" class="editor-textarea"></textarea>
+            </label>
+            <label class="field-row">
+              Inline slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad
+              <textarea id="articleInlineVocabularyInput" class="editor-textarea"></textarea>
+            </label>
           </div>
-          <label class="field-row">
-            Pravda/nepravda, jeden riadok: nemecká veta = true/false
-            <textarea id="articleQuestionsInput" class="editor-textarea"></textarea>
-          </label>
 
           <p id="articleEditorStatus" class="form-error"></p>
-          <button id="saveArticleBtn" class="primary-btn" type="button">Uložiť článok</button>
+          <button id="saveArticleBtn" class="primary-btn hidden" type="button">Uložiť článok</button>
         </div>
       </section>
     </main>

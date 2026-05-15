@@ -78,7 +78,7 @@ h3 { font-size: 1.1rem; }
   box-shadow: var(--shadow);
 }
 
-.icon-btn, .text-btn, .back-btn, .primary-btn, .secondary-btn, .chip {
+.icon-btn, .text-btn, .back-btn, .primary-btn, .secondary-btn, .audio-btn, .chip {
   border: 0;
   cursor: pointer;
   font: inherit;
@@ -241,20 +241,32 @@ h3 { font-size: 1.1rem; }
 }
 
 .listen-panel {
-  display: grid;
+  display: flex;
+  align-items: center;
   gap: 12px;
   margin: 16px 0 20px;
-  padding: 14px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
-  border-radius: 20px;
+  border-radius: 16px;
   background: rgba(127, 127, 127, 0.07);
 }
 
 .listen-actions {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+.audio-btn {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  background: var(--text);
+  color: var(--card);
+  font-weight: 900;
+  line-height: 1;
 }
 
 .secondary-btn {
@@ -270,29 +282,8 @@ h3 { font-size: 1.1rem; }
   color: var(--text);
 }
 
-.speed-control {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  color: var(--muted);
-  font-weight: 800;
-}
-
 .listen-status {
   min-height: 1.4em;
-  margin-bottom: 0;
-}
-
-#showTextAfterListeningBtn {
-  margin-top: 0;
-}
-
-.audio-only .article-text {
-  display: none;
-}
-
-.audio-only .listen-panel {
   margin-bottom: 0;
 }
 
@@ -405,6 +396,15 @@ h3 { font-size: 1.1rem; }
   border: 1px solid var(--border);
   border-radius: 18px;
   background: rgba(127, 127, 127, 0.06);
+}
+
+.editor-step {
+  display: grid;
+  gap: 10px;
+}
+
+.editor-step.hidden {
+  display: none;
 }
 
 .editor-actions {
