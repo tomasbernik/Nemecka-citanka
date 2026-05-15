@@ -78,5 +78,86 @@
     "connector": "deshalb",
     "adjective_adverb": "wichtig",
     "phrase": "es hängt davon ab"
+  },
+  {
+    "group": 11,
+    "noun": "die Lösung",
+    "verb": "teilnehmen",
+    "connector": "zumal",
+    "adjective_adverb": "effektiv",
+    "phrase": "ich bin der Meinung, dass"
+  },
+  {
+    "group": 12,
+    "noun": "die Tätigkeit",
+    "verb": "übersehen",
+    "connector": "sofern",
+    "adjective_adverb": "anspruchsvoll",
+    "phrase": "ich gehe davon aus, dass"
+  },
+  {
+    "group": 13,
+    "noun": "die Zukunft",
+    "verb": "vorbereiten",
+    "connector": "sobald",
+    "adjective_adverb": "deutlich",
+    "phrase": "in naher Zukunft"
+  },
+  {
+    "group": 14,
+    "noun": "der Grund",
+    "verb": "nachvollziehen",
+    "connector": "nachdem",
+    "adjective_adverb": "präzise",
+    "phrase": "aus diesem Grund"
+  },
+  {
+    "group": 15,
+    "noun": "die Herausforderung",
+    "verb": "bewältigen",
+    "connector": "folglich",
+    "adjective_adverb": "zügig",
+    "phrase": "vor einer Herausforderung stehen"
+  },
+  {
+    "group": 16,
+    "noun": "die Beschäftigung",
+    "verb": "wechseln",
+    "connector": "sobald",
+    "adjective_adverb": "aktuell",
+    "phrase": "einer Beschäftigung nachgehen"
+  },
+  {
+    "group": 17,
+    "noun": "der Aufenthalt",
+    "verb": "unternehmen",
+    "connector": "währenddessen",
+    "adjective_adverb": "aufwendig",
+    "phrase": "einen Aufenthalt planen"
+  },
+  {
+    "group": 18,
+    "noun": "die Gewohnheit",
+    "verb": "strukturieren",
+    "connector": "damit",
+    "adjective_adverb": "effizient",
+    "phrase": "eine Gewohnheit entwickeln"
+  },
+  {
+    "group": 19,
+    "noun": "das Wohlbefinden",
+    "verb": "beachten",
+    "connector": "falls",
+    "adjective_adverb": "ausreichend",
+    "phrase": "auf das Wohlbefinden achten"
+  },
+  {
+    "group": 20,
+    "noun": "die Kenntnisse",
+    "verb": "erweitern",
+    "connector": "indem",
+    "adjective_adverb": "kontinuierlich",
+    "phrase": "Kenntnisse erweitern"
   }
+
 ]

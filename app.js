@@ -318,6 +318,15 @@ function getInlineVocabulary(article) {
   return article.inlineVocabulary || article.clickVocabulary || [];
 }
 
+function normalizeVocabularyKey(value) {
+  return String(value)
+    .trim()
+    .toLocaleLowerCase("de")
+    .replace(/^(der|die|das|ein|eine)\s+/u, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 function getSavedVocabulary(article) {
   if (!article) return [];
   return state.profileData.discoveredVocabulary[article.id] || [];
@@ -329,11 +338,23 @@ function getVisibleVocabulary(article) {
   const seen = new Set();
 
   return [...initialVocabulary, ...savedVocabulary].filter(item => {
-    const key = item.de.toLocaleLowerCase("de");
+    const key = normalizeVocabularyKey(item.de);
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
+}
+
+function cleanupDiscoveredVocabulary(article) {
+  if (!article || !state.profileData.discoveredVocabulary?.[article.id]) return;
+
+  const initialKeys = new Set((article.vocabulary || []).map(item => normalizeVocabularyKey(item.de)));
+  const cleaned = getSavedVocabulary(article).filter(item => !initialKeys.has(normalizeVocabularyKey(item.de)));
+
+  if (cleaned.length !== getSavedVocabulary(article).length) {
+    state.profileData.discoveredVocabulary[article.id] = cleaned;
+    saveProfileData();
+  }
 }
 
 function getAllVocabulary() {
@@ -361,7 +382,7 @@ function getPracticeVocabulary(article) {
     .filter(item => getSentenceWords(item.de).length <= 2)
     .filter(item => item.de.length <= 18 && item.sk.length <= 32)
     .filter(item => {
-      const key = item.de.toLocaleLowerCase("de");
+      const key = normalizeVocabularyKey(item.de);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -1198,6 +1219,7 @@ function openArticle(id) {
 
   $("articleMeta").textContent = `${article.level} • ${article.category}`;
   $("articleTitle").textContent = article.title;
+  cleanupDiscoveredVocabulary(article);
   renderArticleText(article);
   renderVocabulary();
   renderQuestions(article);
@@ -1219,7 +1241,8 @@ function addDiscoveredVocabulary(word, translation) {
   const article = state.currentArticle;
   if (!article) return;
 
-  const exists = getVisibleVocabulary(article).some(v => v.de.toLocaleLowerCase("de") === word.toLocaleLowerCase("de"));
+  const wordKey = normalizeVocabularyKey(word);
+  const exists = getVisibleVocabulary(article).some(v => normalizeVocabularyKey(v.de) === wordKey);
   if (!exists) {
     state.profileData.discoveredVocabulary[article.id] = [
       ...getSavedVocabulary(article),
