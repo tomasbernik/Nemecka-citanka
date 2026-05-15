@@ -24,33 +24,52 @@
     <main>
       <section id="setupView" class="hidden">
         <div class="reader-card">
-          <p class="eyebrow">Prvé spustenie</p>
-          <h2>Vytvoriť dva profily</h2>
-          <p class="muted">PIN slúži len na oddelenie profilov v tejto súkromnej appke.</p>
+          <p class="eyebrow">Einrichtung</p>
+          <h2>Zwei Profile erstellen</h2>
+          <p class="muted">Der PIN trennt die Profile in dieser privaten App.</p>
 
           <label class="field-row">
-            Tvoje meno
-            <input id="teacherNameInput" autocomplete="given-name" value="Tomas">
+            Name Profil 1
+            <input id="teacherNameInput" autocomplete="given-name">
           </label>
           <label class="field-row">
-            Tvoj PIN
+            PIN Profil 1
             <input id="teacherPinInput" inputmode="numeric" type="password" autocomplete="new-password">
           </label>
           <label class="field-row">
-            Meno žiačky
+            Rolle Profil 1
+            <select id="teacherRoleSelect">
+              <option value="teacher">Lehrer/in</option>
+              <option value="student">Schüler/in</option>
+            </select>
+          </label>
+          <label class="field-row">
+            Muttersprache Profil 1
+            <select id="teacherNativeLanguageSelect"></select>
+          </label>
+          <label class="field-row">
+            Name Profil 2
             <input id="studentNameInput" autocomplete="given-name">
           </label>
           <label class="field-row">
-            PIN žiačky
+            PIN Profil 2
             <input id="studentPinInput" inputmode="numeric" type="password" autocomplete="new-password">
           </label>
           <label class="field-row">
-            Materinský jazyk žiačky
+            Rolle Profil 2
+            <select id="studentRoleSelect">
+              <option value="student">Schüler/in</option>
+              <option value="teacher">Lehrer/in</option>
+            </select>
+          </label>
+          <label class="field-row">
+            Muttersprache Profil 2
             <select id="setupNativeLanguageSelect"></select>
           </label>
 
           <p id="setupError" class="form-error"></p>
-          <button id="createProfilesBtn" class="primary-btn">Uložiť profily</button>
+          <button id="createProfilesBtn" class="primary-btn">Profile speichern</button>
+          <button id="setupBackBtn" class="secondary-btn quiet" type="button">Zur Anmeldung</button>
         </div>
       </section>
 
@@ -73,6 +92,7 @@
           <p id="loginError" class="form-error"></p>
           <button id="loginBtn" class="primary-btn">Anmelden</button>
           <button id="registerProfileBtn" class="secondary-btn quiet" type="button">Neues Profil erstellen</button>
+          <button id="setupPairBtn" class="secondary-btn quiet" type="button">Zwei Profile einrichten</button>
         </div>
       </section>
 
@@ -234,6 +254,13 @@
           <label class="setting-row">
             Materinský jazyk
             <select id="settingsNativeLanguageSelect"></select>
+          </label>
+          <label class="setting-row">
+            Rola profilu
+            <select id="settingsRoleSelect">
+              <option value="teacher">Učiteľ</option>
+              <option value="student">Žiak</option>
+            </select>
           </label>
           <label class="setting-row">
             Tmavý režim

@@ -1467,8 +1467,9 @@ async function setCurrentProfile(profile) {
   state.currentProfile = normalizeProfile(profile);
   localStorage.setItem(CURRENT_PROFILE_KEY, profile.id);
   await loadProfileData(state.currentProfile);
-  $("currentProfileLabel").textContent = `${profile.name} • ${profile.role === "teacher" ? "učiteľ" : "žiačka"}${state.remoteReady ? " • online" : " • lokálne"}`;
   renderNativeLanguageControls();
+  renderRoleControls();
+  renderCurrentProfileLabel();
   $("settingsBtn").classList.remove("hidden");
   $("teacherBtn").classList.toggle("hidden", profile.role !== "teacher");
   showHome();
@@ -1480,7 +1481,17 @@ function showLogin() {
   stopReading();
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
+  renderNativeLanguageControls();
   showView(state.profiles.length ? "loginView" : "setupView");
+}
+
+function showSetup() {
+  clearArticleReadTimer();
+  stopReading();
+  $("settingsBtn").classList.add("hidden");
+  $("teacherBtn").classList.add("hidden");
+  renderNativeLanguageControls();
+  showView("setupView");
 }
 
 async function login() {
@@ -1537,26 +1548,42 @@ async function registerProfileFromLogin() {
 async function createProfiles() {
   const teacherName = $("teacherNameInput").value.trim();
   const teacherPin = $("teacherPinInput").value.trim();
+  const teacherRole = $("teacherRoleSelect").value;
+  const teacherNativeLanguage = $("teacherNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
   const studentName = $("studentNameInput").value.trim();
   const studentPin = $("studentPinInput").value.trim();
+  const studentRole = $("studentRoleSelect").value;
+  const studentNativeLanguage = $("setupNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
 
   if (!teacherName || !teacherPin || !studentName || !studentPin) {
-    $("setupError").textContent = "Vyplň obe mená aj oba PINy.";
+    $("setupError").textContent = "Gib bitte beide Namen und beide PINs ein.";
     return;
   }
 
   if (normalizeName(teacherName) === normalizeName(studentName)) {
-    $("setupError").textContent = "Profily musia mať rozdielne mená.";
+    $("setupError").textContent = "Die Profile brauchen unterschiedliche Namen.";
     return;
   }
 
-  state.profiles = [
-    { id: makeProfileId(teacherName), name: teacherName, pin: teacherPin, role: "teacher", nativeLanguage: DEFAULT_NATIVE_LANGUAGE },
-    { id: makeProfileId(studentName), name: studentName, pin: studentPin, role: "student", nativeLanguage: $("setupNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE }
+  if (teacherRole === studentRole) {
+    $("setupError").textContent = "Wähle einmal Lehrer/in und einmal Schüler/in.";
+    return;
+  }
+
+  const existingNames = new Set(state.profiles.map(profile => normalizeName(profile.name)));
+  if (existingNames.has(normalizeName(teacherName)) || existingNames.has(normalizeName(studentName))) {
+    $("setupError").textContent = "Mindestens ein Profilname existiert schon.";
+    return;
+  }
+
+  const newProfiles = [
+    { id: makeProfileId(teacherName), name: teacherName, pin: teacherPin, role: teacherRole, nativeLanguage: teacherNativeLanguage },
+    { id: makeProfileId(studentName), name: studentName, pin: studentPin, role: studentRole, nativeLanguage: studentNativeLanguage }
   ];
+  state.profiles = [...state.profiles, ...newProfiles];
   await saveProfiles();
   $("setupError").textContent = "";
-  await setCurrentProfile(state.profiles[0]);
+  await setCurrentProfile(newProfiles.find(profile => profile.role === "teacher") || newProfiles[0]);
 }
 
 function logout() {
@@ -1627,9 +1654,23 @@ function renderNativeLanguageSelect(selectId, value = DEFAULT_NATIVE_LANGUAGE) {
 
 function renderNativeLanguageControls() {
   const profileLanguage = getNativeLanguage();
+  renderNativeLanguageSelect("teacherNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);
   renderNativeLanguageSelect("setupNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);
   renderNativeLanguageSelect("loginNativeLanguageSelect", profileLanguage);
   renderNativeLanguageSelect("settingsNativeLanguageSelect", profileLanguage);
+}
+
+function renderRoleControls() {
+  if ($("settingsRoleSelect") && state.currentProfile) {
+    $("settingsRoleSelect").value = state.currentProfile.role;
+  }
+}
+
+function renderCurrentProfileLabel() {
+  const profile = state.currentProfile;
+  if (!profile) return;
+
+  $("currentProfileLabel").textContent = `${profile.name} • ${profile.role === "teacher" ? "učiteľ" : "žiak"}${state.remoteReady ? " • online" : " • lokálne"}`;
 }
 
 async function updateCurrentProfileNativeLanguage(language) {
@@ -1651,6 +1692,20 @@ async function updateCurrentProfileNativeLanguage(language) {
   } else {
     renderArticles();
   }
+}
+
+async function updateCurrentProfileRole(role) {
+  if (!state.currentProfile || !["teacher", "student"].includes(role)) return;
+
+  state.currentProfile.role = role;
+  state.profiles = state.profiles.map(profile =>
+    profile.id === state.currentProfile.id ? { ...profile, role } : profile
+  );
+  await saveProfiles();
+  renderRoleControls();
+  renderCurrentProfileLabel();
+  $("teacherBtn").classList.toggle("hidden", role !== "teacher");
+  renderArticles();
 }
 
 function linesToList(value) {
@@ -2132,6 +2187,7 @@ function loadSettings() {
   const dark = localStorage.getItem("darkMode") === "true";
 
   renderNativeLanguageControls();
+  renderRoleControls();
   $("fontSizeSelect").value = fontSize;
   $("darkModeToggle").checked = dark;
 
@@ -2203,6 +2259,8 @@ $("teacherBtn").onclick = showTeacherOverview;
 $("refreshBtn").onclick = loadArticles;
 $("loginBtn").onclick = login;
 $("registerProfileBtn").onclick = registerProfileFromLogin;
+$("setupPairBtn").onclick = showSetup;
+$("setupBackBtn").onclick = showLogin;
 $("createProfilesBtn").onclick = createProfiles;
 $("logoutBtn").onclick = logout;
 $("readAloudBtn").onclick = () => readSentence(0);
@@ -2331,6 +2389,10 @@ $("darkModeToggle").onchange = (e) => {
 
 $("settingsNativeLanguageSelect").onchange = (e) => {
   updateCurrentProfileNativeLanguage(e.target.value);
+};
+
+$("settingsRoleSelect").onchange = (e) => {
+  updateCurrentProfileRole(e.target.value);
 };
 
 window.addEventListener("pagehide", forceStopSpeech);
