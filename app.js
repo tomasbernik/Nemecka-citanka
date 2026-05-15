@@ -1489,7 +1489,7 @@ async function login() {
   const profile = state.profiles.find(item => normalizeName(item.name) === name && item.pin === pin);
 
   if (!profile) {
-    $("loginError").textContent = "Meno alebo PIN nesedí.";
+    $("loginError").textContent = "Name oder PIN stimmt nicht. Wenn du neu bist, erstelle ein neues Profil.";
     return;
   }
 
@@ -1501,6 +1501,36 @@ async function login() {
     state.profiles = state.profiles.map(item => item.id === profile.id ? profile : item);
     await saveProfiles();
   }
+  await setCurrentProfile(profile);
+}
+
+async function registerProfileFromLogin() {
+  const name = $("loginNameInput").value.trim();
+  const pin = $("loginPinInput").value.trim();
+  const nativeLanguage = $("loginNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
+
+  if (!name || !pin) {
+    $("loginError").textContent = "Gib bitte Name und PIN ein.";
+    return;
+  }
+
+  if (state.profiles.some(item => normalizeName(item.name) === normalizeName(name))) {
+    $("loginError").textContent = "Dieses Profil gibt es schon. Melde dich mit dem passenden PIN an.";
+    return;
+  }
+
+  const profile = {
+    id: makeProfileId(name),
+    name,
+    pin,
+    role: "student",
+    nativeLanguage
+  };
+
+  state.profiles = [...state.profiles, profile];
+  await saveProfiles();
+  $("loginError").textContent = "";
+  $("loginPinInput").value = "";
   await setCurrentProfile(profile);
 }
 
@@ -2172,6 +2202,7 @@ $("settingsBtn").onclick = showSettings;
 $("teacherBtn").onclick = showTeacherOverview;
 $("refreshBtn").onclick = loadArticles;
 $("loginBtn").onclick = login;
+$("registerProfileBtn").onclick = registerProfileFromLogin;
 $("createProfilesBtn").onclick = createProfiles;
 $("logoutBtn").onclick = logout;
 $("readAloudBtn").onclick = () => readSentence(0);
