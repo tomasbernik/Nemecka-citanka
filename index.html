@@ -269,6 +269,22 @@
             Upraviť článok
             <select id="articleEditorSelect"></select>
           </label>
+          <label class="field-row">
+            Viditeľnosť
+            <select id="articleVisibilitySelect">
+              <option value="private">Súkromný článok</option>
+              <option value="public">Verejný po schválení</option>
+            </select>
+          </label>
+          <label class="field-row">
+            Stav schválenia
+            <select id="articleApprovalStatusSelect">
+              <option value="draft">Rozpracované</option>
+              <option value="pending">Čaká na schválenie</option>
+              <option value="approved">Schválené</option>
+              <option value="rejected">Zamietnuté</option>
+            </select>
+          </label>
 
           <section class="editor-helper">
             <p class="eyebrow">ChatGPT pomocník</p>
@@ -320,11 +336,11 @@
             <button id="addSelectedInlineBtn" class="secondary-btn quiet" type="button">Označené iba inline</button>
           </div>
           <label class="field-row">
-            Slovíčka, jeden riadok: nemecky = preklad
+            Slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad
             <textarea id="articleVocabularyInput" class="editor-textarea"></textarea>
           </label>
           <label class="field-row">
-            Inline slovíčka, jeden riadok: nemecky = preklad
+            Inline slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad
             <textarea id="articleInlineVocabularyInput" class="editor-textarea"></textarea>
           </label>
           <label class="field-row">

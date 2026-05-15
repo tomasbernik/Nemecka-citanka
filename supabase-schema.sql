@@ -17,6 +17,9 @@ create table if not exists public.app_profile_data (
 
 create table if not exists public.app_articles (
   id text primary key,
+  owner_profile_id text references public.app_profiles(id) on delete set null,
+  visibility text not null default 'public' check (visibility in ('private', 'public')),
+  approval_status text not null default 'approved' check (approval_status in ('draft', 'pending', 'approved', 'rejected')),
   title text not null,
   level text not null,
   category text not null,
@@ -28,6 +31,34 @@ create table if not exists public.app_articles (
   published boolean not null default true,
   updated_at timestamptz not null default now()
 );
+
+alter table public.app_articles
+add column if not exists owner_profile_id text references public.app_profiles(id) on delete set null;
+
+alter table public.app_articles
+add column if not exists visibility text not null default 'public';
+
+alter table public.app_articles
+add column if not exists approval_status text not null default 'approved';
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'app_articles_visibility_check'
+  ) then
+    alter table public.app_articles
+    add constraint app_articles_visibility_check
+    check (visibility in ('private', 'public'));
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'app_articles_approval_status_check'
+  ) then
+    alter table public.app_articles
+    add constraint app_articles_approval_status_check
+    check (approval_status in ('draft', 'pending', 'approved', 'rejected'));
+  end if;
+end $$;
 
 alter table public.app_profiles enable row level security;
 alter table public.app_profile_data enable row level security;

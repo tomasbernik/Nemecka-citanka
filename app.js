@@ -5,6 +5,9 @@ const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 const AUTO_READ_DELAY_MS = 2 * 60 * 1000;
 const VISIBLE_CATEGORY_LIMIT = 6;
 const DEFAULT_NATIVE_LANGUAGE = "sk";
+const DEFAULT_ARTICLE_VISIBILITY = "private";
+const DEFAULT_ARTICLE_APPROVAL_STATUS = "draft";
+const PUBLIC_ARTICLE_APPROVAL_STATUS = "pending";
 const NATIVE_LANGUAGES = {
   sk: { label: "Slovenčina", promptName: "slovenčiny", lineFormat: "slovensky", locale: "sk" },
   ru: { label: "Ruština", promptName: "ruštiny", lineFormat: "rusky", locale: "ru" },
@@ -228,7 +231,7 @@ async function loadArticles() {
     localArticles = [];
   }
 
-  state.articles = localArticles;
+  state.articles = localArticles.map(normalizeArticle);
 
   if (state.remoteReady) {
     try {
@@ -242,7 +245,7 @@ async function loadArticles() {
       }
 
       if (remoteArticles.length) {
-        state.articles = remoteArticles;
+        state.articles = remoteArticles.map(normalizeArticle);
       }
     } catch (error) {
       console.error(error);
@@ -258,6 +261,33 @@ async function loadRemoteArticles() {
   return (rows || []).map(rowToArticle);
 }
 
+function normalizeArticle(article) {
+  return {
+    ...article,
+    ownerProfileId: article.ownerProfileId || article.owner_profile_id || null,
+    visibility: article.visibility || "public",
+    approvalStatus: article.approvalStatus || article.approval_status || "approved"
+  };
+}
+
+function canViewArticle(article, profile = state.currentProfile) {
+  if (!article?.published && article?.published !== undefined) return false;
+  if (article.visibility === "public" && article.approvalStatus === "approved") return true;
+  if (!profile) return false;
+  if (profile.role === "teacher") return true;
+  return article.ownerProfileId === profile.id;
+}
+
+function getVisibleArticles() {
+  return state.articles.filter(article => canViewArticle(article));
+}
+
+function getEditableArticles() {
+  if (!state.currentProfile) return [];
+  if (state.currentProfile.role === "teacher") return state.articles;
+  return state.articles.filter(article => article.ownerProfileId === state.currentProfile.id);
+}
+
 async function saveRemoteArticles(articles, options = {}) {
   if (!state.remoteReady || !articles.length) return;
 
@@ -271,6 +301,9 @@ async function saveRemoteArticles(articles, options = {}) {
 function rowToArticle(row) {
   return {
     id: row.id,
+    ownerProfileId: row.owner_profile_id || null,
+    visibility: row.visibility || "public",
+    approvalStatus: row.approval_status || "approved",
     title: row.title,
     level: row.level,
     category: row.category,
@@ -286,6 +319,9 @@ function rowToArticle(row) {
 function articleToRow(article, options = {}) {
   const row = {
     id: article.id,
+    owner_profile_id: article.ownerProfileId || null,
+    visibility: article.visibility || "public",
+    approval_status: article.approvalStatus || "approved",
     title: article.title,
     level: article.level,
     category: article.category,
@@ -309,6 +345,8 @@ async function saveArticle(article) {
     throw new Error("Editor článkov potrebuje zapnutý Supabase.");
   }
 
+  article = normalizeArticle(article);
+
   await supabaseRequest("app_articles?on_conflict=id", {
     method: "POST",
     headers: { Prefer: "resolution=merge-duplicates" },
@@ -330,7 +368,7 @@ function getCategories() {
   const categories = [];
   const seen = new Set();
 
-  state.articles.forEach(article => {
+  getVisibleArticles().forEach(article => {
     if (!article.category || seen.has(article.category)) return;
     seen.add(article.category);
     categories.push(article.category);
@@ -375,8 +413,8 @@ function renderCategories() {
 function renderArticles() {
   const root = $("articleList");
   const articles = (state.selectedCategory === "Všetky"
-    ? state.articles
-    : state.articles.filter(a => a.category === state.selectedCategory));
+    ? getVisibleArticles()
+    : getVisibleArticles().filter(a => a.category === state.selectedCategory));
 
   root.innerHTML = "";
 
@@ -390,6 +428,8 @@ function renderArticles() {
       <div class="badges">
         <span class="badge">${escapeHtml(article.level)}</span>
         <span class="badge">${escapeHtml(article.category)}</span>
+        ${article.visibility === "private" ? '<span class="badge">súkromné</span>' : ""}
+        ${article.visibility === "public" && article.approvalStatus !== "approved" ? '<span class="badge">čaká na schválenie</span>' : ""}
         ${isRead ? '<span class="badge">✓ prečítané</span>' : ""}
       </div>
     `;
@@ -1325,7 +1365,7 @@ function startArticleReadTimer() {
 
 function openArticle(id) {
   const article = state.articles.find(a => a.id === id);
-  if (!article) return;
+  if (!article || !canViewArticle(article)) return;
 
   clearArticleReadTimer();
   stopReading();
@@ -1387,6 +1427,7 @@ function showHome() {
   stopReading();
   state.currentArticle = null;
   showView("homeView");
+  renderCategories();
   renderArticles();
 }
 
@@ -1586,7 +1627,25 @@ function linesToList(value) {
   return value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
 }
 
+function parseVocabularyJson(value) {
+  const text = value.trim();
+  if (!text || (!text.startsWith("[") && !text.startsWith("{"))) return null;
+
+  const parsed = JSON.parse(text);
+  const items = Array.isArray(parsed) ? parsed : [parsed];
+  return items.map(item => ({
+    de: (item.de || "").trim(),
+    sk: (item.sk || "").trim(),
+    ru: (item.ru || "").trim(),
+    pl: (item.pl || "").trim(),
+    hu: (item.hu || "").trim()
+  })).filter(item => item.de && (item.sk || item.ru || item.pl || item.hu));
+}
+
 function parseVocabularyLines(value) {
+  const jsonItems = parseVocabularyJson(value);
+  if (jsonItems) return jsonItems;
+
   const language = getNativeLanguage();
   return linesToList(value).map(line => {
     const [de, ...rest] = line.split("=");
@@ -1595,6 +1654,9 @@ function parseVocabularyLines(value) {
 }
 
 function parseVocabularyDraftLines(value) {
+  const jsonItems = parseVocabularyJson(value);
+  if (jsonItems) return jsonItems;
+
   const language = getNativeLanguage();
   return linesToList(value).map(line => {
     const [de, ...rest] = line.split("=");
@@ -1610,11 +1672,14 @@ function mergeVocabularyTranslations(existingItems = [], parsedItems = [], langu
   const existingByKey = new Map(existingItems.map(item => [normalizeVocabularyKey(item.de), item]));
   return parsedItems.map(item => {
     const existing = existingByKey.get(normalizeVocabularyKey(item.de)) || {};
+    const translations = Object.fromEntries(["sk", "ru", "pl", "hu"]
+      .filter(code => item[code])
+      .map(code => [code, item[code]]));
     return {
       ...existing,
-      ...item,
+      ...translations,
       de: item.de,
-      [language]: getVocabularyTranslation(item, language)
+      ...(item[language] ? { [language]: item[language] } : {})
     };
   });
 }
@@ -1719,15 +1784,13 @@ function addRequiredWordsToVocabulary() {
 }
 
 function buildTranslationPrompt() {
-  const language = getNativeLanguage();
-  const languageInfo = getNativeLanguageInfo(language);
   const words = [
     ...parseVocabularyDraftLines($("articleVocabularyInput").value),
     ...parseVocabularyDraftLines($("articleInlineVocabularyInput").value)
   ];
   const seen = new Set();
   const missing = words
-    .filter(item => !getVocabularyTranslation(item, language))
+    .filter(item => !item.sk || !item.ru || !item.pl || !item.hu)
     .filter(item => {
       const key = normalizeVocabularyKey(item.de);
       if (seen.has(key)) return false;
@@ -1737,9 +1800,11 @@ function buildTranslationPrompt() {
     .map(item => `${item.de} =`);
 
   return [
-    `Prelož tieto nemecké slová a frázy do ${languageInfo.promptName}.`,
-    `Vráť presne formát: nemecky = ${languageInfo.lineFormat}.`,
-    "Nepíš vysvetlenia navyše.",
+    "Prelož tieto nemecké slová a frázy do slovenčiny, ruštiny, poľštiny a maďarčiny.",
+    "Vráť iba validné JSON pole. Nepíš vysvetlenia navyše.",
+    "Každá položka musí mať presne tieto kľúče: de, sk, ru, pl, hu.",
+    "Formát jednej položky:",
+    "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",
     "",
     missing.join("\n")
   ].join("\n");
@@ -1767,9 +1832,9 @@ function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
 
   select.innerHTML = [
     '<option value="">-- nový článok --</option>',
-    ...state.articles.map(article => `<option value="${escapeHtml(article.id)}">${escapeHtml(article.title)}</option>`)
+    ...getEditableArticles().map(article => `<option value="${escapeHtml(article.id)}">${escapeHtml(article.title)}</option>`)
   ].join("");
-  select.value = selectedId && state.articles.some(article => article.id === selectedId) ? selectedId : "";
+  select.value = selectedId && getEditableArticles().some(article => article.id === selectedId) ? selectedId : "";
 
   const article = state.articles.find(item => item.id === select.value);
   fillArticleEditor(article || null);
@@ -1778,6 +1843,8 @@ function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
 function fillArticleEditor(article) {
   $("articleTitleInput").value = article?.title || "";
   $("articleIdInput").value = article?.id || "";
+  $("articleVisibilitySelect").value = article?.visibility || DEFAULT_ARTICLE_VISIBILITY;
+  $("articleApprovalStatusSelect").value = article?.approvalStatus || DEFAULT_ARTICLE_APPROVAL_STATUS;
   $("articleLevelInput").value = article?.level || "A2-B1";
   $("articleCategoryInput").value = article?.category || "";
   $("articleSummaryInput").value = article?.summary || "";
@@ -1795,10 +1862,18 @@ function readArticleEditor() {
   const language = getNativeLanguage();
   const title = $("articleTitleInput").value.trim();
   const id = ($("articleIdInput").value.trim() || makeArticleId(title));
+  const visibility = $("articleVisibilitySelect").value || DEFAULT_ARTICLE_VISIBILITY;
+  const selectedApprovalStatus = $("articleApprovalStatusSelect").value || DEFAULT_ARTICLE_APPROVAL_STATUS;
+  const approvalStatus = visibility === "public"
+    ? selectedApprovalStatus
+    : DEFAULT_ARTICLE_APPROVAL_STATUS;
   const parsedVocabulary = parseVocabularyLines($("articleVocabularyInput").value);
   const parsedInlineVocabulary = parseVocabularyLines($("articleInlineVocabularyInput").value);
   const article = {
     id,
+    ownerProfileId: existingArticle?.ownerProfileId || state.currentProfile?.id || null,
+    visibility,
+    approvalStatus,
     title,
     level: $("articleLevelInput").value.trim(),
     category: $("articleCategoryInput").value.trim(),
@@ -2121,6 +2196,14 @@ $("saveArticleBtn").onclick = saveArticleFromEditor;
 $("articleEditorSelect").onchange = () => {
   const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
   fillArticleEditor(article || null);
+};
+$("articleVisibilitySelect").onchange = (event) => {
+  if (event.target.value === "public" && $("articleApprovalStatusSelect").value === "draft") {
+    $("articleApprovalStatusSelect").value = PUBLIC_ARTICLE_APPROVAL_STATUS;
+  }
+  if (event.target.value === "private") {
+    $("articleApprovalStatusSelect").value = DEFAULT_ARTICLE_APPROVAL_STATUS;
+  }
 };
 $("articleTitleInput").addEventListener("input", () => {
   if (!$("articleEditorSelect").value) {
