@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "citanka-v15";
+const CACHE_NAME = "citanka-v16";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -9,7 +9,9 @@ const APP_FILES = [
   "./articles.json",
   "./manifest.json",
   "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/icon-512.png",
+  "./images/urlaub_suchen.png",
+  "./images/urlaub_suchen_mobile.png"
 ];
 
 self.addEventListener("install", event => {

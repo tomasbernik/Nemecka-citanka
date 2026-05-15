@@ -1031,6 +1031,14 @@ const CATEGORY_LABELS = {
   "Nakupovanie": { sk: "Nakupovanie", ru: "Покупки", pl: "Zakupy", hu: "Vásárlás" }
 };
 
+const ARTICLE_IMAGES = {
+  "wohin-fahren-wir-dieses-jahr": {
+    desktop: "images/urlaub_suchen.png",
+    mobile: "images/urlaub_suchen_mobile.png",
+    alt: "Urlaub suchen"
+  }
+};
+
 function getCategoryLabel(category) {
   if (category === ALL_CATEGORIES) return t("all");
   return CATEGORY_LABELS[category]?.[getUiLanguage()] || category;
@@ -1359,6 +1367,7 @@ function normalizeArticle(article) {
     ...article,
     ownerProfileId: article.ownerProfileId || article.owner_profile_id || null,
     teacherGroupId: article.teacherGroupId || article.teacher_group_id || null,
+    image: article.image || ARTICLE_IMAGES[article.id] || null,
     visibility: article.visibility || "public",
     approvalStatus: article.approvalStatus || article.approval_status || "approved"
   };
@@ -1424,6 +1433,7 @@ function rowToArticle(row) {
     text: row.text || [],
     vocabulary: row.vocabulary || [],
     inlineVocabulary: row.inline_vocabulary || [],
+    image: row.image || null,
     questions: row.questions || [],
     updatedAt: row.updated_at || null
   };
@@ -1819,6 +1829,27 @@ function renderVocabulary() {
   $("vocabList").innerHTML = getVisibleVocabulary(article)
     .map(v => `<li><strong>${escapeHtml(v.de)}</strong> – ${escapeHtml(getVocabularyTranslation(v))}</li>`)
     .join("");
+}
+
+function renderArticleImage(article) {
+  const wrap = $("articleImageWrap");
+  const image = article?.image;
+
+  if (!wrap) return;
+  if (!image?.desktop) {
+    wrap.classList.add("hidden");
+    wrap.innerHTML = "";
+    return;
+  }
+
+  const alt = image.alt || article.title || "";
+  wrap.innerHTML = `
+    <picture>
+      ${image.mobile ? `<source media="(max-width: 700px)" srcset="${escapeHtml(image.mobile)}">` : ""}
+      <img src="${escapeHtml(image.desktop)}" alt="${escapeHtml(alt)}" loading="lazy">
+    </picture>
+  `;
+  wrap.classList.remove("hidden");
 }
 
 function renderArticleText(article) {
@@ -2512,6 +2543,7 @@ function openArticle(id) {
   $("articleMeta").textContent = `${article.level} • ${getCategoryLabel(article.category)}`;
   $("articleTitle").textContent = article.title;
   cleanupDiscoveredVocabulary(article);
+  renderArticleImage(article);
   renderArticleText(article);
   renderVocabulary();
   renderQuestions(article);
