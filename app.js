@@ -10,6 +10,7 @@ const DEFAULT_ARTICLE_VISIBILITY = "private";
 const DEFAULT_ARTICLE_APPROVAL_STATUS = "draft";
 const PUBLIC_ARTICLE_APPROVAL_STATUS = "pending";
 const ALL_CATEGORIES = "__all__";
+const UNREAD_CATEGORY = "__unread__";
 const NATIVE_LANGUAGES = {
   sk: { label: "Slovenčina", promptName: "slovenčiny", lineFormat: "slovensky", locale: "sk" },
   ru: { label: "Русский", promptName: "ruštiny", lineFormat: "rusky", locale: "ru" },
@@ -35,6 +36,7 @@ const UI_TEXT = {
     articles: "Artikel",
     refresh: "Aktualisieren",
     all: "Alle",
+    unread: "Ungelesen",
     lessTopics: "Weniger Themen",
     moreTopics: "Weitere Themen",
     teacher: "Lehrer/in",
@@ -185,6 +187,7 @@ const UI_TEXT = {
     articles: "Články",
     refresh: "Aktualizovať",
     all: "Všetky",
+    unread: "Neprečítané",
     lessTopics: "Menej tém",
     moreTopics: "Ďalšie témy",
     teacher: "učiteľ",
@@ -335,6 +338,7 @@ const UI_TEXT = {
     articles: "Статьи",
     refresh: "Обновить",
     all: "Все",
+    unread: "Непрочитанные",
     lessTopics: "Меньше тем",
     moreTopics: "Еще темы",
     teacher: "учитель",
@@ -485,6 +489,7 @@ const UI_TEXT = {
     articles: "Artykuły",
     refresh: "Odśwież",
     all: "Wszystkie",
+    unread: "Nieprzeczytane",
     lessTopics: "Mniej tematów",
     moreTopics: "Więcej tematów",
     teacher: "nauczyciel",
@@ -635,6 +640,7 @@ const UI_TEXT = {
     articles: "Cikkek",
     refresh: "Frissítés",
     all: "Mind",
+    unread: "Olvasatlan",
     lessTopics: "Kevesebb téma",
     moreTopics: "További témák",
     teacher: "tanár",
@@ -1035,6 +1041,7 @@ const ARTICLE_IMAGE_EXTENSIONS = ["jpg", "png"];
 
 function getCategoryLabel(category) {
   if (category === ALL_CATEGORIES) return t("all");
+  if (category === UNREAD_CATEGORY) return t("unread");
   return CATEGORY_LABELS[category]?.[getUiLanguage()] || category;
 }
 
@@ -1494,7 +1501,7 @@ function getCategories() {
     categories.push(article.category);
   });
 
-  return [ALL_CATEGORIES, ...categories];
+  return [ALL_CATEGORIES, UNREAD_CATEGORY, ...categories];
 }
 
 function renderCategories() {
@@ -1532,9 +1539,13 @@ function renderCategories() {
 
 function renderArticles() {
   const root = $("articleList");
-  const articles = (state.selectedCategory === ALL_CATEGORIES
-    ? getVisibleArticles()
-    : getVisibleArticles().filter(a => a.category === state.selectedCategory));
+  const articles = getVisibleArticles().filter(article => {
+    if (state.selectedCategory === ALL_CATEGORIES) return true;
+    if (state.selectedCategory === UNREAD_CATEGORY) {
+      return !state.profileData.readIds.includes(article.id);
+    }
+    return article.category === state.selectedCategory;
+  });
 
   root.innerHTML = "";
 
@@ -2528,6 +2539,8 @@ function markCurrentArticleRead(source = "manual") {
   $("markReadBtn").textContent = source === "auto"
     ? t("markedRead")
     : t("readDone");
+  renderCategories();
+  renderArticles();
 }
 
 function clearArticleReadTimer() {
