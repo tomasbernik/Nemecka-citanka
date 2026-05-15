@@ -155,8 +155,11 @@ async function loadArticles() {
   if (state.remoteReady) {
     try {
       let remoteArticles = await loadRemoteArticles();
-      if (!remoteArticles.length && localArticles.length) {
-        await saveRemoteArticles(localArticles);
+      const remoteIds = new Set(remoteArticles.map(article => article.id));
+      const missingLocalArticles = localArticles.filter(article => !remoteIds.has(article.id));
+
+      if (missingLocalArticles.length) {
+        await saveRemoteArticles(missingLocalArticles);
         remoteArticles = await loadRemoteArticles();
       }
 
