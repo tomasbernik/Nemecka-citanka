@@ -92,7 +92,79 @@ const UI_TEXT = {
     wordSearch: "Osemsmerovka",
     newGame: "Nová",
     markRead: "Označiť ako prečítané",
-    settingsTitle: "Nastavenia"
+    settingsTitle: "Nastavenia",
+    taskAllDone: "Všetky úlohy splnené",
+    taskDone: "Splnené úlohy",
+    trueLabel: "Pravda",
+    falseLabel: "Nepravda",
+    correct: "Správne.",
+    correctIs: "Správne je:",
+    browserNoSpeech: "Tento prehliadač nepodporuje čítanie nahlas.",
+    readingFailed: "Čítanie sa nepodarilo spustiť.",
+    restart: "Od začiatku",
+    listening: "Počúvam...",
+    listenSentence: "Počúvaj vetu {current} z {total}.",
+    readingSentence: "Čítam vetu {current} z {total}.",
+    changingSpeed: "Mením rýchlosť...",
+    continueReading: "Pokračovať",
+    continuingReading: "Pokračujem v čítaní.",
+    readingPaused: "Čítanie je pozastavené.",
+    finishedReading: "Dočítané.",
+    tapWords: "Ťukaj slová v správnom poradí.",
+    sentenceNoTask: "Na túto hru treba aspoň jednu kratšiu vetu.",
+    sentenceCorrect: "Výborne, veta sedí.",
+    sentenceRetry: "Skús prehodiť poradie ešte raz.",
+    matchNoVocab: "Na dvojice treba najprv slovíčka v článku.",
+    matchDone: "Hotovo, všetky dvojice sedia.",
+    noPair: "Toto ešte nie je dvojica.",
+    vocabNeed4: "Na túto hru treba aspoň 4 slovíčka.",
+    clozeNeedMore: "Na túto hru treba viac krátkych slovíčok v texte.",
+    mistakeNeedMore: "Na túto hru treba viac krátkych slovíčok v texte.",
+    mistakeCorrect: "Správne. Vo vete má byť:",
+    mistakeWrong: "Chybné slovo je: {wrong}. Vo vete má byť: {correct}",
+    wordSearchNeed3: "Na osemsmerovku treba aspoň 3 kratšie slovíčka.",
+    wordSearchDone: "Hotovo, všetky slová sú nájdené.",
+    markedRead: "Označené ako prečítané",
+    readDone: "Prečítané ✓",
+    teacherView: "Učiteľský pohľad",
+    studentOverview: "Prehľad žiaka",
+    teacherArticles: "Články",
+    articleEditor: "Editor článkov",
+    newArticle: "Nový článok",
+    editArticle: "Upraviť článok",
+    visibility: "Viditeľnosť",
+    privateArticle: "Súkromný článok",
+    publicAfterApproval: "Verejný po schválení",
+    approvalStatus: "Stav schválenia",
+    draft: "Rozpracované",
+    pending: "Čaká na schválenie",
+    approved: "Schválené",
+    rejected: "Zamietnuté",
+    chatGptHelper: "ChatGPT pomocník",
+    articleTask: "Zadanie pre článok",
+    requiredWords: "Povinné slová, jedno slovo alebo fráza na riadok",
+    copyArticlePrompt: "Kopírovať prompt pre článok",
+    copyTranslationPrompt: "Kopírovať slovíčka na preklad",
+    copyQuestionsPrompt: "Kopírovať prompt pre otázky",
+    generatedPrompt: "Vygenerovaný prompt",
+    title: "Názov",
+    level: "Úroveň",
+    category: "Kategória",
+    summary: "Krátky popis",
+    articleTextLabel: "Text článku, každý odsek na nový riadok",
+    addSelectedVocabulary: "Označené do slovíčok aj inline",
+    addSelectedInline: "Označené iba inline",
+    vocabInputLabel: "Slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad",
+    inlineVocabInputLabel: "Inline slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad",
+    questionsInputLabel: "Pravda/nepravda, jeden riadok: nemecká veta = true/false",
+    saveArticle: "Uložiť článok",
+    startupWarmup: "Krátke rozcvičenie",
+    startupTitle: "Jedno slovíčko na zahriatie",
+    startupQ1: "Čo znamená toto nemecké slovíčko?",
+    startupQ2: "Ako sa to povie po nemecky?",
+    skip: "Preskočiť",
+    next: "Ďalej",
+    done: "Hotovo"
   },
   ru: {
     appTitle: "Книга для чтения",
@@ -169,7 +241,79 @@ const UI_TEXT = {
     wordSearch: "Поиск слов",
     newGame: "Новая",
     markRead: "Отметить как прочитано",
-    settingsTitle: "Настройки"
+    settingsTitle: "Настройки",
+    taskAllDone: "Все задания выполнены",
+    taskDone: "Выполненные задания",
+    trueLabel: "Правда",
+    falseLabel: "Неправда",
+    correct: "Правильно.",
+    correctIs: "Правильно:",
+    browserNoSpeech: "Этот браузер не поддерживает чтение вслух.",
+    readingFailed: "Не удалось запустить чтение.",
+    restart: "С начала",
+    listening: "Слушаю...",
+    listenSentence: "Слушай предложение {current} из {total}.",
+    readingSentence: "Читаю предложение {current} из {total}.",
+    changingSpeed: "Меняю скорость...",
+    continueReading: "Продолжить",
+    continuingReading: "Продолжаю чтение.",
+    readingPaused: "Чтение на паузе.",
+    finishedReading: "Дочитано.",
+    tapWords: "Нажимай слова в правильном порядке.",
+    sentenceNoTask: "Для этой игры нужно хотя бы одно короткое предложение.",
+    sentenceCorrect: "Отлично, предложение верное.",
+    sentenceRetry: "Попробуй изменить порядок еще раз.",
+    matchNoVocab: "Для пар сначала нужны слова в статье.",
+    matchDone: "Готово, все пары совпадают.",
+    noPair: "Это еще не пара.",
+    vocabNeed4: "Для этой игры нужно минимум 4 слова.",
+    clozeNeedMore: "Для этой игры нужно больше коротких слов в тексте.",
+    mistakeNeedMore: "Для этой игры нужно больше коротких слов в тексте.",
+    mistakeCorrect: "Правильно. В предложении должно быть:",
+    mistakeWrong: "Ошибочное слово: {wrong}. В предложении должно быть: {correct}",
+    wordSearchNeed3: "Для поиска слов нужно минимум 3 коротких слова.",
+    wordSearchDone: "Готово, все слова найдены.",
+    markedRead: "Отмечено как прочитано",
+    readDone: "Прочитано ✓",
+    teacherView: "Вид учителя",
+    studentOverview: "Обзор ученика",
+    teacherArticles: "Статьи",
+    articleEditor: "Редактор статей",
+    newArticle: "Новая статья",
+    editArticle: "Редактировать статью",
+    visibility: "Видимость",
+    privateArticle: "Личная статья",
+    publicAfterApproval: "Публичная после одобрения",
+    approvalStatus: "Статус одобрения",
+    draft: "Черновик",
+    pending: "Ожидает одобрения",
+    approved: "Одобрено",
+    rejected: "Отклонено",
+    chatGptHelper: "Помощник ChatGPT",
+    articleTask: "Задание для статьи",
+    requiredWords: "Обязательные слова, одно слово или фраза в строке",
+    copyArticlePrompt: "Копировать prompt для статьи",
+    copyTranslationPrompt: "Копировать слова для перевода",
+    copyQuestionsPrompt: "Копировать prompt для вопросов",
+    generatedPrompt: "Сгенерированный prompt",
+    title: "Название",
+    level: "Уровень",
+    category: "Категория",
+    summary: "Краткое описание",
+    articleTextLabel: "Текст статьи, каждый абзац с новой строки",
+    addSelectedVocabulary: "Выделенное в слова и inline",
+    addSelectedInline: "Выделенное только inline",
+    vocabInputLabel: "Слова: JSON из prompt или строки немецкий = перевод",
+    inlineVocabInputLabel: "Inline слова: JSON из prompt или строки немецкий = перевод",
+    questionsInputLabel: "Правда/неправда, одна строка: немецкое предложение = true/false",
+    saveArticle: "Сохранить статью",
+    startupWarmup: "Короткая разминка",
+    startupTitle: "Одно слово для разогрева",
+    startupQ1: "Что означает это немецкое слово?",
+    startupQ2: "Как это сказать по-немецки?",
+    skip: "Пропустить",
+    next: "Дальше",
+    done: "Готово"
   },
   pl: {
     appTitle: "Czytanka",
@@ -246,7 +390,79 @@ const UI_TEXT = {
     wordSearch: "Wykreślanka",
     newGame: "Nowa",
     markRead: "Oznacz jako przeczytane",
-    settingsTitle: "Ustawienia"
+    settingsTitle: "Ustawienia",
+    taskAllDone: "Wszystkie zadania wykonane",
+    taskDone: "Wykonane zadania",
+    trueLabel: "Prawda",
+    falseLabel: "Nieprawda",
+    correct: "Poprawnie.",
+    correctIs: "Poprawnie:",
+    browserNoSpeech: "Ta przeglądarka nie obsługuje czytania na głos.",
+    readingFailed: "Nie udało się uruchomić czytania.",
+    restart: "Od początku",
+    listening: "Słucham...",
+    listenSentence: "Słuchaj zdania {current} z {total}.",
+    readingSentence: "Czytam zdanie {current} z {total}.",
+    changingSpeed: "Zmieniam szybkość...",
+    continueReading: "Kontynuuj",
+    continuingReading: "Kontynuuję czytanie.",
+    readingPaused: "Czytanie jest wstrzymane.",
+    finishedReading: "Przeczytane.",
+    tapWords: "Klikaj słowa we właściwej kolejności.",
+    sentenceNoTask: "Do tej gry potrzebne jest przynajmniej jedno krótkie zdanie.",
+    sentenceCorrect: "Świetnie, zdanie pasuje.",
+    sentenceRetry: "Spróbuj jeszcze raz zmienić kolejność.",
+    matchNoVocab: "Do par potrzebne są najpierw słówka w artykule.",
+    matchDone: "Gotowe, wszystkie pary pasują.",
+    noPair: "To jeszcze nie jest para.",
+    vocabNeed4: "Do tej gry potrzebne są przynajmniej 4 słówka.",
+    clozeNeedMore: "Do tej gry potrzeba więcej krótkich słówek w tekście.",
+    mistakeNeedMore: "Do tej gry potrzeba więcej krótkich słówek w tekście.",
+    mistakeCorrect: "Poprawnie. W zdaniu powinno być:",
+    mistakeWrong: "Błędne słowo to: {wrong}. W zdaniu powinno być: {correct}",
+    wordSearchNeed3: "Do wykreślanki potrzeba przynajmniej 3 krótszych słówek.",
+    wordSearchDone: "Gotowe, wszystkie słowa znalezione.",
+    markedRead: "Oznaczone jako przeczytane",
+    readDone: "Przeczytane ✓",
+    teacherView: "Widok nauczyciela",
+    studentOverview: "Przegląd ucznia",
+    teacherArticles: "Artykuły",
+    articleEditor: "Edytor artykułów",
+    newArticle: "Nowy artykuł",
+    editArticle: "Edytuj artykuł",
+    visibility: "Widoczność",
+    privateArticle: "Prywatny artykuł",
+    publicAfterApproval: "Publiczny po zatwierdzeniu",
+    approvalStatus: "Status zatwierdzenia",
+    draft: "Wersja robocza",
+    pending: "Czeka na zatwierdzenie",
+    approved: "Zatwierdzone",
+    rejected: "Odrzucone",
+    chatGptHelper: "Pomocnik ChatGPT",
+    articleTask: "Zadanie dla artykułu",
+    requiredWords: "Wymagane słowa, jedno słowo albo fraza w wierszu",
+    copyArticlePrompt: "Kopiuj prompt dla artykułu",
+    copyTranslationPrompt: "Kopiuj słówka do tłumaczenia",
+    copyQuestionsPrompt: "Kopiuj prompt dla pytań",
+    generatedPrompt: "Wygenerowany prompt",
+    title: "Tytuł",
+    level: "Poziom",
+    category: "Kategoria",
+    summary: "Krótki opis",
+    articleTextLabel: "Tekst artykułu, każdy akapit od nowej linii",
+    addSelectedVocabulary: "Zaznaczone do słówek i inline",
+    addSelectedInline: "Zaznaczone tylko inline",
+    vocabInputLabel: "Słówka: JSON z promptu albo wiersze niemiecki = tłumaczenie",
+    inlineVocabInputLabel: "Inline słówka: JSON z promptu albo wiersze niemiecki = tłumaczenie",
+    questionsInputLabel: "Prawda/nieprawda, jeden wiersz: niemieckie zdanie = true/false",
+    saveArticle: "Zapisz artykuł",
+    startupWarmup: "Krótka rozgrzewka",
+    startupTitle: "Jedno słówko na rozgrzewkę",
+    startupQ1: "Co oznacza to niemieckie słówko?",
+    startupQ2: "Jak to powiedzieć po niemiecku?",
+    skip: "Pomiń",
+    next: "Dalej",
+    done: "Gotowe"
   },
   hu: {
     appTitle: "Olvasókönyv",
@@ -323,9 +539,205 @@ const UI_TEXT = {
     wordSearch: "Szókereső",
     newGame: "Új",
     markRead: "Megjelölés olvasottként",
-    settingsTitle: "Beállítások"
+    settingsTitle: "Beállítások",
+    taskAllDone: "Minden feladat kész",
+    taskDone: "Elvégzett feladatok",
+    trueLabel: "Igaz",
+    falseLabel: "Hamis",
+    correct: "Helyes.",
+    correctIs: "A helyes válasz:",
+    browserNoSpeech: "Ez a böngésző nem támogatja a felolvasást.",
+    readingFailed: "A felolvasást nem sikerült elindítani.",
+    restart: "Elölről",
+    listening: "Hallgatom...",
+    listenSentence: "Hallgasd a(z) {current}. mondatot / {total}.",
+    readingSentence: "Olvasom a(z) {current}. mondatot / {total}.",
+    changingSpeed: "Sebesség módosítása...",
+    continueReading: "Folytatás",
+    continuingReading: "Folytatom a felolvasást.",
+    readingPaused: "A felolvasás szünetel.",
+    finishedReading: "Felolvasva.",
+    tapWords: "Koppints a szavakra helyes sorrendben.",
+    sentenceNoTask: "Ehhez a játékhoz kell legalább egy rövidebb mondat.",
+    sentenceCorrect: "Nagyszerű, a mondat helyes.",
+    sentenceRetry: "Próbáld újrarendezni a szavakat.",
+    matchNoVocab: "A párosításhoz előbb szavak kellenek a cikkben.",
+    matchDone: "Kész, minden pár stimmel.",
+    noPair: "Ez még nem pár.",
+    vocabNeed4: "Ehhez a játékhoz legalább 4 szó kell.",
+    clozeNeedMore: "Ehhez a játékhoz több rövid szó kell a szövegben.",
+    mistakeNeedMore: "Ehhez a játékhoz több rövid szó kell a szövegben.",
+    mistakeCorrect: "Helyes. A mondatban ez legyen:",
+    mistakeWrong: "A hibás szó: {wrong}. A mondatban ez legyen: {correct}",
+    wordSearchNeed3: "A szókeresőhöz legalább 3 rövidebb szó kell.",
+    wordSearchDone: "Kész, minden szó megvan.",
+    markedRead: "Olvasottként megjelölve",
+    readDone: "Elolvasva ✓",
+    teacherView: "Tanári nézet",
+    studentOverview: "Tanulói áttekintés",
+    teacherArticles: "Cikkek",
+    articleEditor: "Cikkszerkesztő",
+    newArticle: "Új cikk",
+    editArticle: "Cikk szerkesztése",
+    visibility: "Láthatóság",
+    privateArticle: "Privát cikk",
+    publicAfterApproval: "Nyilvános jóváhagyás után",
+    approvalStatus: "Jóváhagyási állapot",
+    draft: "Piszkozat",
+    pending: "Jóváhagyásra vár",
+    approved: "Jóváhagyva",
+    rejected: "Elutasítva",
+    chatGptHelper: "ChatGPT segítő",
+    articleTask: "Cikkfeladat",
+    requiredWords: "Kötelező szavak, soronként egy szó vagy kifejezés",
+    copyArticlePrompt: "Cikk prompt másolása",
+    copyTranslationPrompt: "Szavak fordításának másolása",
+    copyQuestionsPrompt: "Kérdések prompt másolása",
+    generatedPrompt: "Generált prompt",
+    title: "Cím",
+    level: "Szint",
+    category: "Kategória",
+    summary: "Rövid leírás",
+    articleTextLabel: "Cikk szövege, minden bekezdés új sorban",
+    addSelectedVocabulary: "Kijelölt rész szavakhoz és inline",
+    addSelectedInline: "Kijelölt rész csak inline",
+    vocabInputLabel: "Szavak: JSON a promptból vagy sorok német = fordítás",
+    inlineVocabInputLabel: "Inline szavak: JSON a promptból vagy sorok német = fordítás",
+    questionsInputLabel: "Igaz/hamis, egy sor: német mondat = true/false",
+    saveArticle: "Cikk mentése",
+    startupWarmup: "Rövid bemelegítés",
+    startupTitle: "Egy szó bemelegítésnek",
+    startupQ1: "Mit jelent ez a német szó?",
+    startupQ2: "Hogy mondjuk ezt németül?",
+    skip: "Kihagyás",
+    next: "Tovább",
+    done: "Kész"
   }
 };
+
+Object.assign(UI_TEXT.sk, {
+  loginMismatch: "Meno alebo PIN nesedí. Ak si nový používateľ, vytvor nový profil.",
+  loginFill: "Vyplň meno aj PIN.",
+  profileExists: "Tento profil už existuje. Prihlás sa správnym PINom.",
+  setupFill: "Vyplň obe mená aj oba PINy.",
+  setupDifferentNames: "Profily musia mať rozdielne mená.",
+  setupDifferentRoles: "Vyber raz učiteľa a raz žiaka.",
+  setupNameExists: "Aspoň jedno meno profilu už existuje.",
+  editorNeedsSupabase: "Editor vie ukladať až po zapnutí Supabase.",
+  articleSaved: "Článok je uložený.",
+  validationFillArticle: "Vyplň názov, ID, úroveň, kategóriu, popis a aspoň jeden odsek textu.",
+  validationQuestion: "Pridaj aspoň jednu pravda/nepravda vetu.",
+  copied: "Skopírované.",
+  nothingToCopy: "Nie je čo kopírovať.",
+  copyFailed: "Automatické kopírovanie zlyhalo. Prompt je zobrazený nižšie, skopíruj ho ručne.",
+  selectWordFirst: "Najprv označ slovo alebo frázu v texte článku.",
+  selectedAdded: "Označený text je pridaný.",
+  expressionExists: "Tento výraz už v zozname je.",
+  promptArticleCopied: "Prompt pre článok je skopírovaný.",
+  promptTranslationCopied: "Slovíčka na preklad sú skopírované.",
+  promptQuestionsCopied: "Prompt pre otázky je skopírovaný.",
+  notificationUnsupported: "Tento prehliadač nepodporuje notifikácie.",
+  notificationDefault: "Notifikácie ešte nie sú povolené.",
+  notificationGranted: "Notifikácie sú povolené pre toto zariadenie.",
+  notificationDenied: "Notifikácie sú zablokované v prehliadači.",
+  notificationNotAllowed: "Notifikácie nie sú povolené.",
+  notificationSent: "Skúšobná notifikácia odoslaná.",
+  notificationBody: "Skúšobná pripomienka funguje.",
+  pushBody: "Dnes stačí pár minút nemčiny."
+});
+
+Object.assign(UI_TEXT.ru, {
+  loginMismatch: "Имя или PIN не совпадают. Если вы новый пользователь, создайте новый профиль.",
+  loginFill: "Введите имя и PIN.",
+  profileExists: "Такой профиль уже есть. Войдите с правильным PIN.",
+  setupFill: "Введите оба имени и оба PIN.",
+  setupDifferentNames: "У профилей должны быть разные имена.",
+  setupDifferentRoles: "Выберите одного учителя и одного ученика.",
+  setupNameExists: "Хотя бы одно имя профиля уже существует.",
+  editorNeedsSupabase: "Редактор сохраняет только после включения Supabase.",
+  articleSaved: "Статья сохранена.",
+  validationFillArticle: "Заполните название, ID, уровень, категорию, описание и хотя бы один абзац текста.",
+  validationQuestion: "Добавьте хотя бы одно предложение правда/неправда.",
+  copied: "Скопировано.",
+  nothingToCopy: "Нечего копировать.",
+  copyFailed: "Автоматическое копирование не удалось. Prompt показан ниже, скопируйте его вручную.",
+  selectWordFirst: "Сначала выделите слово или фразу в тексте статьи.",
+  selectedAdded: "Выделенный текст добавлен.",
+  expressionExists: "Это выражение уже есть в списке.",
+  promptArticleCopied: "Prompt для статьи скопирован.",
+  promptTranslationCopied: "Слова для перевода скопированы.",
+  promptQuestionsCopied: "Prompt для вопросов скопирован.",
+  notificationUnsupported: "Этот браузер не поддерживает уведомления.",
+  notificationDefault: "Уведомления еще не разрешены.",
+  notificationGranted: "Уведомления разрешены для этого устройства.",
+  notificationDenied: "Уведомления заблокированы в браузере.",
+  notificationNotAllowed: "Уведомления не разрешены.",
+  notificationSent: "Тестовое уведомление отправлено.",
+  notificationBody: "Тестовое напоминание работает.",
+  pushBody: "Сегодня достаточно нескольких минут немецкого."
+});
+
+Object.assign(UI_TEXT.pl, {
+  loginMismatch: "Imię albo PIN się nie zgadza. Jeśli jesteś nowym użytkownikiem, utwórz nowy profil.",
+  loginFill: "Wpisz imię i PIN.",
+  profileExists: "Ten profil już istnieje. Zaloguj się właściwym PIN-em.",
+  setupFill: "Wpisz oba imiona i oba PIN-y.",
+  setupDifferentNames: "Profile muszą mieć różne imiona.",
+  setupDifferentRoles: "Wybierz jednego nauczyciela i jednego ucznia.",
+  setupNameExists: "Co najmniej jedna nazwa profilu już istnieje.",
+  editorNeedsSupabase: "Edytor zapisuje dopiero po włączeniu Supabase.",
+  articleSaved: "Artykuł zapisany.",
+  validationFillArticle: "Uzupełnij tytuł, ID, poziom, kategorię, opis i przynajmniej jeden akapit tekstu.",
+  validationQuestion: "Dodaj przynajmniej jedno zdanie prawda/nieprawda.",
+  copied: "Skopiowano.",
+  nothingToCopy: "Nie ma czego kopiować.",
+  copyFailed: "Automatyczne kopiowanie nie powiodło się. Prompt jest pokazany niżej, skopiuj go ręcznie.",
+  selectWordFirst: "Najpierw zaznacz słowo albo frazę w tekście artykułu.",
+  selectedAdded: "Zaznaczony tekst został dodany.",
+  expressionExists: "To wyrażenie już jest na liście.",
+  promptArticleCopied: "Prompt dla artykułu skopiowany.",
+  promptTranslationCopied: "Słówka do tłumaczenia skopiowane.",
+  promptQuestionsCopied: "Prompt dla pytań skopiowany.",
+  notificationUnsupported: "Ta przeglądarka nie obsługuje powiadomień.",
+  notificationDefault: "Powiadomienia nie są jeszcze dozwolone.",
+  notificationGranted: "Powiadomienia są dozwolone dla tego urządzenia.",
+  notificationDenied: "Powiadomienia są zablokowane w przeglądarce.",
+  notificationNotAllowed: "Powiadomienia nie są dozwolone.",
+  notificationSent: "Testowe powiadomienie wysłane.",
+  notificationBody: "Testowe przypomnienie działa.",
+  pushBody: "Dziś wystarczy kilka minut niemieckiego."
+});
+
+Object.assign(UI_TEXT.hu, {
+  loginMismatch: "A név vagy a PIN nem egyezik. Ha új felhasználó vagy, hozz létre új profilt.",
+  loginFill: "Add meg a nevet és a PIN-t.",
+  profileExists: "Ez a profil már létezik. Jelentkezz be a megfelelő PIN-nel.",
+  setupFill: "Add meg mindkét nevet és mindkét PIN-t.",
+  setupDifferentNames: "A profilok neve legyen különböző.",
+  setupDifferentRoles: "Válassz egy tanárt és egy tanulót.",
+  setupNameExists: "Legalább az egyik profilnév már létezik.",
+  editorNeedsSupabase: "A szerkesztő csak bekapcsolt Supabase mellett tud menteni.",
+  articleSaved: "A cikk mentve.",
+  validationFillArticle: "Töltsd ki a címet, ID-t, szintet, kategóriát, leírást és legalább egy bekezdést.",
+  validationQuestion: "Adj hozzá legalább egy igaz/hamis mondatot.",
+  copied: "Másolva.",
+  nothingToCopy: "Nincs mit másolni.",
+  copyFailed: "Az automatikus másolás nem sikerült. A prompt lent látható, másold ki kézzel.",
+  selectWordFirst: "Először jelölj ki egy szót vagy kifejezést a cikk szövegében.",
+  selectedAdded: "A kijelölt szöveg hozzáadva.",
+  expressionExists: "Ez a kifejezés már szerepel a listában.",
+  promptArticleCopied: "A cikk prompt másolva.",
+  promptTranslationCopied: "A fordítandó szavak másolva.",
+  promptQuestionsCopied: "A kérdések prompt másolva.",
+  notificationUnsupported: "Ez a böngésző nem támogatja az értesítéseket.",
+  notificationDefault: "Az értesítések még nincsenek engedélyezve.",
+  notificationGranted: "Az értesítések engedélyezve vannak ezen az eszközön.",
+  notificationDenied: "Az értesítések blokkolva vannak a böngészőben.",
+  notificationNotAllowed: "Az értesítések nincsenek engedélyezve.",
+  notificationSent: "Teszt értesítés elküldve.",
+  notificationBody: "A teszt emlékeztető működik.",
+  pushBody: "Ma elég pár perc német."
+});
 
 const state = {
   articles: [],
@@ -556,6 +968,45 @@ function updateStaticTexts() {
   document.querySelector("#notificationStatus").previousElementSibling.textContent = t("notifications");
   setText("notificationStatus", "notificationNote");
   setText("testNotificationBtn", "testNotification");
+
+  setText("teacherBackBtn", "back");
+  document.querySelector("#teacherView > .reader-card .eyebrow").textContent = t("teacherView");
+  document.querySelector("#teacherView > .reader-card h2").textContent = t("studentOverview");
+  document.querySelector(".article-editor .practice-heading .eyebrow").textContent = t("teacherArticles");
+  document.querySelector(".article-editor .practice-heading h2").textContent = t("articleEditor");
+  setText("newArticleBtn", "newArticle");
+  setLabelText("articleEditorSelect", "editArticle");
+  setLabelText("articleVisibilitySelect", "visibility");
+  setOptionText("articleVisibilitySelect", "private", "privateArticle");
+  setOptionText("articleVisibilitySelect", "public", "publicAfterApproval");
+  setLabelText("articleApprovalStatusSelect", "approvalStatus");
+  setOptionText("articleApprovalStatusSelect", "draft", "draft");
+  setOptionText("articleApprovalStatusSelect", "pending", "pending");
+  setOptionText("articleApprovalStatusSelect", "approved", "approved");
+  setOptionText("articleApprovalStatusSelect", "rejected", "rejected");
+  document.querySelector(".editor-helper .eyebrow").textContent = t("chatGptHelper");
+  setLabelText("articlePromptInput", "articleTask");
+  setLabelText("articleRequiredWordsInput", "requiredWords");
+  setText("copyArticlePromptBtn", "copyArticlePrompt");
+  setText("copyTranslationPromptBtn", "copyTranslationPrompt");
+  setText("copyQuestionsPromptBtn", "copyQuestionsPrompt");
+  setLabelText("generatedPromptOutput", "generatedPrompt");
+  setLabelText("articleTitleInput", "title");
+  setLabelText("articleLevelInput", "level");
+  setLabelText("articleCategoryInput", "category");
+  setLabelText("articleSummaryInput", "summary");
+  setLabelText("articleTextInput", "articleTextLabel");
+  setText("addSelectedVocabularyBtn", "addSelectedVocabulary");
+  setText("addSelectedInlineBtn", "addSelectedInline");
+  setLabelText("articleVocabularyInput", "vocabInputLabel");
+  setLabelText("articleInlineVocabularyInput", "inlineVocabInputLabel");
+  setLabelText("articleQuestionsInput", "questionsInputLabel");
+  setText("saveArticleBtn", "saveArticle");
+
+  document.querySelector("#startupQuiz .eyebrow").textContent = t("startupWarmup");
+  setText("startupQuizTitle", "startupTitle");
+  setText("skipStartupQuizBtn", "skip");
+  setText("nextStartupQuizBtn", "next");
 
   renderCurrentProfileLabel();
   renderCategories();
@@ -1081,16 +1532,16 @@ function getTaskDefinitions(article) {
 
   const tasks = (article.questions || []).map((question, index) => ({
     id: getQuestionTaskId(index),
-    label: `Otázka ${index + 1}`,
-    section: "Otázky"
+    label: `${t("questions")} ${index + 1}`,
+    section: t("questions")
   }));
 
-  if (hasSentenceOrderTask(article)) tasks.push({ id: "sentence-order", label: "Zoraď vetu", section: "Hry" });
-  if (getVisibleVocabulary(article).length) tasks.push({ id: "match-pairs", label: "Nájdi dvojice", section: "Hry" });
-  if (getPracticeVocabulary(article).length >= 4) tasks.push({ id: "vocab-choice", label: "4 možnosti", section: "Hry" });
-  if (hasClozeTask(article)) tasks.push({ id: "cloze-word", label: "Doplň slovo", section: "Hry" });
-  if (hasMistakeTask(article)) tasks.push({ id: "find-mistake", label: "Nájdi chybu", section: "Hry" });
-  if (getWordSearchVocabulary(article).length >= 3) tasks.push({ id: "word-search", label: "Osemsmerovka", section: "Hry" });
+  if (hasSentenceOrderTask(article)) tasks.push({ id: "sentence-order", label: t("sentenceOrder"), section: t("game") });
+  if (getVisibleVocabulary(article).length) tasks.push({ id: "match-pairs", label: t("matchPairs"), section: t("game") });
+  if (getPracticeVocabulary(article).length >= 4) tasks.push({ id: "vocab-choice", label: t("vocabChoice"), section: t("game") });
+  if (hasClozeTask(article)) tasks.push({ id: "cloze-word", label: t("cloze"), section: t("game") });
+  if (hasMistakeTask(article)) tasks.push({ id: "find-mistake", label: t("mistake"), section: t("game") });
+  if (getWordSearchVocabulary(article).length >= 3) tasks.push({ id: "word-search", label: t("wordSearch"), section: t("game") });
 
   return tasks;
 }
@@ -1140,7 +1591,7 @@ function renderArticleTaskProgress() {
   const allDone = progress.total > 0 && progress.done === progress.total;
   $("articleTaskProgress").innerHTML = `
     <div class="task-progress-line ${allDone ? "complete" : ""}">
-      <strong>${allDone ? "Všetky úlohy splnené" : "Splnené úlohy"}</strong>
+      <strong>${allDone ? escapeHtml(t("taskAllDone")) : escapeHtml(t("taskDone"))}</strong>
       <span>${progress.done}/${progress.total}</span>
     </div>
   `;
@@ -1203,10 +1654,10 @@ function renderQuestions(article) {
       <li class="true-false-item ${isTaskCompleted(article.id, getQuestionTaskId(index)) ? "task-complete" : ""}">
         <div class="question-text">${escapeHtml(question.statement || question)}</div>
         <div class="true-false-actions">
-          <button class="choice-btn ${answers[index] === true ? "selected" : ""}" type="button" data-question-index="${index}" data-answer="true">Pravda</button>
-          <button class="choice-btn ${answers[index] === false ? "selected" : ""}" type="button" data-question-index="${index}" data-answer="false">Nepravda</button>
+          <button class="choice-btn ${answers[index] === true ? "selected" : ""}" type="button" data-question-index="${index}" data-answer="true">${escapeHtml(t("trueLabel"))}</button>
+          <button class="choice-btn ${answers[index] === false ? "selected" : ""}" type="button" data-question-index="${index}" data-answer="false">${escapeHtml(t("falseLabel"))}</button>
         </div>
-        <p class="practice-feedback">${typeof answers[index] === "boolean" ? (answers[index] === Boolean(question.answer) ? "Správne." : "Správne je: " + (question.answer ? "pravda" : "nepravda")) : ""}</p>
+        <p class="practice-feedback">${typeof answers[index] === "boolean" ? (answers[index] === Boolean(question.answer) ? escapeHtml(t("correct")) : `${escapeHtml(t("correctIs"))} ${question.answer ? escapeHtml(t("trueLabel").toLocaleLowerCase()) : escapeHtml(t("falseLabel").toLocaleLowerCase())}`) : ""}</p>
       </li>
     `)
     .join("");
@@ -1279,23 +1730,23 @@ function stopReading() {
     mode: "text",
     runId: state.speech.runId + 1
   };
-  $("readAloudBtn").textContent = "Prečítať text";
-  $("pauseReadBtn").textContent = "Pauza";
-  $("listenOnlyBtn").textContent = "Počúvať bez textu";
+  $("readAloudBtn").textContent = t("readText");
+  $("pauseReadBtn").textContent = t("pause");
+  $("listenOnlyBtn").textContent = t("listenOnly");
   clearReadingHighlight();
   showArticleText();
   setSpeechStatus("");
 }
 
-function finishReading(message = "Dočítané.") {
+function finishReading(message = t("finishedReading")) {
   const mode = state.speech.mode;
   state.speech.isReading = false;
   state.speech.utterance = null;
   state.speech.sentenceIndex = 0;
   state.speech.runId += 1;
-  $("readAloudBtn").textContent = "Prečítať text";
-  $("pauseReadBtn").textContent = "Pauza";
-  $("listenOnlyBtn").textContent = "Počúvať bez textu";
+  $("readAloudBtn").textContent = t("readText");
+  $("pauseReadBtn").textContent = t("pause");
+  $("listenOnlyBtn").textContent = t("listenOnly");
   clearReadingHighlight();
   setSpeechStatus(message);
 
@@ -1306,7 +1757,7 @@ function finishReading(message = "Dočítané.") {
 
 async function readSentence(index = 0, mode = "text") {
   if (!("speechSynthesis" in window)) {
-    setSpeechStatus("Tento prehliadač nepodporuje čítanie nahlas.");
+    setSpeechStatus(t("browserNoSpeech"));
     return;
   }
 
@@ -1351,15 +1802,15 @@ async function readSentence(index = 0, mode = "text") {
     if (event.error === "interrupted" || event.error === "canceled") return;
 
     state.speech.isReading = false;
-    setSpeechStatus("Čítanie sa nepodarilo spustiť.");
+    setSpeechStatus(t("readingFailed"));
   };
 
   state.speech.utterance = utterance;
-  $("readAloudBtn").textContent = "Od začiatku";
-  $("listenOnlyBtn").textContent = mode === "audioOnly" ? "Počúvam..." : "Počúvať bez textu";
+  $("readAloudBtn").textContent = t("restart");
+  $("listenOnlyBtn").textContent = mode === "audioOnly" ? t("listening") : t("listenOnly");
   setSpeechStatus(mode === "audioOnly"
-    ? `Počúvaj vetu ${index + 1} z ${sentences.length}.`
-    : `Čítam vetu ${index + 1} z ${sentences.length}.`);
+    ? t("listenSentence").replace("{current}", index + 1).replace("{total}", sentences.length)
+    : t("readingSentence").replace("{current}", index + 1).replace("{total}", sentences.length));
   window.speechSynthesis.speak(utterance);
 }
 
@@ -1395,7 +1846,7 @@ function changeSpeechRate() {
 
   state.speech.runId += 1;
   window.speechSynthesis.cancel();
-  setSpeechStatus("Mením rýchlosť...");
+  setSpeechStatus(t("changingSpeed"));
   setTimeout(() => readSentence(index, mode), 80);
 }
 
@@ -1404,12 +1855,12 @@ function togglePauseReading() {
 
   if (window.speechSynthesis.paused) {
     window.speechSynthesis.resume();
-    $("pauseReadBtn").textContent = "Pauza";
-    setSpeechStatus("Pokračujem v čítaní.");
+    $("pauseReadBtn").textContent = t("pause");
+    setSpeechStatus(t("continuingReading"));
   } else {
     window.speechSynthesis.pause();
-    $("pauseReadBtn").textContent = "Pokračovať";
-    setSpeechStatus("Čítanie je pozastavené.");
+    $("pauseReadBtn").textContent = t("continueReading");
+    setSpeechStatus(t("readingPaused"));
   }
 }
 
@@ -1437,13 +1888,13 @@ function renderSentenceGame() {
   const game = state.sentenceGame;
   $("sentenceTarget").innerHTML = game.chosen.length
     ? game.chosen.map(item => `<button class="word-chip selected" type="button" data-word-id="${escapeHtml(item.id)}">${escapeHtml(item.word)}</button>`).join("")
-    : '<span class="muted">Ťukaj slová v správnom poradí.</span>';
+    : `<span class="muted">${escapeHtml(t("tapWords"))}</span>`;
   $("sentenceWordBank").innerHTML = game.bank
     .map(item => `<button class="word-chip" type="button" data-word-id="${escapeHtml(item.id)}">${escapeHtml(item.word)}</button>`)
     .join("");
 
   if (!game.solution.length) {
-    $("sentenceGameFeedback").textContent = "Na túto hru treba aspoň jednu kratšiu vetu.";
+    $("sentenceGameFeedback").textContent = t("sentenceNoTask");
     return;
   }
 
@@ -1456,8 +1907,8 @@ function renderSentenceGame() {
   const solution = game.solution.join(" ");
   const isCorrect = answer === solution;
   $("sentenceGameFeedback").textContent = isCorrect
-    ? "Výborne, veta sedí."
-    : "Skús prehodiť poradie ešte raz.";
+    ? t("sentenceCorrect")
+    : t("sentenceRetry");
   logPractice("sentence-order", { correct: isCorrect, answer, solution });
   if (isCorrect) markTaskCompleted("sentence-order");
 }
@@ -1504,9 +1955,9 @@ function renderMatchGame() {
   }).join("");
 
   if (!game.cards.length) {
-    $("matchGameFeedback").textContent = "Na dvojice treba najprv slovíčka v článku.";
+    $("matchGameFeedback").textContent = t("matchNoVocab");
   } else if (game.matchedIds.length === game.cards.length) {
-    $("matchGameFeedback").textContent = "Hotovo, všetky dvojice sedia.";
+    $("matchGameFeedback").textContent = t("matchDone");
     if (!game.loggedComplete) {
       game.loggedComplete = true;
       logPractice("match-pairs", { pairs: game.cards.length / 2 });
@@ -1533,7 +1984,7 @@ function chooseMatchCard(id) {
     game.selectedIds = [];
     renderMatchGame();
   } else {
-    $("matchGameFeedback").textContent = "Toto ešte nie je dvojica.";
+    $("matchGameFeedback").textContent = t("noPair");
     setTimeout(() => {
       game.selectedIds = [];
       renderMatchGame();
@@ -1547,7 +1998,7 @@ function startVocabChoiceGame() {
     state.vocabChoiceGame = null;
     $("vocabChoicePrompt").textContent = "";
     $("vocabChoiceOptions").innerHTML = "";
-    $("vocabChoiceFeedback").textContent = "Na túto hru treba aspoň 4 slovíčka.";
+    $("vocabChoiceFeedback").textContent = t("vocabNeed4");
     return;
   }
 
@@ -1579,7 +2030,7 @@ function answerVocabChoice(answer) {
   });
 
   const isCorrect = answer === game.correctTranslation;
-  $("vocabChoiceFeedback").textContent = isCorrect ? "Správne." : `Správne je: ${game.correctTranslation}`;
+  $("vocabChoiceFeedback").textContent = isCorrect ? t("correct") : `${t("correctIs")} ${game.correctTranslation}`;
   logPractice("vocab-choice", { correct: isCorrect, prompt: game.correct.de, answer, expected: game.correctTranslation });
   if (isCorrect) markTaskCompleted("vocab-choice");
 }
@@ -1619,7 +2070,7 @@ function startClozeGame() {
     state.clozeGame = null;
     $("clozeSentence").textContent = "";
     $("clozeOptions").innerHTML = "";
-    $("clozeFeedback").textContent = "Na túto hru treba viac krátkych slovíčok v texte.";
+    $("clozeFeedback").textContent = t("clozeNeedMore");
     return;
   }
 
@@ -1648,7 +2099,7 @@ function answerClozeGame(answer) {
     button.disabled = true;
   });
   const isCorrect = answer === game.answer;
-  $("clozeFeedback").textContent = isCorrect ? "Správne." : `Správne je: ${game.answer}`;
+  $("clozeFeedback").textContent = isCorrect ? t("correct") : `${t("correctIs")} ${game.answer}`;
   logPractice("cloze-word", { correct: isCorrect, answer, expected: game.answer });
   if (isCorrect) markTaskCompleted("cloze-word");
 }
@@ -1661,7 +2112,7 @@ function startMistakeGame() {
     state.mistakeGame = null;
     $("mistakeSentence").textContent = "";
     $("mistakeOptions").innerHTML = "";
-    $("mistakeFeedback").textContent = "Na túto hru treba viac krátkych slovíčok v texte.";
+    $("mistakeFeedback").textContent = t("mistakeNeedMore");
     return;
   }
 
@@ -1690,8 +2141,8 @@ function answerMistakeGame(answer) {
   });
   const isCorrect = answer === game.wrongWord;
   $("mistakeFeedback").textContent = isCorrect
-    ? `Správne. Vo vete má byť: ${game.correctWord}`
-    : `Chybné slovo je: ${game.wrongWord}. Vo vete má byť: ${game.correctWord}`;
+    ? `${t("mistakeCorrect")} ${game.correctWord}`
+    : t("mistakeWrong").replace("{wrong}", game.wrongWord).replace("{correct}", game.correctWord);
   logPractice("find-mistake", { correct: isCorrect, answer, expected: game.wrongWord });
   if (isCorrect) markTaskCompleted("find-mistake");
 }
@@ -1750,7 +2201,7 @@ function startWordSearchGame() {
     state.wordSearchGame = { words: [], found: [], selected: [], grid: [] };
     $("wordSearchHints").innerHTML = "";
     $("wordSearchGrid").innerHTML = "";
-    $("wordSearchFeedback").textContent = "Na osemsmerovku treba aspoň 3 kratšie slovíčka.";
+    $("wordSearchFeedback").textContent = t("wordSearchNeed3");
     return;
   }
 
@@ -1773,7 +2224,7 @@ function renderWordSearchGame() {
     })
   ).join("");
   $("wordSearchFeedback").textContent = game.found.length === game.words.length && game.words.length
-    ? "Hotovo, všetky slová sú nájdené."
+    ? t("wordSearchDone")
     : game.selected.length ? game.selected.map(item => item.letter).join("") : "";
 }
 
@@ -1811,8 +2262,8 @@ function markCurrentArticleRead(source = "manual") {
   state.profileData.readIds.push(article.id);
   saveProfileData();
   $("markReadBtn").textContent = source === "auto"
-    ? "Označené ako prečítané"
-    : "Prečítané ✓";
+    ? t("markedRead")
+    : t("readDone");
 }
 
 function clearArticleReadTimer() {
@@ -1856,8 +2307,8 @@ function openArticle(id) {
   startWordSearchGame();
 
   $("markReadBtn").textContent = state.profileData.readIds.includes(article.id)
-    ? "Prečítané ✓"
-    : "Označiť ako prečítané";
+    ? t("readDone")
+    : t("markRead");
   startArticleReadTimer();
 }
 
@@ -1972,7 +2423,7 @@ async function login() {
   const profile = state.profiles.find(item => normalizeName(item.name) === name && item.pin === pin);
 
   if (!profile) {
-    $("loginError").textContent = "Name oder PIN stimmt nicht. Wenn du neu bist, erstelle ein neues Profil.";
+    $("loginError").textContent = t("loginMismatch");
     return;
   }
 
@@ -1993,12 +2444,12 @@ async function registerProfileFromLogin() {
   const nativeLanguage = $("loginNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
 
   if (!name || !pin) {
-    $("loginError").textContent = "Gib bitte Name und PIN ein.";
+    $("loginError").textContent = t("loginFill");
     return;
   }
 
   if (state.profiles.some(item => normalizeName(item.name) === normalizeName(name))) {
-    $("loginError").textContent = "Dieses Profil gibt es schon. Melde dich mit dem passenden PIN an.";
+    $("loginError").textContent = t("profileExists");
     return;
   }
 
@@ -2029,23 +2480,23 @@ async function createProfiles() {
   const studentNativeLanguage = $("setupNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
 
   if (!teacherName || !teacherPin || !studentName || !studentPin) {
-    $("setupError").textContent = "Gib bitte beide Namen und beide PINs ein.";
+    $("setupError").textContent = t("setupFill");
     return;
   }
 
   if (normalizeName(teacherName) === normalizeName(studentName)) {
-    $("setupError").textContent = "Die Profile brauchen unterschiedliche Namen.";
+    $("setupError").textContent = t("setupDifferentNames");
     return;
   }
 
   if (teacherRole === studentRole) {
-    $("setupError").textContent = "Wähle einmal Lehrer/in und einmal Schüler/in.";
+    $("setupError").textContent = t("setupDifferentRoles");
     return;
   }
 
   const existingNames = new Set(state.profiles.map(profile => normalizeName(profile.name)));
   if (existingNames.has(normalizeName(teacherName)) || existingNames.has(normalizeName(studentName))) {
-    $("setupError").textContent = "Mindestens ein Profilname existiert schon.";
+    $("setupError").textContent = t("setupNameExists");
     return;
   }
 
@@ -2163,6 +2614,8 @@ async function updateCurrentProfileNativeLanguage(language) {
   if (state.currentArticle) {
     renderVocabulary();
     renderArticleText(state.currentArticle);
+    renderQuestions(state.currentArticle);
+    renderArticleTaskProgress();
     startMatchGame();
     startVocabChoiceGame();
     startWordSearchGame();
@@ -2264,9 +2717,9 @@ function formatQuestionLines(items = []) {
   return items.map(item => `${item.statement || item} = ${item.answer ? "true" : "false"}`).join("\n");
 }
 
-async function copyTextToClipboard(text, successMessage = "Skopírované.") {
+async function copyTextToClipboard(text, successMessage = t("copied")) {
   if (!text.trim()) {
-    $("articleEditorStatus").textContent = "Nie je čo kopírovať.";
+    $("articleEditorStatus").textContent = t("nothingToCopy");
     return;
   }
 
@@ -2283,7 +2736,7 @@ async function copyTextToClipboard(text, successMessage = "Skopírované.") {
   } catch (error) {
     $("generatedPromptOutput").focus();
     $("generatedPromptOutput").select();
-    $("articleEditorStatus").textContent = "Automatické kopírovanie zlyhalo. Prompt je zobrazený nižšie, skopíruj ho ručne.";
+    $("articleEditorStatus").textContent = t("copyFailed");
   }
 }
 
@@ -2309,7 +2762,7 @@ function appendUniqueLine(textareaId, line) {
 function addSelectedTextToVocabulary(addToVocabulary) {
   const selected = getSelectedArticleText();
   if (!selected) {
-    $("articleEditorStatus").textContent = "Najprv označ slovo alebo frázu v texte článku.";
+    $("articleEditorStatus").textContent = t("selectWordFirst");
     return;
   }
 
@@ -2317,8 +2770,8 @@ function addSelectedTextToVocabulary(addToVocabulary) {
   const inlineAdded = appendUniqueLine("articleInlineVocabularyInput", line);
   const vocabAdded = addToVocabulary ? appendUniqueLine("articleVocabularyInput", line) : false;
   $("articleEditorStatus").textContent = inlineAdded || vocabAdded
-    ? "Označený text je pridaný."
-    : "Tento výraz už v zozname je.";
+    ? t("selectedAdded")
+    : t("expressionExists");
 }
 
 function buildArticlePrompt() {
@@ -2419,7 +2872,7 @@ function fillArticleEditor(article) {
   $("articleQuestionsInput").value = formatQuestionLines(article?.questions || []);
   $("articleEditorStatus").textContent = state.remoteReady
     ? ""
-    : "Editor vie ukladať až po zapnutí Supabase.";
+    : t("editorNeedsSupabase");
 }
 
 function readArticleEditor() {
@@ -2451,11 +2904,11 @@ function readArticleEditor() {
   };
 
   if (!article.title || !article.id || !article.level || !article.category || !article.summary || !article.text.length) {
-    throw new Error("Vyplň názov, ID, úroveň, kategóriu, popis a aspoň jeden odsek textu.");
+    throw new Error(t("validationFillArticle"));
   }
 
   if (!article.questions.length) {
-    throw new Error("Pridaj aspoň jednu pravda/nepravda vetu.");
+    throw new Error(t("validationQuestion"));
   }
 
   return article;
@@ -2465,7 +2918,7 @@ async function saveArticleFromEditor() {
   try {
     const article = readArticleEditor();
     await saveArticle(article);
-    $("articleEditorStatus").textContent = "Článok je uložený.";
+    $("articleEditorStatus").textContent = t("articleSaved");
   } catch (error) {
     $("articleEditorStatus").textContent = error.message;
   }
@@ -2597,8 +3050,8 @@ function renderStartupQuiz() {
 
   quiz.answered = false;
   $("startupQuizTitle").textContent = quiz.index === 0
-    ? "Čo znamená toto nemecké slovíčko?"
-    : "Ako sa to povie po nemecky?";
+    ? t("startupQ1")
+    : t("startupQ2");
   $("startupQuizPrompt").textContent = question.prompt;
   $("startupQuizFeedback").textContent = "";
   $("nextStartupQuizBtn").classList.add("hidden");
@@ -2641,8 +3094,8 @@ function answerStartupQuiz(answer) {
   });
 
   $("startupQuizFeedback").textContent = answer === question.answer
-    ? "Správne."
-    : `Správne je: ${question.answer}`;
+    ? t("correct")
+    : `${t("correctIs")} ${question.answer}`;
   logPractice("startup-vocabulary", {
     correct: answer === question.answer,
     direction: question.direction,
@@ -2650,7 +3103,7 @@ function answerStartupQuiz(answer) {
     answer,
     expected: question.answer
   });
-  $("nextStartupQuizBtn").textContent = quiz.index + 1 >= quiz.questions.length ? "Hotovo" : "Ďalej";
+  $("nextStartupQuizBtn").textContent = quiz.index + 1 >= quiz.questions.length ? t("done") : t("next");
   $("nextStartupQuizBtn").classList.remove("hidden");
 }
 
@@ -2681,7 +3134,7 @@ function loadSettings() {
 
 function updateNotificationStatus(message = "") {
   if (!("Notification" in window)) {
-    $("notificationStatus").textContent = "Tento prehliadač nepodporuje notifikácie.";
+    $("notificationStatus").textContent = t("notificationUnsupported");
     return;
   }
 
@@ -2691,9 +3144,9 @@ function updateNotificationStatus(message = "") {
   }
 
   const labels = {
-    default: "Notifikácie ešte nie sú povolené.",
-    granted: "Notifikácie sú povolené pre toto zariadenie.",
-    denied: "Notifikácie sú zablokované v prehliadači."
+    default: t("notificationDefault"),
+    granted: t("notificationGranted"),
+    denied: t("notificationDenied")
   };
   $("notificationStatus").textContent = labels[Notification.permission] || "";
 }
@@ -2710,27 +3163,27 @@ async function showTestNotification() {
   }
 
   if (permission !== "granted") {
-    updateNotificationStatus("Notifikácie nie sú povolené.");
+    updateNotificationStatus(t("notificationNotAllowed"));
     return;
   }
 
   const registration = await navigator.serviceWorker?.ready;
   if (!registration?.showNotification) {
     new Notification("Čítanka", {
-      body: "Skúšobná pripomienka funguje.",
+      body: t("notificationBody"),
       icon: "icons/icon-192.png"
     });
-    updateNotificationStatus("Skúšobná notifikácia odoslaná.");
+    updateNotificationStatus(t("notificationSent"));
     return;
   }
 
   await registration.showNotification("Čítanka", {
-    body: "Dnes stačí pár minút nemčiny.",
+    body: t("pushBody"),
     icon: "icons/icon-192.png",
     badge: "icons/icon-192.png",
     data: { url: "./index.html" }
   });
-  updateNotificationStatus("Skúšobná notifikácia odoslaná.");
+  updateNotificationStatus(t("notificationSent"));
 }
 
 $("backBtn").onclick = showHome;
@@ -2783,9 +3236,9 @@ $("articleTitleInput").addEventListener("input", () => {
 });
 $("addSelectedVocabularyBtn").onclick = () => addSelectedTextToVocabulary(true);
 $("addSelectedInlineBtn").onclick = () => addSelectedTextToVocabulary(false);
-$("copyArticlePromptBtn").onclick = () => copyTextToClipboard(buildArticlePrompt(), "Prompt pre článok je skopírovaný.");
-$("copyTranslationPromptBtn").onclick = () => copyTextToClipboard(buildTranslationPrompt(), "Slovíčka na preklad sú skopírované.");
-$("copyQuestionsPromptBtn").onclick = () => copyTextToClipboard(buildQuestionsPrompt(), "Prompt pre otázky je skopírovaný.");
+$("copyArticlePromptBtn").onclick = () => copyTextToClipboard(buildArticlePrompt(), t("promptArticleCopied"));
+$("copyTranslationPromptBtn").onclick = () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied"));
+$("copyQuestionsPromptBtn").onclick = () => copyTextToClipboard(buildQuestionsPrompt(), t("promptQuestionsCopied"));
 
 $("loginPinInput").addEventListener("keydown", event => {
   if (event.key === "Enter") login();
