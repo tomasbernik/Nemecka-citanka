@@ -129,6 +129,9 @@ const UI_TEXT = {
     readDone: "Gelesen ✓",
     teacherView: "Lehreransicht",
     studentOverview: "Schülerübersicht",
+    noStudentsInGroup: "In deiner Gruppe sind noch keine Schülerprofile.",
+    missingTranslations: "Fehlende Übersetzungen",
+    missingTranslationsEmpty: "Alle Wörter im Editor haben Übersetzungen für alle Sprachen.",
     teacherArticles: "Artikel",
     articleEditor: "Artikeleditor",
     newArticle: "Neuer Artikel",
@@ -278,6 +281,9 @@ const UI_TEXT = {
     readDone: "Prečítané ✓",
     teacherView: "Učiteľský pohľad",
     studentOverview: "Prehľad žiaka",
+    noStudentsInGroup: "V tvojej skupine zatiaľ nie sú žiadni žiaci.",
+    missingTranslations: "Chýbajúce preklady",
+    missingTranslationsEmpty: "Všetky slovíčka v editore majú preklady do všetkých jazykov.",
     teacherArticles: "Články",
     articleEditor: "Editor článkov",
     newArticle: "Nový článok",
@@ -427,6 +433,9 @@ const UI_TEXT = {
     readDone: "Прочитано ✓",
     teacherView: "Вид учителя",
     studentOverview: "Обзор ученика",
+    noStudentsInGroup: "В вашей группе пока нет профилей учеников.",
+    missingTranslations: "Недостающие переводы",
+    missingTranslationsEmpty: "У всех слов в редакторе есть переводы на все языки.",
     teacherArticles: "Статьи",
     articleEditor: "Редактор статей",
     newArticle: "Новая статья",
@@ -576,6 +585,9 @@ const UI_TEXT = {
     readDone: "Przeczytane ✓",
     teacherView: "Widok nauczyciela",
     studentOverview: "Przegląd ucznia",
+    noStudentsInGroup: "W twojej grupie nie ma jeszcze profili uczniów.",
+    missingTranslations: "Brakujące tłumaczenia",
+    missingTranslationsEmpty: "Wszystkie słówka w edytorze mają tłumaczenia na wszystkie języki.",
     teacherArticles: "Artykuły",
     articleEditor: "Edytor artykułów",
     newArticle: "Nowy artykuł",
@@ -725,6 +737,9 @@ const UI_TEXT = {
     readDone: "Elolvasva ✓",
     teacherView: "Tanári nézet",
     studentOverview: "Tanulói áttekintés",
+    noStudentsInGroup: "A csoportodban még nincsenek tanulói profilok.",
+    missingTranslations: "Hiányzó fordítások",
+    missingTranslationsEmpty: "A szerkesztőben minden szónak van fordítása minden nyelvre.",
     teacherArticles: "Cikkek",
     articleEditor: "Cikkszerkesztő",
     newArticle: "Új cikk",
@@ -1173,6 +1188,7 @@ function updateStaticTexts() {
   setText("copyTranslationPromptBtn", "copyTranslationPrompt");
   setText("copyQuestionsPromptBtn", "copyQuestionsPrompt");
   setLabelText("generatedPromptOutput", "generatedPrompt");
+  setText("missingTranslationsTitle", "missingTranslations");
   setLabelText("articleTitleInput", "title");
   setLabelText("articleLevelInput", "level");
   setLabelText("articleCategoryInput", "category");
@@ -1369,6 +1385,13 @@ function canViewArticle(article, profile = state.currentProfile) {
     || !article.teacherGroupId
   )) return true;
   return article.ownerProfileId === profile.id;
+}
+
+function isInCurrentTeacherGroup(profile) {
+  if (!state.currentProfile || !profile) return false;
+  if (state.currentProfile.role !== "teacher") return profile.id === state.currentProfile.id;
+  const teacherGroupId = state.currentProfile.teacherGroupId || state.currentProfile.id;
+  return profile.teacherGroupId === teacherGroupId && profile.id !== state.currentProfile.id;
 }
 
 function getVisibleArticles() {
@@ -1598,6 +1621,26 @@ function getVisibleVocabulary(article) {
     seen.add(key);
     return true;
   });
+}
+
+function getVocabularySourceItem(article, word) {
+  const key = normalizeVocabularyKey(word);
+  return [
+    ...(article?.vocabulary || []),
+    ...getInlineVocabulary(article)
+  ].find(item => normalizeVocabularyKey(item.de) === key);
+}
+
+function makeDiscoveredVocabularyItem(article, word, translation) {
+  const source = getVocabularySourceItem(article, word) || {};
+  const item = { de: word };
+  ["sk", "ru", "pl", "hu"].forEach(language => {
+    if (source[language]) item[language] = source[language];
+  });
+
+  const language = getNativeLanguage();
+  if (!item[language] && translation) item[language] = translation;
+  return item;
 }
 
 function cleanupDiscoveredVocabulary(article) {
@@ -2477,7 +2520,7 @@ function openArticle(id) {
   state.currentArticle = article;
   showView("articleView");
 
-  $("articleMeta").textContent = `${article.level} • ${article.category}`;
+  $("articleMeta").textContent = `${article.level} • ${getCategoryLabel(article.category)}`;
   $("articleTitle").textContent = article.title;
   cleanupDiscoveredVocabulary(article);
   renderArticleText(article);
@@ -2503,11 +2546,10 @@ function addDiscoveredVocabulary(word, translation) {
 
   const wordKey = normalizeVocabularyKey(word);
   const exists = getVisibleVocabulary(article).some(v => normalizeVocabularyKey(v.de) === wordKey);
-  const language = getNativeLanguage();
   if (!exists) {
     state.profileData.discoveredVocabulary[article.id] = [
       ...getSavedVocabulary(article),
-      { de: word, [language]: translation }
+      makeDiscoveredVocabularyItem(article, word, translation)
     ];
     saveProfileData();
     renderVocabulary();
@@ -2891,6 +2933,51 @@ function mergeVocabularyTranslations(existingItems = [], parsedItems = [], langu
   });
 }
 
+function getMissingVocabularyTranslations(items = []) {
+  const seen = new Set();
+  return items
+    .filter(item => item?.de)
+    .map(item => ({
+      de: item.de,
+      missing: ["sk", "ru", "pl", "hu"].filter(language => !item[language])
+    }))
+    .filter(item => item.missing.length)
+    .filter(item => {
+      const key = normalizeVocabularyKey(item.de);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+}
+
+function getEditorVocabularyDraft() {
+  const existingArticle = state.articles.find(item => item.id === $("articleEditorSelect")?.value);
+  const language = getNativeLanguage();
+  const parsedVocabulary = parseVocabularyDraftLines($("articleVocabularyInput").value);
+  const parsedInlineVocabulary = parseVocabularyDraftLines($("articleInlineVocabularyInput").value);
+
+  return [
+    ...mergeVocabularyTranslations(existingArticle?.vocabulary || [], parsedVocabulary, language),
+    ...mergeVocabularyTranslations(getInlineVocabulary(existingArticle || {}), parsedInlineVocabulary, language)
+  ];
+}
+
+function renderMissingTranslationReport() {
+  const root = $("missingTranslationsReport");
+  if (!root) return;
+
+  let missing = [];
+  try {
+    missing = getMissingVocabularyTranslations(getEditorVocabularyDraft());
+  } catch (error) {
+    root.innerHTML = `<p class="muted">${escapeHtml(error.message)}</p>`;
+    return;
+  }
+  root.innerHTML = missing.length
+    ? `<ul class="overview-list">${missing.map(item => `<li><strong>${escapeHtml(item.de)}</strong><span class="muted"> &bull; ${escapeHtml(item.missing.join(", "))}</span></li>`).join("")}</ul>`
+    : `<p class="muted">${escapeHtml(t("missingTranslationsEmpty"))}</p>`;
+}
+
 function parseQuestionLines(value) {
   return linesToList(value).map(line => {
     const [statement, ...rest] = line.split("=");
@@ -2961,6 +3048,7 @@ function addSelectedTextToVocabulary(addToVocabulary) {
   $("articleEditorStatus").textContent = inlineAdded || vocabAdded
     ? t("selectedAdded")
     : t("expressionExists");
+  renderMissingTranslationReport();
 }
 
 const PROMPT_TEXT = {
@@ -3164,6 +3252,7 @@ function fillArticleEditor(article) {
   $("articleEditorStatus").textContent = state.remoteReady
     ? ""
     : t("editorNeedsSupabase");
+  renderMissingTranslationReport();
 }
 
 function readArticleEditor() {
@@ -3210,13 +3299,14 @@ async function saveArticleFromEditor() {
     const article = readArticleEditor();
     await saveArticle(article);
     $("articleEditorStatus").textContent = t("articleSaved");
+    renderMissingTranslationReport();
   } catch (error) {
     $("articleEditorStatus").textContent = error.message;
   }
 }
 
 async function renderTeacherOverview() {
-  const students = state.profiles.filter(profile => profile.role === "student");
+  const students = state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile));
   const root = $("teacherOverview");
   const sections = await Promise.all(students.map(async student => {
     const data = await getProfileData(student);
@@ -3224,7 +3314,7 @@ async function renderTeacherOverview() {
       .map(id => state.articles.find(article => article.id === id)?.title || id);
     const clickedCount = Object.values(data.discoveredVocabulary || {}).reduce((sum, items) => sum + items.length, 0);
     const practiceLog = data.practiceLog || [];
-    const articleProgress = state.articles.map(article => {
+    const articleProgress = state.articles.filter(article => canViewArticle(article, state.currentProfile)).map(article => {
       const progress = getArticleTaskProgress(article, data);
       return { article, ...progress };
     });
@@ -3280,7 +3370,7 @@ async function renderTeacherOverview() {
     `;
   }));
 
-  root.innerHTML = sections.join("");
+  root.innerHTML = sections.join("") || `<p class="muted">${escapeHtml(t("noStudentsInGroup"))}</p>`;
 }
 
 function saveTrueFalseAnswer(index, answer) {
@@ -3527,6 +3617,9 @@ $("articleTitleInput").addEventListener("input", () => {
 });
 $("addSelectedVocabularyBtn").onclick = () => addSelectedTextToVocabulary(true);
 $("addSelectedInlineBtn").onclick = () => addSelectedTextToVocabulary(false);
+["articleVocabularyInput", "articleInlineVocabularyInput"].forEach(id => {
+  $(id).addEventListener("input", renderMissingTranslationReport);
+});
 $("copyArticlePromptBtn").onclick = () => copyTextToClipboard(buildArticlePrompt(), t("promptArticleCopied"));
 $("copyTranslationPromptBtn").onclick = () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied"));
 $("copyQuestionsPromptBtn").onclick = () => copyTextToClipboard(buildQuestionsPrompt(), t("promptQuestionsCopied"));
