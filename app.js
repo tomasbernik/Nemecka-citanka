@@ -8,17 +8,329 @@ const DEFAULT_NATIVE_LANGUAGE = "sk";
 const DEFAULT_ARTICLE_VISIBILITY = "private";
 const DEFAULT_ARTICLE_APPROVAL_STATUS = "draft";
 const PUBLIC_ARTICLE_APPROVAL_STATUS = "pending";
+const ALL_CATEGORIES = "__all__";
 const NATIVE_LANGUAGES = {
   sk: { label: "Slovenčina", promptName: "slovenčiny", lineFormat: "slovensky", locale: "sk" },
-  ru: { label: "Ruština", promptName: "ruštiny", lineFormat: "rusky", locale: "ru" },
-  pl: { label: "Poľština", promptName: "poľštiny", lineFormat: "poľsky", locale: "pl" },
-  hu: { label: "Maďarčina", promptName: "maďarčiny", lineFormat: "maďarsky", locale: "hu" }
+  ru: { label: "Русский", promptName: "ruštiny", lineFormat: "rusky", locale: "ru" },
+  pl: { label: "Polski", promptName: "poľštiny", lineFormat: "poľsky", locale: "pl" },
+  hu: { label: "Magyar", promptName: "maďarčiny", lineFormat: "maďarsky", locale: "hu" }
+};
+
+const UI_TEXT = {
+  sk: {
+    appTitle: "Čítanka",
+    languageLabel: "A2 nemčina",
+    overview: "Prehľad",
+    settings: "Nastavenia",
+    loginEyebrow: "Prihlásenie",
+    loginTitle: "Kto číta?",
+    name: "Meno",
+    pin: "PIN",
+    nativeLanguage: "Materinský jazyk",
+    login: "Prihlásiť sa",
+    newProfile: "Vytvoriť nový profil",
+    setupPair: "Vytvoriť dva profily",
+    logout: "Odhlásiť",
+    articles: "Články",
+    refresh: "Aktualizovať",
+    all: "Všetky",
+    lessTopics: "Menej tém",
+    moreTopics: "Ďalšie témy",
+    teacher: "učiteľ",
+    student: "žiak",
+    online: "online",
+    local: "lokálne",
+    private: "súkromné",
+    pendingApproval: "čaká na schválenie",
+    read: "prečítané",
+    setupEyebrow: "Nastavenie",
+    setupTitle: "Vytvoriť dva profily",
+    setupNote: "PIN slúži len na oddelenie profilov v tejto súkromnej appke.",
+    profile1Name: "Meno profil 1",
+    profile1Pin: "PIN profil 1",
+    profile1Role: "Rola profil 1",
+    profile1Language: "Materinský jazyk profil 1",
+    profile2Name: "Meno profil 2",
+    profile2Pin: "PIN profil 2",
+    profile2Role: "Rola profil 2",
+    profile2Language: "Materinský jazyk profil 2",
+    teacherRole: "Učiteľ",
+    studentRole: "Žiak",
+    saveProfiles: "Uložiť profily",
+    backToLogin: "Späť na prihlásenie",
+    fontSize: "Veľkosť písma",
+    normal: "Normálne",
+    large: "Veľké",
+    xlarge: "Veľmi veľké",
+    profileRole: "Rola profilu",
+    darkMode: "Tmavý režim",
+    notifications: "Upozornenia",
+    notificationNote: "Pošli skúšobnú notifikáciu na toto zariadenie.",
+    testNotification: "Skúšobná notifikácia",
+    back: "← Späť",
+    readText: "Prečítať text",
+    listenOnly: "Počúvať bez textu",
+    pause: "Pauza",
+    stop: "Stop",
+    speed: "Rýchlosť",
+    slower: "Pomalšie",
+    speedNormal: "Normálne",
+    faster: "Rýchlejšie",
+    showText: "Ukázať text",
+    vocabulary: "Slovíčka a frázy",
+    practice: "Cvičenie",
+    questions: "Otázky",
+    game: "Hra",
+    sentenceOrder: "Zoraď vetu",
+    newSentence: "Nová veta",
+    matchPairs: "Nájdi dvojice",
+    shuffle: "Zamiešať",
+    vocabChoice: "4 možnosti zo slovíčok",
+    newVocab: "Nové slovíčko",
+    cloze: "Doplň chýbajúce slovo",
+    mistake: "Nájdi chybné slovo vo vete",
+    wordSearch: "Osemsmerovka",
+    newGame: "Nová",
+    markRead: "Označiť ako prečítané",
+    settingsTitle: "Nastavenia"
+  },
+  ru: {
+    appTitle: "Книга для чтения",
+    languageLabel: "Немецкий A2",
+    overview: "Обзор",
+    settings: "Настройки",
+    loginEyebrow: "Вход",
+    loginTitle: "Кто читает?",
+    name: "Имя",
+    pin: "PIN",
+    nativeLanguage: "Родной язык",
+    login: "Войти",
+    newProfile: "Создать новый профиль",
+    setupPair: "Создать два профиля",
+    logout: "Выйти",
+    articles: "Статьи",
+    refresh: "Обновить",
+    all: "Все",
+    lessTopics: "Меньше тем",
+    moreTopics: "Еще темы",
+    teacher: "учитель",
+    student: "ученик",
+    online: "онлайн",
+    local: "локально",
+    private: "личное",
+    pendingApproval: "ожидает одобрения",
+    read: "прочитано",
+    setupEyebrow: "Настройка",
+    setupTitle: "Создать два профиля",
+    setupNote: "PIN нужен только для разделения профилей в этой частной app.",
+    profile1Name: "Имя профиля 1",
+    profile1Pin: "PIN профиля 1",
+    profile1Role: "Роль профиля 1",
+    profile1Language: "Родной язык профиля 1",
+    profile2Name: "Имя профиля 2",
+    profile2Pin: "PIN профиля 2",
+    profile2Role: "Роль профиля 2",
+    profile2Language: "Родной язык профиля 2",
+    teacherRole: "Учитель",
+    studentRole: "Ученик",
+    saveProfiles: "Сохранить профили",
+    backToLogin: "Назад ко входу",
+    fontSize: "Размер шрифта",
+    normal: "Обычный",
+    large: "Большой",
+    xlarge: "Очень большой",
+    profileRole: "Роль профиля",
+    darkMode: "Темный режим",
+    notifications: "Уведомления",
+    notificationNote: "Отправить тестовое уведомление на это устройство.",
+    testNotification: "Тестовое уведомление",
+    back: "← Назад",
+    readText: "Прочитать текст",
+    listenOnly: "Слушать без текста",
+    pause: "Пауза",
+    stop: "Стоп",
+    speed: "Скорость",
+    slower: "Медленнее",
+    speedNormal: "Нормально",
+    faster: "Быстрее",
+    showText: "Показать текст",
+    vocabulary: "Слова и фразы",
+    practice: "Упражнение",
+    questions: "Вопросы",
+    game: "Игра",
+    sentenceOrder: "Собери предложение",
+    newSentence: "Новое предложение",
+    matchPairs: "Найди пары",
+    shuffle: "Перемешать",
+    vocabChoice: "4 варианта",
+    newVocab: "Новое слово",
+    cloze: "Вставь слово",
+    mistake: "Найди ошибочное слово",
+    wordSearch: "Поиск слов",
+    newGame: "Новая",
+    markRead: "Отметить как прочитано",
+    settingsTitle: "Настройки"
+  },
+  pl: {
+    appTitle: "Czytanka",
+    languageLabel: "Niemiecki A2",
+    overview: "Przegląd",
+    settings: "Ustawienia",
+    loginEyebrow: "Logowanie",
+    loginTitle: "Kto czyta?",
+    name: "Imię",
+    pin: "PIN",
+    nativeLanguage: "Język ojczysty",
+    login: "Zaloguj się",
+    newProfile: "Utwórz nowy profil",
+    setupPair: "Utwórz dwa profile",
+    logout: "Wyloguj",
+    articles: "Artykuły",
+    refresh: "Odśwież",
+    all: "Wszystkie",
+    lessTopics: "Mniej tematów",
+    moreTopics: "Więcej tematów",
+    teacher: "nauczyciel",
+    student: "uczeń",
+    online: "online",
+    local: "lokalnie",
+    private: "prywatne",
+    pendingApproval: "czeka na zatwierdzenie",
+    read: "przeczytane",
+    setupEyebrow: "Konfiguracja",
+    setupTitle: "Utwórz dwa profile",
+    setupNote: "PIN służy tylko do rozdzielenia profili w tej prywatnej app.",
+    profile1Name: "Imię profilu 1",
+    profile1Pin: "PIN profilu 1",
+    profile1Role: "Rola profilu 1",
+    profile1Language: "Język ojczysty profilu 1",
+    profile2Name: "Imię profilu 2",
+    profile2Pin: "PIN profilu 2",
+    profile2Role: "Rola profilu 2",
+    profile2Language: "Język ojczysty profilu 2",
+    teacherRole: "Nauczyciel",
+    studentRole: "Uczeń",
+    saveProfiles: "Zapisz profile",
+    backToLogin: "Powrót do logowania",
+    fontSize: "Rozmiar czcionki",
+    normal: "Normalny",
+    large: "Duży",
+    xlarge: "Bardzo duży",
+    profileRole: "Rola profilu",
+    darkMode: "Tryb ciemny",
+    notifications: "Powiadomienia",
+    notificationNote: "Wyślij testowe powiadomienie na to urządzenie.",
+    testNotification: "Testowe powiadomienie",
+    back: "← Wstecz",
+    readText: "Przeczytaj tekst",
+    listenOnly: "Słuchaj bez tekstu",
+    pause: "Pauza",
+    stop: "Stop",
+    speed: "Szybkość",
+    slower: "Wolniej",
+    speedNormal: "Normalnie",
+    faster: "Szybciej",
+    showText: "Pokaż tekst",
+    vocabulary: "Słówka i frazy",
+    practice: "Ćwiczenie",
+    questions: "Pytania",
+    game: "Gra",
+    sentenceOrder: "Ułóż zdanie",
+    newSentence: "Nowe zdanie",
+    matchPairs: "Znajdź pary",
+    shuffle: "Wymieszaj",
+    vocabChoice: "4 możliwości",
+    newVocab: "Nowe słówko",
+    cloze: "Uzupełnij słowo",
+    mistake: "Znajdź błędne słowo",
+    wordSearch: "Wykreślanka",
+    newGame: "Nowa",
+    markRead: "Oznacz jako przeczytane",
+    settingsTitle: "Ustawienia"
+  },
+  hu: {
+    appTitle: "Olvasókönyv",
+    languageLabel: "A2 német",
+    overview: "Áttekintés",
+    settings: "Beállítások",
+    loginEyebrow: "Bejelentkezés",
+    loginTitle: "Ki olvas?",
+    name: "Név",
+    pin: "PIN",
+    nativeLanguage: "Anyanyelv",
+    login: "Bejelentkezés",
+    newProfile: "Új profil létrehozása",
+    setupPair: "Két profil beállítása",
+    logout: "Kijelentkezés",
+    articles: "Cikkek",
+    refresh: "Frissítés",
+    all: "Mind",
+    lessTopics: "Kevesebb téma",
+    moreTopics: "További témák",
+    teacher: "tanár",
+    student: "tanuló",
+    online: "online",
+    local: "helyi",
+    private: "privát",
+    pendingApproval: "jóváhagyásra vár",
+    read: "elolvasva",
+    setupEyebrow: "Beállítás",
+    setupTitle: "Két profil létrehozása",
+    setupNote: "A PIN csak a profilok elválasztására szolgál ebben a privát appban.",
+    profile1Name: "1. profil neve",
+    profile1Pin: "1. profil PIN",
+    profile1Role: "1. profil szerepe",
+    profile1Language: "1. profil anyanyelve",
+    profile2Name: "2. profil neve",
+    profile2Pin: "2. profil PIN",
+    profile2Role: "2. profil szerepe",
+    profile2Language: "2. profil anyanyelve",
+    teacherRole: "Tanár",
+    studentRole: "Tanuló",
+    saveProfiles: "Profilok mentése",
+    backToLogin: "Vissza a belépéshez",
+    fontSize: "Betűméret",
+    normal: "Normál",
+    large: "Nagy",
+    xlarge: "Nagyon nagy",
+    profileRole: "Profil szerepe",
+    darkMode: "Sötét mód",
+    notifications: "Értesítések",
+    notificationNote: "Teszt értesítés küldése erre az eszközre.",
+    testNotification: "Teszt értesítés",
+    back: "← Vissza",
+    readText: "Szöveg felolvasása",
+    listenOnly: "Hallgatás szöveg nélkül",
+    pause: "Szünet",
+    stop: "Stop",
+    speed: "Sebesség",
+    slower: "Lassabban",
+    speedNormal: "Normál",
+    faster: "Gyorsabban",
+    showText: "Szöveg mutatása",
+    vocabulary: "Szavak és kifejezések",
+    practice: "Gyakorlat",
+    questions: "Kérdések",
+    game: "Játék",
+    sentenceOrder: "Rakd össze a mondatot",
+    newSentence: "Új mondat",
+    matchPairs: "Párok keresése",
+    shuffle: "Keverés",
+    vocabChoice: "4 lehetőség",
+    newVocab: "Új szó",
+    cloze: "Hiányzó szó",
+    mistake: "Hibás szó keresése",
+    wordSearch: "Szókereső",
+    newGame: "Új",
+    markRead: "Megjelölés olvasottként",
+    settingsTitle: "Beállítások"
+  }
 };
 
 const state = {
   articles: [],
   profiles: [],
-  selectedCategory: "Všetky",
+  selectedCategory: ALL_CATEGORIES,
   currentArticle: null,
   currentProfile: null,
   profileData: emptyProfileData(),
@@ -60,6 +372,32 @@ const state = {
 
 const $ = (id) => document.getElementById(id);
 
+function getUiLanguage() {
+  if (state.currentProfile) return getNativeLanguage(state.currentProfile);
+  const selectedLoginLanguage = $("loginNativeLanguageSelect")?.value;
+  return isSupportedNativeLanguage(selectedLoginLanguage) ? selectedLoginLanguage : DEFAULT_NATIVE_LANGUAGE;
+}
+
+function t(key, language = getUiLanguage()) {
+  return UI_TEXT[language]?.[key] || UI_TEXT[DEFAULT_NATIVE_LANGUAGE][key] || key;
+}
+
+function setText(id, key) {
+  const element = $(id);
+  if (element) element.textContent = t(key);
+}
+
+function setLabelText(inputId, key) {
+  const input = $(inputId);
+  const label = input?.closest("label");
+  if (label?.firstChild) label.firstChild.textContent = `${t(key)}\n            `;
+}
+
+function setOptionText(selectId, value, key) {
+  const option = $(`${selectId}`)?.querySelector(`option[value="${value}"]`);
+  if (option) option.textContent = t(key);
+}
+
 function isSupportedNativeLanguage(language) {
   return Boolean(NATIVE_LANGUAGES[language]);
 }
@@ -84,6 +422,19 @@ function makeVocabularyItem(de, translation, language = getNativeLanguage()) {
     de: (de || "").trim(),
     [language]: (translation || "").trim()
   };
+}
+
+const CATEGORY_LABELS = {
+  "Jedlo": { sk: "Jedlo", ru: "Еда", pl: "Jedzenie", hu: "Étel" },
+  "Voľný čas": { sk: "Voľný čas", ru: "Свободное время", pl: "Czas wolny", hu: "Szabadidő" },
+  "Každodenný život": { sk: "Každodenný život", ru: "Повседневная жизнь", pl: "Codzienne życie", hu: "Mindennapi élet" },
+  "Cestovanie": { sk: "Cestovanie", ru: "Путешествия", pl: "Podróże", hu: "Utazás" },
+  "Nakupovanie": { sk: "Nakupovanie", ru: "Покупки", pl: "Zakupy", hu: "Vásárlás" }
+};
+
+function getCategoryLabel(category) {
+  if (category === ALL_CATEGORIES) return t("all");
+  return CATEGORY_LABELS[category]?.[getUiLanguage()] || category;
 }
 
 function normalizeName(value) {
@@ -122,6 +473,95 @@ function showView(viewId) {
   });
 }
 
+function updateStaticTexts() {
+  document.documentElement.lang = getUiLanguage();
+  document.title = t("appTitle");
+  document.querySelector(".topbar h1").textContent = t("appTitle");
+  document.querySelector(".topbar .eyebrow").textContent = t("languageLabel");
+  $("teacherBtn").setAttribute("aria-label", t("overview"));
+  $("settingsBtn").setAttribute("aria-label", t("settings"));
+
+  document.querySelector("#setupView .eyebrow").textContent = t("setupEyebrow");
+  document.querySelector("#setupView h2").textContent = t("setupTitle");
+  document.querySelector("#setupView .muted").textContent = t("setupNote");
+  setLabelText("teacherNameInput", "profile1Name");
+  setLabelText("teacherPinInput", "profile1Pin");
+  setLabelText("teacherRoleSelect", "profile1Role");
+  setLabelText("teacherNativeLanguageSelect", "profile1Language");
+  setLabelText("studentNameInput", "profile2Name");
+  setLabelText("studentPinInput", "profile2Pin");
+  setLabelText("studentRoleSelect", "profile2Role");
+  setLabelText("setupNativeLanguageSelect", "profile2Language");
+  setOptionText("teacherRoleSelect", "teacher", "teacherRole");
+  setOptionText("teacherRoleSelect", "student", "studentRole");
+  setOptionText("studentRoleSelect", "teacher", "teacherRole");
+  setOptionText("studentRoleSelect", "student", "studentRole");
+  setText("createProfilesBtn", "saveProfiles");
+  setText("setupBackBtn", "backToLogin");
+
+  document.querySelector("#loginView .eyebrow").textContent = t("loginEyebrow");
+  document.querySelector("#loginView h2").textContent = t("loginTitle");
+  setLabelText("loginNameInput", "name");
+  setLabelText("loginPinInput", "pin");
+  setLabelText("loginNativeLanguageSelect", "nativeLanguage");
+  setText("loginBtn", "login");
+  setText("registerProfileBtn", "newProfile");
+  setText("setupPairBtn", "setupPair");
+
+  setText("logoutBtn", "logout");
+  document.querySelector("#homeView .section-title h3").textContent = t("articles");
+  setText("refreshBtn", "refresh");
+
+  setText("backBtn", "back");
+  setText("readAloudBtn", "readText");
+  setText("listenOnlyBtn", "listenOnly");
+  setText("pauseReadBtn", "pause");
+  setText("stopReadBtn", "stop");
+  setLabelText("speechRateSelect", "speed");
+  setOptionText("speechRateSelect", "0.65", "slower");
+  setOptionText("speechRateSelect", "1", "speedNormal");
+  setOptionText("speechRateSelect", "1.35", "faster");
+  setText("showTextAfterListeningBtn", "showText");
+  setText("markReadBtn", "markRead");
+
+  document.querySelectorAll("#articleView .practice-heading .eyebrow").forEach(item => item.textContent = t("game"));
+  document.querySelector("#articleView .practice-panel:nth-of-type(1) .eyebrow").textContent = t("overview");
+  document.querySelector("#articleView .practice-panel:nth-of-type(1) h3").textContent = t("vocabulary");
+  document.querySelector("#articleView .practice-panel:nth-of-type(2) .eyebrow").textContent = t("practice");
+  document.querySelector("#articleView .practice-panel:nth-of-type(2) h3").textContent = t("questions");
+  setText("sentenceGameTitle", "sentenceOrder");
+  setText("newSentenceGameBtn", "newSentence");
+  setText("matchGameTitle", "matchPairs");
+  setText("newMatchGameBtn", "shuffle");
+  setText("vocabChoiceTitle", "vocabChoice");
+  setText("newVocabChoiceBtn", "newVocab");
+  setText("clozeGameTitle", "cloze");
+  setText("newClozeGameBtn", "newSentence");
+  setText("mistakeGameTitle", "mistake");
+  setText("newMistakeGameBtn", "newSentence");
+  setText("wordSearchTitle", "wordSearch");
+  setText("newWordSearchBtn", "newGame");
+
+  setText("settingsBackBtn", "back");
+  document.querySelector("#settingsView h2").textContent = t("settingsTitle");
+  setLabelText("fontSizeSelect", "fontSize");
+  setOptionText("fontSizeSelect", "normal", "normal");
+  setOptionText("fontSizeSelect", "large", "large");
+  setOptionText("fontSizeSelect", "xlarge", "xlarge");
+  setLabelText("settingsNativeLanguageSelect", "nativeLanguage");
+  setLabelText("settingsRoleSelect", "profileRole");
+  setOptionText("settingsRoleSelect", "teacher", "teacherRole");
+  setOptionText("settingsRoleSelect", "student", "studentRole");
+  setLabelText("darkModeToggle", "darkMode");
+  document.querySelector("#notificationStatus").previousElementSibling.textContent = t("notifications");
+  setText("notificationStatus", "notificationNote");
+  setText("testNotificationBtn", "testNotification");
+
+  renderCurrentProfileLabel();
+  renderCategories();
+  renderArticles();
+}
+
 async function supabaseRequest(path, options = {}) {
   if (!state.remoteReady) return null;
 
@@ -146,18 +586,20 @@ async function supabaseRequest(path, options = {}) {
 async function loadProfiles() {
   state.profiles = JSON.parse(localStorage.getItem(PROFILE_KEY) || "[]");
   state.profiles = state.profiles.map(normalizeProfile);
+  ensureProfileGroups();
 
   if (!state.remoteReady) return;
 
   try {
     let profiles;
     try {
-      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language&order=role.desc,name.asc");
+      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id&order=role.desc,name.asc");
     } catch (error) {
       profiles = await supabaseRequest("app_profiles?select=id,name,pin,role&order=role.desc,name.asc");
     }
     if (profiles?.length) {
       state.profiles = profiles.map(rowToProfile);
+      ensureProfileGroups();
       localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
     } else if (state.profiles.length) {
       await saveProfiles();
@@ -194,10 +636,21 @@ async function saveProfiles() {
 function normalizeProfile(profile) {
   return {
     ...profile,
+    teacherGroupId: profile?.teacherGroupId || profile?.teacher_group_id || null,
     nativeLanguage: isSupportedNativeLanguage(profile?.nativeLanguage)
       ? profile.nativeLanguage
       : DEFAULT_NATIVE_LANGUAGE
   };
+}
+
+function ensureProfileGroups() {
+  if (!state.profiles.length) return;
+
+  const fallbackTeacher = state.profiles.find(profile => profile.role === "teacher") || state.profiles[0];
+  state.profiles = state.profiles.map(profile => ({
+    ...profile,
+    teacherGroupId: profile.teacherGroupId || (profile.role === "teacher" ? profile.id : fallbackTeacher.id)
+  }));
 }
 
 function rowToProfile(row) {
@@ -206,7 +659,8 @@ function rowToProfile(row) {
     name: row.name,
     pin: row.pin,
     role: row.role,
-    nativeLanguage: row.native_language
+    nativeLanguage: row.native_language,
+    teacherGroupId: row.teacher_group_id
   });
 }
 
@@ -216,6 +670,7 @@ function profileToRow(profile) {
     name: profile.name,
     pin: profile.pin,
     role: profile.role,
+    teacher_group_id: profile.teacherGroupId || profile.id,
     native_language: getNativeLanguage(profile)
   };
 }
@@ -265,6 +720,7 @@ function normalizeArticle(article) {
   return {
     ...article,
     ownerProfileId: article.ownerProfileId || article.owner_profile_id || null,
+    teacherGroupId: article.teacherGroupId || article.teacher_group_id || null,
     visibility: article.visibility || "public",
     approvalStatus: article.approvalStatus || article.approval_status || "approved"
   };
@@ -274,7 +730,11 @@ function canViewArticle(article, profile = state.currentProfile) {
   if (!article?.published && article?.published !== undefined) return false;
   if (article.visibility === "public" && article.approvalStatus === "approved") return true;
   if (!profile) return false;
-  if (profile.role === "teacher") return true;
+  if (profile.role === "teacher" && (
+    article.teacherGroupId === profile.teacherGroupId
+    || article.ownerProfileId === profile.id
+    || !article.teacherGroupId
+  )) return true;
   return article.ownerProfileId === profile.id;
 }
 
@@ -284,7 +744,14 @@ function getVisibleArticles() {
 
 function getEditableArticles() {
   if (!state.currentProfile) return [];
-  if (state.currentProfile.role === "teacher") return state.articles;
+  if (state.currentProfile.role === "teacher") {
+    return state.articles.filter(article =>
+      article.visibility === "public"
+      || article.ownerProfileId === state.currentProfile.id
+      || article.teacherGroupId === state.currentProfile.teacherGroupId
+      || !article.teacherGroupId
+    );
+  }
   return state.articles.filter(article => article.ownerProfileId === state.currentProfile.id);
 }
 
@@ -302,6 +769,7 @@ function rowToArticle(row) {
   return {
     id: row.id,
     ownerProfileId: row.owner_profile_id || null,
+    teacherGroupId: row.teacher_group_id || null,
     visibility: row.visibility || "public",
     approvalStatus: row.approval_status || "approved",
     title: row.title,
@@ -320,6 +788,7 @@ function articleToRow(article, options = {}) {
   const row = {
     id: article.id,
     owner_profile_id: article.ownerProfileId || null,
+    teacher_group_id: article.teacherGroupId || null,
     visibility: article.visibility || "public",
     approval_status: article.approvalStatus || "approved",
     title: article.title,
@@ -374,7 +843,7 @@ function getCategories() {
     categories.push(article.category);
   });
 
-  return ["Všetky", ...categories];
+  return [ALL_CATEGORIES, ...categories];
 }
 
 function renderCategories() {
@@ -389,7 +858,7 @@ function renderCategories() {
   visibleCategories.forEach(category => {
     const btn = document.createElement("button");
     btn.className = "chip" + (category === state.selectedCategory ? " active" : "");
-    btn.textContent = category;
+    btn.textContent = getCategoryLabel(category);
     btn.onclick = () => {
       state.selectedCategory = category;
       renderCategories();
@@ -401,7 +870,7 @@ function renderCategories() {
   if (hasMore) {
     const btn = document.createElement("button");
     btn.className = "chip more-chip";
-    btn.textContent = state.showAllCategories ? "Menej tém" : "Ďalšie témy";
+    btn.textContent = state.showAllCategories ? t("lessTopics") : t("moreTopics");
     btn.onclick = () => {
       state.showAllCategories = !state.showAllCategories;
       renderCategories();
@@ -412,7 +881,7 @@ function renderCategories() {
 
 function renderArticles() {
   const root = $("articleList");
-  const articles = (state.selectedCategory === "Všetky"
+  const articles = (state.selectedCategory === ALL_CATEGORIES
     ? getVisibleArticles()
     : getVisibleArticles().filter(a => a.category === state.selectedCategory));
 
@@ -427,10 +896,10 @@ function renderArticles() {
       <p>${escapeHtml(article.summary)}</p>
       <div class="badges">
         <span class="badge">${escapeHtml(article.level)}</span>
-        <span class="badge">${escapeHtml(article.category)}</span>
-        ${article.visibility === "private" ? '<span class="badge">súkromné</span>' : ""}
-        ${article.visibility === "public" && article.approvalStatus !== "approved" ? '<span class="badge">čaká na schválenie</span>' : ""}
-        ${isRead ? '<span class="badge">✓ prečítané</span>' : ""}
+        <span class="badge">${escapeHtml(getCategoryLabel(article.category))}</span>
+        ${article.visibility === "private" ? `<span class="badge">${escapeHtml(t("private"))}</span>` : ""}
+        ${article.visibility === "public" && article.approvalStatus !== "approved" ? `<span class="badge">${escapeHtml(t("pendingApproval"))}</span>` : ""}
+        ${isRead ? `<span class="badge">✓ ${escapeHtml(t("read"))}</span>` : ""}
       </div>
     `;
     btn.onclick = () => openArticle(article.id);
@@ -1470,6 +1939,7 @@ async function setCurrentProfile(profile) {
   renderNativeLanguageControls();
   renderRoleControls();
   renderCurrentProfileLabel();
+  updateStaticTexts();
   $("settingsBtn").classList.remove("hidden");
   $("teacherBtn").classList.toggle("hidden", profile.role !== "teacher");
   showHome();
@@ -1482,6 +1952,7 @@ function showLogin() {
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
   renderNativeLanguageControls();
+  updateStaticTexts();
   showView(state.profiles.length ? "loginView" : "setupView");
 }
 
@@ -1491,6 +1962,7 @@ function showSetup() {
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
   renderNativeLanguageControls();
+  updateStaticTexts();
   showView("setupView");
 }
 
@@ -1535,6 +2007,7 @@ async function registerProfileFromLogin() {
     name,
     pin,
     role: "student",
+    teacherGroupId: makeProfileId(name),
     nativeLanguage
   };
 
@@ -1576,9 +2049,12 @@ async function createProfiles() {
     return;
   }
 
+  const firstProfileId = makeProfileId(teacherName);
+  const secondProfileId = makeProfileId(studentName);
+  const groupId = teacherRole === "teacher" ? firstProfileId : secondProfileId;
   const newProfiles = [
-    { id: makeProfileId(teacherName), name: teacherName, pin: teacherPin, role: teacherRole, nativeLanguage: teacherNativeLanguage },
-    { id: makeProfileId(studentName), name: studentName, pin: studentPin, role: studentRole, nativeLanguage: studentNativeLanguage }
+    { id: firstProfileId, name: teacherName, pin: teacherPin, role: teacherRole, teacherGroupId: groupId, nativeLanguage: teacherNativeLanguage },
+    { id: secondProfileId, name: studentName, pin: studentPin, role: studentRole, teacherGroupId: groupId, nativeLanguage: studentNativeLanguage }
   ];
   state.profiles = [...state.profiles, ...newProfiles];
   await saveProfiles();
@@ -1670,7 +2146,7 @@ function renderCurrentProfileLabel() {
   const profile = state.currentProfile;
   if (!profile) return;
 
-  $("currentProfileLabel").textContent = `${profile.name} • ${profile.role === "teacher" ? "učiteľ" : "žiak"}${state.remoteReady ? " • online" : " • lokálne"}`;
+  $("currentProfileLabel").textContent = `${profile.name} • ${profile.role === "teacher" ? t("teacher") : t("student")}${state.remoteReady ? ` • ${t("online")}` : ` • ${t("local")}`}`;
 }
 
 async function updateCurrentProfileNativeLanguage(language) {
@@ -1682,6 +2158,7 @@ async function updateCurrentProfileNativeLanguage(language) {
   );
   await saveProfiles();
   renderNativeLanguageControls();
+  updateStaticTexts();
 
   if (state.currentArticle) {
     renderVocabulary();
@@ -1698,8 +2175,11 @@ async function updateCurrentProfileRole(role) {
   if (!state.currentProfile || !["teacher", "student"].includes(role)) return;
 
   state.currentProfile.role = role;
+  if (role === "teacher" && !state.currentProfile.teacherGroupId) {
+    state.currentProfile.teacherGroupId = state.currentProfile.id;
+  }
   state.profiles = state.profiles.map(profile =>
-    profile.id === state.currentProfile.id ? { ...profile, role } : profile
+    profile.id === state.currentProfile.id ? { ...profile, role, teacherGroupId: state.currentProfile.teacherGroupId } : profile
   );
   await saveProfiles();
   renderRoleControls();
@@ -1957,6 +2437,7 @@ function readArticleEditor() {
   const article = {
     id,
     ownerProfileId: existingArticle?.ownerProfileId || state.currentProfile?.id || null,
+    teacherGroupId: existingArticle?.teacherGroupId || state.currentProfile?.teacherGroupId || state.currentProfile?.id || null,
     visibility,
     approvalStatus,
     title,
@@ -2194,6 +2675,7 @@ function loadSettings() {
   document.body.classList.toggle("font-large", fontSize === "large");
   document.body.classList.toggle("font-xlarge", fontSize === "xlarge");
   document.body.classList.toggle("dark", dark);
+  updateStaticTexts();
   updateNotificationStatus();
 }
 
@@ -2234,7 +2716,7 @@ async function showTestNotification() {
 
   const registration = await navigator.serviceWorker?.ready;
   if (!registration?.showNotification) {
-    new Notification("Nemecká čítanka", {
+    new Notification("Čítanka", {
       body: "Skúšobná pripomienka funguje.",
       icon: "icons/icon-192.png"
     });
@@ -2242,7 +2724,7 @@ async function showTestNotification() {
     return;
   }
 
-  await registration.showNotification("Nemecká čítanka", {
+  await registration.showNotification("Čítanka", {
     body: "Dnes stačí pár minút nemčiny.",
     icon: "icons/icon-192.png",
     badge: "icons/icon-192.png",
@@ -2308,6 +2790,8 @@ $("copyQuestionsPromptBtn").onclick = () => copyTextToClipboard(buildQuestionsPr
 $("loginPinInput").addEventListener("keydown", event => {
   if (event.key === "Enter") login();
 });
+
+$("loginNativeLanguageSelect").onchange = updateStaticTexts;
 
 $("markReadBtn").onclick = () => {
   markCurrentArticleRead("manual");

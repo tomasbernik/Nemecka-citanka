@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "nemecka-citanka-v8";
+const CACHE_NAME = "citanka-v9";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -59,13 +59,13 @@ self.addEventListener("notificationclick", event => {
 
 self.addEventListener("push", event => {
   const data = event.data?.json?.() || {
-    title: "Nemecká čítanka",
+    title: "Čítanka",
     body: "Dnes stačí pár minút nemčiny.",
     url: "./index.html"
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || "Nemecká čítanka", {
+    self.registration.showNotification(data.title || "Čítanka", {
       body: data.body || "Dnes stačí pár minút nemčiny.",
       icon: "icons/icon-192.png",
       badge: "icons/icon-192.png",

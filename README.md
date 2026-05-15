@@ -1,4 +1,4 @@
-# Nemecká čítanka – PWA prototyp
+# Čítanka – PWA prototyp
 
 Jednoduchá offline čítanka pre Android.
 

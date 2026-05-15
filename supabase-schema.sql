@@ -3,11 +3,15 @@ create table if not exists public.app_profiles (
   name text not null unique,
   pin text not null,
   role text not null check (role in ('teacher', 'student')),
+  teacher_group_id text,
   native_language text not null default 'sk' check (native_language in ('sk', 'ru', 'pl', 'hu'))
 );
 
 alter table public.app_profiles
 add column if not exists native_language text not null default 'sk';
+
+alter table public.app_profiles
+add column if not exists teacher_group_id text;
 
 create table if not exists public.app_profile_data (
   profile_id text primary key references public.app_profiles(id) on delete cascade,
@@ -18,6 +22,7 @@ create table if not exists public.app_profile_data (
 create table if not exists public.app_articles (
   id text primary key,
   owner_profile_id text references public.app_profiles(id) on delete set null,
+  teacher_group_id text,
   visibility text not null default 'public' check (visibility in ('private', 'public')),
   approval_status text not null default 'approved' check (approval_status in ('draft', 'pending', 'approved', 'rejected')),
   title text not null,
@@ -36,10 +41,29 @@ alter table public.app_articles
 add column if not exists owner_profile_id text references public.app_profiles(id) on delete set null;
 
 alter table public.app_articles
+add column if not exists teacher_group_id text;
+
+alter table public.app_articles
 add column if not exists visibility text not null default 'public';
 
 alter table public.app_articles
 add column if not exists approval_status text not null default 'approved';
+
+update public.app_profiles
+set teacher_group_id = case
+  when role = 'teacher' then id
+  else coalesce(
+    (select id from public.app_profiles where role = 'teacher' order by name asc limit 1),
+    id
+  )
+end
+where teacher_group_id is null;
+
+update public.app_articles article
+set teacher_group_id = profile.teacher_group_id
+from public.app_profiles profile
+where article.owner_profile_id = profile.id
+  and article.teacher_group_id is null;
 
 do $$
 begin
