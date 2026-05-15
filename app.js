@@ -1031,13 +1031,7 @@ const CATEGORY_LABELS = {
   "Nakupovanie": { sk: "Nakupovanie", ru: "Покупки", pl: "Zakupy", hu: "Vásárlás" }
 };
 
-const ARTICLE_IMAGES = {
-  "wohin-fahren-wir-dieses-jahr": {
-    desktop: "images/urlaub_suchen.jpg",
-    mobile: "images/urlaub_suchen_mobile.jpg",
-    alt: "Urlaub suchen"
-  }
-};
+const ARTICLE_IMAGE_EXTENSIONS = ["jpg", "png"];
 
 function getCategoryLabel(category) {
   if (category === ALL_CATEGORIES) return t("all");
@@ -1367,7 +1361,7 @@ function normalizeArticle(article) {
     ...article,
     ownerProfileId: article.ownerProfileId || article.owner_profile_id || null,
     teacherGroupId: article.teacherGroupId || article.teacher_group_id || null,
-    image: article.image || ARTICLE_IMAGES[article.id] || null,
+    image: article.image || null,
     visibility: article.visibility || "public",
     approvalStatus: article.approvalStatus || article.approval_status || "approved"
   };
@@ -1833,23 +1827,43 @@ function renderVocabulary() {
 
 function renderArticleImage(article) {
   const wrap = $("articleImageWrap");
-  const image = article?.image;
 
   if (!wrap) return;
-  if (!image?.desktop) {
+  if (!article?.id) {
     wrap.classList.add("hidden");
     wrap.innerHTML = "";
     return;
   }
 
+  const image = article.image || {};
+  const desktop = image.desktop || `images/articles/${article.id}.jpg`;
+  const fallbackSources = [
+    desktop,
+    ...ARTICLE_IMAGE_EXTENSIONS
+      .map(extension => `images/articles/${article.id}.${extension}`)
+      .filter(source => source !== desktop)
+  ];
   const alt = image.alt || article.title || "";
   wrap.innerHTML = `
     <picture>
       ${image.mobile ? `<source media="(max-width: 700px)" srcset="${escapeHtml(image.mobile)}">` : ""}
-      <img src="${escapeHtml(image.desktop)}" alt="${escapeHtml(alt)}" loading="lazy">
+      <img src="${escapeHtml(desktop)}" alt="${escapeHtml(alt)}" loading="lazy" data-fallback-sources="${escapeHtml(fallbackSources.join("|"))}">
     </picture>
   `;
   wrap.classList.remove("hidden");
+
+  const img = wrap.querySelector("img");
+  img.onerror = () => {
+    const sources = (img.dataset.fallbackSources || "").split("|").filter(Boolean);
+    const currentIndex = sources.indexOf(img.getAttribute("src"));
+    const nextSource = sources[currentIndex + 1];
+    if (nextSource) {
+      img.src = nextSource;
+    } else {
+      wrap.classList.add("hidden");
+      wrap.innerHTML = "";
+    }
+  };
 }
 
 function renderArticleText(article) {

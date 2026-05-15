@@ -41,6 +41,16 @@ Uprav súbor `articles.json`. Každý článok má:
 
 Po nahratí novej verzie na hosting stačí v appke kliknúť na „Aktualizovať“.
 
+## Obrázky k článkom
+
+Obrázok ulož do priečinka `images/articles/` a pomenuj ho podľa ID článku:
+
+```text
+images/articles/wohin-fahren-wir-dieses-jahr.jpg
+```
+
+Appka najprv hľadá `.jpg`, potom `.png`. Ak súbor existuje, zobrazí sa v článku tesne pred textom. Ak neexistuje, článok ostane bez obrázka.
+
 ## Online databáza cez Supabase
 
 Appka vie bežať aj bez online databázy. Ak v `config.js` necháš prázdne hodnoty, používa iba lokálne uloženie v konkrétnom mobile.
