@@ -834,7 +834,7 @@
         "de": "ruhig",
         "sk": "kľudný, pokojný",
         "ru": "спокойный, мирный",
-        "pl": "spokój, spokój",
+        "pl": "spokojny",
         "hu": "nyugodt, békés"
       },
       {
@@ -934,7 +934,7 @@
         "de": "üben",
         "sk": "cvičiť, precvičovať",
         "ru": "практиковаться, репетировать",
-        "pl": "ćwiczyć, ćwiczyć",
+        "pl": "ćwiczyć",
         "hu": "gyakorolni, próbálni"
       },
       {
@@ -961,16 +961,16 @@
       {
         "de": "Zuerst",
         "sk": "najskôr, najprv",
-        "ru": "первый, первый",
-        "pl": "pierwszy, pierwszy",
-        "hu": "első, első"
+        "ru": "сначала",
+        "pl": "najpierw",
+        "hu": "először"
       },
       {
         "de": "lieb",
         "sk": "milý, milá, milé",
-        "ru": "дорогой, дорогой, дорогой",
-        "pl": "kochanie, kochanie, kochanie",
-        "hu": "drága, drága, drága"
+        "ru": "милый",
+        "pl": "miły",
+        "hu": "kedves"
       },
       {
         "de": "Mir gefällt",
@@ -1129,9 +1129,9 @@
       {
         "de": "sofort",
         "sk": "hneď, okamžite",
-        "ru": "немедленно, немедленно",
-        "pl": "natychmiast, natychmiast",
-        "hu": "azonnal, azonnal"
+        "ru": "сразу",
+        "pl": "od razu",
+        "hu": "azonnal"
       },
       {
         "de": "zu Fuß",

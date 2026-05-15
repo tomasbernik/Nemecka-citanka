@@ -37,6 +37,57 @@ create table if not exists public.app_articles (
   updated_at timestamptz not null default now()
 );
 
+create or replace view public.app_vocabulary_missing_translations as
+with article_vocabulary as (
+  select
+    article.id as article_id,
+    article.title as article_title,
+    'vocabulary'::text as source,
+    item.ordinality::int as item_index,
+    item.value as item
+  from public.app_articles article
+  cross join lateral jsonb_array_elements(article.vocabulary) with ordinality as item(value, ordinality)
+
+  union all
+
+  select
+    article.id as article_id,
+    article.title as article_title,
+    'inline_vocabulary'::text as source,
+    item.ordinality::int as item_index,
+    item.value as item
+  from public.app_articles article
+  cross join lateral jsonb_array_elements(article.inline_vocabulary) with ordinality as item(value, ordinality)
+),
+missing as (
+  select
+    article_id,
+    article_title,
+    source,
+    item_index,
+    item ->> 'de' as de,
+    array_remove(array[
+      case when coalesce(item ->> 'sk', '') = '' then 'sk' end,
+      case when coalesce(item ->> 'ru', '') = '' then 'ru' end,
+      case when coalesce(item ->> 'pl', '') = '' then 'pl' end,
+      case when coalesce(item ->> 'hu', '') = '' then 'hu' end
+    ], null) as missing_languages,
+    item
+  from article_vocabulary
+  where coalesce(item ->> 'de', '') <> ''
+)
+select
+  article_id,
+  article_title,
+  source,
+  item_index,
+  de,
+  missing_languages,
+  item
+from missing
+where array_length(missing_languages, 1) > 0
+order by article_title, source, item_index;
+
 alter table public.app_articles
 add column if not exists owner_profile_id text references public.app_profiles(id) on delete set null;
 
