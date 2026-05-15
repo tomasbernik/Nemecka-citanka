@@ -1033,8 +1033,8 @@ const CATEGORY_LABELS = {
 
 const ARTICLE_IMAGES = {
   "wohin-fahren-wir-dieses-jahr": {
-    desktop: "images/urlaub_suchen.png",
-    mobile: "images/urlaub_suchen_mobile.png",
+    desktop: "images/urlaub_suchen.jpg",
+    mobile: "images/urlaub_suchen_mobile.jpg",
     alt: "Urlaub suchen"
   }
 };
