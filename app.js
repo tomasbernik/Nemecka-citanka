@@ -3043,7 +3043,7 @@ function addSelectedTextToVocabulary(addToVocabulary) {
 const PROMPT_TEXT = {
   sk: {
     article: ({ level, category, topic, requiredWords }) => [
-      `Napíš krátky článok v nemčine pre úroveň ${level}.`,
+      `Napíš článok v nemčine pre úroveň ${level}.`,
       category ? `Kategória/téma: ${category}.` : "",
       topic ? `Konkrétne zadanie: ${topic}` : "",
       requiredWords.length
