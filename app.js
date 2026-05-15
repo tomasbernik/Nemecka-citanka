@@ -1007,7 +1007,8 @@ function getNativeLanguageInfo(language = getNativeLanguage()) {
 
 function getVocabularyTranslation(item, language = getNativeLanguage()) {
   if (!item) return "";
-  return item[language] || item.sk || item.translation || "";
+  if (item[language]) return item[language];
+  return language === DEFAULT_NATIVE_LANGUAGE ? item.translation || "" : "";
 }
 
 function makeVocabularyItem(de, translation, language = getNativeLanguage()) {
@@ -1613,13 +1614,15 @@ function cleanupDiscoveredVocabulary(article) {
 
 function getAllVocabulary() {
   const seen = new Set();
+  const language = getNativeLanguage();
+  const locale = getNativeLanguageInfo(language).locale;
   return state.articles.flatMap(article => [
     ...(article.vocabulary || []),
     ...getInlineVocabulary(article)
   ]).filter(item => {
-    const translation = getVocabularyTranslation(item);
+    const translation = getVocabularyTranslation(item, language);
     if (!item.de || !translation) return false;
-    const key = `${item.de.toLocaleLowerCase("de")}|${translation.toLocaleLowerCase(getNativeLanguageInfo().locale)}`;
+    const key = `${item.de.toLocaleLowerCase("de")}|${translation.toLocaleLowerCase(locale)}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -1628,14 +1631,15 @@ function getAllVocabulary() {
 
 function getPracticeVocabulary(article) {
   const seen = new Set();
+  const language = getNativeLanguage();
   return [
     ...(article?.vocabulary || []),
     ...getInlineVocabulary(article),
     ...getSavedVocabulary(article)
   ]
-    .filter(item => item.de && getVocabularyTranslation(item))
+    .filter(item => item.de && getVocabularyTranslation(item, language))
     .filter(item => getSentenceWords(item.de).length <= 2)
-    .filter(item => item.de.length <= 18 && getVocabularyTranslation(item).length <= 32)
+    .filter(item => item.de.length <= 18 && getVocabularyTranslation(item, language).length <= 32)
     .filter(item => {
       const key = normalizeVocabularyKey(item.de);
       if (seen.has(key)) return false;
@@ -2499,10 +2503,11 @@ function addDiscoveredVocabulary(word, translation) {
 
   const wordKey = normalizeVocabularyKey(word);
   const exists = getVisibleVocabulary(article).some(v => normalizeVocabularyKey(v.de) === wordKey);
+  const language = getNativeLanguage();
   if (!exists) {
     state.profileData.discoveredVocabulary[article.id] = [
       ...getSavedVocabulary(article),
-      { de: word, sk: translation }
+      { de: word, [language]: translation }
     ];
     saveProfileData();
     renderVocabulary();
@@ -2762,9 +2767,12 @@ function renderNativeLanguageSelect(selectId, value = DEFAULT_NATIVE_LANGUAGE) {
 
 function renderNativeLanguageControls() {
   const profileLanguage = getNativeLanguage();
+  const loginLanguage = state.currentProfile
+    ? profileLanguage
+    : isSupportedNativeLanguage(state.preLoginLanguage) ? state.preLoginLanguage : DEFAULT_NATIVE_LANGUAGE;
   renderNativeLanguageSelect("teacherNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);
   renderNativeLanguageSelect("setupNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);
-  renderNativeLanguageSelect("loginNativeLanguageSelect", profileLanguage);
+  renderNativeLanguageSelect("loginNativeLanguageSelect", loginLanguage);
   renderNativeLanguageSelect("settingsNativeLanguageSelect", profileLanguage);
 }
 
