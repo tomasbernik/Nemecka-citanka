@@ -1,43 +1,298 @@
 [
-  { "de": "die Erfahrung", "sk": "skúsenosť", "example": "Ich habe viel Erfahrung in diesem Bereich." },
-  { "de": "die Möglichkeit", "sk": "možnosť", "example": "Es gibt viele Möglichkeiten, Deutsch zu lernen." },
-  { "de": "die Entscheidung", "sk": "rozhodnutie", "example": "Das war eine schwere Entscheidung." },
-  { "de": "die Meinung", "sk": "názor", "example": "Meiner Meinung nach ist das eine gute Idee." },
-  { "de": "das Verhalten", "sk": "správanie", "example": "Sein Verhalten war nicht korrekt." },
-  { "de": "die Situation", "sk": "situácia", "example": "Die Situation ist kompliziert." },
-  { "de": "der Unterschied", "sk": "rozdiel", "example": "Ich sehe keinen großen Unterschied." },
-  { "de": "die Entwicklung", "sk": "vývoj", "example": "Die Entwicklung ist sehr schnell." },
-
-  { "de": "erledigen", "sk": "vybaviť", "example": "Ich muss heute viele Dinge erledigen." },
-  { "de": "sich kümmern (um)", "sk": "starať sa o", "example": "Ich kümmere mich um meine Familie." },
-  { "de": "vermeiden", "sk": "vyhnúť sa", "example": "Ich versuche, Stress zu vermeiden." },
-  { "de": "gehören", "sk": "patriť", "example": "Das gehört mir nicht." },
-  { "de": "erlauben", "sk": "dovoliť", "example": "Meine Eltern erlauben mir das." },
-  { "de": "verbessern", "sk": "zlepšiť", "example": "Ich möchte mein Deutsch verbessern." },
-  { "de": "erklären", "sk": "vysvetliť", "example": "Der Lehrer erklärt die Aufgabe." },
-  { "de": "beschreiben", "sk": "opísať", "example": "Kannst du das Bild beschreiben?" },
-  { "de": "entscheiden", "sk": "rozhodnúť sa", "example": "Ich muss mich schnell entscheiden." },
-  { "de": "versuchen", "sk": "pokúsiť sa", "example": "Ich versuche, pünktlich zu sein." },
-
-  { "de": "obwohl", "sk": "aj keď", "example": "Ich gehe spazieren, obwohl es regnet." },
-  { "de": "trotzdem", "sk": "napriek tomu", "example": "Es regnet, trotzdem gehe ich raus." },
-  { "de": "deshalb", "sk": "preto", "example": "Ich bin müde, deshalb gehe ich schlafen." },
-  { "de": "außerdem", "sk": "okrem toho", "example": "Ich lerne Deutsch, außerdem arbeite ich viel." },
-  { "de": "während", "sk": "počas / zatiaľ čo", "example": "Ich höre Musik, während ich arbeite." },
-  { "de": "damit", "sk": "aby", "example": "Ich lerne viel, damit ich besser werde." },
-  { "de": "falls", "sk": "ak (v prípade že)", "example": "Ruf mich an, falls du Hilfe brauchst." },
-
-  { "de": "wahrscheinlich", "sk": "pravdepodobne", "example": "Er kommt wahrscheinlich später." },
-  { "de": "besonders", "sk": "obzvlášť", "example": "Ich mag besonders diesen Ort." },
-  { "de": "wichtig", "sk": "dôležitý", "example": "Das ist sehr wichtig für mich." },
-  { "de": "möglich", "sk": "možný", "example": "Ist das möglich?" },
-  { "de": "unterschiedlich", "sk": "rôzny", "example": "Die Meinungen sind unterschiedlich." },
-  { "de": "gemeinsam", "sk": "spolu", "example": "Wir arbeiten gemeinsam an dem Projekt." },
-  { "de": "sofort", "sk": "okamžite", "example": "Komm bitte sofort hierher." },
-
-  { "de": "meiner Meinung nach", "sk": "podľa môjho názoru", "example": "Meiner Meinung nach ist das richtig." },
-  { "de": "ich glaube, dass", "sk": "myslím si, že", "example": "Ich glaube, dass er recht hat." },
-  { "de": "es ist wichtig, dass", "sk": "je dôležité, aby", "example": "Es ist wichtig, dass du lernst." },
-  { "de": "ich habe vor, ... zu ...", "sk": "mám v pláne", "example": "Ich habe vor, morgen zu reisen." },
-  { "de": "es hängt davon ab", "sk": "závisí to od toho", "example": "Es hängt davon ab, wie viel Zeit ich habe." }
+  {
+    "de": "die Erfahrung",
+    "sk": "skúsenosť",
+    "example": "Ich habe viel Erfahrung in diesem Bereich.",
+    "ru": "опыт",
+    "pl": "doświadczenie",
+    "hu": "tapasztalat"
+  },
+  {
+    "de": "die Möglichkeit",
+    "sk": "možnosť",
+    "example": "Es gibt viele Möglichkeiten, Deutsch zu lernen.",
+    "ru": "возможность",
+    "pl": "możliwość",
+    "hu": "lehetőség"
+  },
+  {
+    "de": "die Entscheidung",
+    "sk": "rozhodnutie",
+    "example": "Das war eine schwere Entscheidung.",
+    "ru": "решение",
+    "pl": "decyzja",
+    "hu": "döntés"
+  },
+  {
+    "de": "die Meinung",
+    "sk": "názor",
+    "example": "Meiner Meinung nach ist das eine gute Idee.",
+    "ru": "мнение",
+    "pl": "opinia",
+    "hu": "vélemény"
+  },
+  {
+    "de": "das Verhalten",
+    "sk": "správanie",
+    "example": "Sein Verhalten war nicht korrekt.",
+    "ru": "поведение",
+    "pl": "zachowanie",
+    "hu": "viselkedés"
+  },
+  {
+    "de": "die Situation",
+    "sk": "situácia",
+    "example": "Die Situation ist kompliziert.",
+    "ru": "ситуация",
+    "pl": "sytuacja",
+    "hu": "a helyzetet"
+  },
+  {
+    "de": "der Unterschied",
+    "sk": "rozdiel",
+    "example": "Ich sehe keinen großen Unterschied.",
+    "ru": "разница",
+    "pl": "różnica",
+    "hu": "a különbséget"
+  },
+  {
+    "de": "die Entwicklung",
+    "sk": "vývoj",
+    "example": "Die Entwicklung ist sehr schnell.",
+    "ru": "развитие",
+    "pl": "rozwój",
+    "hu": "fejlődését"
+  },
+  {
+    "de": "erledigen",
+    "sk": "vybaviť",
+    "example": "Ich muss heute viele Dinge erledigen.",
+    "ru": "выполнить / уладить",
+    "pl": "załatwić",
+    "hu": "elintézni"
+  },
+  {
+    "de": "sich kümmern (um)",
+    "sk": "starať sa o",
+    "example": "Ich kümmere mich um meine Familie.",
+    "ru": "заботиться о",
+    "pl": "dbać",
+    "hu": "vigyázni"
+  },
+  {
+    "de": "vermeiden",
+    "sk": "vyhnúť sa",
+    "example": "Ich versuche, Stress zu vermeiden.",
+    "ru": "избегать",
+    "pl": "uniknąć",
+    "hu": "elkerülni"
+  },
+  {
+    "de": "gehören",
+    "sk": "patriť",
+    "example": "Das gehört mir nicht.",
+    "ru": "принадлежать",
+    "pl": "należeć",
+    "hu": "tartozni"
+  },
+  {
+    "de": "erlauben",
+    "sk": "dovoliť",
+    "example": "Meine Eltern erlauben mir das.",
+    "ru": "разрешить",
+    "pl": "pozwolić",
+    "hu": "engedje meg"
+  },
+  {
+    "de": "verbessern",
+    "sk": "zlepšiť",
+    "example": "Ich möchte mein Deutsch verbessern.",
+    "ru": "улучшить",
+    "pl": "poprawić",
+    "hu": "javítani"
+  },
+  {
+    "de": "erklären",
+    "sk": "vysvetliť",
+    "example": "Der Lehrer erklärt die Aufgabe.",
+    "ru": "объяснить",
+    "pl": "wyjaśnić",
+    "hu": "megmagyarázni"
+  },
+  {
+    "de": "beschreiben",
+    "sk": "opísať",
+    "example": "Kannst du das Bild beschreiben?",
+    "ru": "описать",
+    "pl": "opisać",
+    "hu": "leírni"
+  },
+  {
+    "de": "entscheiden",
+    "sk": "rozhodnúť sa",
+    "example": "Ich muss mich schnell entscheiden.",
+    "ru": "решать",
+    "pl": "zdecydować",
+    "hu": "dönteni"
+  },
+  {
+    "de": "versuchen",
+    "sk": "pokúsiť sa",
+    "example": "Ich versuche, pünktlich zu sein.",
+    "ru": "попробовать",
+    "pl": "spróbować",
+    "hu": "hogy megpróbáljam"
+  },
+  {
+    "de": "obwohl",
+    "sk": "aj keď",
+    "example": "Ich gehe spazieren, obwohl es regnet.",
+    "ru": "хотя",
+    "pl": "chociaż",
+    "hu": "bár"
+  },
+  {
+    "de": "trotzdem",
+    "sk": "napriek tomu",
+    "example": "Es regnet, trotzdem gehe ich raus.",
+    "ru": "тем не менее",
+    "pl": "mimo to",
+    "hu": "mindazonáltal"
+  },
+  {
+    "de": "deshalb",
+    "sk": "preto",
+    "example": "Ich bin müde, deshalb gehe ich schlafen.",
+    "ru": "поэтому",
+    "pl": "dlatego",
+    "hu": "ezért"
+  },
+  {
+    "de": "außerdem",
+    "sk": "okrem toho",
+    "example": "Ich lerne Deutsch, außerdem arbeite ich viel.",
+    "ru": "в дополнение к этому",
+    "pl": "oprócz tego",
+    "hu": "ezen felül"
+  },
+  {
+    "de": "während",
+    "sk": "počas / zatiaľ čo",
+    "example": "Ich höre Musik, während ich arbeite.",
+    "ru": "во время / пока",
+    "pl": "podczas/podczas",
+    "hu": "közben / közben"
+  },
+  {
+    "de": "damit",
+    "sk": "aby",
+    "example": "Ich lerne viel, damit ich besser werde.",
+    "ru": "чтобы",
+    "pl": "do",
+    "hu": "hogy"
+  },
+  {
+    "de": "falls",
+    "sk": "ak (v prípade že)",
+    "example": "Ruf mich an, falls du Hilfe brauchst.",
+    "ru": "если (в случае)",
+    "pl": "jeśli (w przypadku)",
+    "hu": "ha (abban az esetben)"
+  },
+  {
+    "de": "wahrscheinlich",
+    "sk": "pravdepodobne",
+    "example": "Er kommt wahrscheinlich später.",
+    "ru": "вероятно",
+    "pl": "prawdopodobnie",
+    "hu": "valószínűleg"
+  },
+  {
+    "de": "besonders",
+    "sk": "obzvlášť",
+    "example": "Ich mag besonders diesen Ort.",
+    "ru": "особенно",
+    "pl": "szczególnie",
+    "hu": "különösen"
+  },
+  {
+    "de": "wichtig",
+    "sk": "dôležitý",
+    "example": "Das ist sehr wichtig für mich.",
+    "ru": "важный",
+    "pl": "ważne",
+    "hu": "fontos"
+  },
+  {
+    "de": "möglich",
+    "sk": "možný",
+    "example": "Ist das möglich?",
+    "ru": "возможно",
+    "pl": "możliwe",
+    "hu": "lehetséges"
+  },
+  {
+    "de": "unterschiedlich",
+    "sk": "rôzny",
+    "example": "Die Meinungen sind unterschiedlich.",
+    "ru": "различные",
+    "pl": "różne",
+    "hu": "különféle"
+  },
+  {
+    "de": "gemeinsam",
+    "sk": "spolu",
+    "example": "Wir arbeiten gemeinsam an dem Projekt.",
+    "ru": "вместе",
+    "pl": "razem",
+    "hu": "együtt"
+  },
+  {
+    "de": "sofort",
+    "sk": "okamžite",
+    "example": "Komm bitte sofort hierher.",
+    "ru": "немедленно",
+    "pl": "natychmiast",
+    "hu": "azonnal"
+  },
+  {
+    "de": "meiner Meinung nach",
+    "sk": "podľa môjho názoru",
+    "example": "Meiner Meinung nach ist das richtig.",
+    "ru": "по моему мнению",
+    "pl": "moim zdaniem",
+    "hu": "véleményem szerint"
+  },
+  {
+    "de": "ich glaube, dass",
+    "sk": "myslím si, že",
+    "example": "Ich glaube, dass er recht hat.",
+    "ru": "я думаю, что",
+    "pl": "myślę, że",
+    "hu": "azt hiszem, hogy"
+  },
+  {
+    "de": "es ist wichtig, dass",
+    "sk": "je dôležité, aby",
+    "example": "Es ist wichtig, dass du lernst.",
+    "ru": "важно, чтобы",
+    "pl": "ważne jest, żeby",
+    "hu": "fontos, hogy"
+  },
+  {
+    "de": "ich habe vor, ... zu ...",
+    "sk": "mám v pláne",
+    "example": "Ich habe vor, morgen zu reisen.",
+    "ru": "я планирую",
+    "pl": "planuję",
+    "hu": "azt tervezem"
+  },
+  {
+    "de": "es hängt davon ab",
+    "sk": "závisí to od toho",
+    "example": "Es hängt davon ab, wie viel Zeit ich habe.",
+    "ru": "это зависит от",
+    "pl": "to zależy od tego",
+    "hu": "attól függ"
+  }
 ]

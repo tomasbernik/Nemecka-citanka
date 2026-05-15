@@ -2,8 +2,12 @@ create table if not exists public.app_profiles (
   id text primary key,
   name text not null unique,
   pin text not null,
-  role text not null check (role in ('teacher', 'student'))
+  role text not null check (role in ('teacher', 'student')),
+  native_language text not null default 'sk' check (native_language in ('sk', 'ru', 'pl', 'hu'))
 );
+
+alter table public.app_profiles
+add column if not exists native_language text not null default 'sk';
 
 create table if not exists public.app_profile_data (
   profile_id text primary key references public.app_profiles(id) on delete cascade,

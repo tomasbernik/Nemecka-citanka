@@ -44,6 +44,10 @@
             PIN žiačky
             <input id="studentPinInput" inputmode="numeric" type="password" autocomplete="new-password">
           </label>
+          <label class="field-row">
+            Materinský jazyk žiačky
+            <select id="setupNativeLanguageSelect"></select>
+          </label>
 
           <p id="setupError" class="form-error"></p>
           <button id="createProfilesBtn" class="primary-btn">Uložiť profily</button>
@@ -61,6 +65,10 @@
           <label class="field-row">
             PIN
             <input id="loginPinInput" inputmode="numeric" type="password" autocomplete="current-password">
+          </label>
+          <label class="field-row">
+            Materinský jazyk
+            <select id="loginNativeLanguageSelect"></select>
           </label>
           <p id="loginError" class="form-error"></p>
           <button id="loginBtn" class="primary-btn">Prihlásiť sa</button>
@@ -184,7 +192,7 @@
             <div class="practice-heading">
               <div>
                 <p class="eyebrow">Hra</p>
-                <h3 id="mistakeGameTitle">Nájdi chybu vo vete</h3>
+                <h3 id="mistakeGameTitle">Nájdi chybné slovo vo vete</h3>
               </div>
               <button id="newMistakeGameBtn" class="text-btn" type="button">Nová veta</button>
             </div>
@@ -221,6 +229,10 @@
               <option value="large">Veľké</option>
               <option value="xlarge">Veľmi veľké</option>
             </select>
+          </label>
+          <label class="setting-row">
+            Materinský jazyk
+            <select id="settingsNativeLanguageSelect"></select>
           </label>
           <label class="setting-row">
             Tmavý režim
@@ -308,11 +320,11 @@
             <button id="addSelectedInlineBtn" class="secondary-btn quiet" type="button">Označené iba inline</button>
           </div>
           <label class="field-row">
-            Slovíčka, jeden riadok: nemecky = slovensky
+            Slovíčka, jeden riadok: nemecky = preklad
             <textarea id="articleVocabularyInput" class="editor-textarea"></textarea>
           </label>
           <label class="field-row">
-            Inline slovíčka, jeden riadok: nemecky = slovensky
+            Inline slovíčka, jeden riadok: nemecky = preklad
             <textarea id="articleInlineVocabularyInput" class="editor-textarea"></textarea>
           </label>
           <label class="field-row">

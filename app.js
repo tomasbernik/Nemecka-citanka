@@ -4,6 +4,13 @@ const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 const AUTO_READ_DELAY_MS = 2 * 60 * 1000;
 const VISIBLE_CATEGORY_LIMIT = 6;
+const DEFAULT_NATIVE_LANGUAGE = "sk";
+const NATIVE_LANGUAGES = {
+  sk: { label: "Slovenčina", promptName: "slovenčiny", lineFormat: "slovensky", locale: "sk" },
+  ru: { label: "Ruština", promptName: "ruštiny", lineFormat: "rusky", locale: "ru" },
+  pl: { label: "Poľština", promptName: "poľštiny", lineFormat: "poľsky", locale: "pl" },
+  hu: { label: "Maďarčina", promptName: "maďarčiny", lineFormat: "maďarsky", locale: "hu" }
+};
 
 const state = {
   articles: [],
@@ -49,6 +56,32 @@ const state = {
 };
 
 const $ = (id) => document.getElementById(id);
+
+function isSupportedNativeLanguage(language) {
+  return Boolean(NATIVE_LANGUAGES[language]);
+}
+
+function getNativeLanguage(profile = state.currentProfile) {
+  return isSupportedNativeLanguage(profile?.nativeLanguage)
+    ? profile.nativeLanguage
+    : DEFAULT_NATIVE_LANGUAGE;
+}
+
+function getNativeLanguageInfo(language = getNativeLanguage()) {
+  return NATIVE_LANGUAGES[isSupportedNativeLanguage(language) ? language : DEFAULT_NATIVE_LANGUAGE];
+}
+
+function getVocabularyTranslation(item, language = getNativeLanguage()) {
+  if (!item) return "";
+  return item[language] || item.sk || item.translation || "";
+}
+
+function makeVocabularyItem(de, translation, language = getNativeLanguage()) {
+  return {
+    de: (de || "").trim(),
+    [language]: (translation || "").trim()
+  };
+}
 
 function normalizeName(value) {
   return value.trim().toLocaleLowerCase("sk");
@@ -109,13 +142,19 @@ async function supabaseRequest(path, options = {}) {
 
 async function loadProfiles() {
   state.profiles = JSON.parse(localStorage.getItem(PROFILE_KEY) || "[]");
+  state.profiles = state.profiles.map(normalizeProfile);
 
   if (!state.remoteReady) return;
 
   try {
-    const profiles = await supabaseRequest("app_profiles?select=id,name,pin,role&order=role.desc,name.asc");
+    let profiles;
+    try {
+      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language&order=role.desc,name.asc");
+    } catch (error) {
+      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role&order=role.desc,name.asc");
+    }
     if (profiles?.length) {
-      state.profiles = profiles;
+      state.profiles = profiles.map(rowToProfile);
       localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
     } else if (state.profiles.length) {
       await saveProfiles();
@@ -131,14 +170,51 @@ async function saveProfiles() {
   if (!state.remoteReady || !state.profiles.length) return;
 
   try {
-    await supabaseRequest("app_profiles?on_conflict=id", {
-      method: "POST",
-      headers: { Prefer: "resolution=merge-duplicates" },
-      body: JSON.stringify(state.profiles)
-    });
+    try {
+      await supabaseRequest("app_profiles?on_conflict=id", {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates" },
+        body: JSON.stringify(state.profiles.map(profileToRow))
+      });
+    } catch (error) {
+      await supabaseRequest("app_profiles?on_conflict=id", {
+        method: "POST",
+        headers: { Prefer: "resolution=merge-duplicates" },
+        body: JSON.stringify(state.profiles.map(({ id, name, pin, role }) => ({ id, name, pin, role })))
+      });
+    }
   } catch (error) {
     console.error(error);
   }
+}
+
+function normalizeProfile(profile) {
+  return {
+    ...profile,
+    nativeLanguage: isSupportedNativeLanguage(profile?.nativeLanguage)
+      ? profile.nativeLanguage
+      : DEFAULT_NATIVE_LANGUAGE
+  };
+}
+
+function rowToProfile(row) {
+  return normalizeProfile({
+    id: row.id,
+    name: row.name,
+    pin: row.pin,
+    role: row.role,
+    nativeLanguage: row.native_language
+  });
+}
+
+function profileToRow(profile) {
+  return {
+    id: profile.id,
+    name: profile.name,
+    pin: profile.pin,
+    role: profile.role,
+    native_language: getNativeLanguage(profile)
+  };
 }
 
 async function loadArticles() {
@@ -400,8 +476,9 @@ function getAllVocabulary() {
     ...(article.vocabulary || []),
     ...getInlineVocabulary(article)
   ]).filter(item => {
-    if (!item.de || !item.sk) return false;
-    const key = `${item.de.toLocaleLowerCase("de")}|${item.sk.toLocaleLowerCase("sk")}`;
+    const translation = getVocabularyTranslation(item);
+    if (!item.de || !translation) return false;
+    const key = `${item.de.toLocaleLowerCase("de")}|${translation.toLocaleLowerCase(getNativeLanguageInfo().locale)}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
@@ -415,9 +492,9 @@ function getPracticeVocabulary(article) {
     ...getInlineVocabulary(article),
     ...getSavedVocabulary(article)
   ]
-    .filter(item => item.de && item.sk)
+    .filter(item => item.de && getVocabularyTranslation(item))
     .filter(item => getSentenceWords(item.de).length <= 2)
-    .filter(item => item.de.length <= 18 && item.sk.length <= 32)
+    .filter(item => item.de.length <= 18 && getVocabularyTranslation(item).length <= 32)
     .filter(item => {
       const key = normalizeVocabularyKey(item.de);
       if (seen.has(key)) return false;
@@ -563,7 +640,7 @@ function renderArticleTaskProgress() {
 function renderVocabulary() {
   const article = state.currentArticle;
   $("vocabList").innerHTML = getVisibleVocabulary(article)
-    .map(v => `<li><strong>${escapeHtml(v.de)}</strong> – ${escapeHtml(v.sk)}</li>`)
+    .map(v => `<li><strong>${escapeHtml(v.de)}</strong> – ${escapeHtml(getVocabularyTranslation(v))}</li>`)
     .join("");
 }
 
@@ -588,7 +665,7 @@ function renderArticleText(article) {
       const vocab = lookup.get(word.toLocaleLowerCase("de"));
       if (!vocab) return match;
 
-      return `${prefix}<button class="inline-word" type="button" data-word="${escapeHtml(vocab.de)}" data-translation="${escapeHtml(vocab.sk)}" aria-expanded="false">${word}</button>`;
+      return `${prefix}<button class="inline-word" type="button" data-word="${escapeHtml(vocab.de)}" data-translation="${escapeHtml(getVocabularyTranslation(vocab))}" aria-expanded="false">${word}</button>`;
     });
 
     return `<span class="reading-sentence" data-sentence-index="${index}">${html}</span>`;
@@ -893,10 +970,10 @@ function returnSentenceWord(id) {
 }
 
 function startMatchGame() {
-  const vocabulary = shuffle(getVisibleVocabulary(state.currentArticle)).slice(0, 6);
+  const vocabulary = shuffle(getVisibleVocabulary(state.currentArticle).filter(item => getVocabularyTranslation(item))).slice(0, 6);
   const cards = vocabulary.flatMap((item, index) => [
     { id: `${index}-de`, pairId: String(index), label: item.de, type: "de" },
-    { id: `${index}-sk`, pairId: String(index), label: item.sk, type: "sk" }
+    { id: `${index}-native`, pairId: String(index), label: getVocabularyTranslation(item), type: "native" }
   ]);
 
   state.matchGame = {
@@ -966,11 +1043,12 @@ function startVocabChoiceGame() {
   }
 
   const correct = shuffle(vocabulary)[0];
+  const correctTranslation = getVocabularyTranslation(correct);
   const options = shuffle([
-    correct.sk,
-    ...shuffle(vocabulary.filter(item => item.sk !== correct.sk)).slice(0, 3).map(item => item.sk)
+    correctTranslation,
+    ...shuffle(vocabulary.filter(item => getVocabularyTranslation(item) !== correctTranslation)).slice(0, 3).map(item => getVocabularyTranslation(item))
   ]);
-  state.vocabChoiceGame = { correct, options, answered: false };
+  state.vocabChoiceGame = { correct, correctTranslation, options, answered: false };
   $("vocabChoicePrompt").textContent = correct.de;
   $("vocabChoiceOptions").innerHTML = options
     .map(option => `<button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
@@ -984,16 +1062,16 @@ function answerVocabChoice(answer) {
   game.answered = true;
 
   document.querySelectorAll("#vocabChoiceOptions .quiz-option").forEach(button => {
-    const isCorrect = button.dataset.answer === game.correct.sk;
+    const isCorrect = button.dataset.answer === game.correctTranslation;
     const isChosen = button.dataset.answer === answer;
     button.classList.toggle("correct", isCorrect);
     button.classList.toggle("wrong", isChosen && !isCorrect);
     button.disabled = true;
   });
 
-  const isCorrect = answer === game.correct.sk;
-  $("vocabChoiceFeedback").textContent = isCorrect ? "Správne." : `Správne je: ${game.correct.sk}`;
-  logPractice("vocab-choice", { correct: isCorrect, prompt: game.correct.de, answer, expected: game.correct.sk });
+  const isCorrect = answer === game.correctTranslation;
+  $("vocabChoiceFeedback").textContent = isCorrect ? "Správne." : `Správne je: ${game.correctTranslation}`;
+  logPractice("vocab-choice", { correct: isCorrect, prompt: game.correct.de, answer, expected: game.correctTranslation });
   if (isCorrect) markTaskCompleted("vocab-choice");
 }
 
@@ -1175,7 +1253,7 @@ function startWordSearchGame() {
 function renderWordSearchGame() {
   const game = state.wordSearchGame;
   $("wordSearchHints").innerHTML = game.words
-    .map(item => `<li class="${game.found.includes(item.search) ? "found" : ""}">${escapeHtml(item.sk)}</li>`)
+    .map(item => `<li class="${game.found.includes(item.search) ? "found" : ""}">${escapeHtml(getVocabularyTranslation(item))}</li>`)
     .join("");
   $("wordSearchGrid").innerHTML = game.grid.flatMap((row, rowIndex) =>
     row.map((letter, colIndex) => {
@@ -1345,10 +1423,11 @@ async function loadProfileData(profile) {
 }
 
 async function setCurrentProfile(profile) {
-  state.currentProfile = profile;
+  state.currentProfile = normalizeProfile(profile);
   localStorage.setItem(CURRENT_PROFILE_KEY, profile.id);
-  await loadProfileData(profile);
+  await loadProfileData(state.currentProfile);
   $("currentProfileLabel").textContent = `${profile.name} • ${profile.role === "teacher" ? "učiteľ" : "žiačka"}${state.remoteReady ? " • online" : " • lokálne"}`;
+  renderNativeLanguageControls();
   $("settingsBtn").classList.remove("hidden");
   $("teacherBtn").classList.toggle("hidden", profile.role !== "teacher");
   showHome();
@@ -1375,6 +1454,12 @@ async function login() {
 
   $("loginError").textContent = "";
   $("loginPinInput").value = "";
+  const nativeLanguage = $("loginNativeLanguageSelect").value;
+  if (isSupportedNativeLanguage(nativeLanguage) && profile.nativeLanguage !== nativeLanguage) {
+    profile.nativeLanguage = nativeLanguage;
+    state.profiles = state.profiles.map(item => item.id === profile.id ? profile : item);
+    await saveProfiles();
+  }
   await setCurrentProfile(profile);
 }
 
@@ -1395,8 +1480,8 @@ async function createProfiles() {
   }
 
   state.profiles = [
-    { id: makeProfileId(teacherName), name: teacherName, pin: teacherPin, role: "teacher" },
-    { id: makeProfileId(studentName), name: studentName, pin: studentPin, role: "student" }
+    { id: makeProfileId(teacherName), name: teacherName, pin: teacherPin, role: "teacher", nativeLanguage: DEFAULT_NATIVE_LANGUAGE },
+    { id: makeProfileId(studentName), name: studentName, pin: studentPin, role: "student", nativeLanguage: $("setupNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE }
   ];
   await saveProfiles();
   $("setupError").textContent = "";
@@ -1444,7 +1529,7 @@ function formatPracticeType(type) {
     "true-false": "Pravda/nepravda",
     "vocab-choice": "4 možnosti",
     "cloze-word": "Doplň slovo",
-    "find-mistake": "Nájdi chybu",
+    "find-mistake": "Nájdi chybné slovo",
     "word-search": "Osemsmerovka"
   }[type] || type;
 }
@@ -1459,32 +1544,79 @@ function formatDateTime(value) {
   });
 }
 
+function renderNativeLanguageSelect(selectId, value = DEFAULT_NATIVE_LANGUAGE) {
+  const select = $(selectId);
+  if (!select) return;
+
+  select.innerHTML = Object.entries(NATIVE_LANGUAGES)
+    .map(([code, language]) => `<option value="${code}">${escapeHtml(language.label)}</option>`)
+    .join("");
+  select.value = isSupportedNativeLanguage(value) ? value : DEFAULT_NATIVE_LANGUAGE;
+}
+
+function renderNativeLanguageControls() {
+  const profileLanguage = getNativeLanguage();
+  renderNativeLanguageSelect("setupNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);
+  renderNativeLanguageSelect("loginNativeLanguageSelect", profileLanguage);
+  renderNativeLanguageSelect("settingsNativeLanguageSelect", profileLanguage);
+}
+
+async function updateCurrentProfileNativeLanguage(language) {
+  if (!state.currentProfile || !isSupportedNativeLanguage(language)) return;
+
+  state.currentProfile.nativeLanguage = language;
+  state.profiles = state.profiles.map(profile =>
+    profile.id === state.currentProfile.id ? { ...profile, nativeLanguage: language } : profile
+  );
+  await saveProfiles();
+  renderNativeLanguageControls();
+
+  if (state.currentArticle) {
+    renderVocabulary();
+    renderArticleText(state.currentArticle);
+    startMatchGame();
+    startVocabChoiceGame();
+    startWordSearchGame();
+  } else {
+    renderArticles();
+  }
+}
+
 function linesToList(value) {
   return value.split(/\r?\n/).map(line => line.trim()).filter(Boolean);
 }
 
 function parseVocabularyLines(value) {
+  const language = getNativeLanguage();
   return linesToList(value).map(line => {
     const [de, ...rest] = line.split("=");
-    return {
-      de: (de || "").trim(),
-      sk: rest.join("=").trim()
-    };
-  }).filter(item => item.de && item.sk);
+    return makeVocabularyItem(de, rest.join("="), language);
+  }).filter(item => item.de && getVocabularyTranslation(item, language));
 }
 
 function parseVocabularyDraftLines(value) {
+  const language = getNativeLanguage();
   return linesToList(value).map(line => {
     const [de, ...rest] = line.split("=");
-    return {
-      de: (de || "").trim(),
-      sk: rest.join("=").trim()
-    };
+    return makeVocabularyItem(de, rest.join("="), language);
   }).filter(item => item.de);
 }
 
 function formatVocabularyLines(items = []) {
-  return items.map(item => `${item.de} = ${item.sk}`).join("\n");
+  return items.map(item => `${item.de} = ${getVocabularyTranslation(item)}`).join("\n");
+}
+
+function mergeVocabularyTranslations(existingItems = [], parsedItems = [], language = getNativeLanguage()) {
+  const existingByKey = new Map(existingItems.map(item => [normalizeVocabularyKey(item.de), item]));
+  return parsedItems.map(item => {
+    const existing = existingByKey.get(normalizeVocabularyKey(item.de)) || {};
+    return {
+      ...existing,
+      ...item,
+      de: item.de,
+      [language]: getVocabularyTranslation(item, language)
+    };
+  });
 }
 
 function parseQuestionLines(value) {
@@ -1562,29 +1694,40 @@ function addSelectedTextToVocabulary(addToVocabulary) {
 function buildArticlePrompt() {
   const topic = $("articlePromptInput").value.trim();
   const level = $("articleLevelInput").value.trim() || "A2-B1";
-  const category = $("articleCategoryInput").value.trim() || "bežný život";
+  const category = $("articleCategoryInput").value.trim();
   const requiredWords = linesToList($("articleRequiredWordsInput").value);
+  addRequiredWordsToVocabulary();
 
   return [
     `Napíš krátky článok v nemčine pre úroveň ${level}.`,
-    `Kategória/téma: ${category}.`,
+    category ? `Kategória/téma: ${category}.` : "",
     topic ? `Konkrétne zadanie: ${topic}` : "",
     requiredWords.length
       ? `Tieto slová alebo frázy musia byť v texte použité každé minimálne 2x a maximálne 4x: ${requiredWords.join(", ")}.`
       : "",
-    "Text má byť prirodzený, vhodný pre čítanku, bez príliš ťažkých viet.",
-    "Vráť iba názov, krátky slovenský popis a nemecký text rozdelený na odseky."
+    "Vráť iba názov, krátky nemecký popis a nemecký text rozdelený na odseky."
   ].filter(Boolean).join("\n");
 }
 
+function addRequiredWordsToVocabulary() {
+  const requiredWords = linesToList($("articleRequiredWordsInput").value);
+  requiredWords.forEach(word => {
+    const line = `${word} =`;
+    appendUniqueLine("articleVocabularyInput", line);
+    appendUniqueLine("articleInlineVocabularyInput", line);
+  });
+}
+
 function buildTranslationPrompt() {
+  const language = getNativeLanguage();
+  const languageInfo = getNativeLanguageInfo(language);
   const words = [
     ...parseVocabularyDraftLines($("articleVocabularyInput").value),
     ...parseVocabularyDraftLines($("articleInlineVocabularyInput").value)
   ];
   const seen = new Set();
   const missing = words
-    .filter(item => !item.sk)
+    .filter(item => !getVocabularyTranslation(item, language))
     .filter(item => {
       const key = normalizeVocabularyKey(item.de);
       if (seen.has(key)) return false;
@@ -1594,8 +1737,8 @@ function buildTranslationPrompt() {
     .map(item => `${item.de} =`);
 
   return [
-    "Prelož tieto nemecké slová a frázy do slovenčiny.",
-    "Vráť presne formát: nemecky = slovensky.",
+    `Prelož tieto nemecké slová a frázy do ${languageInfo.promptName}.`,
+    `Vráť presne formát: nemecky = ${languageInfo.lineFormat}.`,
     "Nepíš vysvetlenia navyše.",
     "",
     missing.join("\n")
@@ -1648,8 +1791,12 @@ function fillArticleEditor(article) {
 }
 
 function readArticleEditor() {
+  const existingArticle = state.articles.find(item => item.id === $("articleEditorSelect").value);
+  const language = getNativeLanguage();
   const title = $("articleTitleInput").value.trim();
   const id = ($("articleIdInput").value.trim() || makeArticleId(title));
+  const parsedVocabulary = parseVocabularyLines($("articleVocabularyInput").value);
+  const parsedInlineVocabulary = parseVocabularyLines($("articleInlineVocabularyInput").value);
   const article = {
     id,
     title,
@@ -1657,8 +1804,8 @@ function readArticleEditor() {
     category: $("articleCategoryInput").value.trim(),
     summary: $("articleSummaryInput").value.trim(),
     text: linesToList($("articleTextInput").value),
-    vocabulary: parseVocabularyLines($("articleVocabularyInput").value),
-    inlineVocabulary: parseVocabularyLines($("articleInlineVocabularyInput").value),
+    vocabulary: mergeVocabularyTranslations(existingArticle?.vocabulary || [], parsedVocabulary, language),
+    inlineVocabulary: mergeVocabularyTranslations(getInlineVocabulary(existingArticle || {}), parsedInlineVocabulary, language),
     questions: parseQuestionLines($("articleQuestionsInput").value)
   };
 
@@ -1778,21 +1925,25 @@ function buildStartupQuizQuestions() {
 
   const makeQuestion = (direction) => {
     const correct = shuffle(vocabulary)[0];
-    const optionKey = direction === "de-sk" ? "sk" : "de";
-    const promptKey = direction === "de-sk" ? "de" : "sk";
-    const wrongOptions = shuffle(vocabulary.filter(item => item[optionKey] !== correct[optionKey]))
+    const correctTranslation = getVocabularyTranslation(correct);
+    const prompt = direction === "de-native" ? correct.de : correctTranslation;
+    const answer = direction === "de-native" ? correctTranslation : correct.de;
+    const wrongOptions = shuffle(vocabulary.filter(item => {
+      const option = direction === "de-native" ? getVocabularyTranslation(item) : item.de;
+      return option !== answer;
+    }))
       .slice(0, 3)
-      .map(item => item[optionKey]);
+      .map(item => direction === "de-native" ? getVocabularyTranslation(item) : item.de);
 
     return {
       direction,
-      prompt: correct[promptKey],
-      answer: correct[optionKey],
-      options: shuffle([correct[optionKey], ...wrongOptions])
+      prompt,
+      answer,
+      options: shuffle([answer, ...wrongOptions])
     };
   };
 
-  return [makeQuestion("de-sk"), makeQuestion("sk-de")];
+  return [makeQuestion("de-native"), makeQuestion("native-de")];
 }
 
 function renderStartupQuiz() {
@@ -1875,6 +2026,7 @@ function loadSettings() {
   const fontSize = localStorage.getItem("fontSize") || "normal";
   const dark = localStorage.getItem("darkMode") === "true";
 
+  renderNativeLanguageControls();
   $("fontSizeSelect").value = fontSize;
   $("darkModeToggle").checked = dark;
 
@@ -2061,6 +2213,10 @@ $("fontSizeSelect").onchange = (e) => {
 $("darkModeToggle").onchange = (e) => {
   localStorage.setItem("darkMode", e.target.checked);
   loadSettings();
+};
+
+$("settingsNativeLanguageSelect").onchange = (e) => {
+  updateCurrentProfileNativeLanguage(e.target.value);
 };
 
 window.addEventListener("pagehide", forceStopSpeech);
