@@ -278,7 +278,7 @@ const UI_TEXT = {
     markedRead: "Označené ako prečítané",
     readDone: "Prečítané ✓",
     teacherView: "Učiteľský pohľad",
-    studentOverview: "Prehľad žiaka",
+    studentOverview: "Prehľad žiakov",
     noStudentsInGroup: "V tvojej skupine zatiaľ nie sú žiadni žiaci.",
     teacherArticles: "Články",
     articleEditor: "Editor článkov",
@@ -1159,8 +1159,10 @@ function updateStaticTexts() {
   setText("testNotificationBtn", "testNotification");
 
   setText("teacherBackBtn", "back");
-  document.querySelector("#teacherView > .reader-card .eyebrow").textContent = t("teacherView");
-  document.querySelector("#teacherView > .reader-card h2").textContent = t("studentOverview");
+  setText("teacherArticlesTabBtn", "articleEditor");
+  setText("teacherStudentsTabBtn", "studentOverview");
+  document.querySelector("#teacherOverviewCard .eyebrow").textContent = t("teacherView");
+  document.querySelector("#teacherOverviewCard h2").textContent = t("studentOverview");
   document.querySelector(".article-editor .practice-heading .eyebrow").textContent = t("teacherArticles");
   document.querySelector(".article-editor .practice-heading h2").textContent = t("articleEditor");
   setText("newArticleBtn", "newArticle");
@@ -2788,10 +2790,20 @@ function logout() {
   showLogin();
 }
 
-async function showTeacherOverview() {
+function setTeacherPanel(panel) {
+  const showStudents = panel === "students";
+  $("articleEditorCard").classList.toggle("hidden", showStudents);
+  $("teacherOverviewCard").classList.toggle("hidden", !showStudents);
+  $("teacherArticlesTabBtn").classList.toggle("active", !showStudents);
+  $("teacherStudentsTabBtn").classList.toggle("active", showStudents);
+  $("teacherArticlesTabBtn").classList.toggle("quiet", showStudents);
+  $("teacherStudentsTabBtn").classList.toggle("quiet", !showStudents);
+}
+
+async function showTeacherView() {
   if (!state.currentProfile || state.currentProfile.role !== "teacher") return;
-  await renderTeacherOverview();
   renderArticleEditorList();
+  setTeacherPanel("articles");
   showView("teacherView");
 }
 
@@ -3558,7 +3570,12 @@ $("backBtn").onclick = showHome;
 $("settingsBackBtn").onclick = showHome;
 $("teacherBackBtn").onclick = showHome;
 $("settingsBtn").onclick = showSettings;
-$("teacherBtn").onclick = showTeacherOverview;
+$("teacherBtn").onclick = showTeacherView;
+$("teacherArticlesTabBtn").onclick = () => setTeacherPanel("articles");
+$("teacherStudentsTabBtn").onclick = async () => {
+  await renderTeacherOverview();
+  setTeacherPanel("students");
+};
 $("refreshBtn").onclick = loadArticles;
 $("loginBtn").onclick = login;
 $("registerProfileBtn").onclick = registerProfileFromLogin;

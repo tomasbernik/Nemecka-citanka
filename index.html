@@ -279,13 +279,18 @@
 
       <section id="teacherView" class="hidden">
         <button id="teacherBackBtn" class="back-btn">← Späť</button>
-        <div class="reader-card">
+        <div class="teacher-tabs" role="group" aria-label="Učiteľský pohľad">
+          <button id="teacherArticlesTabBtn" class="secondary-btn" type="button">Editor článkov</button>
+          <button id="teacherStudentsTabBtn" class="secondary-btn quiet" type="button">Prehľad žiakov</button>
+        </div>
+
+        <div id="teacherOverviewCard" class="reader-card hidden">
           <p class="eyebrow">Učiteľský pohľad</p>
-          <h2>Prehľad žiačky</h2>
+          <h2>Prehľad žiakov</h2>
           <div id="teacherOverview"></div>
         </div>
 
-        <div class="reader-card article-editor">
+        <div id="articleEditorCard" class="reader-card article-editor">
           <div class="practice-heading">
             <div>
               <p class="eyebrow">Články</p>

@@ -665,6 +665,23 @@ h3 { font-size: 1.1rem; }
   margin-bottom: 8px;
 }
 
+.teacher-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.teacher-tabs .secondary-btn {
+  width: auto;
+  margin-top: 0;
+}
+
+.teacher-tabs .secondary-btn.active {
+  background: var(--accent);
+  color: #241a10;
+}
+
 .primary-btn {
   width: 100%;
   margin-top: 20px;
