@@ -1004,6 +1004,21 @@ function setButtonLabel(id, key) {
   button.setAttribute("title", label);
 }
 
+function onClick(id, handler) {
+  const element = $(id);
+  if (element) element.onclick = handler;
+}
+
+function onChange(id, handler) {
+  const element = $(id);
+  if (element) element.onchange = handler;
+}
+
+function onEvent(id, eventName, handler) {
+  const element = $(id);
+  if (element) element.addEventListener(eventName, handler);
+}
+
 function isSupportedNativeLanguage(language) {
   return Boolean(NATIVE_LANGUAGES[language]);
 }
@@ -3538,165 +3553,165 @@ async function showTestNotification() {
   updateNotificationStatus(t("notificationSent"));
 }
 
-$("backBtn").onclick = showHome;
-$("settingsBackBtn").onclick = showHome;
-$("teacherBackBtn").onclick = showHome;
-$("settingsBtn").onclick = showSettings;
-$("teacherBtn").onclick = showTeacherView;
-$("teacherArticlesTabBtn").onclick = () => setTeacherPanel("articles");
-$("teacherStudentsTabBtn").onclick = async () => {
+onClick("backBtn", showHome);
+onClick("settingsBackBtn", showHome);
+onClick("teacherBackBtn", showHome);
+onClick("settingsBtn", showSettings);
+onClick("teacherBtn", showTeacherView);
+onClick("teacherArticlesTabBtn", () => setTeacherPanel("articles"));
+onClick("teacherStudentsTabBtn", async () => {
   await renderTeacherOverview();
   setTeacherPanel("students");
-};
-$("refreshBtn").onclick = loadArticles;
-$("loginBtn").onclick = login;
-$("registerProfileBtn").onclick = registerProfileFromLogin;
-$("setupPairBtn").onclick = showSetup;
-$("setupBackBtn").onclick = showLogin;
-$("createProfilesBtn").onclick = createProfiles;
-$("logoutBtn").onclick = logout;
-$("readAloudBtn").onclick = () => readSentence(0);
-$("pauseReadBtn").onclick = togglePauseReading;
-$("stopReadBtn").onclick = stopReading;
-$("newSentenceGameBtn").onclick = startSentenceGame;
-$("newMatchGameBtn").onclick = startMatchGame;
-$("newVocabChoiceBtn").onclick = startVocabChoiceGame;
-$("newClozeGameBtn").onclick = startClozeGame;
-$("newMistakeGameBtn").onclick = startMistakeGame;
-$("newWordSearchBtn").onclick = startWordSearchGame;
-$("skipStartupQuizBtn").onclick = closeStartupQuiz;
-$("nextStartupQuizBtn").onclick = nextStartupQuizQuestion;
-$("testNotificationBtn").onclick = showTestNotification;
-$("newArticleBtn").onclick = () => {
+});
+onClick("refreshBtn", loadArticles);
+onClick("loginBtn", login);
+onClick("registerProfileBtn", registerProfileFromLogin);
+onClick("setupPairBtn", showSetup);
+onClick("setupBackBtn", showLogin);
+onClick("createProfilesBtn", createProfiles);
+onClick("logoutBtn", logout);
+onClick("readAloudBtn", () => readSentence(0));
+onClick("pauseReadBtn", togglePauseReading);
+onClick("stopReadBtn", stopReading);
+onClick("newSentenceGameBtn", startSentenceGame);
+onClick("newMatchGameBtn", startMatchGame);
+onClick("newVocabChoiceBtn", startVocabChoiceGame);
+onClick("newClozeGameBtn", startClozeGame);
+onClick("newMistakeGameBtn", startMistakeGame);
+onClick("newWordSearchBtn", startWordSearchGame);
+onClick("skipStartupQuizBtn", closeStartupQuiz);
+onClick("nextStartupQuizBtn", nextStartupQuizQuestion);
+onClick("testNotificationBtn", showTestNotification);
+onClick("newArticleBtn", () => {
   $("articleEditorSelect").value = "";
   fillArticleEditor(null);
-};
-$("saveArticleBtn").onclick = saveArticleFromEditor;
-$("articleEditorSelect").onchange = () => {
+});
+onClick("saveArticleBtn", saveArticleFromEditor);
+onChange("articleEditorSelect", () => {
   const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
   fillArticleEditor(article || null);
-};
-$("articleVisibilitySelect").onchange = (event) => {
+});
+onChange("articleVisibilitySelect", (event) => {
   if (event.target.value === "public" && $("articleApprovalStatusSelect").value === "draft") {
     $("articleApprovalStatusSelect").value = PUBLIC_ARTICLE_APPROVAL_STATUS;
   }
   if (event.target.value === "private") {
     $("articleApprovalStatusSelect").value = DEFAULT_ARTICLE_APPROVAL_STATUS;
   }
-};
-$("articleTitleInput").addEventListener("input", () => {
+});
+onEvent("articleTitleInput", "input", () => {
   if (!$("articleEditorSelect").value) {
     $("articleIdInput").value = makeArticleId($("articleTitleInput").value);
   }
   updateArticleEditorFlow();
 });
-$("articleCategoryInput").addEventListener("input", updateArticleEditorFlow);
-$("articleSummaryInput").addEventListener("input", updateArticleEditorFlow);
-$("articleTextInput").addEventListener("input", updateArticleEditorFlow);
-$("articleQuestionsInput").addEventListener("input", updateArticleEditorFlow);
-$("articleVocabularyInput").addEventListener("input", updateArticleEditorFlow);
-$("articleInlineVocabularyInput").addEventListener("input", updateArticleEditorFlow);
-$("addSelectedInlineBtn").onclick = () => {
+onEvent("articleCategoryInput", "input", updateArticleEditorFlow);
+onEvent("articleSummaryInput", "input", updateArticleEditorFlow);
+onEvent("articleTextInput", "input", updateArticleEditorFlow);
+onEvent("articleQuestionsInput", "input", updateArticleEditorFlow);
+onEvent("articleVocabularyInput", "input", updateArticleEditorFlow);
+onEvent("articleInlineVocabularyInput", "input", updateArticleEditorFlow);
+onClick("addSelectedInlineBtn", () => {
   addSelectedTextToVocabulary(false);
   updateArticleEditorFlow();
-};
-$("copyArticlePromptBtn").onclick = async () => {
+});
+onClick("copyArticlePromptBtn", async () => {
   await copyTextToClipboard(buildArticlePrompt(), t("promptArticleCopied"));
   updateArticleEditorFlow();
-};
-$("copyTranslationPromptBtn").onclick = () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied"));
-$("copyQuestionsPromptBtn").onclick = () => copyTextToClipboard(buildQuestionsPrompt(), t("promptQuestionsCopied"));
+});
+onClick("copyTranslationPromptBtn", () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied")));
+onClick("copyQuestionsPromptBtn", () => copyTextToClipboard(buildQuestionsPrompt(), t("promptQuestionsCopied")));
 
-$("loginPinInput").addEventListener("keydown", event => {
+onEvent("loginPinInput", "keydown", event => {
   if (event.key === "Enter") login();
 });
 
-$("loginNativeLanguageSelect").onchange = (event) => {
+onChange("loginNativeLanguageSelect", (event) => {
   state.preLoginLanguage = event.target.value;
   updateStaticTexts();
-};
+});
 
-$("markReadBtn").onclick = () => {
+onClick("markReadBtn", () => {
   markCurrentArticleRead("manual");
-};
+});
 
-$("articleText").onclick = (event) => {
+onClick("articleText", (event) => {
   const button = event.target.closest(".inline-word");
   if (!button) return;
   showInlineTranslation(button);
-};
+});
 
-$("questionList").addEventListener("click", event => {
+onEvent("questionList", "click", event => {
   const button = event.target.closest(".choice-btn");
   if (!button) return;
   saveTrueFalseAnswer(button.dataset.questionIndex, button.dataset.answer === "true");
 });
 
-$("sentenceWordBank").addEventListener("click", event => {
+onEvent("sentenceWordBank", "click", event => {
   const button = event.target.closest(".word-chip");
   if (!button) return;
   chooseSentenceWord(button.dataset.wordId);
 });
 
-$("sentenceTarget").addEventListener("click", event => {
+onEvent("sentenceTarget", "click", event => {
   const button = event.target.closest(".word-chip");
   if (!button) return;
   returnSentenceWord(button.dataset.wordId);
 });
 
-$("matchGameBoard").addEventListener("click", event => {
+onEvent("matchGameBoard", "click", event => {
   const button = event.target.closest(".match-card");
   if (!button) return;
   chooseMatchCard(button.dataset.cardId);
 });
 
-$("vocabChoiceOptions").addEventListener("click", event => {
+onEvent("vocabChoiceOptions", "click", event => {
   const button = event.target.closest(".quiz-option");
   if (!button) return;
   answerVocabChoice(button.dataset.answer);
 });
 
-$("clozeOptions").addEventListener("click", event => {
+onEvent("clozeOptions", "click", event => {
   const button = event.target.closest(".quiz-option");
   if (!button) return;
   answerClozeGame(button.dataset.answer);
 });
 
-$("mistakeOptions").addEventListener("click", event => {
+onEvent("mistakeOptions", "click", event => {
   const button = event.target.closest(".quiz-option");
   if (!button) return;
   answerMistakeGame(button.dataset.answer);
 });
 
-$("wordSearchGrid").addEventListener("click", event => {
+onEvent("wordSearchGrid", "click", event => {
   const button = event.target.closest(".letter-cell");
   if (!button) return;
   chooseWordSearchLetter(Number(button.dataset.row), Number(button.dataset.col));
 });
 
-$("startupQuizOptions").addEventListener("click", event => {
+onEvent("startupQuizOptions", "click", event => {
   const button = event.target.closest(".quiz-option");
   if (!button) return;
   answerStartupQuiz(button.dataset.answer);
 });
 
-$("fontSizeSelect").onchange = (e) => {
+onChange("fontSizeSelect", (e) => {
   localStorage.setItem("fontSize", e.target.value);
   loadSettings();
-};
+});
 
-$("darkModeToggle").onchange = (e) => {
+onChange("darkModeToggle", (e) => {
   localStorage.setItem("darkMode", e.target.checked);
   loadSettings();
-};
+});
 
-$("settingsNativeLanguageSelect").onchange = (e) => {
+onChange("settingsNativeLanguageSelect", (e) => {
   updateCurrentProfileNativeLanguage(e.target.value);
-};
+});
 
-$("settingsRoleSelect").onchange = (e) => {
+onChange("settingsRoleSelect", (e) => {
   updateCurrentProfileRole(e.target.value);
-};
+});
 
 window.addEventListener("pagehide", forceStopSpeech);
 window.addEventListener("beforeunload", forceStopSpeech);
