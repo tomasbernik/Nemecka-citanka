@@ -1266,23 +1266,39 @@ async function supabaseRequest(path, options = {}) {
 async function logAppEvent(eventType, details = {}) {
   if (!state.remoteReady) return;
 
+  const event = {
+    event_type: eventType,
+    profile_id: state.currentProfile?.id || null,
+    article_id: details.articleId || state.currentArticle?.id || null,
+    article_title: details.articleTitle || state.currentArticle?.title || null,
+    device_id: getDeviceId(),
+    ui_language: getUiLanguage(),
+    native_language: getNativeLanguage(),
+    details,
+    user_agent: navigator.userAgent
+  };
+
   try {
     await supabaseRequest("app_events", {
       method: "POST",
       headers: { Prefer: "return=minimal" },
-      body: JSON.stringify({
-        event_type: eventType,
-        profile_id: state.currentProfile?.id || null,
-        article_id: details.articleId || state.currentArticle?.id || null,
-        article_title: details.articleTitle || state.currentArticle?.title || null,
-        device_id: getDeviceId(),
-        ui_language: getUiLanguage(),
-        native_language: getNativeLanguage(),
-        details,
-        user_agent: navigator.userAgent
-      })
+      body: JSON.stringify(event)
     });
   } catch (error) {
+    if (error.message.includes("device_id")) {
+      try {
+        const { device_id, ...eventWithoutDeviceId } = event;
+        await supabaseRequest("app_events", {
+          method: "POST",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify(eventWithoutDeviceId)
+        });
+        return;
+      } catch (fallbackError) {
+        console.info("Event logging skipped:", fallbackError.message);
+        return;
+      }
+    }
     console.info("Event logging skipped:", error.message);
   }
 }
