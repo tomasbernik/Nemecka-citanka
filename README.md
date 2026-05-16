@@ -79,6 +79,13 @@ window.NC_ADMIN_PROFILE_IDS = [
 
 ID profilu vzniká z mena bez diakritiky, malými písmenami. Napríklad `Tomáš` má ID `tomas`.
 
+Ak už tabuľka `app_events` existuje a chceš sledovať unikátne zariadenia, pridaj stĺpec:
+
+```sql
+alter table public.app_events
+add column if not exists device_id text;
+```
+
 5. Nahraj novú verziu appky na hosting.
 6. Pri prvom spustení vytvor profily. Druhý mobil si ich potom načíta z databázy a stačí sa prihlásiť menom a PINom.
 

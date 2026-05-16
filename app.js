@@ -1,6 +1,7 @@
 const PROFILE_KEY = "profiles";
 const CURRENT_PROFILE_KEY = "currentProfileId";
 const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
+const DEVICE_ID_KEY = "deviceId";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 const ADMIN_PROFILE_IDS = new Set(window.NC_ADMIN_PROFILE_IDS || []);
 const VISIBLE_CATEGORY_LIMIT = 6;
@@ -1085,6 +1086,18 @@ function makeArticleId(title) {
   return makeProfileId(title);
 }
 
+function getDeviceId() {
+  let deviceId = localStorage.getItem(DEVICE_ID_KEY);
+  if (deviceId) return deviceId;
+
+  const randomPart = crypto?.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+  deviceId = `device-${randomPart}`;
+  localStorage.setItem(DEVICE_ID_KEY, deviceId);
+  return deviceId;
+}
+
 function profileDataKey(profileId) {
   return `profileData:${profileId}`;
 }
@@ -1262,6 +1275,7 @@ async function logAppEvent(eventType, details = {}) {
         profile_id: state.currentProfile?.id || null,
         article_id: details.articleId || state.currentArticle?.id || null,
         article_title: details.articleTitle || state.currentArticle?.title || null,
+        device_id: getDeviceId(),
         ui_language: getUiLanguage(),
         native_language: getNativeLanguage(),
         details,
@@ -3339,10 +3353,18 @@ function updateArticleApprovalControl(article = state.articles.find(item => item
   const select = $("articleApprovalStatusSelect");
   if (!select) return;
 
+  const isPublic = $("articleVisibilitySelect").value === "public";
+  select.closest("label")?.classList.toggle("hidden", !isPublic);
+  if (!isPublic) {
+    select.value = DEFAULT_ARTICLE_APPROVAL_STATUS;
+    select.disabled = true;
+    return;
+  }
+
   const canModerate = canModerateArticleApproval(article);
   select.disabled = !canModerate;
 
-  if (!canModerate && $("articleVisibilitySelect").value === "public") {
+  if (!canModerate) {
     select.value = article?.approvalStatus === "approved"
       ? "approved"
       : PUBLIC_ARTICLE_APPROVAL_STATUS;

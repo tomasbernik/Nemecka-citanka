@@ -43,6 +43,7 @@ create table if not exists public.app_events (
   profile_id text references public.app_profiles(id) on delete set null,
   article_id text references public.app_articles(id) on delete set null,
   article_title text,
+  device_id text,
   ui_language text,
   native_language text,
   details jsonb not null default '{}'::jsonb,
@@ -117,6 +118,9 @@ add column if not exists visibility text not null default 'public';
 
 alter table public.app_articles
 add column if not exists approval_status text not null default 'approved';
+
+alter table public.app_events
+add column if not exists device_id text;
 
 update public.app_profiles
 set teacher_group_id = case
