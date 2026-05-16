@@ -126,6 +126,17 @@
             <p id="speechStatus" class="muted listen-status"></p>
           </div>
           <div id="articleImageWrap" class="article-image-wrap hidden"></div>
+
+          <section class="panel practice-panel">
+            <div class="practice-heading">
+              <div>
+                <p id="vocabPanelEyebrow" class="eyebrow">Prehľad</p>
+                <h3 id="vocabPanelTitle">Slovíčka a frázy</h3>
+              </div>
+            </div>
+            <ul id="vocabList"></ul>
+          </section>
+
           <div id="articleText" class="article-text"></div>
           <button id="markReadBtn" class="primary-btn">Označiť ako prečítané</button>
           <div id="articleTaskProgress" class="task-progress"></div>
@@ -133,18 +144,8 @@
           <section class="panel practice-panel">
             <div class="practice-heading">
               <div>
-                <p class="eyebrow">Prehľad</p>
-                <h3>Slovíčka a frázy</h3>
-              </div>
-            </div>
-            <ul id="vocabList"></ul>
-          </section>
-
-          <section class="panel practice-panel">
-            <div class="practice-heading">
-              <div>
-                <p class="eyebrow">Cvičenie</p>
-                <h3>Otázky</h3>
+                <p id="questionsPanelEyebrow" class="eyebrow">Cvičenie</p>
+                <h3 id="questionsPanelTitle">Otázky</h3>
               </div>
             </div>
             <ol id="questionList"></ol>
@@ -344,6 +345,10 @@
             </label>
             <label class="field-row">
               Kategória
+              <select id="articleCategorySelect"></select>
+            </label>
+            <label id="articleNewCategoryWrap" class="field-row hidden">
+              Nová kategória
               <input id="articleCategoryInput">
             </label>
             <label class="field-row">
@@ -354,6 +359,9 @@
               Text článku, každý odsek na nový riadok
               <textarea id="articleTextInput" class="editor-textarea tall"></textarea>
             </label>
+            <div class="editor-actions">
+              <button id="addSelectedInlineBtn" class="secondary-btn quiet" type="button">Označené do inline</button>
+            </div>
           </div>
 
           <div id="articleQuestionsStep" class="editor-step hidden">
@@ -367,9 +375,6 @@
           </div>
 
           <div id="articleVocabularyStep" class="editor-step hidden">
-            <div class="editor-actions">
-              <button id="addSelectedInlineBtn" class="secondary-btn quiet" type="button">Označené do inline</button>
-            </div>
             <div class="editor-actions">
               <button id="copyTranslationPromptBtn" class="secondary-btn quiet" type="button">Kopírovať slovíčka na preklad</button>
             </div>

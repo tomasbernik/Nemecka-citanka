@@ -10,6 +10,7 @@ const DEFAULT_ARTICLE_APPROVAL_STATUS = "draft";
 const PUBLIC_ARTICLE_APPROVAL_STATUS = "pending";
 const ALL_CATEGORIES = "__all__";
 const UNREAD_CATEGORY = "__unread__";
+const NEW_CATEGORY_VALUE = "__new_category__";
 const NATIVE_LANGUAGES = {
   sk: { label: "Slovenčina", promptName: "slovenčiny", lineFormat: "slovensky", locale: "sk" },
   ru: { label: "Русский", promptName: "ruštiny", lineFormat: "rusky", locale: "ru" },
@@ -135,6 +136,7 @@ const UI_TEXT = {
     articleEditor: "Artikeleditor",
     newArticle: "Neuer Artikel",
     editArticle: "Artikel bearbeiten",
+    newCategory: "Neue Kategorie",
     visibility: "Sichtbarkeit",
     privateArticle: "Privater Artikel",
     publicAfterApproval: "Öffentlich nach Freigabe",
@@ -285,6 +287,7 @@ const UI_TEXT = {
     articleEditor: "Editor článkov",
     newArticle: "Nový článok",
     editArticle: "Upraviť článok",
+    newCategory: "Nová kategória",
     visibility: "Viditeľnosť",
     privateArticle: "Súkromný článok",
     publicAfterApproval: "Verejný po schválení",
@@ -435,6 +438,7 @@ const UI_TEXT = {
     articleEditor: "Редактор статей",
     newArticle: "Новая статья",
     editArticle: "Редактировать статью",
+    newCategory: "Новая категория",
     visibility: "Видимость",
     privateArticle: "Личная статья",
     publicAfterApproval: "Публичная после одобрения",
@@ -585,6 +589,7 @@ const UI_TEXT = {
     articleEditor: "Edytor artykułów",
     newArticle: "Nowy artykuł",
     editArticle: "Edytuj artykuł",
+    newCategory: "Nowa kategoria",
     visibility: "Widoczność",
     privateArticle: "Prywatny artykuł",
     publicAfterApproval: "Publiczny po zatwierdzeniu",
@@ -735,6 +740,7 @@ const UI_TEXT = {
     articleEditor: "Cikkszerkesztő",
     newArticle: "Új cikk",
     editArticle: "Cikk szerkesztése",
+    newCategory: "Új kategória",
     visibility: "Láthatóság",
     privateArticle: "Privát cikk",
     publicAfterApproval: "Nyilvános jóváhagyás után",
@@ -1144,10 +1150,10 @@ function updateStaticTexts() {
   setText("markReadBtn", "markRead");
 
   document.querySelectorAll("#articleView .practice-heading .eyebrow").forEach(item => item.textContent = t("game"));
-  document.querySelector("#articleView .practice-panel:nth-of-type(1) .eyebrow").textContent = t("overview");
-  document.querySelector("#articleView .practice-panel:nth-of-type(1) h3").textContent = t("vocabulary");
-  document.querySelector("#articleView .practice-panel:nth-of-type(2) .eyebrow").textContent = t("practice");
-  document.querySelector("#articleView .practice-panel:nth-of-type(2) h3").textContent = t("questions");
+  setText("vocabPanelEyebrow", "overview");
+  setText("vocabPanelTitle", "vocabulary");
+  setText("questionsPanelEyebrow", "practice");
+  setText("questionsPanelTitle", "questions");
   setText("sentenceGameTitle", "sentenceOrder");
   setText("newSentenceGameBtn", "newSentence");
   setText("matchGameTitle", "matchPairs");
@@ -1185,6 +1191,8 @@ function updateStaticTexts() {
   document.querySelector(".article-editor .practice-heading h2").textContent = t("articleEditor");
   setText("newArticleBtn", "newArticle");
   setLabelText("articleEditorSelect", "editArticle");
+  setLabelText("articleCategorySelect", "category");
+  setLabelText("articleCategoryInput", "newCategory");
   setLabelText("articleVisibilitySelect", "visibility");
   setOptionText("articleVisibilitySelect", "private", "privateArticle");
   setOptionText("articleVisibilitySelect", "public", "publicAfterApproval");
@@ -1202,7 +1210,6 @@ function updateStaticTexts() {
   setLabelText("generatedPromptOutput", "generatedPrompt");
   setLabelText("articleTitleInput", "title");
   setLabelText("articleLevelInput", "level");
-  setLabelText("articleCategoryInput", "category");
   setLabelText("articleSummaryInput", "summary");
   setLabelText("articleTextInput", "articleTextLabel");
   setText("addSelectedInlineBtn", "addSelectedInline");
@@ -1498,6 +1505,7 @@ async function saveArticle(article) {
   }
   renderCategories();
   renderArticles();
+  renderArticleCategoryOptions(article.category);
   renderArticleEditorList(article.id);
 }
 
@@ -1512,6 +1520,10 @@ function getCategories() {
   });
 
   return [ALL_CATEGORIES, UNREAD_CATEGORY, ...categories];
+}
+
+function getArticleCategories() {
+  return getCategories().filter(category => category !== ALL_CATEGORIES && category !== UNREAD_CATEGORY);
 }
 
 function renderCategories() {
@@ -3135,7 +3147,7 @@ function getPromptText() {
 function buildArticlePrompt() {
   const topic = $("articlePromptInput").value.trim();
   const level = $("articleLevelInput").value.trim() || "A2-B1";
-  const category = $("articleCategoryInput").value.trim();
+  const category = getArticleEditorCategory();
   const requiredWords = linesToList($("articleRequiredWordsInput").value);
   addRequiredWordsToVocabulary();
 
@@ -3191,6 +3203,33 @@ function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
   fillArticleEditor(article || null);
 }
 
+function renderArticleCategoryOptions(selectedCategory = "") {
+  const select = $("articleCategorySelect");
+  if (!select) return;
+
+  const categories = getArticleCategories();
+  const selectedExists = selectedCategory && categories.includes(selectedCategory);
+  select.innerHTML = [
+    '<option value="">-- vyber kategóriu --</option>',
+    ...categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(getCategoryLabel(category))}</option>`),
+    `<option value="${NEW_CATEGORY_VALUE}">+ nová kategória</option>`
+  ].join("");
+  select.value = selectedExists ? selectedCategory : selectedCategory ? NEW_CATEGORY_VALUE : "";
+  $("articleCategoryInput").value = selectedExists ? "" : selectedCategory;
+  updateArticleCategoryMode();
+}
+
+function getArticleEditorCategory() {
+  return $("articleCategorySelect").value === NEW_CATEGORY_VALUE
+    ? $("articleCategoryInput").value.trim()
+    : $("articleCategorySelect").value.trim();
+}
+
+function updateArticleCategoryMode() {
+  const isNewCategory = $("articleCategorySelect").value === NEW_CATEGORY_VALUE;
+  $("articleNewCategoryWrap").classList.toggle("hidden", !isNewCategory);
+}
+
 function hasTranslatedVocabulary() {
   try {
     return parseVocabularyLines($("articleVocabularyInput").value).length > 0;
@@ -3206,7 +3245,7 @@ function updateArticleEditorFlow() {
     $("articleTitleInput").value.trim()
     || $("articleTextInput").value.trim()
     || $("articleSummaryInput").value.trim()
-    || $("articleCategoryInput").value.trim()
+    || getArticleEditorCategory()
   );
   const hasText = Boolean($("articleTextInput").value.trim());
   const hasQuestions = Boolean($("articleQuestionsInput").value.trim());
@@ -3224,7 +3263,7 @@ function fillArticleEditor(article) {
   $("articleVisibilitySelect").value = article?.visibility || DEFAULT_ARTICLE_VISIBILITY;
   $("articleApprovalStatusSelect").value = article?.approvalStatus || DEFAULT_ARTICLE_APPROVAL_STATUS;
   $("articleLevelInput").value = article?.level || "A2-B1";
-  $("articleCategoryInput").value = article?.category || "";
+  renderArticleCategoryOptions(article?.category || "");
   $("articleSummaryInput").value = article?.summary || "";
   $("articleTextInput").value = (article?.text || []).join("\n");
   $("articleVocabularyInput").value = formatVocabularyLines(article?.vocabulary || []);
@@ -3258,7 +3297,7 @@ function readArticleEditor() {
     approvalStatus,
     title,
     level: $("articleLevelInput").value.trim(),
-    category: $("articleCategoryInput").value.trim(),
+    category: getArticleEditorCategory(),
     summary: $("articleSummaryInput").value.trim(),
     text: linesToList($("articleTextInput").value),
     vocabulary: mergeVocabularyTranslations(existingArticle?.vocabulary || [], parsedVocabulary, language),
@@ -3603,6 +3642,10 @@ onEvent("articleTitleInput", "input", () => {
   if (!$("articleEditorSelect").value) {
     $("articleIdInput").value = makeArticleId($("articleTitleInput").value);
   }
+  updateArticleEditorFlow();
+});
+onChange("articleCategorySelect", () => {
+  updateArticleCategoryMode();
   updateArticleEditorFlow();
 });
 onEvent("articleCategoryInput", "input", updateArticleEditorFlow);
