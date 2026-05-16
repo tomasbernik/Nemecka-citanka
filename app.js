@@ -2732,6 +2732,11 @@ async function login() {
     await saveProfiles();
   }
   await setCurrentProfile(profile);
+  logAppEvent("profile_login", {
+    profileId: profile.id,
+    role: profile.role,
+    nativeLanguage: profile.nativeLanguage
+  });
 }
 
 async function registerProfileFromLogin() {
