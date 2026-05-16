@@ -69,6 +69,16 @@ window.NC_SUPABASE_CONFIG = {
 };
 ```
 
+Admini, ktorí môžu schvaľovať verejné články, sa nastavujú v `config.js`:
+
+```js
+window.NC_ADMIN_PROFILE_IDS = [
+  "tomas"
+];
+```
+
+ID profilu vzniká z mena bez diakritiky, malými písmenami. Napríklad `Tomáš` má ID `tomas`.
+
 5. Nahraj novú verziu appky na hosting.
 6. Pri prvom spustení vytvor profily. Druhý mobil si ich potom načíta z databázy a stačí sa prihlásiť menom a PINom.
 

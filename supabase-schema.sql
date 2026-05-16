@@ -37,6 +37,19 @@ create table if not exists public.app_articles (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.app_events (
+  id uuid primary key default gen_random_uuid(),
+  event_type text not null,
+  profile_id text references public.app_profiles(id) on delete set null,
+  article_id text references public.app_articles(id) on delete set null,
+  article_title text,
+  ui_language text,
+  native_language text,
+  details jsonb not null default '{}'::jsonb,
+  user_agent text,
+  created_at timestamptz not null default now()
+);
+
 create or replace view public.app_vocabulary_missing_translations
 with (security_invoker = true) as
 with article_vocabulary as (
@@ -143,6 +156,7 @@ end $$;
 alter table public.app_profiles enable row level security;
 alter table public.app_profile_data enable row level security;
 alter table public.app_articles enable row level security;
+alter table public.app_events enable row level security;
 
 drop policy if exists "app_profiles_select" on public.app_profiles;
 drop policy if exists "app_profiles_insert" on public.app_profiles;
@@ -154,6 +168,7 @@ drop policy if exists "app_articles_select" on public.app_articles;
 drop policy if exists "app_articles_insert" on public.app_articles;
 drop policy if exists "app_articles_update" on public.app_articles;
 drop policy if exists "app_articles_delete" on public.app_articles;
+drop policy if exists "app_events_insert" on public.app_events;
 
 create policy "app_profiles_select"
 on public.app_profiles for select
@@ -207,3 +222,8 @@ create policy "app_articles_delete"
 on public.app_articles for delete
 to anon
 using (true);
+
+create policy "app_events_insert"
+on public.app_events for insert
+to anon
+with check (true);

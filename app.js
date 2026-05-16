@@ -2,10 +2,11 @@ const PROFILE_KEY = "profiles";
 const CURRENT_PROFILE_KEY = "currentProfileId";
 const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
+const ADMIN_PROFILE_IDS = new Set(window.NC_ADMIN_PROFILE_IDS || []);
 const VISIBLE_CATEGORY_LIMIT = 6;
 const DEFAULT_NATIVE_LANGUAGE = "sk";
 const DEFAULT_PRELOGIN_LANGUAGE = "de";
-const DEFAULT_ARTICLE_VISIBILITY = "private";
+const DEFAULT_ARTICLE_VISIBILITY = "public";
 const DEFAULT_ARTICLE_APPROVAL_STATUS = "draft";
 const PUBLIC_ARTICLE_APPROVAL_STATUS = "pending";
 const ALL_CATEGORIES = "__all__";
@@ -1247,6 +1248,29 @@ async function supabaseRequest(path, options = {}) {
 
   const text = await response.text();
   return text ? JSON.parse(text) : null;
+}
+
+async function logAppEvent(eventType, details = {}) {
+  if (!state.remoteReady) return;
+
+  try {
+    await supabaseRequest("app_events", {
+      method: "POST",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({
+        event_type: eventType,
+        profile_id: state.currentProfile?.id || null,
+        article_id: details.articleId || state.currentArticle?.id || null,
+        article_title: details.articleTitle || state.currentArticle?.title || null,
+        ui_language: getUiLanguage(),
+        native_language: getNativeLanguage(),
+        details,
+        user_agent: navigator.userAgent
+      })
+    });
+  } catch (error) {
+    console.info("Event logging skipped:", error.message);
+  }
 }
 
 async function loadProfiles() {
@@ -2510,6 +2534,11 @@ function markCurrentArticleRead(source = "manual") {
 
   state.profileData.readIds.push(article.id);
   saveProfileData();
+  logAppEvent("article_marked_read", {
+    articleId: article.id,
+    articleTitle: article.title,
+    source
+  });
   $("markReadBtn").textContent = source === "auto"
     ? t("markedRead")
     : t("readDone");
@@ -2523,6 +2552,12 @@ function openArticle(id) {
 
   stopReading();
   state.currentArticle = article;
+  logAppEvent("article_opened", {
+    articleId: article.id,
+    articleTitle: article.title,
+    category: article.category,
+    level: article.level
+  });
   showView("articleView");
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 
@@ -2698,6 +2733,12 @@ async function registerProfileFromLogin() {
   $("loginError").textContent = "";
   $("loginPinInput").value = "";
   await setCurrentProfile(profile);
+  logAppEvent("profile_created", {
+    profileId: profile.id,
+    role: profile.role,
+    nativeLanguage: profile.nativeLanguage,
+    source: "login_register"
+  });
 }
 
 async function createProfiles() {
@@ -2742,6 +2783,14 @@ async function createProfiles() {
   await saveProfiles();
   $("setupError").textContent = "";
   await setCurrentProfile(newProfiles.find(profile => profile.role === "teacher") || newProfiles[0]);
+  newProfiles.forEach(profile => {
+    logAppEvent("profile_created", {
+      profileId: profile.id,
+      role: profile.role,
+      nativeLanguage: profile.nativeLanguage,
+      source: "pair_setup"
+    });
+  });
 }
 
 function logout() {
@@ -3262,7 +3311,7 @@ function fillArticleEditor(article) {
   $("articleIdInput").value = article?.id || "";
   $("articleVisibilitySelect").value = article?.visibility || DEFAULT_ARTICLE_VISIBILITY;
   $("articleApprovalStatusSelect").value = article?.approvalStatus || DEFAULT_ARTICLE_APPROVAL_STATUS;
-  $("articleLevelInput").value = article?.level || "A2-B1";
+  $("articleLevelInput").value = article?.level || "B1";
   renderArticleCategoryOptions(article?.category || "");
   $("articleSummaryInput").value = article?.summary || "";
   $("articleTextInput").value = (article?.text || []).join("\n");
@@ -3274,7 +3323,30 @@ function fillArticleEditor(article) {
   $("articleEditorStatus").textContent = state.remoteReady
     ? ""
     : t("editorNeedsSupabase");
+  updateArticleApprovalControl(article);
   updateArticleEditorFlow();
+}
+
+function canModerateArticleApproval(article) {
+  return Boolean(
+    article
+    && state.currentProfile?.id
+    && ADMIN_PROFILE_IDS.has(state.currentProfile.id)
+  );
+}
+
+function updateArticleApprovalControl(article = state.articles.find(item => item.id === $("articleEditorSelect")?.value) || null) {
+  const select = $("articleApprovalStatusSelect");
+  if (!select) return;
+
+  const canModerate = canModerateArticleApproval(article);
+  select.disabled = !canModerate;
+
+  if (!canModerate && $("articleVisibilitySelect").value === "public") {
+    select.value = article?.approvalStatus === "approved"
+      ? "approved"
+      : PUBLIC_ARTICLE_APPROVAL_STATUS;
+  }
 }
 
 function readArticleEditor() {
@@ -3285,7 +3357,11 @@ function readArticleEditor() {
   const visibility = $("articleVisibilitySelect").value || DEFAULT_ARTICLE_VISIBILITY;
   const selectedApprovalStatus = $("articleApprovalStatusSelect").value || DEFAULT_ARTICLE_APPROVAL_STATUS;
   const approvalStatus = visibility === "public"
-    ? selectedApprovalStatus
+    ? canModerateArticleApproval(existingArticle)
+      ? selectedApprovalStatus
+      : existingArticle?.approvalStatus === "approved"
+        ? "approved"
+      : PUBLIC_ARTICLE_APPROVAL_STATUS
     : DEFAULT_ARTICLE_APPROVAL_STATUS;
   const parsedVocabulary = parseVocabularyLines($("articleVocabularyInput").value);
   const parsedInlineVocabulary = parseVocabularyLines($("articleInlineVocabularyInput").value);
@@ -3637,6 +3713,7 @@ onChange("articleVisibilitySelect", (event) => {
   if (event.target.value === "private") {
     $("articleApprovalStatusSelect").value = DEFAULT_ARTICLE_APPROVAL_STATUS;
   }
+  updateArticleApprovalControl();
 });
 onEvent("articleTitleInput", "input", () => {
   if (!$("articleEditorSelect").value) {
@@ -3772,6 +3849,10 @@ async function init() {
   loadSettings();
   await loadProfiles();
   await loadArticles();
+  logAppEvent("app_opened", {
+    hasSavedProfile: Boolean(localStorage.getItem(CURRENT_PROFILE_KEY)),
+    path: location.pathname
+  });
 
   const savedProfileId = localStorage.getItem(CURRENT_PROFILE_KEY);
   const savedProfile = state.profiles.find(profile => profile.id === savedProfileId);
