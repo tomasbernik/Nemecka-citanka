@@ -155,8 +155,7 @@ const UI_TEXT = {
     category: "Kategorie",
     summary: "Kurze Beschreibung",
     articleTextLabel: "Artikeltext, jeder Absatz in einer neuen Zeile",
-    addSelectedVocabulary: "Auswahl zu Wörtern und inline hinzufügen",
-    addSelectedInline: "Auswahl nur inline hinzufügen",
+    addSelectedInline: "Auswahl inline hinzufügen",
     vocabInputLabel: "Wörter: JSON aus dem Prompt oder Zeilen Deutsch = Übersetzung",
     inlineVocabInputLabel: "Inline-Wörter: JSON aus dem Prompt oder Zeilen Deutsch = Übersetzung",
     questionsInputLabel: "Richtig/falsch, eine Zeile: deutscher Satz = true/false",
@@ -306,8 +305,7 @@ const UI_TEXT = {
     category: "Kategória",
     summary: "Krátky popis",
     articleTextLabel: "Text článku, každý odsek na nový riadok",
-    addSelectedVocabulary: "Označené do slovíčok aj inline",
-    addSelectedInline: "Označené iba inline",
+    addSelectedInline: "Označené do inline",
     vocabInputLabel: "Slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad",
     inlineVocabInputLabel: "Inline slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad",
     questionsInputLabel: "Pravda/nepravda, jeden riadok: nemecká veta = true/false",
@@ -457,8 +455,7 @@ const UI_TEXT = {
     category: "Категория",
     summary: "Краткое описание",
     articleTextLabel: "Текст статьи, каждый абзац с новой строки",
-    addSelectedVocabulary: "Выделенное в слова и inline",
-    addSelectedInline: "Выделенное только inline",
+    addSelectedInline: "Выделенное в inline",
     vocabInputLabel: "Слова: JSON из prompt или строки немецкий = перевод",
     inlineVocabInputLabel: "Inline слова: JSON из prompt или строки немецкий = перевод",
     questionsInputLabel: "Правда/неправда, одна строка: немецкое предложение = true/false",
@@ -608,8 +605,7 @@ const UI_TEXT = {
     category: "Kategoria",
     summary: "Krótki opis",
     articleTextLabel: "Tekst artykułu, każdy akapit od nowej linii",
-    addSelectedVocabulary: "Zaznaczone do słówek i inline",
-    addSelectedInline: "Zaznaczone tylko inline",
+    addSelectedInline: "Zaznaczone do inline",
     vocabInputLabel: "Słówka: JSON z promptu albo wiersze niemiecki = tłumaczenie",
     inlineVocabInputLabel: "Inline słówka: JSON z promptu albo wiersze niemiecki = tłumaczenie",
     questionsInputLabel: "Prawda/nieprawda, jeden wiersz: niemieckie zdanie = true/false",
@@ -759,8 +755,7 @@ const UI_TEXT = {
     category: "Kategória",
     summary: "Rövid leírás",
     articleTextLabel: "Cikk szövege, minden bekezdés új sorban",
-    addSelectedVocabulary: "Kijelölt rész szavakhoz és inline",
-    addSelectedInline: "Kijelölt rész csak inline",
+    addSelectedInline: "Kijelölt rész inline-ba",
     vocabInputLabel: "Szavak: JSON a promptból vagy sorok német = fordítás",
     inlineVocabInputLabel: "Inline szavak: JSON a promptból vagy sorok német = fordítás",
     questionsInputLabel: "Igaz/hamis, egy sor: német mondat = true/false",
@@ -1195,7 +1190,6 @@ function updateStaticTexts() {
   setLabelText("articleCategoryInput", "category");
   setLabelText("articleSummaryInput", "summary");
   setLabelText("articleTextInput", "articleTextLabel");
-  setText("addSelectedVocabularyBtn", "addSelectedVocabulary");
   setText("addSelectedInlineBtn", "addSelectedInline");
   setLabelText("articleVocabularyInput", "vocabInputLabel");
   setLabelText("articleInlineVocabularyInput", "inlineVocabInputLabel");
@@ -3602,10 +3596,6 @@ $("articleTextInput").addEventListener("input", updateArticleEditorFlow);
 $("articleQuestionsInput").addEventListener("input", updateArticleEditorFlow);
 $("articleVocabularyInput").addEventListener("input", updateArticleEditorFlow);
 $("articleInlineVocabularyInput").addEventListener("input", updateArticleEditorFlow);
-$("addSelectedVocabularyBtn").onclick = () => {
-  addSelectedTextToVocabulary(true);
-  updateArticleEditorFlow();
-};
 $("addSelectedInlineBtn").onclick = () => {
   addSelectedTextToVocabulary(false);
   updateArticleEditorFlow();
