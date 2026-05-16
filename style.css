@@ -434,6 +434,18 @@ h3 { font-size: 1.1rem; }
   min-height: 220px;
 }
 
+#articlePromptInput {
+  min-height: 150px;
+}
+
+#articleRequiredWordsInput {
+  min-height: 170px;
+}
+
+#articleTextInput {
+  min-height: 340px;
+}
+
 .true-false-actions {
   display: flex;
   flex-wrap: wrap;
