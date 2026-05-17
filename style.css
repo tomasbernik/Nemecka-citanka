@@ -418,23 +418,6 @@ h3 { font-size: 1.1rem; }
   gap: 10px;
 }
 
-.inline-vocab-preview {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: -2px;
-}
-
-.inline-vocab-chip {
-  max-width: 100%;
-  border-radius: 999px;
-  padding: 7px 10px;
-  background: rgba(62, 139, 91, 0.14);
-  color: var(--text);
-  font-size: 0.9rem;
-  font-weight: 850;
-}
-
 .editor-textarea {
   width: 100%;
   min-height: 128px;
@@ -461,7 +444,7 @@ h3 { font-size: 1.1rem; }
 }
 
 #articleRequiredWordsInput {
-  min-height: 170px;
+  min-height: 110px;
 }
 
 #articleTextInput {
@@ -670,6 +653,16 @@ h3 { font-size: 1.1rem; }
   background: var(--bg);
   color: var(--text);
   font: inherit;
+}
+
+.field-row select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+#articleEditorSelect {
+  min-width: 0;
 }
 
 .form-error {
