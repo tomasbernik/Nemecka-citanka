@@ -158,7 +158,9 @@ const UI_TEXT = {
     chatGptHelper: "ChatGPT-Helfer",
     articleTask: "Aufgabe für den Artikel",
     requiredWords: "Pflichtwörter, ein Wort oder eine Phrase pro Zeile",
-    copyArticlePrompt: "Prompt für Artikel kopieren",
+    articleLength: "Textlänge",
+    copyArticlePrompt: "Prompt für Text kopieren",
+    copyArticleJsonPrompt: "Prompt für JSON kopieren",
     copyImagePrompt: "Bild-Prompt kopieren",
     articleImportJson: "Fertiger Artikel aus ChatGPT im JSON-Format",
     importArticle: "In den Editor einfügen",
@@ -318,7 +320,9 @@ const UI_TEXT = {
     chatGptHelper: "ChatGPT pomocník",
     articleTask: "Zadanie pre článok",
     requiredWords: "Povinné slová, jedno slovo alebo fráza na riadok",
-    copyArticlePrompt: "Kopírovať prompt pre článok",
+    articleLength: "Dĺžka textu",
+    copyArticlePrompt: "Kopírovať prompt pre text",
+    copyArticleJsonPrompt: "Kopírovať prompt na JSON",
     copyImagePrompt: "Kopírovať prompt pre obrázok",
     articleImportJson: "Hotový článok z ChatGPT vo formáte JSON",
     importArticle: "Vložiť do editora",
@@ -478,7 +482,9 @@ const UI_TEXT = {
     chatGptHelper: "Помощник ChatGPT",
     articleTask: "Задание для статьи",
     requiredWords: "Обязательные слова, одно слово или фраза в строке",
-    copyArticlePrompt: "Копировать prompt для статьи",
+    articleLength: "Длина текста",
+    copyArticlePrompt: "Копировать prompt для текста",
+    copyArticleJsonPrompt: "Копировать prompt для JSON",
     copyImagePrompt: "Копировать prompt для картинки",
     articleImportJson: "Готовая статья из ChatGPT в формате JSON",
     importArticle: "Вставить в редактор",
@@ -638,7 +644,9 @@ const UI_TEXT = {
     chatGptHelper: "Pomocnik ChatGPT",
     articleTask: "Zadanie dla artykułu",
     requiredWords: "Wymagane słowa, jedno słowo albo fraza w wierszu",
-    copyArticlePrompt: "Kopiuj prompt dla artykułu",
+    articleLength: "Długość tekstu",
+    copyArticlePrompt: "Kopiuj prompt tekstu",
+    copyArticleJsonPrompt: "Kopiuj prompt JSON",
     copyImagePrompt: "Kopiuj prompt obrazka",
     articleImportJson: "Gotowy artykuł z ChatGPT w formacie JSON",
     importArticle: "Wstaw do edytora",
@@ -798,7 +806,9 @@ const UI_TEXT = {
     chatGptHelper: "ChatGPT segítő",
     articleTask: "Cikkfeladat",
     requiredWords: "Kötelező szavak, soronként egy szó vagy kifejezés",
-    copyArticlePrompt: "Cikk prompt másolása",
+    articleLength: "Szöveg hossza",
+    copyArticlePrompt: "Szöveg prompt másolása",
+    copyArticleJsonPrompt: "JSON prompt másolása",
     copyImagePrompt: "Kép prompt másolása",
     articleImportJson: "Kész ChatGPT-cikk JSON formátumban",
     importArticle: "Beillesztés a szerkesztőbe",
@@ -858,7 +868,8 @@ Object.assign(UI_TEXT.sk, {
   selectedAdded: "Označený text je pridaný.",
   selectionAlreadyInline: "Táto položka je už pokrytá v inlineVocabulary.",
   expressionExists: "Tento výraz už v zozname je.",
-  promptArticleCopied: "Prompt pre článok je skopírovaný.",
+  promptArticleCopied: "Prompt pre text je skopírovaný.",
+  promptArticleJsonCopied: "Prompt na JSON je skopírovaný.",
   promptImageCopied: "Prompt pre obrázok je skopírovaný.",
   promptTranslationCopied: "Slovíčka na preklad sú skopírované.",
   promptQuestionsCopied: "Prompt pre otázky je skopírovaný.",
@@ -903,7 +914,8 @@ Object.assign(UI_TEXT.de, {
   selectedAdded: "Der markierte Text wurde hinzugefügt.",
   selectionAlreadyInline: "Diese Auswahl ist schon durch inlineVocabulary abgedeckt.",
   expressionExists: "Dieser Ausdruck ist schon in der Liste.",
-  promptArticleCopied: "Prompt für den Artikel kopiert.",
+  promptArticleCopied: "Prompt für den Text kopiert.",
+  promptArticleJsonCopied: "JSON-Prompt kopiert.",
   promptImageCopied: "Bild-Prompt kopiert.",
   promptTranslationCopied: "Wörter zum Übersetzen kopiert.",
   promptQuestionsCopied: "Prompt für Fragen kopiert.",
@@ -947,7 +959,8 @@ Object.assign(UI_TEXT.ru, {
   selectWordFirst: "Сначала выделите слово или фразу в тексте статьи.",
   selectedAdded: "Выделенный текст добавлен.",
   expressionExists: "Это выражение уже есть в списке.",
-  promptArticleCopied: "Prompt для статьи скопирован.",
+  promptArticleCopied: "Prompt для текста скопирован.",
+  promptArticleJsonCopied: "Prompt для JSON скопирован.",
   promptImageCopied: "Prompt для картинки скопирован.",
   promptTranslationCopied: "Слова для перевода скопированы.",
   promptQuestionsCopied: "Prompt для вопросов скопирован.",
@@ -991,7 +1004,8 @@ Object.assign(UI_TEXT.pl, {
   selectWordFirst: "Najpierw zaznacz słowo albo frazę w tekście artykułu.",
   selectedAdded: "Zaznaczony tekst został dodany.",
   expressionExists: "To wyrażenie już jest na liście.",
-  promptArticleCopied: "Prompt dla artykułu skopiowany.",
+  promptArticleCopied: "Prompt tekstu skopiowany.",
+  promptArticleJsonCopied: "Prompt JSON skopiowany.",
   promptImageCopied: "Prompt obrazka skopiowany.",
   promptTranslationCopied: "Słówka do tłumaczenia skopiowane.",
   promptQuestionsCopied: "Prompt dla pytań skopiowany.",
@@ -1035,7 +1049,8 @@ Object.assign(UI_TEXT.hu, {
   selectWordFirst: "Először jelölj ki egy szót vagy kifejezést a cikk szövegében.",
   selectedAdded: "A kijelölt szöveg hozzáadva.",
   expressionExists: "Ez a kifejezés már szerepel a listában.",
-  promptArticleCopied: "A cikk prompt másolva.",
+  promptArticleCopied: "A szöveg prompt másolva.",
+  promptArticleJsonCopied: "A JSON prompt másolva.",
   promptImageCopied: "A kép prompt másolva.",
   promptTranslationCopied: "A fordítandó szavak másolva.",
   promptQuestionsCopied: "A kérdések prompt másolva.",
@@ -1397,7 +1412,9 @@ function updateStaticTexts() {
   document.querySelector(".editor-helper .eyebrow").textContent = t("chatGptHelper");
   setLabelText("articlePromptInput", "articleTask");
   setLabelText("articleRequiredWordsInput", "requiredWords");
+  setLabelText("articleLengthSelect", "articleLength");
   setText("copyArticlePromptBtn", "copyArticlePrompt");
+  setText("copyArticleJsonPromptBtn", "copyArticleJsonPrompt");
   setText("copyImagePromptBtn", "copyImagePrompt");
   setLabelText("articleImportInput", "articleImportJson");
   setText("importArticleBtn", "importArticle");
@@ -3783,9 +3800,8 @@ function getArticleJsonPromptInstructions(level) {
     "  ]",
     "}",
     "",
-    "Pracuj v dvoch krokoch, ale v odpovedi vráť iba finálny JSON: 1. Najprv vytvor samotný nemecký text. 2. Skontroluj, že text má 300 až 350 slov, a až potom z neho vytvor JSON so slovíčkami a otázkami.",
-    "Text musí obsahovať minimálne 300 slov a maximálne 350 slov v 3 až 8 odsekoch. Ak má menej ako 300 slov, rozšír dej, pridaj konkrétne detaily alebo prirodzený dialóg. Ak má viac ako 350 slov, skráť ho.",
-    "Text musí obsahovať aspoň jeden krátky prirodzený dialóg v nemčine, napríklad 2 až 4 repliky medzi postavami. Dialóg zapíš priamo do odsekov textu.",
+    "Použi nižšie vložený text presne tak, ako je. Neprepisuj ho, neskracuj ho a nemen dĺžku textu.",
+    "Text rozdeľ do poľa \"text\" podľa odsekov.",
     `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
     "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
     "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false.",
@@ -3793,16 +3809,59 @@ function getArticleJsonPromptInstructions(level) {
   ];
 }
 
+function getSelectedArticleLengthRange() {
+  const value = $("articleLengthSelect")?.value || "300-350";
+  const [min, max] = value.split("-").map(item => Number.parseInt(item, 10));
+  return {
+    label: Number.isFinite(min) && Number.isFinite(max) ? `${min} až ${max}` : "300 až 350",
+    min: Number.isFinite(min) ? min : 300,
+    max: Number.isFinite(max) ? max : 350
+  };
+}
+
 function buildArticlePrompt() {
   const topic = $("articlePromptInput").value.trim();
   const level = $("articleLevelInput").value.trim() || "A2-B1";
   const category = getArticleEditorCategory();
   const requiredWords = linesToList($("articleRequiredWordsInput").value);
+  const range = getSelectedArticleLengthRange();
+
+  return [
+    `Napíš nemecký text pre študentov na úrovni ${level}.`,
+    category ? `Kategória/téma: ${category}.` : "",
+    topic ? `Konkrétne zadanie: ${topic}` : "",
+    requiredWords.length
+      ? `Tieto nemecké slová alebo frázy použi v texte prirodzene: ${requiredWords.join(", ")}.`
+      : "",
+    `Text musí mať ${range.label} slov. Pred odoslaním si počet slov skontroluj.`,
+    "Text má mať 3 až 8 odsekov.",
+    "Text musí obsahovať aspoň jeden krátky prirodzený dialóg v nemčine, napríklad 2 až 4 repliky medzi postavami.",
+    "Použi jazyk primeraný zadanej úrovni. Dej môže byť praktický, zaujímavý alebo mierne veselý.",
+    "Vráť iba hotový nemecký text. Nepíš JSON, slovíčka, otázky ani vysvetlenie."
+  ].filter(Boolean).join("\n");
+}
+
+function buildArticleJsonPrompt() {
+  const text = $("articleTextInput").value.trim();
+  if (!text) return "";
+
+  const level = $("articleLevelInput").value.trim() || "A2-B1";
+  const category = getArticleEditorCategory();
+  const title = $("articleTitleInput").value.trim();
+  const summary = $("articleSummaryInput").value.trim();
+
   addRequiredWordsToVocabulary();
 
   return [
-    ...getPromptText().article({ level, category, topic, requiredWords }),
-    ...getArticleJsonPromptInstructions(level)
+    "Premeň tento hotový nemecký text na JSON pre čítankovú appku.",
+    "Dôležité: vložený text použi presne. Neprepisuj ho, neskracuj ho, nerozširuj ho a nemeň formulácie.",
+    title ? `Ak sa hodí, použi tento názov: ${title}` : "Vytvor krátky nemecký názov.",
+    summary ? `Ak sa hodí, použi tento krátky popis: ${summary}` : "Vytvor krátky nemecký popis.",
+    category ? `Kategória: ${category}.` : "",
+    ...getArticleJsonPromptInstructions(level),
+    "",
+    "Hotový nemecký text:",
+    text
   ].filter(Boolean).join("\n");
 }
 
@@ -3946,6 +4005,8 @@ function updateArticleEditorFlow() {
     || $("articleTextInput").value.trim()
     || $("articleSummaryInput").value.trim()
     || getArticleEditorCategory()
+    || $("articlePromptInput").value.trim()
+    || $("articleRequiredWordsInput").value.trim()
   );
   const hasText = Boolean($("articleTextInput").value.trim());
   const hasQuestions = Boolean($("articleQuestionsInput").value.trim());
@@ -4447,6 +4508,8 @@ onChange("articleCategorySelect", () => {
   updateArticleEditorFlow();
 });
 onEvent("articleCategoryInput", "input", updateArticleEditorFlow);
+onEvent("articlePromptInput", "input", updateArticleEditorFlow);
+onEvent("articleRequiredWordsInput", "input", updateArticleEditorFlow);
 onEvent("articleSummaryInput", "input", updateArticleEditorFlow);
 onEvent("articleTextInput", "input", updateArticleEditorFlow);
 onChange("articleImageInput", (event) => {
@@ -4462,6 +4525,10 @@ onClick("addSelectedInlineBtn", () => {
 });
 onClick("copyArticlePromptBtn", async () => {
   await copyTextToClipboard(buildArticlePrompt(), t("promptArticleCopied"));
+  updateArticleEditorFlow();
+});
+onClick("copyArticleJsonPromptBtn", async () => {
+  await copyTextToClipboard(buildArticleJsonPrompt(), t("promptArticleJsonCopied"));
   updateArticleEditorFlow();
 });
 onClick("copyImagePromptBtn", async () => {

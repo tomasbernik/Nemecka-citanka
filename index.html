@@ -319,6 +319,14 @@
               <input id="articleLevelInput" placeholder="A2, A2-B1, B1">
             </label>
             <label class="field-row">
+              Dĺžka textu
+              <select id="articleLengthSelect">
+                <option value="220-260">220-260 slov</option>
+                <option value="300-350" selected>300-350 slov</option>
+                <option value="450-550">450-550 slov</option>
+              </select>
+            </label>
+            <label class="field-row">
               Informácie pre generovanie promptu
               <textarea id="articlePromptInput" class="editor-textarea compact" placeholder="Napr. článok o balení na dovolenku, použi jednoduché vety..."></textarea>
             </label>
@@ -327,7 +335,8 @@
               <textarea id="articleRequiredWordsInput" class="editor-textarea compact"></textarea>
             </label>
             <div class="editor-actions">
-              <button id="copyArticlePromptBtn" class="secondary-btn" type="button">Kopírovať prompt pre článok</button>
+              <button id="copyArticlePromptBtn" class="secondary-btn" type="button">Kopírovať prompt pre text</button>
+              <button id="copyArticleJsonPromptBtn" class="secondary-btn quiet" type="button">Kopírovať prompt na JSON</button>
             </div>
             <label id="generatedPromptWrap" class="field-row hidden">
               Vygenerovaný prompt
