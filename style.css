@@ -550,6 +550,11 @@ h3 { font-size: 1.1rem; }
   color: #241a10;
 }
 
+.vocab-base {
+  color: var(--muted);
+  font-weight: 700;
+}
+
 .match-board {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

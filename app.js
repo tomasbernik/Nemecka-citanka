@@ -1181,6 +1181,7 @@ function getVocabularyTranslation(item, language = getNativeLanguage()) {
 function makeVocabularyItem(de, translation, language = getNativeLanguage()) {
   return {
     de: (de || "").trim(),
+    base: "",
     [language]: (translation || "").trim()
   };
 }
@@ -2181,7 +2182,10 @@ function renderArticleTaskProgress() {
 function renderVocabulary() {
   const article = state.currentArticle;
   $("vocabList").innerHTML = getVisibleVocabulary(article)
-    .map(v => `<li><strong>${escapeHtml(v.de)}</strong> – ${escapeHtml(getVocabularyTranslation(v))}</li>`)
+    .map(v => {
+      const base = v.base ? ` <span class="vocab-base">(${escapeHtml(v.base)})</span>` : "";
+      return `<li><strong>${escapeHtml(v.de)}</strong>${base} – ${escapeHtml(getVocabularyTranslation(v))}</li>`;
+    })
     .join("");
 }
 
@@ -3308,6 +3312,7 @@ function parseVocabularyJson(value) {
   const items = Array.isArray(parsed) ? parsed : [parsed];
   return items.map(item => ({
     de: (item.de || "").trim(),
+    base: (item.base || item.lemma || item.basic || item.grundform || "").trim(),
     sk: (item.sk || "").trim(),
     ru: (item.ru || "").trim(),
     pl: (item.pl || "").trim(),
@@ -3341,6 +3346,7 @@ function formatVocabularyLines(items = []) {
   const language = getNativeLanguage();
   const hasMultipleTranslations = items.some(item =>
     ["sk", "ru", "pl", "hu"].filter(code => item[code]).length > (item[language] ? 1 : 0)
+    || item.base
   );
   if (hasMultipleTranslations) {
     return JSON.stringify(items.map(normalizeVocabularyImportItem).filter(Boolean), null, 2);
@@ -3359,6 +3365,7 @@ function mergeVocabularyTranslations(existingItems = [], parsedItems = [], langu
       ...existing,
       ...translations,
       de: item.de,
+      base: item.base || existing.base || "",
       ...(item[language] ? { [language]: item[language] } : {})
     };
   });
@@ -3375,6 +3382,7 @@ function normalizeVocabularyImportItem(item) {
   if (!item || typeof item !== "object") return null;
   const normalized = {
     de: (item.de || item.german || item.word || item.phrase || "").trim(),
+    base: (item.base || item.lemma || item.basic || item.grundform || "").trim(),
     sk: (item.sk || "").trim(),
     ru: (item.ru || "").trim(),
     pl: (item.pl || "").trim(),
@@ -3790,10 +3798,10 @@ function getArticleJsonPromptInstructions(level) {
     "  \"summary\": \"krátky nemecký popis článku\",",
     "  \"text\": [\"odsek 1\", \"odsek 2\", \"odsek 3\", \"odsek 4\"],",
     "  \"vocabulary\": [",
-    "    {\"de\":\"slovo alebo fráza z textu\",\"sk\":\"slovenský preklad\",\"ru\":\"ruský preklad\",\"pl\":\"poľský preklad\",\"hu\":\"maďarský preklad\"}",
+    "    {\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",\"sk\":\"slovenský preklad\",\"ru\":\"ruský preklad\",\"pl\":\"poľský preklad\",\"hu\":\"maďarský preklad\"}",
     "  ],",
     "  \"inlineVocabulary\": [",
-    "    {\"de\":\"presný súvislý úsek skopírovaný z textu článku\",\"sk\":\"slovenský preklad\",\"ru\":\"ruský preklad\",\"pl\":\"poľský preklad\",\"hu\":\"maďarský preklad\"}",
+    "    {\"de\":\"presný súvislý úsek skopírovaný z textu článku\",\"base\":\"základný tvar\",\"sk\":\"slovenský preklad\",\"ru\":\"ruský preklad\",\"pl\":\"poľský preklad\",\"hu\":\"maďarský preklad\"}",
     "  ],",
     "  \"questions\": [",
     "    {\"statement\":\"nemecká pravda/nepravda veta\",\"answer\":true}",
@@ -3805,7 +3813,8 @@ function getArticleJsonPromptInstructions(level) {
     `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
     "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
     "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false.",
-    "Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, sk, ru, pl, hu."
+    "Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, base, sk, ru, pl, hu.",
+    "Do \"base\" daj základný slovníkový tvar: pri podstatnom mene s určitým členom a v nominatíve jednotného čísla, napríklad \"der Mann\"; pri slovese infinitív, napríklad \"gehen\"; pri prídavnom mene základný tvar, napríklad \"freundlich\". Ak je \"de\" už základný tvar alebo ide o celú frázu, môže byť \"base\" rovnaké ako \"de\"."
   ];
 }
 
@@ -3827,17 +3836,16 @@ function buildArticlePrompt() {
   const range = getSelectedArticleLengthRange();
 
   return [
-    `Napíš nemecký text pre študentov na úrovni ${level}.`,
+    `Napíš nemecký príbeh alebo článok na úrovni ${level}.`,
     category ? `Kategória/téma: ${category}.` : "",
     topic ? `Konkrétne zadanie: ${topic}` : "",
     requiredWords.length
-      ? `Tieto nemecké slová alebo frázy použi v texte prirodzene: ${requiredWords.join(", ")}.`
+      ? `Tieto nemecké slová alebo frázy použi prirodzene: ${requiredWords.join(", ")}.`
       : "",
-    `Text musí mať ${range.label} slov. Pred odoslaním si počet slov skontroluj.`,
-    "Text má mať 3 až 8 odsekov.",
-    "Text musí obsahovať aspoň jeden krátky prirodzený dialóg v nemčine, napríklad 2 až 4 repliky medzi postavami.",
-    "Použi jazyk primeraný zadanej úrovni. Dej môže byť praktický, zaujímavý alebo mierne veselý.",
-    "Vráť iba hotový nemecký text. Nepíš JSON, slovíčka, otázky ani vysvetlenie."
+    `Dĺžka: ${range.label} slov.`,
+    "Obsah musí mať aspoň jeden prirodzený dialóg v nemčine, napríklad 2 až 4 repliky medzi postavami.",
+    "Dej môže byť praktický, zaujímavý alebo mierne veselý.",
+    "Vráť iba hotový nemecký obsah. Nepíš JSON, slovíčka, otázky ani vysvetlenie."
   ].filter(Boolean).join("\n");
 }
 
