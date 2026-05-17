@@ -97,7 +97,7 @@ const UI_TEXT = {
     vocabChoice: "4 Möglichkeiten",
     newVocab: "Neues Wort",
     cloze: "Fehlendes Wort ergänzen",
-    mistake: "Falsches Wort finden",
+    mistake: "Falsches Wort ersetzen",
     wordSearch: "Wortsuche",
     newGame: "Neu",
     markRead: "Als gelesen markieren",
@@ -129,8 +129,8 @@ const UI_TEXT = {
     vocabNeed4: "Für dieses Spiel braucht man mindestens 4 Wörter.",
     clozeNeedMore: "Für dieses Spiel braucht man mehr kurze Wörter im Text.",
     mistakeNeedMore: "Für dieses Spiel braucht man mehr kurze Wörter im Text.",
-    mistakeCorrect: "Richtig. Im Satz soll stehen:",
-    mistakeWrong: "Das falsche Wort ist: {wrong}. Im Satz soll stehen: {correct}",
+    mistakeCorrect: "Richtig. Das passende Wort ist:",
+    mistakeWrong: "Noch nicht. Statt {wrong} passt hier: {correct}",
     wordSearchNeed3: "Für die Wortsuche braucht man mindestens 3 kürzere Wörter.",
     wordSearchDone: "Fertig, alle Wörter sind gefunden.",
     markedRead: "Als gelesen markiert",
@@ -172,6 +172,7 @@ const UI_TEXT = {
     articleTextLabel: "Artikeltext, jeder Absatz in einer neuen Zeile",
     articleImage: "Bild zum Artikel",
     addSelectedInline: "Auswahl inline hinzufügen",
+    inlineIncluded: "Schon in inlineVocabulary:",
     vocabInputLabel: "Wörter: JSON aus dem Prompt oder Zeilen Deutsch = Übersetzung",
     inlineVocabInputLabel: "Inline-Wörter: exakte Textstelle aus dem Artikel = Übersetzung",
     questionsInputLabel: "Richtig/falsch, eine Zeile: deutscher Satz = true/false",
@@ -256,7 +257,7 @@ const UI_TEXT = {
     vocabChoice: "4 možnosti zo slovíčok",
     newVocab: "Nové slovíčko",
     cloze: "Doplň chýbajúce slovo",
-    mistake: "Nájdi chybné slovo vo vete",
+    mistake: "Nahraď chybné slovo správnym",
     wordSearch: "Osemsmerovka",
     newGame: "Nová",
     markRead: "Označiť ako prečítané",
@@ -288,8 +289,8 @@ const UI_TEXT = {
     vocabNeed4: "Na túto hru treba aspoň 4 slovíčka.",
     clozeNeedMore: "Na túto hru treba viac krátkych slovíčok v texte.",
     mistakeNeedMore: "Na túto hru treba viac krátkych slovíčok v texte.",
-    mistakeCorrect: "Správne. Vo vete má byť:",
-    mistakeWrong: "Chybné slovo je: {wrong}. Vo vete má byť: {correct}",
+    mistakeCorrect: "Správne. Správne slovo je:",
+    mistakeWrong: "Ešte nie. Namiesto {wrong} sem patrí: {correct}",
     wordSearchNeed3: "Na osemsmerovku treba aspoň 3 kratšie slovíčka.",
     wordSearchDone: "Hotovo, všetky slová sú nájdené.",
     markedRead: "Označené ako prečítané",
@@ -331,6 +332,7 @@ const UI_TEXT = {
     articleTextLabel: "Text článku, každý odsek na nový riadok",
     articleImage: "Obrázok k článku",
     addSelectedInline: "Označené do inline",
+    inlineIncluded: "Už je v inlineVocabulary:",
     vocabInputLabel: "Slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad",
     inlineVocabInputLabel: "Inline slovíčka: presný úsek z článku = preklad",
     questionsInputLabel: "Pravda/nepravda, jeden riadok: nemecká veta = true/false",
@@ -415,7 +417,7 @@ const UI_TEXT = {
     vocabChoice: "4 варианта",
     newVocab: "Новое слово",
     cloze: "Вставь слово",
-    mistake: "Найди ошибочное слово",
+    mistake: "Замени ошибочное слово",
     wordSearch: "Поиск слов",
     newGame: "Новая",
     markRead: "Отметить как прочитано",
@@ -447,8 +449,8 @@ const UI_TEXT = {
     vocabNeed4: "Для этой игры нужно минимум 4 слова.",
     clozeNeedMore: "Для этой игры нужно больше коротких слов в тексте.",
     mistakeNeedMore: "Для этой игры нужно больше коротких слов в тексте.",
-    mistakeCorrect: "Правильно. В предложении должно быть:",
-    mistakeWrong: "Ошибочное слово: {wrong}. В предложении должно быть: {correct}",
+    mistakeCorrect: "Правильно. Подходящее слово:",
+    mistakeWrong: "Пока нет. Вместо {wrong} здесь должно быть: {correct}",
     wordSearchNeed3: "Для поиска слов нужно минимум 3 коротких слова.",
     wordSearchDone: "Готово, все слова найдены.",
     markedRead: "Отмечено как прочитано",
@@ -490,6 +492,7 @@ const UI_TEXT = {
     articleTextLabel: "Текст статьи, каждый абзац с новой строки",
     articleImage: "Картинка к статье",
     addSelectedInline: "Выделенное в inline",
+    inlineIncluded: "Уже в inlineVocabulary:",
     vocabInputLabel: "Слова: JSON из prompt или строки немецкий = перевод",
     inlineVocabInputLabel: "Inline слова: точный фрагмент из статьи = перевод",
     questionsInputLabel: "Правда/неправда, одна строка: немецкое предложение = true/false",
@@ -574,7 +577,7 @@ const UI_TEXT = {
     vocabChoice: "4 możliwości",
     newVocab: "Nowe słówko",
     cloze: "Uzupełnij słowo",
-    mistake: "Znajdź błędne słowo",
+    mistake: "Zastąp błędne słowo",
     wordSearch: "Wykreślanka",
     newGame: "Nowa",
     markRead: "Oznacz jako przeczytane",
@@ -606,8 +609,8 @@ const UI_TEXT = {
     vocabNeed4: "Do tej gry potrzebne są przynajmniej 4 słówka.",
     clozeNeedMore: "Do tej gry potrzeba więcej krótkich słówek w tekście.",
     mistakeNeedMore: "Do tej gry potrzeba więcej krótkich słówek w tekście.",
-    mistakeCorrect: "Poprawnie. W zdaniu powinno być:",
-    mistakeWrong: "Błędne słowo to: {wrong}. W zdaniu powinno być: {correct}",
+    mistakeCorrect: "Poprawnie. Pasujące słowo to:",
+    mistakeWrong: "Jeszcze nie. Zamiast {wrong} pasuje tutaj: {correct}",
     wordSearchNeed3: "Do wykreślanki potrzeba przynajmniej 3 krótszych słówek.",
     wordSearchDone: "Gotowe, wszystkie słowa znalezione.",
     markedRead: "Oznaczone jako przeczytane",
@@ -649,6 +652,7 @@ const UI_TEXT = {
     articleTextLabel: "Tekst artykułu, każdy akapit od nowej linii",
     articleImage: "Obrazek do artykułu",
     addSelectedInline: "Zaznaczone do inline",
+    inlineIncluded: "Już w inlineVocabulary:",
     vocabInputLabel: "Słówka: JSON z promptu albo wiersze niemiecki = tłumaczenie",
     inlineVocabInputLabel: "Inline słówka: dokładny fragment z artykułu = tłumaczenie",
     questionsInputLabel: "Prawda/nieprawda, jeden wiersz: niemieckie zdanie = true/false",
@@ -733,7 +737,7 @@ const UI_TEXT = {
     vocabChoice: "4 lehetőség",
     newVocab: "Új szó",
     cloze: "Hiányzó szó",
-    mistake: "Hibás szó keresése",
+    mistake: "Cseréld ki a hibás szót",
     wordSearch: "Szókereső",
     newGame: "Új",
     markRead: "Megjelölés olvasottként",
@@ -765,8 +769,8 @@ const UI_TEXT = {
     vocabNeed4: "Ehhez a játékhoz legalább 4 szó kell.",
     clozeNeedMore: "Ehhez a játékhoz több rövid szó kell a szövegben.",
     mistakeNeedMore: "Ehhez a játékhoz több rövid szó kell a szövegben.",
-    mistakeCorrect: "Helyes. A mondatban ez legyen:",
-    mistakeWrong: "A hibás szó: {wrong}. A mondatban ez legyen: {correct}",
+    mistakeCorrect: "Helyes. A megfelelő szó:",
+    mistakeWrong: "Még nem. {wrong} helyett ez illik ide: {correct}",
     wordSearchNeed3: "A szókeresőhöz legalább 3 rövidebb szó kell.",
     wordSearchDone: "Kész, minden szó megvan.",
     markedRead: "Olvasottként megjelölve",
@@ -808,6 +812,7 @@ const UI_TEXT = {
     articleTextLabel: "Cikk szövege, minden bekezdés új sorban",
     articleImage: "Kép a cikkhez",
     addSelectedInline: "Kijelölt rész inline-ba",
+    inlineIncluded: "Már az inlineVocabulary része:",
     vocabInputLabel: "Szavak: JSON a promptból vagy sorok német = fordítás",
     inlineVocabInputLabel: "Inline szavak: pontos szövegrész a cikkből = fordítás",
     questionsInputLabel: "Igaz/hamis, egy sor: német mondat = true/false",
@@ -851,6 +856,7 @@ Object.assign(UI_TEXT.sk, {
   copyFailed: "Automatické kopírovanie zlyhalo. Prompt je zobrazený nižšie, skopíruj ho ručne.",
   selectWordFirst: "Najprv označ slovo alebo frázu v texte článku.",
   selectedAdded: "Označený text je pridaný.",
+  selectionAlreadyInline: "Táto položka je už pokrytá v inlineVocabulary.",
   expressionExists: "Tento výraz už v zozname je.",
   promptArticleCopied: "Prompt pre článok je skopírovaný.",
   promptImageCopied: "Prompt pre obrázok je skopírovaný.",
@@ -895,6 +901,7 @@ Object.assign(UI_TEXT.de, {
   copyFailed: "Automatisches Kopieren ist fehlgeschlagen. Der Prompt ist unten sichtbar, kopiere ihn manuell.",
   selectWordFirst: "Markiere zuerst ein Wort oder eine Phrase im Artikeltext.",
   selectedAdded: "Der markierte Text wurde hinzugefügt.",
+  selectionAlreadyInline: "Diese Auswahl ist schon durch inlineVocabulary abgedeckt.",
   expressionExists: "Dieser Ausdruck ist schon in der Liste.",
   promptArticleCopied: "Prompt für den Artikel kopiert.",
   promptImageCopied: "Bild-Prompt kopiert.",
@@ -2668,11 +2675,13 @@ function startMistakeGame() {
 
   const wrongWord = shuffle(vocabulary)[0].de;
   const sentence = candidate.sentence.replace(candidate.pattern, (match, prefix) => `${prefix}${wrongWord}`);
-  const options = shuffle([...new Set(getSentenceWords(sentence))]).slice(0, 5);
-  if (!options.includes(wrongWord)) options[0] = wrongWord;
-  state.mistakeGame = { wrongWord, correctWord: candidate.item.de, sentence, answered: false };
+  const options = shuffle([
+    candidate.item.de,
+    ...shuffle(vocabulary.filter(item => item.de !== wrongWord && item.de !== candidate.item.de)).slice(0, 4).map(item => item.de)
+  ]);
+  state.mistakeGame = { wrongWord, correctWord: candidate.item.de, sentence, options, answered: false };
   $("mistakeSentence").textContent = sentence;
-  $("mistakeOptions").innerHTML = shuffle(options)
+  $("mistakeOptions").innerHTML = options
     .map(option => `<button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
     .join("");
   $("mistakeFeedback").textContent = "";
@@ -2683,17 +2692,17 @@ function answerMistakeGame(answer) {
   if (!game || game.answered) return;
   game.answered = true;
   document.querySelectorAll("#mistakeOptions .quiz-option").forEach(button => {
-    const isCorrect = button.dataset.answer === game.wrongWord;
+    const isCorrect = button.dataset.answer === game.correctWord;
     const isChosen = button.dataset.answer === answer;
     button.classList.toggle("correct", isCorrect);
     button.classList.toggle("wrong", isChosen && !isCorrect);
     button.disabled = true;
   });
-  const isCorrect = answer === game.wrongWord;
+  const isCorrect = answer === game.correctWord;
   $("mistakeFeedback").textContent = isCorrect
     ? `${t("mistakeCorrect")} ${game.correctWord}`
     : t("mistakeWrong").replace("{wrong}", game.wrongWord).replace("{correct}", game.correctWord);
-  logPractice("find-mistake", { correct: isCorrect, answer, expected: game.wrongWord });
+  logPractice("find-mistake", { correct: isCorrect, answer, expected: game.correctWord, wrongWord: game.wrongWord });
   if (isCorrect) markTaskCompleted("find-mistake");
 }
 
@@ -3180,7 +3189,7 @@ function formatPracticeType(type) {
     "true-false": "Pravda/nepravda",
     "vocab-choice": "4 možnosti",
     "cloze-word": "Doplň slovo",
-    "find-mistake": "Nájdi chybné slovo",
+    "find-mistake": "Nahraď chybné slovo",
     "word-search": "Osemsmerovka"
   }[type] || type;
 }
@@ -3528,17 +3537,18 @@ async function copyTextToClipboard(text, successMessage = t("copied")) {
     return;
   }
 
-  $("generatedPromptOutput").value = text;
-  $("generatedPromptWrap").classList.remove("hidden");
-
   try {
     if (!navigator.clipboard?.writeText) {
       throw new Error("Clipboard API nie je dostupné.");
     }
 
     await navigator.clipboard.writeText(text);
+    $("generatedPromptOutput").value = "";
+    $("generatedPromptWrap").classList.add("hidden");
     $("articleEditorStatus").textContent = successMessage;
   } catch (error) {
+    $("generatedPromptOutput").value = text;
+    $("generatedPromptWrap").classList.remove("hidden");
     $("generatedPromptOutput").focus();
     $("generatedPromptOutput").select();
     $("articleEditorStatus").textContent = t("copyFailed");
@@ -3564,6 +3574,45 @@ function appendUniqueLine(textareaId, line) {
   return true;
 }
 
+function getDraftInlineVocabularyItems() {
+  try {
+    return parseVocabularyDraftLines($("articleInlineVocabularyInput").value);
+  } catch (error) {
+    return [];
+  }
+}
+
+function isSelectionCoveredByInlineVocabulary(selected) {
+  const selectedKey = normalizeVocabularyKey(selected);
+  if (!selectedKey) return false;
+  const selectedWords = getSentenceWords(selectedKey);
+
+  return getDraftInlineVocabularyItems().some(item => {
+    const itemKey = normalizeVocabularyKey(item.de);
+    if (!itemKey) return false;
+    if (itemKey === selectedKey) return true;
+    if (selectedWords.length !== 1) return itemKey.includes(selectedKey);
+    return getSentenceWords(itemKey).includes(selectedWords[0]);
+  });
+}
+
+function renderInlineVocabularyPreview() {
+  const wrap = $("inlineVocabularyPreview");
+  if (!wrap) return;
+
+  const items = getDraftInlineVocabularyItems()
+    .map(item => item.de)
+    .filter(Boolean);
+
+  wrap.classList.toggle("hidden", !items.length);
+  wrap.innerHTML = items.length
+    ? [
+      `<span class="muted">${escapeHtml(t("inlineIncluded"))}</span>`,
+      ...items.map(item => `<span class="inline-vocab-chip">${escapeHtml(item)}</span>`)
+    ].join("")
+    : "";
+}
+
 function addSelectedTextToVocabulary(addToVocabulary) {
   const selected = getSelectedArticleText();
   if (!selected) {
@@ -3571,9 +3620,16 @@ function addSelectedTextToVocabulary(addToVocabulary) {
     return;
   }
 
+  if (isSelectionCoveredByInlineVocabulary(selected)) {
+    $("articleEditorStatus").textContent = t("selectionAlreadyInline");
+    renderInlineVocabularyPreview();
+    return;
+  }
+
   const line = `${selected} =`;
   const inlineAdded = appendUniqueLine("articleInlineVocabularyInput", line);
   const vocabAdded = addToVocabulary ? appendUniqueLine("articleVocabularyInput", line) : false;
+  renderInlineVocabularyPreview();
   $("articleEditorStatus").textContent = inlineAdded || vocabAdded
     ? t("selectedAdded")
     : t("expressionExists");
@@ -3727,7 +3783,9 @@ function getArticleJsonPromptInstructions(level) {
     "  ]",
     "}",
     "",
-    "Text musí obsahovať minimálne 300 slov a maximálne 350 slov v 3 až 8 odsekoch. Najprv vytvor text. Potom interne spočítaj počet slov. Ak je menej ako 300, rozšír text.",
+    "Pracuj v dvoch krokoch, ale v odpovedi vráť iba finálny JSON: 1. Najprv vytvor samotný nemecký text. 2. Skontroluj, že text má 300 až 350 slov, a až potom z neho vytvor JSON so slovíčkami a otázkami.",
+    "Text musí obsahovať minimálne 300 slov a maximálne 350 slov v 3 až 8 odsekoch. Ak má menej ako 300 slov, rozšír dej, pridaj konkrétne detaily alebo prirodzený dialóg. Ak má viac ako 350 slov, skráť ho.",
+    "Text musí obsahovať aspoň jeden krátky prirodzený dialóg v nemčine, napríklad 2 až 4 repliky medzi postavami. Dialóg zapíš priamo do odsekov textu.",
     `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
     "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
     "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false.",
@@ -3898,6 +3956,7 @@ function updateArticleEditorFlow() {
   $("articleVocabularyStep").classList.toggle("hidden", !hasQuestions);
   $("saveArticleBtn").classList.toggle("hidden", !(hasQuestions && hasVocabulary));
   $("deleteArticleBtn").classList.toggle("hidden", !(selectedArticle && isAdminProfile()));
+  renderInlineVocabularyPreview();
 }
 
 function fillArticleEditor(article) {
@@ -3922,6 +3981,14 @@ function fillArticleEditor(article) {
   updateArticleApprovalControl(article);
   updateArticleImageStatus(article);
   updateArticleEditorFlow();
+}
+
+function clearArticleCreationHelperInputs() {
+  $("articlePromptInput").value = "";
+  $("articleRequiredWordsInput").value = "";
+  $("articleImportInput").value = "";
+  $("generatedPromptOutput").value = "";
+  $("generatedPromptWrap").classList.add("hidden");
 }
 
 function canModerateArticleApproval(article) {
@@ -4351,6 +4418,7 @@ onClick("nextStartupQuizBtn", nextStartupQuizQuestion);
 onClick("testNotificationBtn", showTestNotification);
 onClick("newArticleBtn", () => {
   $("articleEditorSelect").value = "";
+  clearArticleCreationHelperInputs();
   fillArticleEditor(null);
 });
 onClick("saveArticleBtn", saveArticleFromEditor);

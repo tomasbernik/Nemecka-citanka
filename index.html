@@ -207,7 +207,7 @@
             <div class="practice-heading">
               <div>
                 <p class="eyebrow">Hra</p>
-                <h3 id="mistakeGameTitle">Nájdi chybné slovo vo vete</h3>
+                <h3 id="mistakeGameTitle">Nahraď chybné slovo správnym</h3>
               </div>
               <button id="newMistakeGameBtn" class="text-btn" type="button">Nová veta</button>
             </div>
@@ -328,7 +328,6 @@
             </label>
             <div class="editor-actions">
               <button id="copyArticlePromptBtn" class="secondary-btn" type="button">Kopírovať prompt pre článok</button>
-              <button id="copyImagePromptBtn" class="secondary-btn quiet" type="button">Kopírovať prompt pre obrázok</button>
             </div>
             <label id="generatedPromptWrap" class="field-row hidden">
               Vygenerovaný prompt
@@ -372,10 +371,14 @@
               Obrázok k článku
               <input id="articleImageInput" type="file" accept="image/*">
             </label>
+            <div class="editor-actions">
+              <button id="copyImagePromptBtn" class="secondary-btn quiet" type="button">Kopírovať prompt pre obrázok</button>
+            </div>
             <p id="articleImageStatus" class="muted image-upload-status"></p>
             <div class="editor-actions">
               <button id="addSelectedInlineBtn" class="secondary-btn quiet" type="button">Označené do inline</button>
             </div>
+            <div id="inlineVocabularyPreview" class="inline-vocab-preview hidden"></div>
           </div>
 
           <div id="articleQuestionsStep" class="editor-step hidden">
