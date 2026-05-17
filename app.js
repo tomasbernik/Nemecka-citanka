@@ -165,7 +165,7 @@ const UI_TEXT = {
     copyImagePrompt: "Bild-Prompt kopieren",
     articleImportJson: "Fertiger Artikel aus ChatGPT im JSON-Format",
     importArticle: "In den Editor einfügen",
-    copyTranslationPrompt: "Wörter zum Übersetzen kopieren",
+    copyTranslationPrompt: "Neue Inline-Wörter übersetzen",
     copyQuestionsPrompt: "Prompt für Fragen kopieren",
     generatedPrompt: "Generierter Prompt",
     title: "Titel",
@@ -328,7 +328,7 @@ const UI_TEXT = {
     copyImagePrompt: "Kopírovať prompt pre obrázok",
     articleImportJson: "Hotový článok z ChatGPT vo formáte JSON",
     importArticle: "Vložiť do editora",
-    copyTranslationPrompt: "Kopírovať slovíčka na preklad",
+    copyTranslationPrompt: "Kopírovať nové inline slovíčka na preklad",
     copyQuestionsPrompt: "Kopírovať prompt pre otázky",
     generatedPrompt: "Vygenerovaný prompt",
     title: "Názov",
@@ -491,7 +491,7 @@ const UI_TEXT = {
     copyImagePrompt: "Копировать prompt для картинки",
     articleImportJson: "Готовая статья из ChatGPT в формате JSON",
     importArticle: "Вставить в редактор",
-    copyTranslationPrompt: "Копировать слова для перевода",
+    copyTranslationPrompt: "Перевести новые inline-слова",
     copyQuestionsPrompt: "Копировать prompt для вопросов",
     generatedPrompt: "Сгенерированный prompt",
     title: "Название",
@@ -654,7 +654,7 @@ const UI_TEXT = {
     copyImagePrompt: "Kopiuj prompt obrazka",
     articleImportJson: "Gotowy artykuł z ChatGPT w formacie JSON",
     importArticle: "Wstaw do edytora",
-    copyTranslationPrompt: "Kopiuj słówka do tłumaczenia",
+    copyTranslationPrompt: "Kopiuj nowe inline słówka do tłumaczenia",
     copyQuestionsPrompt: "Kopiuj prompt dla pytań",
     generatedPrompt: "Wygenerowany prompt",
     title: "Tytuł",
@@ -817,7 +817,7 @@ const UI_TEXT = {
     copyImagePrompt: "Kép prompt másolása",
     articleImportJson: "Kész ChatGPT-cikk JSON formátumban",
     importArticle: "Beillesztés a szerkesztőbe",
-    copyTranslationPrompt: "Szavak fordításának másolása",
+    copyTranslationPrompt: "Új inline szavak fordítása",
     copyQuestionsPrompt: "Kérdések prompt másolása",
     generatedPrompt: "Generált prompt",
     title: "Cím",
@@ -1109,6 +1109,8 @@ const state = {
     selected: []
   },
   articleImageFile: null,
+  editorBaseInlineVocabulary: [],
+  editorManualInlineVocabulary: [],
   showAllCategories: false,
   remoteReady: Boolean(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey)
 };
@@ -3631,12 +3633,64 @@ function getDraftInlineVocabularyItems() {
   }
 }
 
+function getAllEditorInlineVocabularyItems() {
+  return [
+    ...(state.editorBaseInlineVocabulary || []),
+    ...(state.editorManualInlineVocabulary || []),
+    ...getDraftInlineVocabularyItems()
+  ];
+}
+
+function renderArticleInlineHighlightPreview() {
+  const wrap = $("articleInlineHighlightPreview");
+  if (!wrap) return;
+
+  const paragraphs = linesToList($("articleTextInput").value);
+  const phrases = getAllEditorInlineVocabularyItems()
+    .map(item => item.de)
+    .filter(Boolean)
+    .sort((a, b) => b.length - a.length);
+
+  wrap.classList.toggle("hidden", !paragraphs.length || !phrases.length);
+  if (!paragraphs.length || !phrases.length) {
+    wrap.innerHTML = "";
+    return;
+  }
+
+  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])(${phrases.map(escapeRegExp).join("|")})(?=$|[^\\p{L}\\p{N}_])`, "giu");
+  wrap.innerHTML = paragraphs.map(paragraph => {
+    const html = escapeHtml(paragraph).replace(pattern, (match, prefix, phrase) =>
+      `${prefix}<span class="editor-inline-hit">${phrase}</span>`
+    );
+    return `<p>${html}</p>`;
+  }).join("");
+}
+
+function addManualInlineVocabularyItem(text) {
+  const item = makeVocabularyItem(text, "", getNativeLanguage());
+  const key = normalizeVocabularyKey(item.de);
+  if (!key) return false;
+
+  const existingKeys = [
+    ...(state.editorBaseInlineVocabulary || []),
+    ...(state.editorManualInlineVocabulary || []),
+    ...getDraftInlineVocabularyItems()
+  ].map(entry => normalizeVocabularyKey(entry.de));
+
+  if (existingKeys.includes(key)) return false;
+  state.editorManualInlineVocabulary = [
+    ...(state.editorManualInlineVocabulary || []),
+    item
+  ];
+  return true;
+}
+
 function isSelectionCoveredByInlineVocabulary(selected) {
   const selectedKey = normalizeVocabularyKey(selected);
   if (!selectedKey) return false;
   const selectedWords = getSentenceWords(selectedKey);
 
-  return getDraftInlineVocabularyItems().some(item => {
+  return getAllEditorInlineVocabularyItems().some(item => {
     const itemKey = normalizeVocabularyKey(item.de);
     if (!itemKey) return false;
     if (itemKey === selectedKey) return true;
@@ -3658,7 +3712,7 @@ function addSelectedTextToVocabulary(addToVocabulary) {
   }
 
   const line = `${selected} =`;
-  const inlineAdded = appendUniqueLine("articleInlineVocabularyInput", line);
+  const inlineAdded = addManualInlineVocabularyItem(selected);
   const vocabAdded = addToVocabulary ? appendUniqueLine("articleVocabularyInput", line) : false;
   if (inlineAdded) $("articleInlineVocabularyInput").dataset.manual = "true";
   $("articleEditorStatus").textContent = inlineAdded || vocabAdded
@@ -3889,7 +3943,10 @@ function importArticleToEditor() {
       approvalStatus: DEFAULT_ARTICLE_APPROVAL_STATUS
     });
     $("articleVocabularyInput").value = JSON.stringify(article.vocabulary, null, 2);
-    $("articleInlineVocabularyInput").value = JSON.stringify(article.inlineVocabulary, null, 2);
+    state.editorBaseInlineVocabulary = article.inlineVocabulary || [];
+    state.editorManualInlineVocabulary = [];
+    $("articleInlineVocabularyInput").value = "";
+    $("articleInlineVocabularyInput").dataset.manual = "";
     $("articleQuestionsInput").value = formatQuestionLines(article.questions);
     $("articleEditorStatus").textContent = t("articleImported");
     updateArticleEditorFlow();
@@ -3899,19 +3956,14 @@ function importArticleToEditor() {
 }
 
 function addRequiredWordsToVocabulary() {
-  const requiredWords = getArticleRequiredWords();
-  requiredWords.forEach(word => {
-    const line = `${word} =`;
-    appendUniqueLine("articleVocabularyInput", line);
-    appendUniqueLine("articleInlineVocabularyInput", line);
-  });
 }
 
 function buildTranslationPrompt() {
-  const words = [
-    ...parseVocabularyDraftLines($("articleVocabularyInput").value),
-    ...parseVocabularyDraftLines($("articleInlineVocabularyInput").value)
-  ];
+  const translatedKeys = new Set(getDraftInlineVocabularyItems()
+    .filter(item => item.sk || item.ru || item.pl || item.hu)
+    .map(item => normalizeVocabularyKey(item.de)));
+  const words = (state.editorManualInlineVocabulary || [])
+    .filter(item => !translatedKeys.has(normalizeVocabularyKey(item.de)));
   const seen = new Set();
   const missing = words
     .filter(item => !item.sk || !item.ru || !item.pl || !item.hu)
@@ -3923,6 +3975,7 @@ function buildTranslationPrompt() {
     })
     .map(item => `${item.de} =`);
 
+  if (!missing.length) return "";
   return getPromptText().translation(missing).join("\n");
 }
 
@@ -4039,19 +4092,23 @@ function updateArticleEditorFlow() {
   const hasText = Boolean($("articleTextInput").value.trim());
   const hasQuestions = Boolean($("articleQuestionsInput").value.trim());
   const hasVocabulary = hasTranslatedVocabulary();
-  const showInlineVocabularyEditor = $("articleInlineVocabularyInput").dataset.manual === "true";
+  const showInlineVocabularyEditor = $("articleInlineVocabularyInput").dataset.manual === "true"
+    || Boolean($("articleInlineVocabularyInput").value.trim());
 
   $("articleContentStep").classList.toggle("hidden", !(isEditing || hasGeneratedPrompt || hasContent));
-  $("articleQuestionsStep").classList.toggle("hidden", !hasText);
+  $("articleQuestionsStep").classList.add("hidden");
   $("articleVocabularyStep").classList.toggle("hidden", !showInlineVocabularyEditor);
   $("inlineTranslationActions").classList.toggle("hidden", !showInlineVocabularyEditor);
   $("articleInlineVocabularyWrap").classList.toggle("hidden", !showInlineVocabularyEditor);
   $("saveArticleBtn").classList.toggle("hidden", !(hasQuestions && hasVocabulary));
   $("deleteArticleBtn").classList.toggle("hidden", !(selectedArticle && isAdminProfile()));
+  renderArticleInlineHighlightPreview();
 }
 
 function fillArticleEditor(article) {
   state.articleImageFile = null;
+  state.editorBaseInlineVocabulary = getInlineVocabulary(article || {});
+  state.editorManualInlineVocabulary = [];
   $("articleRequiredWordsMode").value = "no";
   $("articleRequiredWordsInput").value = "";
   updateArticleRequiredWordsMode();
@@ -4065,7 +4122,7 @@ function fillArticleEditor(article) {
   $("articleTextInput").value = (article?.text || []).join("\n");
   $("articleImageInput").value = "";
   $("articleVocabularyInput").value = formatVocabularyLines(article?.vocabulary || []);
-  $("articleInlineVocabularyInput").value = formatVocabularyLines(getInlineVocabulary(article || {}));
+  $("articleInlineVocabularyInput").value = "";
   $("articleInlineVocabularyInput").dataset.manual = "";
   $("articleQuestionsInput").value = formatQuestionLines(article?.questions || []);
   $("generatedPromptOutput").value = "";
@@ -4139,7 +4196,8 @@ function readArticleEditor() {
       : PUBLIC_ARTICLE_APPROVAL_STATUS
     : DEFAULT_ARTICLE_APPROVAL_STATUS;
   const parsedVocabulary = parseVocabularyLines($("articleVocabularyInput").value);
-  const parsedInlineVocabulary = parseVocabularyLines($("articleInlineVocabularyInput").value);
+  const parsedInlineVocabulary = parseVocabularyDraftLines($("articleInlineVocabularyInput").value)
+    .filter(item => item.sk || item.ru || item.pl || item.hu);
   const article = {
     id,
     ownerProfileId: existingArticle?.ownerProfileId || state.currentProfile?.id || null,
@@ -4153,7 +4211,7 @@ function readArticleEditor() {
     text: linesToList($("articleTextInput").value),
     image: existingArticle?.image || null,
     vocabulary: mergeVocabularyTranslations(existingArticle?.vocabulary || [], parsedVocabulary, language),
-    inlineVocabulary: mergeVocabularyTranslations(getInlineVocabulary(existingArticle || {}), parsedInlineVocabulary, language),
+    inlineVocabulary: mergeVocabularyTranslations(state.editorBaseInlineVocabulary || [], parsedInlineVocabulary, language),
     questions: parseQuestionLines($("articleQuestionsInput").value)
   };
 
@@ -4177,9 +4235,14 @@ async function saveArticleFromEditor() {
     const article = readArticleEditor();
     article.image = await uploadArticleImage(article);
     await saveArticle(article);
+    state.editorBaseInlineVocabulary = getInlineVocabulary(article);
+    state.editorManualInlineVocabulary = [];
+    $("articleInlineVocabularyInput").value = "";
+    $("articleInlineVocabularyInput").dataset.manual = "";
     state.articleImageFile = null;
     $("articleImageInput").value = "";
     updateArticleImageStatus(article);
+    updateArticleEditorFlow();
     $("articleEditorStatus").textContent = t("articleSaved");
   } catch (error) {
     $("articleEditorStatus").textContent = error.message.includes("Supabase Storage")

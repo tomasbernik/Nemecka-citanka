@@ -386,6 +386,7 @@
             <div class="editor-actions">
               <button id="addSelectedInlineBtn" class="secondary-btn quiet" type="button">Označené do inline</button>
             </div>
+            <div id="articleInlineHighlightPreview" class="inline-highlight-preview hidden"></div>
             <label class="field-row">
               Obrázok k článku
               <input id="articleImageInput" type="file" accept="image/*">
@@ -397,7 +398,7 @@
           </div>
 
           <div id="articleQuestionsStep" class="editor-step hidden">
-            <label class="field-row">
+            <label class="field-row hidden">
               Pravda/nepravda, jeden riadok: nemecká veta = true/false
               <textarea id="articleQuestionsInput" class="editor-textarea"></textarea>
             </label>
@@ -405,7 +406,7 @@
 
           <div id="articleVocabularyStep" class="editor-step hidden">
             <div id="inlineTranslationActions" class="editor-actions hidden">
-              <button id="copyTranslationPromptBtn" class="secondary-btn quiet" type="button">Kopírovať slovíčka na preklad</button>
+              <button id="copyTranslationPromptBtn" class="secondary-btn quiet" type="button">Kopírovať nové inline slovíčka na preklad</button>
             </div>
             <label class="field-row hidden">
               Slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad
