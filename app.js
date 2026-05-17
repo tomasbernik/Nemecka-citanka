@@ -1425,6 +1425,7 @@ function updateStaticTexts() {
   setText("copyImagePromptBtn", "copyImagePrompt");
   setLabelText("articleImportInput", "articleImportJson");
   setText("importArticleBtn", "importArticle");
+  setText("copyTranslationPromptBtn", "copyTranslationPrompt");
   setLabelText("generatedPromptOutput", "generatedPrompt");
   setLabelText("articleTitleInput", "title");
   setLabelText("articleLevelInput", "level");
@@ -4043,6 +4044,7 @@ function updateArticleEditorFlow() {
   $("articleContentStep").classList.toggle("hidden", !(isEditing || hasGeneratedPrompt || hasContent));
   $("articleQuestionsStep").classList.toggle("hidden", !hasText);
   $("articleVocabularyStep").classList.toggle("hidden", !showInlineVocabularyEditor);
+  $("inlineTranslationActions").classList.toggle("hidden", !showInlineVocabularyEditor);
   $("articleInlineVocabularyWrap").classList.toggle("hidden", !showInlineVocabularyEditor);
   $("saveArticleBtn").classList.toggle("hidden", !(hasQuestions && hasVocabulary));
   $("deleteArticleBtn").classList.toggle("hidden", !(selectedArticle && isAdminProfile()));
@@ -4574,6 +4576,7 @@ onClick("copyImagePromptBtn", async () => {
   updateArticleEditorFlow();
 });
 onClick("importArticleBtn", importArticleToEditor);
+onClick("copyTranslationPromptBtn", () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied")));
 
 onEvent("loginPinInput", "keydown", event => {
   if (event.key === "Enter") login();
