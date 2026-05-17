@@ -1191,6 +1191,65 @@ function getDeviceId() {
   return deviceId;
 }
 
+function getBrowserName() {
+  const ua = navigator.userAgent;
+  if (/Edg\//.test(ua)) return "Edge";
+  if (/OPR\//.test(ua)) return "Opera";
+  if (/Firefox\//.test(ua)) return "Firefox";
+  if (/Chrome\//.test(ua) && !/Edg\//.test(ua)) return "Chrome";
+  if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) return "Safari";
+  return "Browser";
+}
+
+function getDevicePlatformName() {
+  const ua = navigator.userAgent;
+  if (/iPhone/i.test(ua)) return "iPhone";
+  if (/iPad/i.test(ua)) return "iPad";
+  if (/Android/i.test(ua)) {
+    const model = ua.match(/Android[^;]*;\s*([^;)]+)\)/i)?.[1];
+    return model ? `Android ${model.trim()}` : "Android";
+  }
+  if (/Windows/i.test(ua)) return "Windows";
+  if (/Mac OS X/i.test(ua)) return "Mac";
+  if (/Linux/i.test(ua)) return "Linux";
+  return "Zariadenie";
+}
+
+function getAutomaticDeviceName() {
+  const deviceId = getDeviceId();
+  const shortId = deviceId.split("-").pop()?.slice(0, 6) || deviceId.slice(-6);
+  const profileName = state.currentProfile?.name || "Neprihlásené";
+  return `${profileName} • ${getDevicePlatformName()} • ${getBrowserName()} • ${shortId}`;
+}
+
+async function getDeviceName() {
+  const deviceId = getDeviceId();
+  const automaticName = getAutomaticDeviceName();
+
+  if (!state.remoteReady) return automaticName;
+
+  try {
+    await supabaseRequest("app_devices?on_conflict=device_id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
+      body: JSON.stringify([{
+        device_id: deviceId,
+        profile_id: state.currentProfile?.id || null,
+        automatic_name: automaticName,
+        user_agent: navigator.userAgent,
+        last_seen_at: new Date().toISOString()
+      }])
+    });
+
+    const rows = await supabaseRequest(`app_devices?device_id=eq.${encodeURIComponent(deviceId)}&select=device_name,automatic_name&limit=1`);
+    const device = rows?.[0] || {};
+    return device.device_name || device.automatic_name || automaticName;
+  } catch (error) {
+    console.info("Device name lookup skipped:", error.message);
+    return automaticName;
+  }
+}
+
 function profileDataKey(profileId) {
   return `profileData:${profileId}`;
 }
@@ -1387,12 +1446,14 @@ async function supabaseStorageRequest(path, options = {}) {
 async function logAppEvent(eventType, details = {}) {
   if (!state.remoteReady) return;
 
+  const deviceId = getDeviceId();
   const event = {
     event_type: eventType,
     profile_id: state.currentProfile?.id || null,
     article_id: details.articleId || state.currentArticle?.id || null,
     article_title: details.articleTitle || state.currentArticle?.title || null,
-    device_id: getDeviceId(),
+    device_id: deviceId,
+    device_name: await getDeviceName(),
     ui_language: getUiLanguage(),
     native_language: getNativeLanguage(),
     details,
@@ -1406,9 +1467,9 @@ async function logAppEvent(eventType, details = {}) {
       body: JSON.stringify(event)
     });
   } catch (error) {
-    if (error.message.includes("device_id")) {
+    if (error.message.includes("device_name") || error.message.includes("device_id")) {
       try {
-        const { device_id, ...eventWithoutDeviceId } = event;
+        const { device_id, device_name, ...eventWithoutDeviceId } = event;
         await supabaseRequest("app_events", {
           method: "POST",
           headers: { Prefer: "return=minimal" },

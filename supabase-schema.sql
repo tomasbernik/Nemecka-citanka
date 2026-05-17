@@ -45,11 +45,22 @@ create table if not exists public.app_events (
   article_id text references public.app_articles(id) on delete set null,
   article_title text,
   device_id text,
+  device_name text,
   ui_language text,
   native_language text,
   details jsonb not null default '{}'::jsonb,
   user_agent text,
   created_at timestamptz not null default now()
+);
+
+create table if not exists public.app_devices (
+  device_id text primary key,
+  device_name text,
+  automatic_name text,
+  profile_id text references public.app_profiles(id) on delete set null,
+  user_agent text,
+  first_seen_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now()
 );
 
 create or replace view public.app_vocabulary_missing_translations
@@ -126,6 +137,19 @@ add column if not exists image jsonb;
 alter table public.app_events
 add column if not exists device_id text;
 
+alter table public.app_events
+add column if not exists device_name text;
+
+create table if not exists public.app_devices (
+  device_id text primary key,
+  device_name text,
+  automatic_name text,
+  profile_id text references public.app_profiles(id) on delete set null,
+  user_agent text,
+  first_seen_at timestamptz not null default now(),
+  last_seen_at timestamptz not null default now()
+);
+
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('article-images', 'article-images', true, 5242880, array['image/jpeg'])
 on conflict (id) do update set
@@ -194,6 +218,7 @@ alter table public.app_profiles enable row level security;
 alter table public.app_profile_data enable row level security;
 alter table public.app_articles enable row level security;
 alter table public.app_events enable row level security;
+alter table public.app_devices enable row level security;
 
 drop policy if exists "app_profiles_select" on public.app_profiles;
 drop policy if exists "app_profiles_insert" on public.app_profiles;
@@ -206,6 +231,9 @@ drop policy if exists "app_articles_insert" on public.app_articles;
 drop policy if exists "app_articles_update" on public.app_articles;
 drop policy if exists "app_articles_delete" on public.app_articles;
 drop policy if exists "app_events_insert" on public.app_events;
+drop policy if exists "app_devices_select" on public.app_devices;
+drop policy if exists "app_devices_insert" on public.app_devices;
+drop policy if exists "app_devices_update" on public.app_devices;
 
 create policy "app_profiles_select"
 on public.app_profiles for select
@@ -263,4 +291,20 @@ using (true);
 create policy "app_events_insert"
 on public.app_events for insert
 to anon
+with check (true);
+
+create policy "app_devices_select"
+on public.app_devices for select
+to anon
+using (true);
+
+create policy "app_devices_insert"
+on public.app_devices for insert
+to anon
+with check (true);
+
+create policy "app_devices_update"
+on public.app_devices for update
+to anon
+using (true)
 with check (true);
