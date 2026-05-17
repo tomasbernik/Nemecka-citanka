@@ -1399,6 +1399,7 @@ function updateStaticTexts() {
   setText("testNotificationBtn", "testNotification");
 
   setText("teacherBackBtn", "back");
+  setText("articleEditorBottomBackBtn", "back");
   setText("teacherArticlesTabBtn", "articleEditor");
   setText("teacherStudentsTabBtn", "studentOverview");
   document.querySelector("#teacherOverviewCard .eyebrow").textContent = t("teacherView");
@@ -4578,6 +4579,7 @@ async function showTestNotification() {
 onClick("backBtn", showHome);
 onClick("settingsBackBtn", showHome);
 onClick("teacherBackBtn", showHome);
+onClick("articleEditorBottomBackBtn", showHome);
 onClick("settingsBtn", showSettings);
 onClick("shareAppBtn", shareApp);
 onClick("teacherBtn", showTeacherView);
