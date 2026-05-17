@@ -1,0 +1,26 @@
+{
+  "1": {
+    "accent": "#f6b73c",
+    "accentDark": "#b77400",
+    "background": "#fff8ed",
+    "note": "Warm yellow; closest to the current app colors."
+  },
+  "2": {
+    "accent": "#22c8c7",
+    "accentDark": "#087b8d",
+    "background": "#f4fbf4",
+    "note": "Yellow and turquoise; fresher, still friendly."
+  },
+  "3": {
+    "accent": "#f5b72f",
+    "accentDark": "#a96a00",
+    "background": "#fff7e8",
+    "note": "Soft yellow with a small teal support color."
+  },
+  "4": {
+    "accent": "#2aa8e8",
+    "accentDark": "#3154c9",
+    "background": "#f5f8ff",
+    "note": "Blue/purple direction; would be the biggest visual shift."
+  }
+}
