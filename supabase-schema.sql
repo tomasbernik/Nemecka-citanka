@@ -46,6 +46,9 @@ create table if not exists public.app_events (
   article_title text,
   device_id text,
   device_name text,
+  country text,
+  city text,
+  ip_hash text,
   ui_language text,
   native_language text,
   details jsonb not null default '{}'::jsonb,
@@ -139,6 +142,15 @@ add column if not exists device_id text;
 
 alter table public.app_events
 add column if not exists device_name text;
+
+alter table public.app_events
+add column if not exists country text;
+
+alter table public.app_events
+add column if not exists city text;
+
+alter table public.app_events
+add column if not exists ip_hash text;
 
 create table if not exists public.app_devices (
   device_id text primary key,

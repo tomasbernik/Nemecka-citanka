@@ -2,6 +2,7 @@ const PROFILE_KEY = "profiles";
 const CURRENT_PROFILE_KEY = "currentProfileId";
 const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
 const DEVICE_ID_KEY = "deviceId";
+const GEO_APP_OPENED_KEY_PREFIX = "geoAppOpened";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 const ADMIN_PROFILE_IDS = new Set(window.NC_ADMIN_PROFILE_IDS || []);
 const VISIBLE_CATEGORY_LIMIT = 6;
@@ -1443,11 +1444,9 @@ async function supabaseStorageRequest(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
-async function logAppEvent(eventType, details = {}) {
-  if (!state.remoteReady) return;
-
+async function buildAppEvent(eventType, details = {}) {
   const deviceId = getDeviceId();
-  const event = {
+  return {
     event_type: eventType,
     profile_id: state.currentProfile?.id || null,
     article_id: details.articleId || state.currentArticle?.id || null,
@@ -1459,22 +1458,28 @@ async function logAppEvent(eventType, details = {}) {
     details,
     user_agent: navigator.userAgent
   };
+}
+
+async function insertAppEvent(event) {
+  await supabaseRequest("app_events", {
+    method: "POST",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify(event)
+  });
+}
+
+async function logAppEvent(eventType, details = {}) {
+  if (!state.remoteReady) return;
+
+  const event = await buildAppEvent(eventType, details);
 
   try {
-    await supabaseRequest("app_events", {
-      method: "POST",
-      headers: { Prefer: "return=minimal" },
-      body: JSON.stringify(event)
-    });
+    await insertAppEvent(event);
   } catch (error) {
     if (error.message.includes("device_name") || error.message.includes("device_id")) {
       try {
         const { device_id, device_name, ...eventWithoutDeviceId } = event;
-        await supabaseRequest("app_events", {
-          method: "POST",
-          headers: { Prefer: "return=minimal" },
-          body: JSON.stringify(eventWithoutDeviceId)
-        });
+        await insertAppEvent(eventWithoutDeviceId);
         return;
       } catch (fallbackError) {
         console.info("Event logging skipped:", fallbackError.message);
@@ -1482,6 +1487,48 @@ async function logAppEvent(eventType, details = {}) {
       }
     }
     console.info("Event logging skipped:", error.message);
+  }
+}
+
+function geoAppOpenedKey() {
+  return `${GEO_APP_OPENED_KEY_PREFIX}:${getDeviceId()}`;
+}
+
+function todayKey() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+async function logAppOpened(details = {}) {
+  if (!state.remoteReady) return;
+
+  const key = geoAppOpenedKey();
+  const today = todayKey();
+
+  if (localStorage.getItem(key) === today) {
+    logAppEvent("app_opened", details);
+    return;
+  }
+
+  try {
+    const event = await buildAppEvent("app_opened", details);
+    const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/functions/v1/log-app-opened`, {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_CONFIG.anonKey,
+        Authorization: `Bearer ${SUPABASE_CONFIG.anonKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(event)
+    });
+
+    if (!response.ok) {
+      throw new Error(`Edge Function ${response.status}: ${await response.text()}`);
+    }
+
+    localStorage.setItem(key, today);
+  } catch (error) {
+    console.info("Geo app_opened logging skipped:", error.message);
+    logAppEvent("app_opened", details);
   }
 }
 
@@ -4402,7 +4449,7 @@ async function init() {
   loadSettings();
   await loadProfiles();
   await loadArticles();
-  logAppEvent("app_opened", {
+  logAppOpened({
     hasSavedProfile: Boolean(localStorage.getItem(CURRENT_PROFILE_KEY)),
     path: location.pathname
   });

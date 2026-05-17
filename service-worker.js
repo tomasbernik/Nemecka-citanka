@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "citanka-v32";
+const CACHE_NAME = "citanka-v33";
 const APP_FILES = [
   "./",
   "./index.html",

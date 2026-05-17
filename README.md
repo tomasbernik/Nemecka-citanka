@@ -94,6 +94,15 @@ add column if not exists device_id text;
 alter table public.app_events
 add column if not exists device_name text;
 
+alter table public.app_events
+add column if not exists country text;
+
+alter table public.app_events
+add column if not exists city text;
+
+alter table public.app_events
+add column if not exists ip_hash text;
+
 create table if not exists public.app_devices (
   device_id text primary key,
   device_name text,
@@ -108,6 +117,18 @@ create table if not exists public.app_devices (
 `automatic_name` nie je skutočný systémový názov telefónu alebo notebooku, pretože prehliadač ho z bezpečnostných dôvodov neposkytuje. Appka ho skladá z profilu, platformy, prehliadača a krátkej časti `device_id`, napríklad `Tomas • Windows • Chrome • 5bd2a0`.
 
 Ak chceš vlastný názov zariadenia, uprav v tabuľke `app_devices` stĺpec `device_name`, napríklad `Tomas-PC` alebo `Tomas-Mobil`. Appka toto meno použije pri budúcich eventoch.
+
+Voliteľná Edge Function `log-app-opened` dopĺňa pri otvorení appky približnú krajinu/mesto a hash IP. Appka ju volá maximálne raz denne na jedno zariadenie; ostatné eventy sa ukladajú priamo ako doteraz. Deploy cez Supabase CLI:
+
+```bash
+supabase functions deploy log-app-opened
+```
+
+Ak chceš stabilnejší anonymný hash IP, nastav pre funkciu aj secret:
+
+```bash
+supabase secrets set IP_HASH_SALT="nahodny-dlhy-retazec"
+```
 
 5. Nahraj novú verziu appky na hosting.
 6. Pri prvom spustení vytvor profily. Druhý mobil si ich potom načíta z databázy a stačí sa prihlásiť menom a PINom.
