@@ -12,8 +12,8 @@ const DEFAULT_ARTICLE_VISIBILITY = "public";
 const DEFAULT_ARTICLE_APPROVAL_STATUS = "draft";
 const PUBLIC_ARTICLE_APPROVAL_STATUS = "pending";
 const ARTICLE_IMAGE_BUCKET = "article-images";
-const ARTICLE_IMAGE_MAX_WIDTH = 1600;
-const ARTICLE_IMAGE_JPEG_QUALITY = 0.86;
+const ARTICLE_IMAGE_MAX_WIDTH = 1100;
+const ARTICLE_IMAGE_JPEG_QUALITY = 0.72;
 const ALL_CATEGORIES = "__all__";
 const UNREAD_CATEGORY = "__unread__";
 const NEW_CATEGORY_VALUE = "__new_category__";
@@ -838,6 +838,9 @@ Object.assign(UI_TEXT.sk, {
   validationImportArticle: "Vlož platný JSON článok z ChatGPT.",
   articleImported: "Článok je vložený do editora. Skontroluj ho a ulož.",
   editNotAllowed: "Tento článok môže upravovať iba jeho autor alebo administrátor.",
+  deleteArticle: "Vymazať článok",
+  confirmDeleteArticle: "Naozaj chceš vymazať tento článok?",
+  articleDeleted: "Článok je vymazaný.",
   imageReady: "Obrázok je pripravený. Pri uložení sa nahrá ako JPG.",
   imageExisting: "Článok už má obrázok. Nový súbor ho pri uložení nahradí.",
   imageUploading: "Nahrávam obrázok ako JPG...",
@@ -879,6 +882,9 @@ Object.assign(UI_TEXT.de, {
   validationImportArticle: "Füge einen gültigen JSON-Artikel aus ChatGPT ein.",
   articleImported: "Der Artikel wurde in den Editor eingefügt. Prüfe ihn und speichere.",
   editNotAllowed: "Diesen Artikel darf nur der Autor oder ein Admin bearbeiten.",
+  deleteArticle: "Artikel löschen",
+  confirmDeleteArticle: "Diesen Artikel wirklich löschen?",
+  articleDeleted: "Artikel gelöscht.",
   imageReady: "Das Bild ist bereit. Beim Speichern wird es als JPG hochgeladen.",
   imageExisting: "Der Artikel hat schon ein Bild. Eine neue Datei ersetzt es beim Speichern.",
   imageUploading: "Bild wird als JPG hochgeladen...",
@@ -920,6 +926,9 @@ Object.assign(UI_TEXT.ru, {
   validationImportArticle: "Вставьте корректный JSON статьи из ChatGPT.",
   articleImported: "Статья вставлена в редактор. Проверьте ее и сохраните.",
   editNotAllowed: "Эту статью может редактировать только автор или администратор.",
+  deleteArticle: "Удалить статью",
+  confirmDeleteArticle: "Действительно удалить эту статью?",
+  articleDeleted: "Статья удалена.",
   imageReady: "Картинка готова. При сохранении она загрузится как JPG.",
   imageExisting: "У статьи уже есть картинка. Новый файл заменит ее при сохранении.",
   imageUploading: "Загружаю картинку как JPG...",
@@ -961,6 +970,9 @@ Object.assign(UI_TEXT.pl, {
   validationImportArticle: "Wklej poprawny JSON artykułu z ChatGPT.",
   articleImported: "Artykuł został wstawiony do edytora. Sprawdź go i zapisz.",
   editNotAllowed: "Ten artykuł może edytować tylko autor albo administrator.",
+  deleteArticle: "Usuń artykuł",
+  confirmDeleteArticle: "Na pewno usunąć ten artykuł?",
+  articleDeleted: "Artykuł usunięty.",
   imageReady: "Obrazek jest gotowy. Przy zapisie zostanie wysłany jako JPG.",
   imageExisting: "Artykuł ma już obrazek. Nowy plik zastąpi go przy zapisie.",
   imageUploading: "Wysyłam obrazek jako JPG...",
@@ -1002,6 +1014,9 @@ Object.assign(UI_TEXT.hu, {
   validationImportArticle: "Illessz be érvényes ChatGPT-cikk JSON-t.",
   articleImported: "A cikk bekerült a szerkesztőbe. Ellenőrizd és mentsd.",
   editNotAllowed: "Ezt a cikket csak a szerzője vagy egy admin szerkesztheti.",
+  deleteArticle: "Cikk törlése",
+  confirmDeleteArticle: "Biztosan törlöd ezt a cikket?",
+  articleDeleted: "A cikk törölve.",
   imageReady: "A kép készen áll. Mentéskor JPG-ként lesz feltöltve.",
   imageExisting: "A cikknek már van képe. Az új fájl mentéskor lecseréli.",
   imageUploading: "Kép feltöltése JPG-ként...",
@@ -1392,6 +1407,7 @@ function updateStaticTexts() {
   setLabelText("articleInlineVocabularyInput", "inlineVocabInputLabel");
   setLabelText("articleQuestionsInput", "questionsInputLabel");
   setText("saveArticleBtn", "saveArticle");
+  setText("deleteArticleBtn", "deleteArticle");
 
   document.querySelector("#startupQuiz .eyebrow").textContent = t("startupWarmup");
   setText("startupQuizTitle", "startupTitle");
@@ -3482,6 +3498,15 @@ function updateArticleImageStatus(article = null) {
   }
 }
 
+function getArticleImageStoragePath(article) {
+  const desktop = article?.image?.desktop || "";
+  const marker = `/storage/v1/object/public/${ARTICLE_IMAGE_BUCKET}/`;
+  const index = desktop.indexOf(marker);
+  return index >= 0
+    ? decodeURIComponent(desktop.slice(index + marker.length))
+    : article?.id ? `${article.id}.jpg` : "";
+}
+
 function parseQuestionLines(value) {
   return linesToList(value).map(line => {
     const [statement, ...rest] = line.split("=");
@@ -3704,7 +3729,7 @@ function getArticleJsonPromptInstructions(level) {
     "",
     "Článok má mať približne 180 až 240 nemeckých slov v 3 až 5 odsekoch. Nepíš príliš krátky text.",
     `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
-    "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Neopakuj položky z \"vocabulary\".",
+    "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
     "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false.",
     "Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, sk, ru, pl, hu."
   ];
@@ -3856,6 +3881,7 @@ function hasTranslatedVocabulary() {
 
 function updateArticleEditorFlow() {
   const isEditing = Boolean($("articleEditorSelect")?.value);
+  const selectedArticle = state.articles.find(item => item.id === $("articleEditorSelect")?.value) || null;
   const hasGeneratedPrompt = Boolean($("generatedPromptOutput")?.value.trim());
   const hasContent = Boolean(
     $("articleTitleInput").value.trim()
@@ -3871,6 +3897,7 @@ function updateArticleEditorFlow() {
   $("articleQuestionsStep").classList.toggle("hidden", !hasText);
   $("articleVocabularyStep").classList.toggle("hidden", !hasQuestions);
   $("saveArticleBtn").classList.toggle("hidden", !(hasQuestions && hasVocabulary));
+  $("deleteArticleBtn").classList.toggle("hidden", !(selectedArticle && isAdminProfile()));
 }
 
 function fillArticleEditor(article) {
@@ -3994,6 +4021,39 @@ async function saveArticleFromEditor() {
     $("articleEditorStatus").textContent = error.message.includes("Supabase Storage")
       ? t("imageUploadFailed")
       : error.message;
+  }
+}
+
+async function deleteArticleFromEditor() {
+  const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
+  if (!article || !isAdminProfile()) return;
+  if (!confirm(t("confirmDeleteArticle"))) return;
+
+  try {
+    await supabaseRequest(`app_articles?id=eq.${encodeURIComponent(article.id)}`, {
+      method: "DELETE",
+      headers: { Prefer: "return=minimal" }
+    });
+
+    const imagePath = getArticleImageStoragePath(article);
+    if (imagePath) {
+      try {
+        await supabaseStorageRequest(`object/${ARTICLE_IMAGE_BUCKET}/${encodeURIComponent(imagePath)}`, {
+          method: "DELETE"
+        });
+      } catch (error) {
+        console.info("Article image delete skipped:", error.message);
+      }
+    }
+
+    state.articles = state.articles.filter(item => item.id !== article.id);
+    renderCategories();
+    renderArticles();
+    renderArticleCategoryOptions();
+    renderArticleEditorList();
+    $("articleEditorStatus").textContent = t("articleDeleted");
+  } catch (error) {
+    $("articleEditorStatus").textContent = error.message;
   }
 }
 
@@ -4294,6 +4354,7 @@ onClick("newArticleBtn", () => {
   fillArticleEditor(null);
 });
 onClick("saveArticleBtn", saveArticleFromEditor);
+onClick("deleteArticleBtn", deleteArticleFromEditor);
 onChange("articleEditorSelect", () => {
   const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
   fillArticleEditor(article || null);
