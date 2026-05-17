@@ -32,6 +32,7 @@ create table if not exists public.app_articles (
   text jsonb not null default '[]'::jsonb,
   vocabulary jsonb not null default '[]'::jsonb,
   inline_vocabulary jsonb not null default '[]'::jsonb,
+  image jsonb,
   questions jsonb not null default '[]'::jsonb,
   published boolean not null default true,
   updated_at timestamptz not null default now()
@@ -119,8 +120,40 @@ add column if not exists visibility text not null default 'public';
 alter table public.app_articles
 add column if not exists approval_status text not null default 'approved';
 
+alter table public.app_articles
+add column if not exists image jsonb;
+
 alter table public.app_events
 add column if not exists device_id text;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('article-images', 'article-images', true, 5242880, array['image/jpeg'])
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "article_images_select" on storage.objects;
+drop policy if exists "article_images_insert" on storage.objects;
+drop policy if exists "article_images_update" on storage.objects;
+drop policy if exists "article_images_delete" on storage.objects;
+
+create policy "article_images_select"
+on storage.objects for select
+using (bucket_id = 'article-images');
+
+create policy "article_images_insert"
+on storage.objects for insert
+with check (bucket_id = 'article-images');
+
+create policy "article_images_update"
+on storage.objects for update
+using (bucket_id = 'article-images')
+with check (bucket_id = 'article-images');
+
+create policy "article_images_delete"
+on storage.objects for delete
+using (bucket_id = 'article-images');
 
 update public.app_profiles
 set teacher_group_id = case

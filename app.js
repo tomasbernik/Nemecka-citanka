@@ -10,6 +10,9 @@ const DEFAULT_PRELOGIN_LANGUAGE = "de";
 const DEFAULT_ARTICLE_VISIBILITY = "public";
 const DEFAULT_ARTICLE_APPROVAL_STATUS = "draft";
 const PUBLIC_ARTICLE_APPROVAL_STATUS = "pending";
+const ARTICLE_IMAGE_BUCKET = "article-images";
+const ARTICLE_IMAGE_MAX_WIDTH = 1600;
+const ARTICLE_IMAGE_JPEG_QUALITY = 0.86;
 const ALL_CATEGORIES = "__all__";
 const UNREAD_CATEGORY = "__unread__";
 const NEW_CATEGORY_VALUE = "__new_category__";
@@ -166,6 +169,7 @@ const UI_TEXT = {
     category: "Kategorie",
     summary: "Kurze Beschreibung",
     articleTextLabel: "Artikeltext, jeder Absatz in einer neuen Zeile",
+    articleImage: "Bild zum Artikel",
     addSelectedInline: "Auswahl inline hinzufügen",
     vocabInputLabel: "Wörter: JSON aus dem Prompt oder Zeilen Deutsch = Übersetzung",
     inlineVocabInputLabel: "Inline-Wörter: JSON aus dem Prompt oder Zeilen Deutsch = Übersetzung",
@@ -324,6 +328,7 @@ const UI_TEXT = {
     category: "Kategória",
     summary: "Krátky popis",
     articleTextLabel: "Text článku, každý odsek na nový riadok",
+    articleImage: "Obrázok k článku",
     addSelectedInline: "Označené do inline",
     vocabInputLabel: "Slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad",
     inlineVocabInputLabel: "Inline slovíčka: buď JSON zo skopírovaného promptu, alebo riadky nemecky = preklad",
@@ -482,6 +487,7 @@ const UI_TEXT = {
     category: "Категория",
     summary: "Краткое описание",
     articleTextLabel: "Текст статьи, каждый абзац с новой строки",
+    articleImage: "Картинка к статье",
     addSelectedInline: "Выделенное в inline",
     vocabInputLabel: "Слова: JSON из prompt или строки немецкий = перевод",
     inlineVocabInputLabel: "Inline слова: JSON из prompt или строки немецкий = перевод",
@@ -640,6 +646,7 @@ const UI_TEXT = {
     category: "Kategoria",
     summary: "Krótki opis",
     articleTextLabel: "Tekst artykułu, każdy akapit od nowej linii",
+    articleImage: "Obrazek do artykułu",
     addSelectedInline: "Zaznaczone do inline",
     vocabInputLabel: "Słówka: JSON z promptu albo wiersze niemiecki = tłumaczenie",
     inlineVocabInputLabel: "Inline słówka: JSON z promptu albo wiersze niemiecki = tłumaczenie",
@@ -798,6 +805,7 @@ const UI_TEXT = {
     category: "Kategória",
     summary: "Rövid leírás",
     articleTextLabel: "Cikk szövege, minden bekezdés új sorban",
+    articleImage: "Kép a cikkhez",
     addSelectedInline: "Kijelölt rész inline-ba",
     vocabInputLabel: "Szavak: JSON a promptból vagy sorok német = fordítás",
     inlineVocabInputLabel: "Inline szavak: JSON a promptból vagy sorok német = fordítás",
@@ -829,6 +837,11 @@ Object.assign(UI_TEXT.sk, {
   validationImportArticle: "Vlož platný JSON článok z ChatGPT.",
   articleImported: "Článok je vložený do editora. Skontroluj ho a ulož.",
   editNotAllowed: "Tento článok môže upravovať iba jeho autor alebo administrátor.",
+  imageReady: "Obrázok je pripravený. Pri uložení sa nahrá ako JPG.",
+  imageExisting: "Článok už má obrázok. Nový súbor ho pri uložení nahradí.",
+  imageUploading: "Nahrávam obrázok ako JPG...",
+  imageUploaded: "Obrázok je nahratý.",
+  imageUploadFailed: "Obrázok sa nepodarilo nahrať. Skontroluj Supabase Storage bucket article-images.",
   copied: "Skopírované.",
   nothingToCopy: "Nie je čo kopírovať.",
   copyFailed: "Automatické kopírovanie zlyhalo. Prompt je zobrazený nižšie, skopíruj ho ručne.",
@@ -865,6 +878,11 @@ Object.assign(UI_TEXT.de, {
   validationImportArticle: "Füge einen gültigen JSON-Artikel aus ChatGPT ein.",
   articleImported: "Der Artikel wurde in den Editor eingefügt. Prüfe ihn und speichere.",
   editNotAllowed: "Diesen Artikel darf nur der Autor oder ein Admin bearbeiten.",
+  imageReady: "Das Bild ist bereit. Beim Speichern wird es als JPG hochgeladen.",
+  imageExisting: "Der Artikel hat schon ein Bild. Eine neue Datei ersetzt es beim Speichern.",
+  imageUploading: "Bild wird als JPG hochgeladen...",
+  imageUploaded: "Bild hochgeladen.",
+  imageUploadFailed: "Das Bild konnte nicht hochgeladen werden. Prüfe den Supabase-Storage-Bucket article-images.",
   copied: "Kopiert.",
   nothingToCopy: "Es gibt nichts zu kopieren.",
   copyFailed: "Automatisches Kopieren ist fehlgeschlagen. Der Prompt ist unten sichtbar, kopiere ihn manuell.",
@@ -901,6 +919,11 @@ Object.assign(UI_TEXT.ru, {
   validationImportArticle: "Вставьте корректный JSON статьи из ChatGPT.",
   articleImported: "Статья вставлена в редактор. Проверьте ее и сохраните.",
   editNotAllowed: "Эту статью может редактировать только автор или администратор.",
+  imageReady: "Картинка готова. При сохранении она загрузится как JPG.",
+  imageExisting: "У статьи уже есть картинка. Новый файл заменит ее при сохранении.",
+  imageUploading: "Загружаю картинку как JPG...",
+  imageUploaded: "Картинка загружена.",
+  imageUploadFailed: "Не удалось загрузить картинку. Проверьте Supabase Storage bucket article-images.",
   copied: "Скопировано.",
   nothingToCopy: "Нечего копировать.",
   copyFailed: "Автоматическое копирование не удалось. Prompt показан ниже, скопируйте его вручную.",
@@ -937,6 +960,11 @@ Object.assign(UI_TEXT.pl, {
   validationImportArticle: "Wklej poprawny JSON artykułu z ChatGPT.",
   articleImported: "Artykuł został wstawiony do edytora. Sprawdź go i zapisz.",
   editNotAllowed: "Ten artykuł może edytować tylko autor albo administrator.",
+  imageReady: "Obrazek jest gotowy. Przy zapisie zostanie wysłany jako JPG.",
+  imageExisting: "Artykuł ma już obrazek. Nowy plik zastąpi go przy zapisie.",
+  imageUploading: "Wysyłam obrazek jako JPG...",
+  imageUploaded: "Obrazek wysłany.",
+  imageUploadFailed: "Nie udało się wysłać obrazka. Sprawdź Supabase Storage bucket article-images.",
   copied: "Skopiowano.",
   nothingToCopy: "Nie ma czego kopiować.",
   copyFailed: "Automatyczne kopiowanie nie powiodło się. Prompt jest pokazany niżej, skopiuj go ręcznie.",
@@ -973,6 +1001,11 @@ Object.assign(UI_TEXT.hu, {
   validationImportArticle: "Illessz be érvényes ChatGPT-cikk JSON-t.",
   articleImported: "A cikk bekerült a szerkesztőbe. Ellenőrizd és mentsd.",
   editNotAllowed: "Ezt a cikket csak a szerzője vagy egy admin szerkesztheti.",
+  imageReady: "A kép készen áll. Mentéskor JPG-ként lesz feltöltve.",
+  imageExisting: "A cikknek már van képe. Az új fájl mentéskor lecseréli.",
+  imageUploading: "Kép feltöltése JPG-ként...",
+  imageUploaded: "Kép feltöltve.",
+  imageUploadFailed: "A képet nem sikerült feltölteni. Ellenőrizd a Supabase Storage article-images bucketet.",
   copied: "Másolva.",
   nothingToCopy: "Nincs mit másolni.",
   copyFailed: "Az automatikus másolás nem sikerült. A prompt lent látható, másold ki kézzel.",
@@ -1032,6 +1065,7 @@ const state = {
     found: [],
     selected: []
   },
+  articleImageFile: null,
   showAllCategories: false,
   remoteReady: Boolean(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey)
 };
@@ -1292,6 +1326,7 @@ function updateStaticTexts() {
   setLabelText("articleLevelInput", "level");
   setLabelText("articleSummaryInput", "summary");
   setLabelText("articleTextInput", "articleTextLabel");
+  setLabelText("articleImageInput", "articleImage");
   setText("addSelectedInlineBtn", "addSelectedInline");
   setLabelText("articleVocabularyInput", "vocabInputLabel");
   setLabelText("articleInlineVocabularyInput", "inlineVocabInputLabel");
@@ -1323,6 +1358,26 @@ async function supabaseRequest(path, options = {}) {
 
   if (!response.ok) {
     throw new Error(`Supabase ${response.status}: ${await response.text()}`);
+  }
+
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
+}
+
+async function supabaseStorageRequest(path, options = {}) {
+  if (!state.remoteReady) return null;
+
+  const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/storage/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_CONFIG.anonKey,
+      Authorization: `Bearer ${SUPABASE_CONFIG.anonKey}`,
+      ...(options.headers || {})
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase Storage ${response.status}: ${await response.text()}`);
   }
 
   const text = await response.text();
@@ -1594,6 +1649,7 @@ function articleToRow(article, options = {}) {
     text: article.text || [],
     vocabulary: article.vocabulary || [],
     inline_vocabulary: getInlineVocabulary(article),
+    image: article.image || null,
     questions: article.questions || [],
     published: article.published !== false
   };
@@ -3218,6 +3274,82 @@ function parseArticleImport(value) {
   return article;
 }
 
+function getArticleImagePublicUrl(path) {
+  return `${SUPABASE_CONFIG.url.replace(/\/$/, "")}/storage/v1/object/public/${ARTICLE_IMAGE_BUCKET}/${path}`;
+}
+
+async function imageFileToJpegBlob(file) {
+  const imageUrl = URL.createObjectURL(file);
+  const image = new Image();
+  image.decoding = "async";
+
+  try {
+    await new Promise((resolve, reject) => {
+      image.onload = resolve;
+      image.onerror = reject;
+      image.src = imageUrl;
+    });
+
+    const scale = Math.min(1, ARTICLE_IMAGE_MAX_WIDTH / image.naturalWidth);
+    const width = Math.max(1, Math.round(image.naturalWidth * scale));
+    const height = Math.max(1, Math.round(image.naturalHeight * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext("2d");
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(image, 0, 0, width, height);
+
+    return await new Promise((resolve, reject) => {
+      canvas.toBlob(blob => {
+        if (blob) resolve(blob);
+        else reject(new Error(t("imageUploadFailed")));
+      }, "image/jpeg", ARTICLE_IMAGE_JPEG_QUALITY);
+    });
+  } finally {
+    URL.revokeObjectURL(imageUrl);
+  }
+}
+
+async function uploadArticleImage(article) {
+  if (!state.articleImageFile) return article.image || null;
+  if (!state.remoteReady) throw new Error(t("editorNeedsSupabase"));
+
+  $("articleImageStatus").textContent = t("imageUploading");
+  const blob = await imageFileToJpegBlob(state.articleImageFile);
+  const path = `${article.id}.jpg`;
+
+  await supabaseStorageRequest(`object/${ARTICLE_IMAGE_BUCKET}/${encodeURIComponent(path)}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "image/jpeg",
+      "Cache-Control": "3600",
+      "x-upsert": "true"
+    },
+    body: blob
+  });
+
+  $("articleImageStatus").textContent = t("imageUploaded");
+  return {
+    desktop: getArticleImagePublicUrl(path),
+    alt: article.title
+  };
+}
+
+function updateArticleImageStatus(article = null) {
+  const status = $("articleImageStatus");
+  if (!status) return;
+  if (state.articleImageFile) {
+    status.textContent = t("imageReady");
+  } else if (article?.image?.desktop) {
+    status.textContent = t("imageExisting");
+  } else {
+    status.textContent = "";
+  }
+}
+
 function parseQuestionLines(value) {
   return linesToList(value).map(line => {
     const [statement, ...rest] = line.split("=");
@@ -3525,7 +3657,7 @@ function buildImagePrompt() {
   ].map(item => item.de).filter(Boolean).slice(0, 12);
 
   return [
-    "Create a warm, realistic educational illustration for a German reading app.",
+    "Create a cheerful modern educational illustration for a German reading app.",
     title ? `Article title: ${title}` : "",
     `German level: ${level}.`,
     category ? `Category: ${category}.` : "",
@@ -3534,8 +3666,9 @@ function buildImagePrompt() {
     vocabulary.length ? `Important words and phrases to reflect subtly: ${vocabulary.join(", ")}.` : "",
     "The image should show the main situation from the article clearly and naturally.",
     "No text, no letters, no captions, no speech bubbles, no logos.",
-    "Friendly everyday European setting, natural light, suitable for learners, not childish.",
-    "Landscape composition, 16:9, clean focus, realistic details."
+    "Warm, slightly playful style with friendly light humor and expressive characters, but not childish.",
+    "Colorful everyday European setting, natural light, suitable for teen and adult learners.",
+    "Landscape composition, 16:9, clean focus, polished modern textbook illustration style."
   ].filter(Boolean).join("\n");
 }
 
@@ -3608,6 +3741,7 @@ function updateArticleEditorFlow() {
 }
 
 function fillArticleEditor(article) {
+  state.articleImageFile = null;
   $("articleTitleInput").value = article?.title || "";
   $("articleIdInput").value = article?.id || "";
   $("articleVisibilitySelect").value = article?.visibility || DEFAULT_ARTICLE_VISIBILITY;
@@ -3616,6 +3750,7 @@ function fillArticleEditor(article) {
   renderArticleCategoryOptions(article?.category || "");
   $("articleSummaryInput").value = article?.summary || "";
   $("articleTextInput").value = (article?.text || []).join("\n");
+  $("articleImageInput").value = "";
   $("articleVocabularyInput").value = formatVocabularyLines(article?.vocabulary || []);
   $("articleInlineVocabularyInput").value = formatVocabularyLines(getInlineVocabulary(article || {}));
   $("articleQuestionsInput").value = formatQuestionLines(article?.questions || []);
@@ -3625,6 +3760,7 @@ function fillArticleEditor(article) {
     ? ""
     : t("editorNeedsSupabase");
   updateArticleApprovalControl(article);
+  updateArticleImageStatus(article);
   updateArticleEditorFlow();
 }
 
@@ -3691,6 +3827,7 @@ function readArticleEditor() {
     category: getArticleEditorCategory(),
     summary: $("articleSummaryInput").value.trim(),
     text: linesToList($("articleTextInput").value),
+    image: existingArticle?.image || null,
     vocabulary: mergeVocabularyTranslations(existingArticle?.vocabulary || [], parsedVocabulary, language),
     inlineVocabulary: mergeVocabularyTranslations(getInlineVocabulary(existingArticle || {}), parsedInlineVocabulary, language),
     questions: parseQuestionLines($("articleQuestionsInput").value)
@@ -3714,10 +3851,16 @@ function readArticleEditor() {
 async function saveArticleFromEditor() {
   try {
     const article = readArticleEditor();
+    article.image = await uploadArticleImage(article);
     await saveArticle(article);
+    state.articleImageFile = null;
+    $("articleImageInput").value = "";
+    updateArticleImageStatus(article);
     $("articleEditorStatus").textContent = t("articleSaved");
   } catch (error) {
-    $("articleEditorStatus").textContent = error.message;
+    $("articleEditorStatus").textContent = error.message.includes("Supabase Storage")
+      ? t("imageUploadFailed")
+      : error.message;
   }
 }
 
@@ -4044,6 +4187,10 @@ onChange("articleCategorySelect", () => {
 onEvent("articleCategoryInput", "input", updateArticleEditorFlow);
 onEvent("articleSummaryInput", "input", updateArticleEditorFlow);
 onEvent("articleTextInput", "input", updateArticleEditorFlow);
+onChange("articleImageInput", (event) => {
+  state.articleImageFile = event.target.files?.[0] || null;
+  updateArticleImageStatus();
+});
 onEvent("articleQuestionsInput", "input", updateArticleEditorFlow);
 onEvent("articleVocabularyInput", "input", updateArticleEditorFlow);
 onEvent("articleInlineVocabularyInput", "input", updateArticleEditorFlow);
