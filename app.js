@@ -2929,10 +2929,24 @@ function showSetup() {
 async function login() {
   const name = normalizeName($("loginNameInput").value);
   const pin = $("loginPinInput").value.trim();
+
+  if (!name || !pin) {
+    $("loginError").textContent = t("loginFill");
+    logAppEvent("login_failed", {
+      attemptedName: name,
+      reason: "missing_fields"
+    });
+    return;
+  }
+
   const profile = state.profiles.find(item => normalizeName(item.name) === name && item.pin === pin);
 
   if (!profile) {
     $("loginError").textContent = t("loginMismatch");
+    logAppEvent("login_failed", {
+      attemptedName: name,
+      reason: "wrong_credentials"
+    });
     return;
   }
 
@@ -2945,6 +2959,16 @@ async function login() {
     await saveProfiles();
   }
   await setCurrentProfile(profile);
+  logAppEvent("login_success", {
+    profileId: profile.id,
+    role: profile.role,
+    nativeLanguage: profile.nativeLanguage
+  });
+  logAppEvent("profile_selected", {
+    profileId: profile.id,
+    role: profile.role,
+    source: "login"
+  });
   logAppEvent("profile_login", {
     profileId: profile.id,
     role: profile.role,
@@ -4387,6 +4411,11 @@ async function init() {
   const savedProfile = state.profiles.find(profile => profile.id === savedProfileId);
   if (savedProfile) {
     await setCurrentProfile(savedProfile);
+    logAppEvent("profile_selected", {
+      profileId: savedProfile.id,
+      role: savedProfile.role,
+      source: "saved_profile"
+    });
   } else {
     showLogin();
   }
