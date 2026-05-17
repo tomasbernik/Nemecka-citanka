@@ -281,6 +281,12 @@ h3 { font-size: 1.1rem; }
   color: var(--text);
 }
 
+.secondary-btn.danger {
+  background: rgba(180, 35, 24, 0.12);
+  color: #b42318;
+  border: 1px solid rgba(180, 35, 24, 0.25);
+}
+
 .listen-status {
   min-height: 1.4em;
   margin-bottom: 0;
