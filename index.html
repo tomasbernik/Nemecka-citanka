@@ -92,6 +92,7 @@
           </label>
           <p id="loginError" class="form-error"></p>
           <button id="loginBtn" class="primary-btn">Anmelden</button>
+          <button id="googleLoginBtn" class="secondary-btn quiet" type="button">Mit Google anmelden</button>
           <button id="registerProfileBtn" class="secondary-btn quiet" type="button">Neues Profil erstellen</button>
           <button id="setupPairBtn" class="secondary-btn quiet" type="button">Zwei Profile einrichten</button>
         </div>
@@ -259,6 +260,16 @@
             Tmavý režim
             <input id="darkModeToggle" type="checkbox">
           </label>
+          <div class="setting-row stacked">
+            <div>
+              <strong id="authAccountTitle">Účet</strong>
+              <p id="authAccountStatus" class="muted setting-note"></p>
+            </div>
+            <div class="editor-actions">
+              <button id="linkGoogleAccountBtn" class="secondary-btn" type="button">Prepojiť Google účet</button>
+              <button id="signOutGoogleBtn" class="secondary-btn quiet" type="button">Odpojiť Google</button>
+            </div>
+          </div>
           <div class="setting-row stacked">
             <div>
               <strong>Upozornenia</strong>

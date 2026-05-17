@@ -298,6 +298,11 @@ h3 { font-size: 1.1rem; }
   color: var(--text);
 }
 
+#loginView .secondary-btn {
+  width: 100%;
+  margin-top: 10px;
+}
+
 .secondary-btn.danger {
   background: rgba(180, 35, 24, 0.12);
   color: #b42318;

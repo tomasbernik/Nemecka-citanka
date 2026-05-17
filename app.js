@@ -2,6 +2,8 @@ const PROFILE_KEY = "profiles";
 const CURRENT_PROFILE_KEY = "currentProfileId";
 const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
 const DEVICE_ID_KEY = "deviceId";
+const AUTH_SESSION_KEY = "supabaseAuthSession";
+const AUTH_PENDING_ACTION_KEY = "supabaseAuthPendingAction";
 const GEO_APP_OPENED_KEY_PREFIX = "geoAppOpened";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 const ADMIN_PROFILE_IDS = new Set(window.NC_ADMIN_PROFILE_IDS || []);
@@ -1069,6 +1071,88 @@ Object.assign(UI_TEXT.hu, {
   pushBody: "Ma elég pár perc német."
 });
 
+const AUTH_TEXT = {
+  de: {
+    googleLogin: "Mit Google anmelden",
+    accountTitle: "Konto",
+    linkGoogle: "Google-Konto verbinden",
+    signOutGoogle: "Google trennen",
+    authLinked: "Verbunden mit {email}.",
+    authUnlinked: "Dieses Profil ist noch nicht mit Google verbunden.",
+    authSignedIn: "Google ist angemeldet als {email}.",
+    authSignInFirst: "Melde dich zuerst mit deinem Profil an.",
+    authLinkStarted: "Google-Anmeldung wird geoeffnet...",
+    authLinkSuccess: "Google-Konto wurde mit diesem Profil verbunden.",
+    authLoginNoProfile: "Dieses Google-Konto ist noch mit keinem Profil verbunden. Melde dich mit PIN an und verbinde es in den Einstellungen.",
+    authUnavailable: "Google-Anmeldung ist erst nach der Supabase-Konfiguration verfuegbar.",
+    authSignedOut: "Google wurde getrennt."
+  },
+  sk: {
+    googleLogin: "Prihlásiť cez Google",
+    accountTitle: "Účet",
+    linkGoogle: "Prepojiť Google účet",
+    signOutGoogle: "Odpojiť Google",
+    authLinked: "Prepojené s {email}.",
+    authUnlinked: "Tento profil ešte nie je prepojený s Google účtom.",
+    authSignedIn: "Google je prihlásený ako {email}.",
+    authSignInFirst: "Najprv sa prihlás do profilu.",
+    authLinkStarted: "Otváram Google prihlásenie...",
+    authLinkSuccess: "Google účet je prepojený s týmto profilom.",
+    authLoginNoProfile: "Tento Google účet ešte nie je prepojený so žiadnym profilom. Prihlás sa PINom a prepoj ho v nastaveniach.",
+    authUnavailable: "Google prihlásenie bude dostupné po nastavení Supabase Auth.",
+    authSignedOut: "Google účet je odpojený."
+  },
+  ru: {
+    googleLogin: "Войти через Google",
+    accountTitle: "Аккаунт",
+    linkGoogle: "Связать Google",
+    signOutGoogle: "Отключить Google",
+    authLinked: "Связано с {email}.",
+    authUnlinked: "Этот профиль еще не связан с Google.",
+    authSignedIn: "Google: {email}.",
+    authSignInFirst: "Сначала войдите в профиль.",
+    authLinkStarted: "Открываю вход Google...",
+    authLinkSuccess: "Google аккаунт связан с этим профилем.",
+    authLoginNoProfile: "Этот Google аккаунт еще не связан с профилем. Войдите по PIN и свяжите его в настройках.",
+    authUnavailable: "Google вход будет доступен после настройки Supabase Auth.",
+    authSignedOut: "Google отключен."
+  },
+  pl: {
+    googleLogin: "Zaloguj przez Google",
+    accountTitle: "Konto",
+    linkGoogle: "Polacz konto Google",
+    signOutGoogle: "Odlacz Google",
+    authLinked: "Polaczono z {email}.",
+    authUnlinked: "Ten profil nie jest jeszcze polaczony z Google.",
+    authSignedIn: "Google: {email}.",
+    authSignInFirst: "Najpierw zaloguj sie do profilu.",
+    authLinkStarted: "Otwieram logowanie Google...",
+    authLinkSuccess: "Konto Google zostalo polaczone z tym profilem.",
+    authLoginNoProfile: "To konto Google nie jest polaczone z zadnym profilem. Zaloguj sie PIN-em i polacz je w ustawieniach.",
+    authUnavailable: "Logowanie Google bedzie dostepne po konfiguracji Supabase Auth.",
+    authSignedOut: "Google odlaczone."
+  },
+  hu: {
+    googleLogin: "Bejelentkezes Google-lal",
+    accountTitle: "Fiok",
+    linkGoogle: "Google fiok osszekapcsolasa",
+    signOutGoogle: "Google levalasztasa",
+    authLinked: "Osszekapcsolva: {email}.",
+    authUnlinked: "Ez a profil meg nincs osszekapcsolva Google fiokkal.",
+    authSignedIn: "Google: {email}.",
+    authSignInFirst: "Eloszor jelentkezz be a profilba.",
+    authLinkStarted: "Google bejelentkezes megnyitasa...",
+    authLinkSuccess: "A Google fiok ossze lett kapcsolva ezzel a profillal.",
+    authLoginNoProfile: "Ez a Google fiok meg nincs profilhoz kapcsolva. Jelentkezz be PIN-nel, es kapcsold ossze a beallitasokban.",
+    authUnavailable: "A Google bejelentkezes a Supabase Auth beallitasa utan lesz elerheto.",
+    authSignedOut: "Google levalasztva."
+  }
+};
+
+Object.entries(AUTH_TEXT).forEach(([language, text]) => {
+  Object.assign(UI_TEXT[language], text);
+});
+
 const state = {
   articles: [],
   profiles: [],
@@ -1076,6 +1160,8 @@ const state = {
   selectedCategory: ALL_CATEGORIES,
   currentArticle: null,
   currentProfile: null,
+  authSession: null,
+  authUser: null,
   profileData: emptyProfileData(),
   speech: {
     sentenceIndex: 0,
@@ -1124,6 +1210,13 @@ function getUiLanguage() {
 
 function t(key, language = getUiLanguage()) {
   return UI_TEXT[language]?.[key] || UI_TEXT[DEFAULT_PRELOGIN_LANGUAGE][key] || UI_TEXT[DEFAULT_NATIVE_LANGUAGE][key] || key;
+}
+
+function formatText(key, values = {}) {
+  return Object.entries(values).reduce(
+    (text, [name, value]) => text.replaceAll(`{${name}}`, value ?? ""),
+    t(key)
+  );
 }
 
 function setText(id, key) {
@@ -1352,6 +1445,7 @@ function updateStaticTexts() {
   setLabelText("loginPinInput", "pin");
   setLabelText("loginNativeLanguageSelect", "nativeLanguage");
   setText("loginBtn", "login");
+  setText("googleLoginBtn", "googleLogin");
   setText("registerProfileBtn", "newProfile");
   setText("setupPairBtn", "setupPair");
 
@@ -1394,6 +1488,10 @@ function updateStaticTexts() {
   setOptionText("settingsRoleSelect", "teacher", "teacherRole");
   setOptionText("settingsRoleSelect", "student", "studentRole");
   setLabelText("darkModeToggle", "darkMode");
+  setText("authAccountTitle", "accountTitle");
+  setText("linkGoogleAccountBtn", "linkGoogle");
+  setText("signOutGoogleBtn", "signOutGoogle");
+  renderAuthControls();
   document.querySelector("#notificationStatus").previousElementSibling.textContent = t("notifications");
   setText("notificationStatus", "notificationNote");
   setText("testNotificationBtn", "testNotification");
@@ -1450,6 +1548,240 @@ function updateStaticTexts() {
   renderCurrentProfileLabel();
   renderCategories();
   renderArticles();
+}
+
+function getStoredAuthSession() {
+  try {
+    return JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function saveAuthSession(session) {
+  state.authSession = session;
+  if (session) {
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+  } else {
+    localStorage.removeItem(AUTH_SESSION_KEY);
+  }
+}
+
+function getAuthRedirectUrl() {
+  return `${location.origin}${location.pathname}`;
+}
+
+function getAuthAccessToken() {
+  return state.authSession?.access_token || null;
+}
+
+async function supabaseAuthRequest(path, options = {}) {
+  if (!state.remoteReady) return null;
+
+  const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/auth/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_CONFIG.anonKey,
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Supabase Auth ${response.status}: ${await response.text()}`);
+  }
+
+  const text = await response.text();
+  return text ? JSON.parse(text) : null;
+}
+
+function readAuthSessionFromHash() {
+  if (!location.hash.includes("access_token")) return null;
+
+  const params = new URLSearchParams(location.hash.slice(1));
+  const accessToken = params.get("access_token");
+  if (!accessToken) return null;
+
+  const expiresIn = Number(params.get("expires_in") || 3600);
+  return {
+    access_token: accessToken,
+    refresh_token: params.get("refresh_token"),
+    token_type: params.get("token_type") || "bearer",
+    expires_at: Number(params.get("expires_at")) || Math.floor(Date.now() / 1000) + expiresIn
+  };
+}
+
+async function refreshAuthSession() {
+  const session = state.authSession || getStoredAuthSession();
+  if (!session?.refresh_token) return session || null;
+
+  const expiresAt = Number(session.expires_at || 0);
+  if (expiresAt && expiresAt - 60 > Math.floor(Date.now() / 1000)) return session;
+
+  const refreshed = await supabaseAuthRequest("token?grant_type=refresh_token", {
+    method: "POST",
+    body: JSON.stringify({ refresh_token: session.refresh_token })
+  });
+
+  const nextSession = {
+    access_token: refreshed.access_token,
+    refresh_token: refreshed.refresh_token || session.refresh_token,
+    token_type: refreshed.token_type || "bearer",
+    expires_at: Math.floor(Date.now() / 1000) + Number(refreshed.expires_in || 3600)
+  };
+  saveAuthSession(nextSession);
+  return nextSession;
+}
+
+async function loadAuthUser() {
+  const session = await refreshAuthSession();
+  if (!session?.access_token) {
+    state.authUser = null;
+    return null;
+  }
+
+  try {
+    const user = await supabaseAuthRequest("user", {
+      headers: { Authorization: `Bearer ${session.access_token}` }
+    });
+    state.authUser = user;
+    return user;
+  } catch (error) {
+    console.info("Auth user lookup skipped:", error.message);
+    state.authUser = null;
+    return null;
+  }
+}
+
+async function initAuthFromRedirect() {
+  const hashSession = readAuthSessionFromHash();
+  if (hashSession) {
+    saveAuthSession(hashSession);
+    history.replaceState(null, "", getAuthRedirectUrl());
+  } else {
+    saveAuthSession(getStoredAuthSession());
+  }
+
+  if (state.authSession) {
+    await loadAuthUser();
+  }
+}
+
+function startGoogleAuth(action) {
+  if (!state.remoteReady) {
+    $("loginError").textContent = t("authUnavailable");
+    return;
+  }
+
+  localStorage.setItem(AUTH_PENDING_ACTION_KEY, action);
+  const params = new URLSearchParams({
+    provider: "google",
+    redirect_to: getAuthRedirectUrl()
+  });
+  location.href = `${SUPABASE_CONFIG.url.replace(/\/$/, "")}/auth/v1/authorize?${params}`;
+}
+
+async function signInWithGoogle() {
+  $("loginError").textContent = t("authLinkStarted");
+  startGoogleAuth("login");
+}
+
+async function signOutGoogle() {
+  const accessToken = getAuthAccessToken();
+  if (accessToken) {
+    try {
+      await supabaseAuthRequest("logout", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: "{}"
+      });
+    } catch (error) {
+      console.info("Auth logout skipped:", error.message);
+    }
+  }
+
+  saveAuthSession(null);
+  state.authUser = null;
+  localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
+  renderAuthControls(t("authSignedOut"));
+}
+
+async function linkCurrentProfileToAuthUser(statusTarget = "authAccountStatus") {
+  if (!state.currentProfile) {
+    const target = $(statusTarget) || $("loginError");
+    if (target) target.textContent = t("authSignInFirst");
+    return false;
+  }
+
+  const user = state.authUser || await loadAuthUser();
+  if (!user?.id) {
+    startGoogleAuth("link-profile");
+    return false;
+  }
+
+  state.currentProfile.authUserId = user.id;
+  state.profiles = state.profiles.map(profile =>
+    profile.id === state.currentProfile.id ? { ...profile, authUserId: user.id } : profile
+  );
+  await saveProfiles();
+  renderAuthControls(t("authLinkSuccess"));
+  logAppEvent("profile_google_linked", {
+    profileId: state.currentProfile.id,
+    email: user.email || null
+  });
+  return true;
+}
+
+async function handlePendingAuthAction() {
+  const action = localStorage.getItem(AUTH_PENDING_ACTION_KEY);
+  if (!action || !state.authUser) return false;
+
+  localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
+
+  if (action === "login") {
+    const profile = state.profiles.find(item => item.authUserId === state.authUser.id);
+    if (!profile) {
+      showLogin();
+      $("loginError").textContent = t("authLoginNoProfile");
+      return true;
+    }
+
+    await setCurrentProfile(profile);
+    logAppEvent("profile_login", {
+      profileId: profile.id,
+      role: profile.role,
+      source: "google"
+    });
+    return true;
+  }
+
+  if (action === "link-profile") {
+    await linkCurrentProfileToAuthUser();
+    return true;
+  }
+
+  return false;
+}
+
+function renderAuthControls(message = "") {
+  const status = $("authAccountStatus");
+  if (!status) return;
+
+  const email = state.authUser?.email || state.authUser?.user_metadata?.email || "";
+  const linked = Boolean(state.currentProfile?.authUserId);
+
+  if (message) {
+    status.textContent = message;
+  } else if (linked && email) {
+    status.textContent = formatText("authLinked", { email });
+  } else if (email) {
+    status.textContent = formatText("authSignedIn", { email });
+  } else {
+    status.textContent = t("authUnlinked");
+  }
+
+  $("linkGoogleAccountBtn")?.classList.toggle("hidden", linked && Boolean(email));
+  $("signOutGoogleBtn")?.classList.toggle("hidden", !email);
 }
 
 async function supabaseRequest(path, options = {}) {
@@ -1591,9 +1923,9 @@ async function loadProfiles() {
   try {
     let profiles;
     try {
-      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id&order=role.desc,name.asc");
+      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id,auth_user_id&order=role.desc,name.asc");
     } catch (error) {
-      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role&order=role.desc,name.asc");
+      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id&order=role.desc,name.asc");
     }
     if (profiles?.length) {
       state.profiles = profiles.map(rowToProfile);
@@ -1635,6 +1967,7 @@ function normalizeProfile(profile) {
   return {
     ...profile,
     teacherGroupId: profile?.teacherGroupId || profile?.teacher_group_id || null,
+    authUserId: profile?.authUserId || profile?.auth_user_id || null,
     nativeLanguage: isSupportedNativeLanguage(profile?.nativeLanguage)
       ? profile.nativeLanguage
       : DEFAULT_NATIVE_LANGUAGE
@@ -1658,7 +1991,8 @@ function rowToProfile(row) {
     pin: row.pin,
     role: row.role,
     nativeLanguage: row.native_language,
-    teacherGroupId: row.teacher_group_id
+    teacherGroupId: row.teacher_group_id,
+    authUserId: row.auth_user_id
   });
 }
 
@@ -1669,7 +2003,8 @@ function profileToRow(profile) {
     pin: profile.pin,
     role: profile.role,
     teacher_group_id: profile.teacherGroupId || profile.id,
-    native_language: getNativeLanguage(profile)
+    native_language: getNativeLanguage(profile),
+    auth_user_id: profile.authUserId || null
   };
 }
 
@@ -3007,6 +3342,7 @@ async function setCurrentProfile(profile) {
   renderNativeLanguageControls();
   renderRoleControls();
   renderCurrentProfileLabel();
+  renderAuthControls();
   updateStaticTexts();
   $("settingsBtn").classList.remove("hidden");
   $("teacherBtn").classList.remove("hidden");
@@ -4590,6 +4926,7 @@ onClick("teacherStudentsTabBtn", async () => {
 });
 onClick("refreshBtn", loadArticles);
 onClick("loginBtn", login);
+onClick("googleLoginBtn", signInWithGoogle);
 onClick("registerProfileBtn", registerProfileFromLogin);
 onClick("setupPairBtn", showSetup);
 onClick("setupBackBtn", showLogin);
@@ -4607,6 +4944,8 @@ onClick("newWordSearchBtn", startWordSearchGame);
 onClick("skipStartupQuizBtn", closeStartupQuiz);
 onClick("nextStartupQuizBtn", nextStartupQuizQuestion);
 onClick("testNotificationBtn", showTestNotification);
+onClick("linkGoogleAccountBtn", () => linkCurrentProfileToAuthUser());
+onClick("signOutGoogleBtn", signOutGoogle);
 onClick("newArticleBtn", () => {
   $("articleEditorSelect").value = "";
   clearArticleCreationHelperInputs();
@@ -4777,6 +5116,7 @@ if ("serviceWorker" in navigator) {
 
 async function init() {
   loadSettings();
+  await initAuthFromRedirect();
   await loadProfiles();
   await loadArticles();
   logAppOpened({
@@ -4793,6 +5133,9 @@ async function init() {
       role: savedProfile.role,
       source: "saved_profile"
     });
+    if (await handlePendingAuthAction()) return;
+  } else if (await handlePendingAuthAction()) {
+    return;
   } else {
     showLogin();
   }

@@ -3,6 +3,7 @@ create table if not exists public.app_profiles (
   name text not null unique,
   pin text not null,
   role text not null check (role in ('teacher', 'student')),
+  auth_user_id uuid unique references auth.users(id) on delete set null,
   teacher_group_id text,
   native_language text not null default 'sk' check (native_language in ('sk', 'ru', 'pl', 'hu'))
 );
@@ -12,6 +13,9 @@ add column if not exists native_language text not null default 'sk';
 
 alter table public.app_profiles
 add column if not exists teacher_group_id text;
+
+alter table public.app_profiles
+add column if not exists auth_user_id uuid unique references auth.users(id) on delete set null;
 
 create table if not exists public.app_profile_data (
   profile_id text primary key references public.app_profiles(id) on delete cascade,
@@ -249,74 +253,74 @@ drop policy if exists "app_devices_update" on public.app_devices;
 
 create policy "app_profiles_select"
 on public.app_profiles for select
-to anon
+to anon, authenticated
 using (true);
 
 create policy "app_profiles_insert"
 on public.app_profiles for insert
-to anon
+to anon, authenticated
 with check (true);
 
 create policy "app_profiles_update"
 on public.app_profiles for update
-to anon
+to anon, authenticated
 using (true)
 with check (true);
 
 create policy "app_profile_data_select"
 on public.app_profile_data for select
-to anon
+to anon, authenticated
 using (true);
 
 create policy "app_profile_data_insert"
 on public.app_profile_data for insert
-to anon
+to anon, authenticated
 with check (true);
 
 create policy "app_profile_data_update"
 on public.app_profile_data for update
-to anon
+to anon, authenticated
 using (true)
 with check (true);
 
 create policy "app_articles_select"
 on public.app_articles for select
-to anon
+to anon, authenticated
 using (true);
 
 create policy "app_articles_insert"
 on public.app_articles for insert
-to anon
+to anon, authenticated
 with check (true);
 
 create policy "app_articles_update"
 on public.app_articles for update
-to anon
+to anon, authenticated
 using (true)
 with check (true);
 
 create policy "app_articles_delete"
 on public.app_articles for delete
-to anon
+to anon, authenticated
 using (true);
 
 create policy "app_events_insert"
 on public.app_events for insert
-to anon
+to anon, authenticated
 with check (true);
 
 create policy "app_devices_select"
 on public.app_devices for select
-to anon
+to anon, authenticated
 using (true);
 
 create policy "app_devices_insert"
 on public.app_devices for insert
-to anon
+to anon, authenticated
 with check (true);
 
 create policy "app_devices_update"
 on public.app_devices for update
-to anon
+to anon, authenticated
 using (true)
 with check (true);
