@@ -1,0 +1,4 @@
+project_id = "yeqxqwbjlhcwiikrmynl"
+
+[functions.log-app-opened]
+verify_jwt = false
