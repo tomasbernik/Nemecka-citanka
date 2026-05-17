@@ -3378,6 +3378,27 @@ function mergeVocabularyTranslations(existingItems = [], parsedItems = [], langu
   });
 }
 
+function appendVocabularyTranslations(existingItems = [], parsedItems = [], language = getNativeLanguage()) {
+  const byKey = new Map(existingItems.map(item => [normalizeVocabularyKey(item.de), item]));
+
+  parsedItems.forEach(item => {
+    const key = normalizeVocabularyKey(item.de);
+    const existing = byKey.get(key) || {};
+    const translations = Object.fromEntries(["sk", "ru", "pl", "hu"]
+      .filter(code => item[code])
+      .map(code => [code, item[code]]));
+    byKey.set(key, {
+      ...existing,
+      ...translations,
+      de: item.de || existing.de,
+      base: item.base || existing.base || "",
+      ...(item[language] ? { [language]: item[language] } : {})
+    });
+  });
+
+  return [...byKey.values()].filter(item => item.de);
+}
+
 function stripJsonCodeFence(value) {
   return value.trim()
     .replace(/^```(?:json)?\s*/i, "")
@@ -4211,7 +4232,7 @@ function readArticleEditor() {
     text: linesToList($("articleTextInput").value),
     image: existingArticle?.image || null,
     vocabulary: mergeVocabularyTranslations(existingArticle?.vocabulary || [], parsedVocabulary, language),
-    inlineVocabulary: mergeVocabularyTranslations(state.editorBaseInlineVocabulary || [], parsedInlineVocabulary, language),
+    inlineVocabulary: appendVocabularyTranslations(state.editorBaseInlineVocabulary || [], parsedInlineVocabulary, language),
     questions: parseQuestionLines($("articleQuestionsInput").value)
   };
 
