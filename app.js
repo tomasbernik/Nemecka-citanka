@@ -1906,19 +1906,27 @@ function renderArticles() {
 
   articles.forEach(article => {
     const isRead = state.profileData.readIds.includes(article.id);
+    const image = article.image || {};
+    const imageSrc = image.desktop || `images/articles/${article.id}.jpg`;
+    const imageAlt = image.alt || article.title || "";
     const btn = document.createElement("button");
     btn.className = "article-card";
     btn.innerHTML = `
-      <h4>${escapeHtml(article.title)}</h4>
-      <p>${escapeHtml(article.summary)}</p>
-      <div class="badges">
-        <span class="badge">${escapeHtml(article.level)}</span>
-        <span class="badge">${escapeHtml(getCategoryLabel(article.category))}</span>
-        ${article.visibility === "private" ? `<span class="badge">${escapeHtml(t("private"))}</span>` : ""}
-        ${article.visibility === "public" && article.approvalStatus !== "approved" ? `<span class="badge">${escapeHtml(t("pendingApproval"))}</span>` : ""}
-        ${isRead ? `<span class="badge">✓ ${escapeHtml(t("read"))}</span>` : ""}
+      <img class="article-card-thumb" src="${escapeHtml(imageSrc)}" alt="${escapeHtml(imageAlt)}" loading="lazy">
+      <div class="article-card-body">
+        <h4>${escapeHtml(article.title)}</h4>
+        <p>${escapeHtml(article.summary)}</p>
+        <div class="badges">
+          <span class="badge">${escapeHtml(article.level)}</span>
+          <span class="badge">${escapeHtml(getCategoryLabel(article.category))}</span>
+          ${article.visibility === "private" ? `<span class="badge">${escapeHtml(t("private"))}</span>` : ""}
+          ${article.visibility === "public" && article.approvalStatus !== "approved" ? `<span class="badge">${escapeHtml(t("pendingApproval"))}</span>` : ""}
+          ${isRead ? `<span class="badge">✓ ${escapeHtml(t("read"))}</span>` : ""}
+        </div>
       </div>
     `;
+    const thumb = btn.querySelector(".article-card-thumb");
+    thumb.onerror = () => thumb.remove();
     btn.onclick = () => openArticle(article.id);
     root.appendChild(btn);
   });
@@ -3312,7 +3320,7 @@ function linesToList(value) {
 }
 
 function parseVocabularyJson(value, allowDraft = false) {
-  const text = value.trim();
+  const text = stripJsonCodeFence(value);
   if (!text || (!text.startsWith("[") && !text.startsWith("{"))) return null;
 
   const parsed = JSON.parse(text);
@@ -3754,7 +3762,7 @@ const PROMPT_TEXT = {
     ],
     translation: (missing) => [
       "Prelož tieto nemecké slová a frázy do slovenčiny, ruštiny, poľštiny a maďarčiny.",
-      "Vráť iba validné JSON pole. Nepíš vysvetlenia navyše.",
+      "Vráť iba validné JSON pole. Nepíš vysvetlenia navyše a nepoužívaj markdown blok ```json.",
       "Každá položka musí mať presne tieto kľúče: de, sk, ru, pl, hu.",
       "Formát jednej položky:",
       "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",

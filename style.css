@@ -139,10 +139,27 @@ h3 { font-size: 1.1rem; }
 }
 
 .article-card {
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
   text-align: left;
   width: 100%;
   color: var(--text);
   padding: 18px;
+}
+
+.article-card-thumb {
+  width: 104px;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(127, 127, 127, 0.08);
+}
+
+.article-card-body {
+  min-width: 0;
 }
 
 .article-card h4 {
@@ -852,6 +869,18 @@ select {
   #app { padding: 14px; }
   h1 { font-size: 1.72rem; }
   .reader-card { border-radius: 24px; padding: 20px; }
+  .article-card {
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 11px;
+    padding: 14px;
+  }
+  .article-card-thumb {
+    width: 76px;
+    border-radius: 10px;
+  }
+  .article-card h4 {
+    font-size: 1.03rem;
+  }
   .word-search-grid { gap: 3px; }
   .letter-cell { border-radius: 6px; font-size: 0.72rem; }
 }
