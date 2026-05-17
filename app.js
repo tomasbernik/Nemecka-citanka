@@ -136,6 +136,10 @@ const UI_TEXT = {
     noStudentsInGroup: "In deiner Gruppe sind noch keine Schülerprofile.",
     teacherArticles: "Artikel",
     articleEditor: "Artikeleditor",
+    shareApp: "App teilen",
+    shareAppText: "Öffne dieses Lesebuch.",
+    shareCopied: "Link zur App kopiert.",
+    shareFailed: "Teilen ist nicht verfügbar. Kopiere den Link aus der Adressleiste.",
     newArticle: "Neuer Artikel",
     editArticle: "Artikel bearbeiten",
     newCategory: "Neue Kategorie",
@@ -151,6 +155,7 @@ const UI_TEXT = {
     articleTask: "Aufgabe für den Artikel",
     requiredWords: "Pflichtwörter, ein Wort oder eine Phrase pro Zeile",
     copyArticlePrompt: "Prompt für Artikel kopieren",
+    copyImagePrompt: "Bild-Prompt kopieren",
     articleImportJson: "Fertiger Artikel aus ChatGPT im JSON-Format",
     importArticle: "In den Editor einfügen",
     copyTranslationPrompt: "Wörter zum Übersetzen kopieren",
@@ -289,6 +294,10 @@ const UI_TEXT = {
     noStudentsInGroup: "V tvojej skupine zatiaľ nie sú žiadni žiaci.",
     teacherArticles: "Články",
     articleEditor: "Editor článkov",
+    shareApp: "Zdieľať appku",
+    shareAppText: "Otvor si túto čítanku.",
+    shareCopied: "Link na appku je skopírovaný.",
+    shareFailed: "Zdieľanie nie je dostupné. Skopíruj link z adresného riadku.",
     newArticle: "Nový článok",
     editArticle: "Upraviť článok",
     newCategory: "Nová kategória",
@@ -304,6 +313,7 @@ const UI_TEXT = {
     articleTask: "Zadanie pre článok",
     requiredWords: "Povinné slová, jedno slovo alebo fráza na riadok",
     copyArticlePrompt: "Kopírovať prompt pre článok",
+    copyImagePrompt: "Kopírovať prompt pre obrázok",
     articleImportJson: "Hotový článok z ChatGPT vo formáte JSON",
     importArticle: "Vložiť do editora",
     copyTranslationPrompt: "Kopírovať slovíčka na preklad",
@@ -442,6 +452,10 @@ const UI_TEXT = {
     noStudentsInGroup: "В вашей группе пока нет профилей учеников.",
     teacherArticles: "Статьи",
     articleEditor: "Редактор статей",
+    shareApp: "Поделиться приложением",
+    shareAppText: "Открой эту книгу для чтения.",
+    shareCopied: "Ссылка на приложение скопирована.",
+    shareFailed: "Поделиться сейчас нельзя. Скопируйте ссылку из адресной строки.",
     newArticle: "Новая статья",
     editArticle: "Редактировать статью",
     newCategory: "Новая категория",
@@ -457,6 +471,7 @@ const UI_TEXT = {
     articleTask: "Задание для статьи",
     requiredWords: "Обязательные слова, одно слово или фраза в строке",
     copyArticlePrompt: "Копировать prompt для статьи",
+    copyImagePrompt: "Копировать prompt для картинки",
     articleImportJson: "Готовая статья из ChatGPT в формате JSON",
     importArticle: "Вставить в редактор",
     copyTranslationPrompt: "Копировать слова для перевода",
@@ -595,6 +610,10 @@ const UI_TEXT = {
     noStudentsInGroup: "W twojej grupie nie ma jeszcze profili uczniów.",
     teacherArticles: "Artykuły",
     articleEditor: "Edytor artykułów",
+    shareApp: "Udostępnij aplikację",
+    shareAppText: "Otwórz tę czytankę.",
+    shareCopied: "Link do aplikacji skopiowany.",
+    shareFailed: "Udostępnianie nie jest dostępne. Skopiuj link z paska adresu.",
     newArticle: "Nowy artykuł",
     editArticle: "Edytuj artykuł",
     newCategory: "Nowa kategoria",
@@ -610,6 +629,7 @@ const UI_TEXT = {
     articleTask: "Zadanie dla artykułu",
     requiredWords: "Wymagane słowa, jedno słowo albo fraza w wierszu",
     copyArticlePrompt: "Kopiuj prompt dla artykułu",
+    copyImagePrompt: "Kopiuj prompt obrazka",
     articleImportJson: "Gotowy artykuł z ChatGPT w formacie JSON",
     importArticle: "Wstaw do edytora",
     copyTranslationPrompt: "Kopiuj słówka do tłumaczenia",
@@ -748,6 +768,10 @@ const UI_TEXT = {
     noStudentsInGroup: "A csoportodban még nincsenek tanulói profilok.",
     teacherArticles: "Cikkek",
     articleEditor: "Cikkszerkesztő",
+    shareApp: "App megosztása",
+    shareAppText: "Nyisd meg ezt az olvasó appot.",
+    shareCopied: "Az app linkje másolva.",
+    shareFailed: "A megosztás nem elérhető. Másold ki a linket a címsorból.",
     newArticle: "Új cikk",
     editArticle: "Cikk szerkesztése",
     newCategory: "Új kategória",
@@ -763,6 +787,7 @@ const UI_TEXT = {
     articleTask: "Cikkfeladat",
     requiredWords: "Kötelező szavak, soronként egy szó vagy kifejezés",
     copyArticlePrompt: "Cikk prompt másolása",
+    copyImagePrompt: "Kép prompt másolása",
     articleImportJson: "Kész ChatGPT-cikk JSON formátumban",
     importArticle: "Beillesztés a szerkesztőbe",
     copyTranslationPrompt: "Szavak fordításának másolása",
@@ -811,6 +836,7 @@ Object.assign(UI_TEXT.sk, {
   selectedAdded: "Označený text je pridaný.",
   expressionExists: "Tento výraz už v zozname je.",
   promptArticleCopied: "Prompt pre článok je skopírovaný.",
+  promptImageCopied: "Prompt pre obrázok je skopírovaný.",
   promptTranslationCopied: "Slovíčka na preklad sú skopírované.",
   promptQuestionsCopied: "Prompt pre otázky je skopírovaný.",
   notificationUnsupported: "Tento prehliadač nepodporuje notifikácie.",
@@ -846,6 +872,7 @@ Object.assign(UI_TEXT.de, {
   selectedAdded: "Der markierte Text wurde hinzugefügt.",
   expressionExists: "Dieser Ausdruck ist schon in der Liste.",
   promptArticleCopied: "Prompt für den Artikel kopiert.",
+  promptImageCopied: "Bild-Prompt kopiert.",
   promptTranslationCopied: "Wörter zum Übersetzen kopiert.",
   promptQuestionsCopied: "Prompt für Fragen kopiert.",
   notificationUnsupported: "Dieser Browser unterstützt keine Benachrichtigungen.",
@@ -881,6 +908,7 @@ Object.assign(UI_TEXT.ru, {
   selectedAdded: "Выделенный текст добавлен.",
   expressionExists: "Это выражение уже есть в списке.",
   promptArticleCopied: "Prompt для статьи скопирован.",
+  promptImageCopied: "Prompt для картинки скопирован.",
   promptTranslationCopied: "Слова для перевода скопированы.",
   promptQuestionsCopied: "Prompt для вопросов скопирован.",
   notificationUnsupported: "Этот браузер не поддерживает уведомления.",
@@ -916,6 +944,7 @@ Object.assign(UI_TEXT.pl, {
   selectedAdded: "Zaznaczony tekst został dodany.",
   expressionExists: "To wyrażenie już jest na liście.",
   promptArticleCopied: "Prompt dla artykułu skopiowany.",
+  promptImageCopied: "Prompt obrazka skopiowany.",
   promptTranslationCopied: "Słówka do tłumaczenia skopiowane.",
   promptQuestionsCopied: "Prompt dla pytań skopiowany.",
   notificationUnsupported: "Ta przeglądarka nie obsługuje powiadomień.",
@@ -951,6 +980,7 @@ Object.assign(UI_TEXT.hu, {
   selectedAdded: "A kijelölt szöveg hozzáadva.",
   expressionExists: "Ez a kifejezés már szerepel a listában.",
   promptArticleCopied: "A cikk prompt másolva.",
+  promptImageCopied: "A kép prompt másolva.",
   promptTranslationCopied: "A fordítandó szavak másolva.",
   promptQuestionsCopied: "A kérdések prompt másolva.",
   notificationUnsupported: "Ez a böngésző nem támogatja az értesítéseket.",
@@ -1152,8 +1182,12 @@ function updateStaticTexts() {
   document.title = t("appTitle");
   document.querySelector(".topbar h1").textContent = t("appTitle");
   document.querySelector(".topbar .eyebrow").textContent = t("languageLabel");
-  $("teacherBtn").setAttribute("aria-label", t("overview"));
+  $("teacherBtn").setAttribute("aria-label", t("articleEditor"));
+  $("teacherBtn").setAttribute("title", t("articleEditor"));
+  $("shareAppBtn").setAttribute("aria-label", t("shareApp"));
+  $("shareAppBtn").setAttribute("title", t("shareApp"));
   $("settingsBtn").setAttribute("aria-label", t("settings"));
+  $("settingsBtn").setAttribute("title", t("settings"));
 
   document.querySelector("#setupView .eyebrow").textContent = t("setupEyebrow");
   document.querySelector("#setupView h2").textContent = t("setupTitle");
@@ -1248,6 +1282,7 @@ function updateStaticTexts() {
   setLabelText("articlePromptInput", "articleTask");
   setLabelText("articleRequiredWordsInput", "requiredWords");
   setText("copyArticlePromptBtn", "copyArticlePrompt");
+  setText("copyImagePromptBtn", "copyImagePrompt");
   setLabelText("articleImportInput", "articleImportJson");
   setText("importArticleBtn", "importArticle");
   setText("copyTranslationPromptBtn", "copyTranslationPrompt");
@@ -2685,6 +2720,32 @@ function showSettings() {
   showView("settingsView");
 }
 
+async function shareApp() {
+  const shareData = {
+    title: t("appTitle"),
+    text: t("shareAppText"),
+    url: window.location.href
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+      return;
+    }
+
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(shareData.url);
+      alert(t("shareCopied"));
+      return;
+    }
+
+    throw new Error("Share unavailable");
+  } catch (error) {
+    if (error?.name === "AbortError") return;
+    alert(t("shareFailed"));
+  }
+}
+
 async function loadProfileData(profile) {
   const localData = JSON.parse(localStorage.getItem(profileDataKey(profile.id)) || "null");
   state.profileData = localData ? { ...emptyProfileData(), ...localData } : emptyProfileData();
@@ -2722,7 +2783,8 @@ async function setCurrentProfile(profile) {
   renderCurrentProfileLabel();
   updateStaticTexts();
   $("settingsBtn").classList.remove("hidden");
-  $("teacherBtn").classList.toggle("hidden", profile.role !== "teacher");
+  $("teacherBtn").classList.remove("hidden");
+  $("shareAppBtn").classList.remove("hidden");
   showHome();
   showStartupQuiz();
 }
@@ -2731,6 +2793,7 @@ function showLogin() {
   stopReading();
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
+  $("shareAppBtn").classList.add("hidden");
   renderNativeLanguageControls();
   updateStaticTexts();
   showView(state.profiles.length ? "loginView" : "setupView");
@@ -2740,6 +2803,7 @@ function showSetup() {
   stopReading();
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
+  $("shareAppBtn").classList.add("hidden");
   renderNativeLanguageControls();
   updateStaticTexts();
   showView("setupView");
@@ -2872,9 +2936,11 @@ function logout() {
 }
 
 function setTeacherPanel(panel) {
-  const showStudents = panel === "students";
+  const canShowStudents = state.currentProfile?.role === "teacher";
+  const showStudents = canShowStudents && panel === "students";
   $("articleEditorCard").classList.toggle("hidden", showStudents);
   $("teacherOverviewCard").classList.toggle("hidden", !showStudents);
+  $("teacherStudentsTabBtn").classList.toggle("hidden", !canShowStudents);
   $("teacherArticlesTabBtn").classList.toggle("active", !showStudents);
   $("teacherStudentsTabBtn").classList.toggle("active", showStudents);
   $("teacherArticlesTabBtn").classList.toggle("quiet", showStudents);
@@ -2882,7 +2948,7 @@ function setTeacherPanel(panel) {
 }
 
 async function showTeacherView() {
-  if (!state.currentProfile || state.currentProfile.role !== "teacher") return;
+  if (!state.currentProfile) return;
   renderArticleEditorList();
   setTeacherPanel("articles");
   showView("teacherView");
@@ -2996,7 +3062,7 @@ async function updateCurrentProfileRole(role) {
   await saveProfiles();
   renderRoleControls();
   renderCurrentProfileLabel();
-  $("teacherBtn").classList.toggle("hidden", role !== "teacher");
+  $("teacherBtn").classList.remove("hidden");
   renderArticles();
 }
 
@@ -3444,6 +3510,33 @@ function buildQuestionsPrompt() {
   const text = $("articleTextInput").value.trim();
 
   return getPromptText().questions({ title, text }).filter(Boolean).join("\n");
+}
+
+function buildImagePrompt() {
+  const title = $("articleTitleInput").value.trim();
+  const summary = $("articleSummaryInput").value.trim();
+  const level = $("articleLevelInput").value.trim() || "A2-B1";
+  const category = getArticleEditorCategory();
+  const text = linesToList($("articleTextInput").value).join(" ");
+  const topic = $("articlePromptInput").value.trim();
+  const vocabulary = [
+    ...parseVocabularyDraftLines($("articleVocabularyInput").value),
+    ...parseVocabularyDraftLines($("articleInlineVocabularyInput").value)
+  ].map(item => item.de).filter(Boolean).slice(0, 12);
+
+  return [
+    "Create a warm, realistic educational illustration for a German reading app.",
+    title ? `Article title: ${title}` : "",
+    `German level: ${level}.`,
+    category ? `Category: ${category}.` : "",
+    summary ? `Article summary: ${summary}` : topic ? `Topic: ${topic}` : "",
+    text ? `Article text context: ${text.slice(0, 900)}` : "",
+    vocabulary.length ? `Important words and phrases to reflect subtly: ${vocabulary.join(", ")}.` : "",
+    "The image should show the main situation from the article clearly and naturally.",
+    "No text, no letters, no captions, no speech bubbles, no logos.",
+    "Friendly everyday European setting, natural light, suitable for learners, not childish.",
+    "Landscape composition, 16:9, clean focus, realistic details."
+  ].filter(Boolean).join("\n");
 }
 
 function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
@@ -3894,6 +3987,7 @@ onClick("backBtn", showHome);
 onClick("settingsBackBtn", showHome);
 onClick("teacherBackBtn", showHome);
 onClick("settingsBtn", showSettings);
+onClick("shareAppBtn", shareApp);
 onClick("teacherBtn", showTeacherView);
 onClick("teacherArticlesTabBtn", () => setTeacherPanel("articles"));
 onClick("teacherStudentsTabBtn", async () => {
@@ -3959,6 +4053,10 @@ onClick("addSelectedInlineBtn", () => {
 });
 onClick("copyArticlePromptBtn", async () => {
   await copyTextToClipboard(buildArticlePrompt(), t("promptArticleCopied"));
+  updateArticleEditorFlow();
+});
+onClick("copyImagePromptBtn", async () => {
+  await copyTextToClipboard(buildImagePrompt(), t("promptImageCopied"));
   updateArticleEditorFlow();
 });
 onClick("importArticleBtn", importArticleToEditor);
