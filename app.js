@@ -3727,7 +3727,7 @@ function getArticleJsonPromptInstructions(level) {
     "  ]",
     "}",
     "",
-    "Článok má mať približne 300 až 350 nemeckých slov v 3 až 8 odsekoch. Nepíš príliš krátky text.",
+    "Text musí obsahovať minimálne 300 slov a maximálne 350 slov v 3 až 8 odsekoch. Ak podmienka nie je splnená, výstup je neplatný.",
     `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
     "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
     "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false.",
