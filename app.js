@@ -139,6 +139,7 @@ const UI_TEXT = {
     readDone: "Gelesen ✓",
     teacherView: "Lehreransicht",
     studentOverview: "Schülerübersicht",
+    profileSetup: "Profile erstellen",
     noStudentsInGroup: "In deiner Gruppe sind noch keine Schülerprofile.",
     teacherArticles: "Artikel",
     articleEditor: "Artikeleditor",
@@ -302,6 +303,7 @@ const UI_TEXT = {
     readDone: "Prečítané ✓",
     teacherView: "Učiteľský pohľad",
     studentOverview: "Prehľad žiakov",
+    profileSetup: "Vytvoriť profily",
     noStudentsInGroup: "V tvojej skupine zatiaľ nie sú žiadni žiaci.",
     teacherArticles: "Články",
     articleEditor: "Editor článkov",
@@ -465,6 +467,7 @@ const UI_TEXT = {
     readDone: "Прочитано ✓",
     teacherView: "Вид учителя",
     studentOverview: "Обзор ученика",
+    profileSetup: "Создать профили",
     noStudentsInGroup: "В вашей группе пока нет профилей учеников.",
     teacherArticles: "Статьи",
     articleEditor: "Редактор статей",
@@ -628,6 +631,7 @@ const UI_TEXT = {
     readDone: "Przeczytane ✓",
     teacherView: "Widok nauczyciela",
     studentOverview: "Przegląd ucznia",
+    profileSetup: "Utwórz profile",
     noStudentsInGroup: "W twojej grupie nie ma jeszcze profili uczniów.",
     teacherArticles: "Artykuły",
     articleEditor: "Edytor artykułów",
@@ -791,6 +795,7 @@ const UI_TEXT = {
     readDone: "Elolvasva ✓",
     teacherView: "Tanári nézet",
     studentOverview: "Tanulói áttekintés",
+    profileSetup: "Profilok letrehozasa",
     noStudentsInGroup: "A csoportodban még nincsenek tanulói profilok.",
     teacherArticles: "Cikkek",
     articleEditor: "Cikkszerkesztő",
@@ -1085,7 +1090,8 @@ const AUTH_TEXT = {
     authLinkSuccess: "Google-Konto wurde mit diesem Profil verbunden.",
     authLoginNoProfile: "Dieses Google-Konto ist noch mit keinem Profil verbunden. Melde dich mit PIN an und verbinde es in den Einstellungen.",
     authUnavailable: "Google-Anmeldung ist erst nach der Supabase-Konfiguration verfuegbar.",
-    authSignedOut: "Google wurde getrennt."
+    authSignedOut: "Google wurde getrennt.",
+    registrationClosed: "Neue Profile koennen nur ein angemeldeter Besitzer oder Admin erstellen."
   },
   sk: {
     googleLogin: "Prihlásiť cez Google",
@@ -1100,7 +1106,8 @@ const AUTH_TEXT = {
     authLinkSuccess: "Google účet je prepojený s týmto profilom.",
     authLoginNoProfile: "Tento Google účet ešte nie je prepojený so žiadnym profilom. Prihlás sa PINom a prepoj ho v nastaveniach.",
     authUnavailable: "Google prihlásenie bude dostupné po nastavení Supabase Auth.",
-    authSignedOut: "Google účet je odpojený."
+    authSignedOut: "Google účet je odpojený.",
+    registrationClosed: "Nové profily môže vytvárať iba prihlásený vlastník alebo admin."
   },
   ru: {
     googleLogin: "Войти через Google",
@@ -1115,7 +1122,8 @@ const AUTH_TEXT = {
     authLinkSuccess: "Google аккаунт связан с этим профилем.",
     authLoginNoProfile: "Этот Google аккаунт еще не связан с профилем. Войдите по PIN и свяжите его в настройках.",
     authUnavailable: "Google вход будет доступен после настройки Supabase Auth.",
-    authSignedOut: "Google отключен."
+    authSignedOut: "Google отключен.",
+    registrationClosed: "Новые профили может создавать только владелец или админ."
   },
   pl: {
     googleLogin: "Zaloguj przez Google",
@@ -1130,7 +1138,8 @@ const AUTH_TEXT = {
     authLinkSuccess: "Konto Google zostalo polaczone z tym profilem.",
     authLoginNoProfile: "To konto Google nie jest polaczone z zadnym profilem. Zaloguj sie PIN-em i polacz je w ustawieniach.",
     authUnavailable: "Logowanie Google bedzie dostepne po konfiguracji Supabase Auth.",
-    authSignedOut: "Google odlaczone."
+    authSignedOut: "Google odlaczone.",
+    registrationClosed: "Nowe profile moze tworzyc tylko zalogowany wlasciciel albo admin."
   },
   hu: {
     googleLogin: "Bejelentkezes Google-lal",
@@ -1145,7 +1154,8 @@ const AUTH_TEXT = {
     authLinkSuccess: "A Google fiok ossze lett kapcsolva ezzel a profillal.",
     authLoginNoProfile: "Ez a Google fiok meg nincs profilhoz kapcsolva. Jelentkezz be PIN-nel, es kapcsold ossze a beallitasokban.",
     authUnavailable: "A Google bejelentkezes a Supabase Auth beallitasa utan lesz elerheto.",
-    authSignedOut: "Google levalasztva."
+    authSignedOut: "Google levalasztva.",
+    registrationClosed: "Uj profilokat csak bejelentkezett tulajdonos vagy admin hozhat letre."
   }
 };
 
@@ -1500,6 +1510,7 @@ function updateStaticTexts() {
   setText("articleEditorBottomBackBtn", "back");
   setText("teacherArticlesTabBtn", "articleEditor");
   setText("teacherStudentsTabBtn", "studentOverview");
+  setText("teacherProfilesTabBtn", "profileSetup");
   document.querySelector("#teacherOverviewCard .eyebrow").textContent = t("teacherView");
   document.querySelector("#teacherOverviewCard h2").textContent = t("studentOverview");
   document.querySelector(".article-editor .practice-heading .eyebrow").textContent = t("teacherArticles");
@@ -1546,6 +1557,7 @@ function updateStaticTexts() {
   setText("nextStartupQuizBtn", "next");
 
   renderCurrentProfileLabel();
+  renderProfileCreationControls();
   renderCategories();
   renderArticles();
 }
@@ -1782,6 +1794,18 @@ function renderAuthControls(message = "") {
 
   $("linkGoogleAccountBtn")?.classList.toggle("hidden", linked && Boolean(email));
   $("signOutGoogleBtn")?.classList.toggle("hidden", !email);
+}
+
+function canCreateProfiles() {
+  return isAdminProfile() || Boolean(state.currentProfile?.authUserId && state.authUser?.id === state.currentProfile.authUserId);
+}
+
+function renderProfileCreationControls() {
+  const canBootstrap = !state.profiles.length;
+  const showPublicCreation = canBootstrap;
+  $("registerProfileBtn")?.classList.toggle("hidden", !showPublicCreation);
+  $("setupPairBtn")?.classList.toggle("hidden", !showPublicCreation);
+  $("teacherProfilesTabBtn")?.classList.toggle("hidden", !canCreateProfiles());
 }
 
 async function supabaseRequest(path, options = {}) {
@@ -3343,6 +3367,7 @@ async function setCurrentProfile(profile) {
   renderRoleControls();
   renderCurrentProfileLabel();
   renderAuthControls();
+  renderProfileCreationControls();
   updateStaticTexts();
   $("settingsBtn").classList.remove("hidden");
   $("teacherBtn").classList.remove("hidden");
@@ -3358,14 +3383,19 @@ function showLogin() {
   $("shareAppBtn").classList.add("hidden");
   renderNativeLanguageControls();
   updateStaticTexts();
+  renderProfileCreationControls();
   showView(state.profiles.length ? "loginView" : "setupView");
 }
 
 function showSetup() {
+  if (state.profiles.length && !canCreateProfiles()) {
+    showLogin();
+    return;
+  }
   stopReading();
-  $("settingsBtn").classList.add("hidden");
-  $("teacherBtn").classList.add("hidden");
-  $("shareAppBtn").classList.add("hidden");
+  $("settingsBtn").classList.toggle("hidden", !state.currentProfile);
+  $("teacherBtn").classList.toggle("hidden", !state.currentProfile);
+  $("shareAppBtn").classList.toggle("hidden", !state.currentProfile);
   renderNativeLanguageControls();
   updateStaticTexts();
   showView("setupView");
@@ -3422,6 +3452,11 @@ async function login() {
 }
 
 async function registerProfileFromLogin() {
+  if (state.profiles.length) {
+    $("loginError").textContent = t("registrationClosed");
+    return;
+  }
+
   const name = $("loginNameInput").value.trim();
   const pin = $("loginPinInput").value.trim();
   const nativeLanguage = $("loginNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
@@ -3459,6 +3494,11 @@ async function registerProfileFromLogin() {
 }
 
 async function createProfiles() {
+  if (state.profiles.length && !canCreateProfiles()) {
+    $("setupError").textContent = t("authSignInFirst");
+    return;
+  }
+
   const teacherName = $("teacherNameInput").value.trim();
   const teacherPin = $("teacherPinInput").value.trim();
   const teacherRole = $("teacherRoleSelect").value;
@@ -3499,7 +3539,14 @@ async function createProfiles() {
   state.profiles = [...state.profiles, ...newProfiles];
   await saveProfiles();
   $("setupError").textContent = "";
-  await setCurrentProfile(newProfiles.find(profile => profile.role === "teacher") || newProfiles[0]);
+  if (state.currentProfile) {
+    await loadProfiles();
+    renderNativeLanguageControls();
+    renderProfileCreationControls();
+    await showTeacherView();
+  } else {
+    await setCurrentProfile(newProfiles.find(profile => profile.role === "teacher") || newProfiles[0]);
+  }
   newProfiles.forEach(profile => {
     logAppEvent("profile_created", {
       profileId: profile.id,
@@ -3527,6 +3574,7 @@ function setTeacherPanel(panel) {
   $("articleEditorCard").classList.toggle("hidden", showStudents);
   $("teacherOverviewCard").classList.toggle("hidden", !showStudents);
   $("teacherStudentsTabBtn").classList.toggle("hidden", !canShowStudents);
+  $("teacherProfilesTabBtn").classList.toggle("hidden", !canCreateProfiles());
   $("teacherArticlesTabBtn").classList.toggle("active", !showStudents);
   $("teacherStudentsTabBtn").classList.toggle("active", showStudents);
   $("teacherArticlesTabBtn").classList.toggle("quiet", showStudents);
@@ -4924,12 +4972,13 @@ onClick("teacherStudentsTabBtn", async () => {
   await renderTeacherOverview();
   setTeacherPanel("students");
 });
+onClick("teacherProfilesTabBtn", showSetup);
 onClick("refreshBtn", loadArticles);
 onClick("loginBtn", login);
 onClick("googleLoginBtn", signInWithGoogle);
 onClick("registerProfileBtn", registerProfileFromLogin);
 onClick("setupPairBtn", showSetup);
-onClick("setupBackBtn", showLogin);
+onClick("setupBackBtn", () => state.currentProfile ? showHome() : showLogin());
 onClick("createProfilesBtn", createProfiles);
 onClick("logoutBtn", logout);
 onClick("readAloudBtn", () => readSentence(0));
