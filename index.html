@@ -332,6 +332,13 @@
               Vygenerovaný prompt
               <textarea id="generatedPromptOutput" class="editor-textarea tall" readonly></textarea>
             </label>
+            <label class="field-row">
+              Hotový článok z ChatGPT vo formáte JSON
+              <textarea id="articleImportInput" class="editor-textarea tall" placeholder='{"title":"...","summary":"...","text":["..."],"vocabulary":[...],"inlineVocabulary":[...],"questions":[...]}'></textarea>
+            </label>
+            <div class="editor-actions">
+              <button id="importArticleBtn" class="secondary-btn" type="button">Vložiť do editora</button>
+            </div>
           </section>
 
           <div id="articleContentStep" class="editor-step hidden">

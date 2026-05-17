@@ -630,6 +630,10 @@ h3 { font-size: 1.1rem; }
   font-weight: 800;
 }
 
+.field-row.hidden {
+  display: none;
+}
+
 .field-row input {
   width: 100%;
   border: 1px solid var(--border);

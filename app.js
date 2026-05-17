@@ -151,6 +151,8 @@ const UI_TEXT = {
     articleTask: "Aufgabe für den Artikel",
     requiredWords: "Pflichtwörter, ein Wort oder eine Phrase pro Zeile",
     copyArticlePrompt: "Prompt für Artikel kopieren",
+    articleImportJson: "Fertiger Artikel aus ChatGPT im JSON-Format",
+    importArticle: "In den Editor einfügen",
     copyTranslationPrompt: "Wörter zum Übersetzen kopieren",
     copyQuestionsPrompt: "Prompt für Fragen kopieren",
     generatedPrompt: "Generierter Prompt",
@@ -302,6 +304,8 @@ const UI_TEXT = {
     articleTask: "Zadanie pre článok",
     requiredWords: "Povinné slová, jedno slovo alebo fráza na riadok",
     copyArticlePrompt: "Kopírovať prompt pre článok",
+    articleImportJson: "Hotový článok z ChatGPT vo formáte JSON",
+    importArticle: "Vložiť do editora",
     copyTranslationPrompt: "Kopírovať slovíčka na preklad",
     copyQuestionsPrompt: "Kopírovať prompt pre otázky",
     generatedPrompt: "Vygenerovaný prompt",
@@ -453,6 +457,8 @@ const UI_TEXT = {
     articleTask: "Задание для статьи",
     requiredWords: "Обязательные слова, одно слово или фраза в строке",
     copyArticlePrompt: "Копировать prompt для статьи",
+    articleImportJson: "Готовая статья из ChatGPT в формате JSON",
+    importArticle: "Вставить в редактор",
     copyTranslationPrompt: "Копировать слова для перевода",
     copyQuestionsPrompt: "Копировать prompt для вопросов",
     generatedPrompt: "Сгенерированный prompt",
@@ -604,6 +610,8 @@ const UI_TEXT = {
     articleTask: "Zadanie dla artykułu",
     requiredWords: "Wymagane słowa, jedno słowo albo fraza w wierszu",
     copyArticlePrompt: "Kopiuj prompt dla artykułu",
+    articleImportJson: "Gotowy artykuł z ChatGPT w formacie JSON",
+    importArticle: "Wstaw do edytora",
     copyTranslationPrompt: "Kopiuj słówka do tłumaczenia",
     copyQuestionsPrompt: "Kopiuj prompt dla pytań",
     generatedPrompt: "Wygenerowany prompt",
@@ -755,6 +763,8 @@ const UI_TEXT = {
     articleTask: "Cikkfeladat",
     requiredWords: "Kötelező szavak, soronként egy szó vagy kifejezés",
     copyArticlePrompt: "Cikk prompt másolása",
+    articleImportJson: "Kész ChatGPT-cikk JSON formátumban",
+    importArticle: "Beillesztés a szerkesztőbe",
     copyTranslationPrompt: "Szavak fordításának másolása",
     copyQuestionsPrompt: "Kérdések prompt másolása",
     generatedPrompt: "Generált prompt",
@@ -791,6 +801,9 @@ Object.assign(UI_TEXT.sk, {
   validationFillArticle: "Vyplň názov, ID, úroveň, kategóriu, popis a aspoň jeden odsek textu.",
   validationQuestion: "Pridaj aspoň jednu pravda/nepravda vetu.",
   validationVocabulary: "Pridaj aspoň jedno slovíčko s prekladom.",
+  validationImportArticle: "Vlož platný JSON článok z ChatGPT.",
+  articleImported: "Článok je vložený do editora. Skontroluj ho a ulož.",
+  editNotAllowed: "Tento článok môže upravovať iba jeho autor alebo administrátor.",
   copied: "Skopírované.",
   nothingToCopy: "Nie je čo kopírovať.",
   copyFailed: "Automatické kopírovanie zlyhalo. Prompt je zobrazený nižšie, skopíruj ho ručne.",
@@ -822,6 +835,10 @@ Object.assign(UI_TEXT.de, {
   articleSaved: "Der Artikel ist gespeichert.",
   validationFillArticle: "Fülle Titel, ID, Niveau, Kategorie, Beschreibung und mindestens einen Textabsatz aus.",
   validationQuestion: "Füge mindestens einen richtig/falsch-Satz hinzu.",
+  validationVocabulary: "Füge mindestens ein Wort mit Übersetzung hinzu.",
+  validationImportArticle: "Füge einen gültigen JSON-Artikel aus ChatGPT ein.",
+  articleImported: "Der Artikel wurde in den Editor eingefügt. Prüfe ihn und speichere.",
+  editNotAllowed: "Diesen Artikel darf nur der Autor oder ein Admin bearbeiten.",
   copied: "Kopiert.",
   nothingToCopy: "Es gibt nichts zu kopieren.",
   copyFailed: "Automatisches Kopieren ist fehlgeschlagen. Der Prompt ist unten sichtbar, kopiere ihn manuell.",
@@ -853,6 +870,10 @@ Object.assign(UI_TEXT.ru, {
   articleSaved: "Статья сохранена.",
   validationFillArticle: "Заполните название, ID, уровень, категорию, описание и хотя бы один абзац текста.",
   validationQuestion: "Добавьте хотя бы одно предложение правда/неправда.",
+  validationVocabulary: "Добавьте хотя бы одно слово с переводом.",
+  validationImportArticle: "Вставьте корректный JSON статьи из ChatGPT.",
+  articleImported: "Статья вставлена в редактор. Проверьте ее и сохраните.",
+  editNotAllowed: "Эту статью может редактировать только автор или администратор.",
   copied: "Скопировано.",
   nothingToCopy: "Нечего копировать.",
   copyFailed: "Автоматическое копирование не удалось. Prompt показан ниже, скопируйте его вручную.",
@@ -884,6 +905,10 @@ Object.assign(UI_TEXT.pl, {
   articleSaved: "Artykuł zapisany.",
   validationFillArticle: "Uzupełnij tytuł, ID, poziom, kategorię, opis i przynajmniej jeden akapit tekstu.",
   validationQuestion: "Dodaj przynajmniej jedno zdanie prawda/nieprawda.",
+  validationVocabulary: "Dodaj przynajmniej jedno słówko z tłumaczeniem.",
+  validationImportArticle: "Wklej poprawny JSON artykułu z ChatGPT.",
+  articleImported: "Artykuł został wstawiony do edytora. Sprawdź go i zapisz.",
+  editNotAllowed: "Ten artykuł może edytować tylko autor albo administrator.",
   copied: "Skopiowano.",
   nothingToCopy: "Nie ma czego kopiować.",
   copyFailed: "Automatyczne kopiowanie nie powiodło się. Prompt jest pokazany niżej, skopiuj go ręcznie.",
@@ -915,6 +940,10 @@ Object.assign(UI_TEXT.hu, {
   articleSaved: "A cikk mentve.",
   validationFillArticle: "Töltsd ki a címet, ID-t, szintet, kategóriát, leírást és legalább egy bekezdést.",
   validationQuestion: "Adj hozzá legalább egy igaz/hamis mondatot.",
+  validationVocabulary: "Adj hozzá legalább egy szót fordítással.",
+  validationImportArticle: "Illessz be érvényes ChatGPT-cikk JSON-t.",
+  articleImported: "A cikk bekerült a szerkesztőbe. Ellenőrizd és mentsd.",
+  editNotAllowed: "Ezt a cikket csak a szerzője vagy egy admin szerkesztheti.",
   copied: "Másolva.",
   nothingToCopy: "Nincs mit másolni.",
   copyFailed: "Az automatikus másolás nem sikerült. A prompt lent látható, másold ki kézzel.",
@@ -1219,6 +1248,8 @@ function updateStaticTexts() {
   setLabelText("articlePromptInput", "articleTask");
   setLabelText("articleRequiredWordsInput", "requiredWords");
   setText("copyArticlePromptBtn", "copyArticlePrompt");
+  setLabelText("articleImportInput", "articleImportJson");
+  setText("importArticleBtn", "importArticle");
   setText("copyTranslationPromptBtn", "copyTranslationPrompt");
   setText("copyQuestionsPromptBtn", "copyQuestionsPrompt");
   setLabelText("generatedPromptOutput", "generatedPrompt");
@@ -1470,17 +1501,18 @@ function getVisibleArticles() {
   return state.articles.filter(article => canViewArticle(article));
 }
 
+function isAdminProfile(profile = state.currentProfile) {
+  return Boolean(profile?.id && ADMIN_PROFILE_IDS.has(profile.id));
+}
+
+function canEditArticle(article, profile = state.currentProfile) {
+  if (!article || !profile) return false;
+  return isAdminProfile(profile) || article.ownerProfileId === profile.id;
+}
+
 function getEditableArticles() {
   if (!state.currentProfile) return [];
-  if (state.currentProfile.role === "teacher") {
-    return state.articles.filter(article =>
-      article.visibility === "public"
-      || article.ownerProfileId === state.currentProfile.id
-      || article.teacherGroupId === state.currentProfile.teacherGroupId
-      || !article.teacherGroupId
-    );
-  }
-  return state.articles.filter(article => article.ownerProfileId === state.currentProfile.id);
+  return state.articles.filter(article => canEditArticle(article));
 }
 
 async function saveRemoteArticles(articles, options = {}) {
@@ -3010,6 +3042,13 @@ function parseVocabularyDraftLines(value) {
 }
 
 function formatVocabularyLines(items = []) {
+  const language = getNativeLanguage();
+  const hasMultipleTranslations = items.some(item =>
+    ["sk", "ru", "pl", "hu"].filter(code => item[code]).length > (item[language] ? 1 : 0)
+  );
+  if (hasMultipleTranslations) {
+    return JSON.stringify(items.map(normalizeVocabularyImportItem).filter(Boolean), null, 2);
+  }
   return items.map(item => `${item.de} = ${getVocabularyTranslation(item)}`).join("\n");
 }
 
@@ -3027,6 +3066,90 @@ function mergeVocabularyTranslations(existingItems = [], parsedItems = [], langu
       ...(item[language] ? { [language]: item[language] } : {})
     };
   });
+}
+
+function stripJsonCodeFence(value) {
+  return value.trim()
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/i, "")
+    .trim();
+}
+
+function normalizeVocabularyImportItem(item) {
+  if (!item || typeof item !== "object") return null;
+  const normalized = {
+    de: (item.de || item.german || item.word || item.phrase || "").trim(),
+    sk: (item.sk || "").trim(),
+    ru: (item.ru || "").trim(),
+    pl: (item.pl || "").trim(),
+    hu: (item.hu || "").trim()
+  };
+  return normalized.de && (normalized.sk || normalized.ru || normalized.pl || normalized.hu)
+    ? normalized
+    : null;
+}
+
+function normalizeQuestionImportItem(item) {
+  if (typeof item === "string") {
+    const [statement, ...rest] = item.split("=");
+    return {
+      statement: (statement || "").trim(),
+      answer: ["true", "pravda", "p", "1", "ano", "áno"].includes(rest.join("=").trim().toLocaleLowerCase("sk"))
+    };
+  }
+  if (!item || typeof item !== "object") return null;
+  const answer = item.answer ?? item.correct ?? item.isTrue;
+  return {
+    statement: (item.statement || item.sentence || item.question || "").trim(),
+    answer: typeof answer === "boolean"
+      ? answer
+      : ["true", "pravda", "p", "1", "ano", "áno"].includes(String(answer || "").trim().toLocaleLowerCase("sk"))
+  };
+}
+
+function parseArticleImport(value) {
+  const text = stripJsonCodeFence(value);
+  if (!text) throw new Error(t("validationImportArticle"));
+
+  let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    throw new Error(t("validationImportArticle"));
+  }
+
+  const source = parsed.article && typeof parsed.article === "object" ? parsed.article : parsed;
+  const title = (source.title || "").trim();
+  const textParagraphs = Array.isArray(source.text)
+    ? source.text.map(item => String(item).trim()).filter(Boolean)
+    : linesToList(String(source.text || ""));
+  const vocabulary = (Array.isArray(source.vocabulary) ? source.vocabulary : [])
+    .map(normalizeVocabularyImportItem)
+    .filter(Boolean);
+  const inlineVocabulary = (Array.isArray(source.inlineVocabulary) ? source.inlineVocabulary : source.inline_vocabulary || [])
+    .map(normalizeVocabularyImportItem)
+    .filter(Boolean);
+  const questions = (Array.isArray(source.questions) ? source.questions : [])
+    .map(normalizeQuestionImportItem)
+    .filter(item => item?.statement);
+
+  const article = {
+    id: (source.id || makeArticleId(title)).trim(),
+    title,
+    level: (source.level || $("articleLevelInput").value || "A2-B1").trim(),
+    category: (source.category || getArticleEditorCategory()).trim(),
+    summary: (source.summary || source.description || "").trim(),
+    text: textParagraphs,
+    vocabulary,
+    inlineVocabulary,
+    questions
+  };
+
+  if (!article.title || !article.summary || !article.text.length || !article.vocabulary.length || !article.questions.length) {
+    throw new Error(t("validationImportArticle"));
+  }
+
+  return article;
 }
 
 function parseQuestionLines(value) {
@@ -3110,7 +3233,7 @@ const PROMPT_TEXT = {
       requiredWords.length
         ? `Tieto slová alebo frázy musia byť v texte použité každé minimálne 2x a maximálne 4x: ${requiredWords.join(", ")}.`
         : "",
-      "Vráť iba názov, krátky nemecký popis a nemecký text rozdelený na odseky."
+      "Vráť iba validný JSON podľa schémy nižšie. Nepíš žiadne vysvetlenia."
     ],
     translation: (missing) => [
       "Prelož tieto nemecké slová a frázy do slovenčiny, ruštiny, poľštiny a maďarčiny.",
@@ -3140,7 +3263,7 @@ const PROMPT_TEXT = {
       requiredWords.length
         ? `Эти немецкие слова или фразы должны быть использованы в тексте каждое минимум 2 раза и максимум 4 раза: ${requiredWords.join(", ")}.`
         : "",
-      "Верни только название, короткое немецкое описание и немецкий текст, разделенный на абзацы."
+      "Верни только валидный JSON по схеме ниже. Не добавляй объяснений."
     ],
     translation: (missing) => [
       "Переведи эти немецкие слова и фразы на словацкий, русский, польский и венгерский.",
@@ -3170,7 +3293,7 @@ const PROMPT_TEXT = {
       requiredWords.length
         ? `Te niemieckie słowa albo frazy muszą zostać użyte w tekście każde minimum 2 razy i maksimum 4 razy: ${requiredWords.join(", ")}.`
         : "",
-      "Zwróć tylko tytuł, krótki niemiecki opis i niemiecki tekst podzielony na akapity."
+      "Zwróć tylko poprawny JSON według schematu poniżej. Nie dodawaj wyjaśnień."
     ],
     translation: (missing) => [
       "Przetłumacz te niemieckie słowa i frazy na słowacki, rosyjski, polski i węgierski.",
@@ -3200,7 +3323,7 @@ const PROMPT_TEXT = {
       requiredWords.length
         ? `Ezeket a német szavakat vagy kifejezéseket a szövegben mindegyiket legalább 2-szer és legfeljebb 4-szer kell használni: ${requiredWords.join(", ")}.`
         : "",
-      "Csak a címet, egy rövid német leírást és a bekezdésekre tagolt német szöveget add vissza."
+      "Csak érvényes JSON-t adj vissza az alábbi séma szerint. Ne írj magyarázatot."
     ],
     translation: (missing) => [
       "Fordítsd le ezeket a német szavakat és kifejezéseket szlovákra, oroszra, lengyelre és magyarra.",
@@ -3228,6 +3351,34 @@ function getPromptText() {
   return PROMPT_TEXT[getUiLanguage()] || PROMPT_TEXT[DEFAULT_NATIVE_LANGUAGE];
 }
 
+function getArticleJsonPromptInstructions(level) {
+  return [
+    "",
+    "JSON schéma:",
+    "{",
+    "  \"title\": \"nemecký názov článku\",",
+    `  \"level\": \"${level}\",`,
+    "  \"category\": \"kategória alebo téma\",",
+    "  \"summary\": \"krátky nemecký popis článku\",",
+    "  \"text\": [\"odsek 1\", \"odsek 2\", \"odsek 3\"],",
+    "  \"vocabulary\": [",
+    "    {\"de\":\"slovo alebo fráza z textu\",\"sk\":\"slovenský preklad\",\"ru\":\"ruský preklad\",\"pl\":\"poľský preklad\",\"hu\":\"maďarský preklad\"}",
+    "  ],",
+    "  \"inlineVocabulary\": [",
+    "    {\"de\":\"ustálené spojenie, veta, fráza alebo zaujímavý výraz z textu\",\"sk\":\"slovenský preklad\",\"ru\":\"ruský preklad\",\"pl\":\"poľský preklad\",\"hu\":\"maďarský preklad\"}",
+    "  ],",
+    "  \"questions\": [",
+    "    {\"statement\":\"nemecká pravda/nepravda veta\",\"answer\":true}",
+    "  ]",
+    "}",
+    "",
+    `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
+    "Do \"inlineVocabulary\" pridaj 5 až 10 ustálených spojení, celých fráz alebo výrazov z textu, ktoré môžu byť pre študenta neznáme. Neopakuj položky z \"vocabulary\".",
+    "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false.",
+    "Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, sk, ru, pl, hu."
+  ];
+}
+
 function buildArticlePrompt() {
   const topic = $("articlePromptInput").value.trim();
   const level = $("articleLevelInput").value.trim() || "A2-B1";
@@ -3235,7 +3386,29 @@ function buildArticlePrompt() {
   const requiredWords = linesToList($("articleRequiredWordsInput").value);
   addRequiredWordsToVocabulary();
 
-  return getPromptText().article({ level, category, topic, requiredWords }).filter(Boolean).join("\n");
+  return [
+    ...getPromptText().article({ level, category, topic, requiredWords }),
+    ...getArticleJsonPromptInstructions(level)
+  ].filter(Boolean).join("\n");
+}
+
+function importArticleToEditor() {
+  try {
+    const article = parseArticleImport($("articleImportInput").value);
+    $("articleEditorSelect").value = "";
+    fillArticleEditor({
+      ...article,
+      visibility: DEFAULT_ARTICLE_VISIBILITY,
+      approvalStatus: DEFAULT_ARTICLE_APPROVAL_STATUS
+    });
+    $("articleVocabularyInput").value = JSON.stringify(article.vocabulary, null, 2);
+    $("articleInlineVocabularyInput").value = JSON.stringify(article.inlineVocabulary, null, 2);
+    $("articleQuestionsInput").value = formatQuestionLines(article.questions);
+    $("articleEditorStatus").textContent = t("articleImported");
+    updateArticleEditorFlow();
+  } catch (error) {
+    $("articleEditorStatus").textContent = error.message;
+  }
 }
 
 function addRequiredWordsToVocabulary() {
@@ -3365,8 +3538,7 @@ function fillArticleEditor(article) {
 function canModerateArticleApproval(article) {
   return Boolean(
     article
-    && state.currentProfile?.id
-    && ADMIN_PROFILE_IDS.has(state.currentProfile.id)
+    && isAdminProfile()
   );
 }
 
@@ -3394,9 +3566,16 @@ function updateArticleApprovalControl(article = state.articles.find(item => item
 
 function readArticleEditor() {
   const existingArticle = state.articles.find(item => item.id === $("articleEditorSelect").value);
+  if (existingArticle && !canEditArticle(existingArticle)) {
+    throw new Error(t("editNotAllowed"));
+  }
   const language = getNativeLanguage();
   const title = $("articleTitleInput").value.trim();
   const id = ($("articleIdInput").value.trim() || makeArticleId(title));
+  const idArticle = state.articles.find(item => item.id === id);
+  if (idArticle && idArticle.id !== existingArticle?.id && !canEditArticle(idArticle)) {
+    throw new Error(t("editNotAllowed"));
+  }
   const visibility = $("articleVisibilitySelect").value || DEFAULT_ARTICLE_VISIBILITY;
   const selectedApprovalStatus = $("articleApprovalStatusSelect").value || DEFAULT_ARTICLE_APPROVAL_STATUS;
   const approvalStatus = visibility === "public"
@@ -3782,6 +3961,7 @@ onClick("copyArticlePromptBtn", async () => {
   await copyTextToClipboard(buildArticlePrompt(), t("promptArticleCopied"));
   updateArticleEditorFlow();
 });
+onClick("importArticleBtn", importArticleToEditor);
 onClick("copyTranslationPromptBtn", () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied")));
 onClick("copyQuestionsPromptBtn", () => copyTextToClipboard(buildQuestionsPrompt(), t("promptQuestionsCopied")));
 
