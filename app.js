@@ -3843,8 +3843,6 @@ function buildArticlePrompt() {
 
 function buildArticleJsonPrompt() {
   const text = $("articleTextInput").value.trim();
-  if (!text) return "";
-
   const level = $("articleLevelInput").value.trim() || "A2-B1";
   const category = getArticleEditorCategory();
   const title = $("articleTitleInput").value.trim();
@@ -3860,7 +3858,9 @@ function buildArticleJsonPrompt() {
     category ? `Kategória: ${category}.` : "",
     ...getArticleJsonPromptInstructions(level),
     "",
-    "Hotový nemecký text:",
+    text
+      ? "Hotový nemecký text:"
+      : "Hotový nemecký text je tvoja posledná odpoveď v tomto chate. Použi práve túto poslednú nemeckú odpoveď.",
     text
   ].filter(Boolean).join("\n");
 }
