@@ -1587,6 +1587,10 @@ function getAuthAccessToken() {
   return state.authSession?.access_token || null;
 }
 
+function getCurrentAuthUserId() {
+  return state.authUser?.id || null;
+}
+
 async function supabaseAuthRequest(path, options = {}) {
   if (!state.remoteReady) return null;
 
@@ -1732,8 +1736,11 @@ async function linkCurrentProfileToAuthUser(statusTarget = "authAccountStatus") 
   }
 
   state.currentProfile.authUserId = user.id;
+  state.currentProfile.ownerAuthUserId = state.currentProfile.ownerAuthUserId || user.id;
   state.profiles = state.profiles.map(profile =>
-    profile.id === state.currentProfile.id ? { ...profile, authUserId: user.id } : profile
+    profile.id === state.currentProfile.id
+      ? { ...profile, authUserId: user.id, ownerAuthUserId: profile.ownerAuthUserId || user.id }
+      : profile
   );
   await saveProfiles();
   renderAuthControls(t("authLinkSuccess"));
@@ -1797,7 +1804,12 @@ function renderAuthControls(message = "") {
 }
 
 function canCreateProfiles() {
-  return isAdminProfile() || Boolean(state.currentProfile?.authUserId && state.authUser?.id === state.currentProfile.authUserId);
+  const authUserId = getCurrentAuthUserId();
+  return isAdminProfile()
+    || Boolean(authUserId && (
+      state.currentProfile?.authUserId === authUserId
+      || state.currentProfile?.ownerAuthUserId === authUserId
+    ));
 }
 
 function renderProfileCreationControls() {
@@ -1810,12 +1822,13 @@ function renderProfileCreationControls() {
 
 async function supabaseRequest(path, options = {}) {
   if (!state.remoteReady) return null;
+  const accessToken = getAuthAccessToken();
 
   const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/rest/v1/${path}`, {
     ...options,
     headers: {
       apikey: SUPABASE_CONFIG.anonKey,
-      Authorization: `Bearer ${SUPABASE_CONFIG.anonKey}`,
+      Authorization: `Bearer ${accessToken || SUPABASE_CONFIG.anonKey}`,
       "Content-Type": "application/json",
       ...(options.headers || {})
     }
@@ -1831,12 +1844,13 @@ async function supabaseRequest(path, options = {}) {
 
 async function supabaseStorageRequest(path, options = {}) {
   if (!state.remoteReady) return null;
+  const accessToken = getAuthAccessToken();
 
   const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/storage/v1/${path}`, {
     ...options,
     headers: {
       apikey: SUPABASE_CONFIG.anonKey,
-      Authorization: `Bearer ${SUPABASE_CONFIG.anonKey}`,
+      Authorization: `Bearer ${accessToken || SUPABASE_CONFIG.anonKey}`,
       ...(options.headers || {})
     }
   });
@@ -1947,7 +1961,7 @@ async function loadProfiles() {
   try {
     let profiles;
     try {
-      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id,auth_user_id&order=role.desc,name.asc");
+      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id,auth_user_id,owner_auth_user_id&order=role.desc,name.asc");
     } catch (error) {
       profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id&order=role.desc,name.asc");
     }
@@ -1992,6 +2006,7 @@ function normalizeProfile(profile) {
     ...profile,
     teacherGroupId: profile?.teacherGroupId || profile?.teacher_group_id || null,
     authUserId: profile?.authUserId || profile?.auth_user_id || null,
+    ownerAuthUserId: profile?.ownerAuthUserId || profile?.owner_auth_user_id || profile?.authUserId || profile?.auth_user_id || null,
     nativeLanguage: isSupportedNativeLanguage(profile?.nativeLanguage)
       ? profile.nativeLanguage
       : DEFAULT_NATIVE_LANGUAGE
@@ -2016,7 +2031,8 @@ function rowToProfile(row) {
     role: row.role,
     nativeLanguage: row.native_language,
     teacherGroupId: row.teacher_group_id,
-    authUserId: row.auth_user_id
+    authUserId: row.auth_user_id,
+    ownerAuthUserId: row.owner_auth_user_id
   });
 }
 
@@ -2028,7 +2044,8 @@ function profileToRow(profile) {
     role: profile.role,
     teacher_group_id: profile.teacherGroupId || profile.id,
     native_language: getNativeLanguage(profile),
-    auth_user_id: profile.authUserId || null
+    auth_user_id: profile.authUserId || null,
+    owner_auth_user_id: profile.ownerAuthUserId || profile.authUserId || null
   };
 }
 
@@ -3460,6 +3477,7 @@ async function registerProfileFromLogin() {
   const name = $("loginNameInput").value.trim();
   const pin = $("loginPinInput").value.trim();
   const nativeLanguage = $("loginNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
+  const ownerAuthUserId = getCurrentAuthUserId();
 
   if (!name || !pin) {
     $("loginError").textContent = t("loginFill");
@@ -3477,7 +3495,8 @@ async function registerProfileFromLogin() {
     pin,
     role: "student",
     teacherGroupId: makeProfileId(name),
-    nativeLanguage
+    nativeLanguage,
+    ownerAuthUserId
   };
 
   state.profiles = [...state.profiles, profile];
@@ -3532,9 +3551,10 @@ async function createProfiles() {
   const firstProfileId = makeProfileId(teacherName);
   const secondProfileId = makeProfileId(studentName);
   const groupId = teacherRole === "teacher" ? firstProfileId : secondProfileId;
+  const ownerAuthUserId = getCurrentAuthUserId() || state.currentProfile?.ownerAuthUserId || state.currentProfile?.authUserId || null;
   const newProfiles = [
-    { id: firstProfileId, name: teacherName, pin: teacherPin, role: teacherRole, teacherGroupId: groupId, nativeLanguage: teacherNativeLanguage },
-    { id: secondProfileId, name: studentName, pin: studentPin, role: studentRole, teacherGroupId: groupId, nativeLanguage: studentNativeLanguage }
+    { id: firstProfileId, name: teacherName, pin: teacherPin, role: teacherRole, teacherGroupId: groupId, nativeLanguage: teacherNativeLanguage, ownerAuthUserId },
+    { id: secondProfileId, name: studentName, pin: studentPin, role: studentRole, teacherGroupId: groupId, nativeLanguage: studentNativeLanguage, ownerAuthUserId }
   ];
   state.profiles = [...state.profiles, ...newProfiles];
   await saveProfiles();

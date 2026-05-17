@@ -4,6 +4,7 @@ create table if not exists public.app_profiles (
   pin text not null,
   role text not null check (role in ('teacher', 'student')),
   auth_user_id uuid unique references auth.users(id) on delete set null,
+  owner_auth_user_id uuid references auth.users(id) on delete set null,
   teacher_group_id text,
   native_language text not null default 'sk' check (native_language in ('sk', 'ru', 'pl', 'hu'))
 );
@@ -16,6 +17,30 @@ add column if not exists teacher_group_id text;
 
 alter table public.app_profiles
 add column if not exists auth_user_id uuid unique references auth.users(id) on delete set null;
+
+alter table public.app_profiles
+add column if not exists owner_auth_user_id uuid references auth.users(id) on delete set null;
+
+update public.app_profiles
+set owner_auth_user_id = auth_user_id
+where owner_auth_user_id is null
+  and auth_user_id is not null;
+
+update public.app_profiles
+set owner_auth_user_id = (
+  select owner_profile.auth_user_id
+  from public.app_profiles owner_profile
+  where owner_profile.id = 'tomas'
+    and owner_profile.auth_user_id is not null
+  limit 1
+)
+where owner_auth_user_id is null
+  and exists (
+    select 1
+    from public.app_profiles owner_profile
+    where owner_profile.id = 'tomas'
+      and owner_profile.auth_user_id is not null
+  );
 
 create table if not exists public.app_profile_data (
   profile_id text primary key references public.app_profiles(id) on delete cascade,
@@ -258,14 +283,26 @@ using (true);
 
 create policy "app_profiles_insert"
 on public.app_profiles for insert
-to anon, authenticated
-with check (true);
+to authenticated
+with check (
+  owner_auth_user_id is null
+  or owner_auth_user_id = auth.uid()
+  or auth_user_id = auth.uid()
+);
 
 create policy "app_profiles_update"
 on public.app_profiles for update
-to anon, authenticated
-using (true)
-with check (true);
+to authenticated
+using (
+  owner_auth_user_id is null
+  or owner_auth_user_id = auth.uid()
+  or auth_user_id = auth.uid()
+)
+with check (
+  owner_auth_user_id is null
+  or owner_auth_user_id = auth.uid()
+  or auth_user_id = auth.uid()
+);
 
 create policy "app_profile_data_select"
 on public.app_profile_data for select
