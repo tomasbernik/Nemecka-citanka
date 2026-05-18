@@ -48,13 +48,26 @@ using (true);
 create policy "app_profiles_insert"
 on public.app_profiles for insert
 to anon, authenticated
-with check (true);
+with check (
+  auth.role() = 'anon'
+  or owner_auth_user_id is null
+  or owner_auth_user_id = auth.uid()
+  or auth_user_id = auth.uid()
+);
 
 create policy "app_profiles_update"
 on public.app_profiles for update
-to anon, authenticated
-using (true)
-with check (true);
+to authenticated
+using (
+  owner_auth_user_id is null
+  or owner_auth_user_id = auth.uid()
+  or auth_user_id = auth.uid()
+)
+with check (
+  owner_auth_user_id is null
+  or owner_auth_user_id = auth.uid()
+  or auth_user_id = auth.uid()
+);
 
 create policy "app_profile_data_select"
 on public.app_profile_data for select

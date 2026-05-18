@@ -27,9 +27,10 @@ drop policy if exists "app_profiles_update" on public.app_profiles;
 
 create policy "app_profiles_insert"
 on public.app_profiles for insert
-to authenticated
+to anon, authenticated
 with check (
-  owner_auth_user_id is null
+  auth.role() = 'anon'
+  or owner_auth_user_id is null
   or owner_auth_user_id = auth.uid()
   or auth_user_id = auth.uid()
 );

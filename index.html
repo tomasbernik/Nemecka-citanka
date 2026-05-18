@@ -93,6 +93,11 @@
           <p id="loginError" class="form-error"></p>
           <button id="loginBtn" class="primary-btn">Anmelden</button>
           <button id="googleLoginBtn" class="secondary-btn quiet" type="button">Mit Google anmelden</button>
+          <label class="field-row auth-email-row">
+            E-Mail
+            <input id="magicEmailInput" type="email" autocomplete="email">
+          </label>
+          <button id="magicLinkBtn" class="secondary-btn quiet" type="button">Anmeldelink senden</button>
           <button id="registerProfileBtn" class="secondary-btn quiet hidden" type="button">Neues Profil erstellen</button>
           <button id="setupPairBtn" class="secondary-btn quiet hidden" type="button">Zwei Profile einrichten</button>
         </div>
@@ -292,6 +297,32 @@
           <p class="eyebrow">Učiteľský pohľad</p>
           <h2>Prehľad žiakov</h2>
           <div id="teacherOverview"></div>
+        </div>
+
+        <div id="profileManagerCard" class="reader-card hidden">
+          <p class="eyebrow" id="profileManagerEyebrow">Profily</p>
+          <h2 id="profileManagerTitle">Nový profil</h2>
+          <label class="field-row">
+            Meno
+            <input id="newProfileNameInput" autocomplete="given-name">
+          </label>
+          <label class="field-row">
+            PIN
+            <input id="newProfilePinInput" inputmode="numeric" type="password" autocomplete="new-password">
+          </label>
+          <label class="field-row">
+            Rola
+            <select id="newProfileRoleSelect">
+              <option value="student">Žiak</option>
+              <option value="teacher">Učiteľ</option>
+            </select>
+          </label>
+          <label class="field-row">
+            Materinský jazyk
+            <select id="newProfileNativeLanguageSelect"></select>
+          </label>
+          <p id="newProfileStatus" class="form-error"></p>
+          <button id="createSingleProfileBtn" class="primary-btn" type="button">Vytvoriť profil</button>
         </div>
 
         <div id="articleEditorCard" class="reader-card article-editor">

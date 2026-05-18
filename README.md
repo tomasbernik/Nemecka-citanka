@@ -71,9 +71,14 @@ Pre spoločné dáta medzi dvoma mobilmi:
 ```js
 window.NC_SUPABASE_CONFIG = {
   url: "https://tvoj-projekt.supabase.co",
-  anonKey: "tvoj-anon-public-kluc"
+  anonKey: "tvoj-anon-public-kluc",
+  authRedirectUrl: "https://tvoja-adresa-appky.example"
 };
 ```
+
+Pre prihlasenie cez Google aj magic link zapni v Supabase `Authentication`.
+Pri magic linku povol email prihlasovanie/OTP a v URL konfiguracii pridaj adresu appky medzi povolene redirect URL.
+V Supabase nastav `Site URL` aj `Redirect URLs` na realnu adresu appky, nie na `localhost`. `localhost` funguje iba na tom istom zariadeni, kde bezi vyvojovy server.
 
 Admini, ktorí môžu schvaľovať verejné články, sa nastavujú v `config.js`:
 
