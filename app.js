@@ -3185,6 +3185,8 @@ async function saveProfileData() {
   if (!state.remoteReady) return;
 
   try {
+    state.profileData = await mergeRemoteProfileDataBeforeOwnSave(state.currentProfile, state.profileData);
+    localStorage.setItem(profileDataKey(state.currentProfile.id), JSON.stringify(state.profileData));
     await supabaseRequest("app_profile_data?on_conflict=profile_id", {
       method: "POST",
       headers: { Prefer: "resolution=merge-duplicates" },
@@ -3197,6 +3199,41 @@ async function saveProfileData() {
   } catch (error) {
     console.error(error);
   }
+}
+
+async function mergeRemoteProfileDataBeforeOwnSave(profile, localData) {
+  if (!profile || !state.remoteReady) return localData;
+
+  try {
+    const rows = await supabaseRequest(`app_profile_data?profile_id=eq.${encodeURIComponent(profile.id)}&select=data`);
+    const remoteData = rows?.[0]?.data;
+    if (!remoteData) return localData;
+
+    return mergeProfileDataPreservingRemoteAssignments(localData, remoteData);
+  } catch (error) {
+    console.error(error);
+    return localData;
+  }
+}
+
+function mergeProfileDataPreservingRemoteAssignments(localData, remoteData) {
+  const merged = {
+    ...emptyProfileData(),
+    ...(remoteData || {}),
+    ...(localData || {})
+  };
+
+  merged.assignments = Array.isArray(remoteData?.assignments)
+    ? getAssignments(remoteData)
+    : getAssignments(localData);
+  merged.seenAssignmentIds = mergeUniqueValues(localData?.seenAssignmentIds, remoteData?.seenAssignmentIds);
+  merged.openedAssignmentIds = mergeUniqueValues(localData?.openedAssignmentIds, remoteData?.openedAssignmentIds);
+
+  return merged;
+}
+
+function mergeUniqueValues(primary = [], secondary = []) {
+  return [...new Set([...(Array.isArray(primary) ? primary : []), ...(Array.isArray(secondary) ? secondary : [])])];
 }
 
 async function saveProfileDataForProfile(profile, data) {
