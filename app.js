@@ -1742,9 +1742,15 @@ function readAuthSessionFromHash() {
 
 async function refreshAuthSession() {
   const session = state.authSession || getStoredAuthSession();
-  if (!session?.refresh_token) return session || null;
-
   const expiresAt = Number(session.expires_at || 0);
+  if (!session?.refresh_token) {
+    if (expiresAt && expiresAt - 60 <= Math.floor(Date.now() / 1000)) {
+      saveAuthSession(null);
+      return null;
+    }
+    return session || null;
+  }
+
   if (expiresAt && expiresAt - 60 > Math.floor(Date.now() / 1000)) return session;
 
   const refreshed = await supabaseAuthRequest("token?grant_type=refresh_token", {
@@ -1760,6 +1766,18 @@ async function refreshAuthSession() {
   };
   saveAuthSession(nextSession);
   return nextSession;
+}
+
+async function getFreshAuthAccessToken() {
+  try {
+    const session = await refreshAuthSession();
+    return session?.access_token || null;
+  } catch (error) {
+    console.info("Auth refresh skipped:", error.message);
+    saveAuthSession(null);
+    state.authUser = null;
+    return null;
+  }
 }
 
 async function loadAuthUser() {
@@ -2155,7 +2173,7 @@ async function claimInvite(tokenValue) {
 
 async function supabaseRequest(path, options = {}) {
   if (!state.remoteReady) return null;
-  const accessToken = getAuthAccessToken();
+  const accessToken = await getFreshAuthAccessToken();
 
   const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/rest/v1/${path}`, {
     ...options,
@@ -2177,7 +2195,7 @@ async function supabaseRequest(path, options = {}) {
 
 async function supabaseStorageRequest(path, options = {}) {
   if (!state.remoteReady) return null;
-  const accessToken = getAuthAccessToken();
+  const accessToken = await getFreshAuthAccessToken();
 
   const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/storage/v1/${path}`, {
     ...options,
@@ -4344,6 +4362,18 @@ function getArticleImagePublicUrl(path) {
 }
 
 async function imageFileToJpegBlob(file) {
+  const bitmap = typeof createImageBitmap === "function"
+    ? await createImageBitmap(file).catch(() => null)
+    : null;
+
+  if (bitmap) {
+    try {
+      return await drawImageAsJpegBlob(bitmap, bitmap.width, bitmap.height);
+    } finally {
+      bitmap.close?.();
+    }
+  }
+
   const imageUrl = URL.createObjectURL(file);
   const image = new Image();
   image.decoding = "async";
@@ -4351,31 +4381,36 @@ async function imageFileToJpegBlob(file) {
   try {
     await new Promise((resolve, reject) => {
       image.onload = resolve;
-      image.onerror = reject;
+      image.onerror = () => reject(new Error("Prehliadač nevie načítať vybraný obrázok."));
       image.src = imageUrl;
     });
 
-    const scale = Math.min(1, ARTICLE_IMAGE_MAX_WIDTH / image.naturalWidth);
-    const width = Math.max(1, Math.round(image.naturalWidth * scale));
-    const height = Math.max(1, Math.round(image.naturalHeight * scale));
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-
-    const context = canvas.getContext("2d");
-    context.fillStyle = "#ffffff";
-    context.fillRect(0, 0, width, height);
-    context.drawImage(image, 0, 0, width, height);
-
-    return await new Promise((resolve, reject) => {
-      canvas.toBlob(blob => {
-        if (blob) resolve(blob);
-        else reject(new Error(t("imageUploadFailed")));
-      }, "image/jpeg", ARTICLE_IMAGE_JPEG_QUALITY);
-    });
+    return await drawImageAsJpegBlob(image, image.naturalWidth, image.naturalHeight);
   } finally {
     URL.revokeObjectURL(imageUrl);
   }
+}
+
+async function drawImageAsJpegBlob(image, sourceWidth, sourceHeight) {
+  const scale = Math.min(1, ARTICLE_IMAGE_MAX_WIDTH / sourceWidth);
+  const width = Math.max(1, Math.round(sourceWidth * scale));
+  const height = Math.max(1, Math.round(sourceHeight * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Prehliadač nevie pripraviť obrázok na upload.");
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+
+  return await new Promise((resolve, reject) => {
+    canvas.toBlob(blob => {
+      if (blob) resolve(blob);
+      else reject(new Error("Prehliadač nevie previesť obrázok na JPG."));
+    }, "image/jpeg", ARTICLE_IMAGE_JPEG_QUALITY);
+  });
 }
 
 async function uploadArticleImage(article) {
@@ -5122,7 +5157,7 @@ async function saveArticleFromEditor() {
     $("articleEditorStatus").textContent = t("articleSaved");
   } catch (error) {
     $("articleEditorStatus").textContent = error.message.includes("Supabase Storage")
-      ? t("imageUploadFailed")
+      ? `${t("imageUploadFailed")} ${error.message}`
       : error.message;
   }
 }
