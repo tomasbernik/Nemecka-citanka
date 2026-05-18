@@ -20,6 +20,8 @@ const ARTICLE_IMAGE_JPEG_QUALITY = 0.72;
 const ALL_CATEGORIES = "__all__";
 const UNREAD_CATEGORY = "__unread__";
 const NEW_CATEGORY_VALUE = "__new_category__";
+const ALL_LEVELS = "__all_levels__";
+const CATEGORY_SEPARATOR = " | ";
 const NATIVE_LANGUAGES = {
   sk: { label: "Slovenčina", promptName: "slovenčiny", lineFormat: "slovensky", locale: "sk" },
   ru: { label: "Русский", promptName: "ruštiny", lineFormat: "rusky", locale: "ru" },
@@ -1234,6 +1236,7 @@ const state = {
   profiles: [],
   preLoginLanguage: DEFAULT_PRELOGIN_LANGUAGE,
   selectedCategory: ALL_CATEGORIES,
+  selectedLevel: ALL_LEVELS,
   currentArticle: null,
   currentProfile: null,
   authSession: null,
@@ -1384,6 +1387,26 @@ function getCategoryLabel(category) {
   return CATEGORY_LABELS[category]?.[getUiLanguage()] || category;
 }
 
+function getArticleCategoriesForFilter(article) {
+  return String(article?.category || "")
+    .split("|")
+    .map(category => category.trim())
+    .filter(Boolean);
+}
+
+function getPrimaryArticleCategory(article) {
+  return getArticleCategoriesForFilter(article)[0] || article?.category || "";
+}
+
+function formatArticleCategories(article) {
+  return getArticleCategoriesForFilter(article).map(getCategoryLabel).join(", ");
+}
+
+function normalizeArticleLevel(level) {
+  const match = String(level || "").toUpperCase().match(/A1|A2|B1|B2|C1|C2/);
+  return match?.[0] || String(level || "").trim();
+}
+
 function normalizeName(value) {
   return value.trim().toLocaleLowerCase("sk");
 }
@@ -1481,7 +1504,8 @@ function emptyProfileData() {
     discoveredVocabulary: {},
     answers: {},
     practiceLog: [],
-    completedTasks: {}
+    completedTasks: {},
+    assignments: []
   };
 }
 
@@ -1607,6 +1631,8 @@ function updateStaticTexts() {
   setLabelText("articleEditorSelect", "editArticle");
   setLabelText("articleCategorySelect", "category");
   setLabelText("articleCategoryInput", "newCategory");
+  setLabelText("articleCategory2Select", "category");
+  setLabelText("articleCategory2Input", "newCategory");
   setLabelText("articleVisibilitySelect", "visibility");
   setOptionText("articleVisibilitySelect", "private", "privateArticle");
   setOptionText("articleVisibilitySelect", "public", "publicAfterApproval");
@@ -1647,6 +1673,7 @@ function updateStaticTexts() {
   renderCurrentProfileLabel();
   renderProfileCreationControls();
   renderCategories();
+  renderLevelFilters();
   renderArticles();
 }
 
@@ -2462,6 +2489,7 @@ async function loadArticles() {
   }
 
   renderCategories();
+  renderLevelFilters();
   renderArticles();
 }
 
@@ -2594,8 +2622,9 @@ async function saveArticle(article) {
     state.articles = [article, ...state.articles];
   }
   renderCategories();
+  renderLevelFilters();
   renderArticles();
-  renderArticleCategoryOptions(article.category);
+  renderArticleCategoryOptionsMulti(article.category);
   renderArticleEditorList(article.id);
 }
 
@@ -2604,12 +2633,26 @@ function getCategories() {
   const seen = new Set();
 
   getVisibleArticles().forEach(article => {
-    if (!article.category || seen.has(article.category)) return;
-    seen.add(article.category);
-    categories.push(article.category);
+    getArticleCategoriesForFilter(article).forEach(category => {
+      if (!category || seen.has(category)) return;
+      seen.add(category);
+      categories.push(category);
+    });
   });
 
   return [ALL_CATEGORIES, UNREAD_CATEGORY, ...categories];
+}
+
+function getArticleLevels() {
+  const levels = [];
+  const seen = new Set();
+  getVisibleArticles().forEach(article => {
+    const level = normalizeArticleLevel(article.level);
+    if (!level || seen.has(level)) return;
+    seen.add(level);
+    levels.push(level);
+  });
+  return [ALL_LEVELS, ...levels.sort((a, b) => a.localeCompare(b, "sk", { numeric: true }))];
 }
 
 function getArticleCategories() {
@@ -2649,14 +2692,35 @@ function renderCategories() {
   }
 }
 
+function renderLevelFilters() {
+  const root = $("levelFilters");
+  if (!root) return;
+  const levels = getArticleLevels();
+  root.innerHTML = "";
+  levels.forEach(level => {
+    const btn = document.createElement("button");
+    btn.className = "chip" + (level === state.selectedLevel ? " active" : "");
+    btn.textContent = level === ALL_LEVELS ? "Všetky úrovne" : level;
+    btn.onclick = () => {
+      state.selectedLevel = level;
+      renderLevelFilters();
+      renderArticles();
+    };
+    root.appendChild(btn);
+  });
+}
+
 function renderArticles() {
   const root = $("articleList");
   const articles = getVisibleArticles().filter(article => {
+    const levelMatches = state.selectedLevel === ALL_LEVELS
+      || normalizeArticleLevel(article.level) === state.selectedLevel;
+    if (!levelMatches) return false;
     if (state.selectedCategory === ALL_CATEGORIES) return true;
     if (state.selectedCategory === UNREAD_CATEGORY) {
       return !state.profileData.readIds.includes(article.id);
     }
-    return article.category === state.selectedCategory;
+    return getArticleCategoriesForFilter(article).includes(state.selectedCategory);
   });
 
   root.innerHTML = "";
@@ -2675,7 +2739,8 @@ function renderArticles() {
         <p>${escapeHtml(article.summary)}</p>
         <div class="badges">
           <span class="badge">${escapeHtml(article.level)}</span>
-          <span class="badge">${escapeHtml(getCategoryLabel(article.category))}</span>
+          ${getArticleCategoriesForFilter(article).map(category => `<span class="badge">${escapeHtml(getCategoryLabel(category))}</span>`).join("")}
+          ${isArticleAssignedToProfile(article.id) ? `<span class="badge">Zadané</span>` : ""}
           ${article.visibility === "private" ? `<span class="badge">${escapeHtml(t("private"))}</span>` : ""}
           ${article.visibility === "public" && article.approvalStatus !== "approved" ? `<span class="badge">${escapeHtml(t("pendingApproval"))}</span>` : ""}
           ${isRead ? `<span class="badge">✓ ${escapeHtml(t("read"))}</span>` : ""}
@@ -2857,6 +2922,39 @@ async function saveProfileData() {
   } catch (error) {
     console.error(error);
   }
+}
+
+async function saveProfileDataForProfile(profile, data) {
+  if (!profile) return;
+  localStorage.setItem(profileDataKey(profile.id), JSON.stringify(data));
+
+  if (!state.remoteReady) return;
+
+  await supabaseRequest("app_profile_data?on_conflict=profile_id", {
+    method: "POST",
+    headers: { Prefer: "resolution=merge-duplicates" },
+    body: JSON.stringify({
+      profile_id: profile.id,
+      data,
+      updated_at: new Date().toISOString()
+    })
+  });
+}
+
+function getAssignments(data = state.profileData) {
+  return Array.isArray(data?.assignments) ? data.assignments : [];
+}
+
+function isArticleAssignedToProfile(articleId, data = state.profileData) {
+  return getAssignments(data).some(assignment => assignment.articleId === articleId);
+}
+
+function getAssignmentForArticle(articleId, data = state.profileData) {
+  return getAssignments(data).find(assignment => assignment.articleId === articleId) || null;
+}
+
+function getTeacherStudents() {
+  return state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile));
 }
 
 function logPractice(type, details = {}) {
@@ -3622,6 +3720,7 @@ function markCurrentArticleRead(source = "manual") {
     ? t("markedRead")
     : t("readDone");
   renderCategories();
+  renderLevelFilters();
   renderArticles();
 }
 
@@ -3640,7 +3739,7 @@ function openArticle(id) {
   showView("articleView");
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 
-  $("articleMeta").textContent = `${article.level} • ${getCategoryLabel(article.category)}`;
+  $("articleMeta").textContent = `${article.level} • ${formatArticleCategories(article)}`;
   $("articleTitle").textContent = article.title;
   cleanupDiscoveredVocabulary(article);
   renderArticleImage(article);
@@ -4941,6 +5040,78 @@ function buildImagePrompt() {
   ].filter(Boolean).join("\n");
 }
 
+async function renderArticleAssignmentPanel(article = state.articles.find(item => item.id === $("articleEditorSelect")?.value) || null) {
+  const panel = $("articleAssignmentPanel");
+  const list = $("articleAssignmentList");
+  if (!panel || !list) return;
+
+  const canAssign = Boolean(article?.id && state.currentProfile?.role === "teacher");
+  panel.classList.toggle("hidden", !canAssign);
+  $("articleAssignmentStatus").textContent = "";
+  if (!canAssign) {
+    list.innerHTML = "";
+    return;
+  }
+
+  const students = getTeacherStudents();
+  if (!students.length) {
+    list.innerHTML = '<p class="muted">V skupine este nie su ziaci.</p>';
+    return;
+  }
+
+  const rows = await Promise.all(students.map(async student => {
+    const data = await getProfileData(student);
+    const assigned = isArticleAssignedToProfile(article.id, data);
+    const read = (data.readIds || []).includes(article.id);
+    return `
+      <label class="assignment-row">
+        <input type="checkbox" value="${escapeHtml(student.id)}" ${assigned ? "checked" : ""}>
+        <span>
+          <strong>${escapeHtml(student.name)}</strong>
+          <small>${assigned ? "zadane" : "nezadane"}${read ? " • precitane" : ""}</small>
+        </span>
+      </label>
+    `;
+  }));
+  list.innerHTML = rows.join("");
+}
+
+async function assignSelectedArticleToStudents() {
+  const article = state.articles.find(item => item.id === $("articleEditorSelect")?.value);
+  if (!article) return;
+
+  const selectedIds = new Set(
+    Array.from(document.querySelectorAll("#articleAssignmentList input[type='checkbox']:checked"))
+      .map(input => input.value)
+  );
+  const students = getTeacherStudents();
+  const assignedAt = new Date().toISOString();
+
+  try {
+    await Promise.all(students.map(async student => {
+      const data = await getProfileData(student);
+      const existing = getAssignments(data).filter(assignment => assignment.articleId !== article.id);
+      const assignments = selectedIds.has(student.id)
+        ? [
+            {
+              articleId: article.id,
+              articleTitle: article.title,
+              teacherId: state.currentProfile.id,
+              assignedAt
+            },
+            ...existing
+          ]
+        : existing;
+      await saveProfileDataForProfile(student, { ...data, assignments });
+    }));
+    $("articleAssignmentStatus").textContent = "Zadanie je ulozene.";
+    renderArticleAssignmentPanel(article);
+    await renderTeacherOverview();
+  } catch (error) {
+    $("articleAssignmentStatus").textContent = error.message;
+  }
+}
+
 function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
   const select = $("articleEditorSelect");
   if (!select) return;
@@ -4972,9 +5143,48 @@ function renderArticleCategoryOptions(selectedCategory = "") {
 }
 
 function getArticleEditorCategory() {
-  return $("articleCategorySelect").value === NEW_CATEGORY_VALUE
+  return getArticleEditorCategoryValue();
+}
+
+function fillCategorySelect(selectId, inputId, selectedCategory = "") {
+  const select = $(selectId);
+  if (!select) return;
+
+  const categories = getArticleCategories();
+  const selectedExists = selectedCategory && categories.includes(selectedCategory);
+  select.innerHTML = [
+    '<option value="">-- vyber kategoriu --</option>',
+    ...categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(getCategoryLabel(category))}</option>`),
+    `<option value="${NEW_CATEGORY_VALUE}">+ nova kategoria</option>`
+  ].join("");
+  select.value = selectedExists ? selectedCategory : selectedCategory ? NEW_CATEGORY_VALUE : "";
+  $(inputId).value = selectedExists ? "" : selectedCategory;
+}
+
+function renderArticleCategoryOptionsMulti(selectedCategory = "") {
+  const [primaryCategory = "", secondaryCategory = ""] = Array.isArray(selectedCategory)
+    ? selectedCategory
+    : getArticleCategoriesForFilter({ category: selectedCategory });
+  fillCategorySelect("articleCategorySelect", "articleCategoryInput", primaryCategory);
+  fillCategorySelect("articleCategory2Select", "articleCategory2Input", secondaryCategory);
+  updateArticleCategoryMode();
+}
+
+function getArticleEditorCategories() {
+  const primary = $("articleCategorySelect").value === NEW_CATEGORY_VALUE
     ? $("articleCategoryInput").value.trim()
     : $("articleCategorySelect").value.trim();
+  const secondary = $("articleCategory2Select").value === NEW_CATEGORY_VALUE
+    ? $("articleCategory2Input").value.trim()
+    : $("articleCategory2Select").value.trim();
+  return [primary, secondary]
+    .map(category => category.trim())
+    .filter(Boolean)
+    .filter((category, index, categories) => categories.indexOf(category) === index);
+}
+
+function getArticleEditorCategoryValue() {
+  return getArticleEditorCategories().join(CATEGORY_SEPARATOR);
 }
 
 function wantsRequiredWords() {
@@ -4994,6 +5204,8 @@ function updateArticleRequiredWordsMode() {
 function updateArticleCategoryMode() {
   const isNewCategory = $("articleCategorySelect").value === NEW_CATEGORY_VALUE;
   $("articleNewCategoryWrap").classList.toggle("hidden", !isNewCategory);
+  const isNewCategory2 = $("articleCategory2Select")?.value === NEW_CATEGORY_VALUE;
+  $("articleNewCategory2Wrap")?.classList.toggle("hidden", !isNewCategory2);
 }
 
 function hasTranslatedVocabulary() {
@@ -5044,7 +5256,7 @@ function fillArticleEditor(article) {
   $("articleVisibilitySelect").value = article?.visibility || DEFAULT_ARTICLE_VISIBILITY;
   $("articleApprovalStatusSelect").value = article?.approvalStatus || DEFAULT_ARTICLE_APPROVAL_STATUS;
   $("articleLevelInput").value = article?.level || "B1";
-  renderArticleCategoryOptions(article?.category || "");
+  renderArticleCategoryOptionsMulti(article?.category || "");
   $("articleSummaryInput").value = article?.summary || "";
   $("articleTextInput").value = (article?.text || []).join("\n");
   $("articleImageInput").value = "";
@@ -5059,6 +5271,7 @@ function fillArticleEditor(article) {
     : t("editorNeedsSupabase");
   updateArticleApprovalControl(article);
   updateArticleImageStatus(article);
+  renderArticleAssignmentPanel(article);
   updateArticleEditorFlow();
 }
 
@@ -5202,8 +5415,9 @@ async function deleteArticleFromEditor() {
 
     state.articles = state.articles.filter(item => item.id !== article.id);
     renderCategories();
+    renderLevelFilters();
     renderArticles();
-    renderArticleCategoryOptions();
+    renderArticleCategoryOptionsMulti();
     renderArticleEditorList();
     $("articleEditorStatus").textContent = t("articleDeleted");
   } catch (error) {
@@ -5333,6 +5547,9 @@ async function renderTeacherOverview() {
       ? state.profileData
       : await getProfileData(profile);
     const readIds = new Set(data.readIds || []);
+    const assignments = getAssignments(data);
+    const assignedIds = new Set(assignments.map(assignment => assignment.articleId));
+    const doneAssigned = assignments.filter(assignment => readIds.has(assignment.articleId)).length;
     const clickedCount = Object.values(data.discoveredVocabulary || {}).reduce((sum, items) => sum + items.length, 0);
     const practiceLog = data.practiceLog || [];
     const articleSummaries = visibleArticles.map(article => {
@@ -5344,8 +5561,9 @@ async function renderTeacherOverview() {
         .filter(([, answer]) => answer !== null && answer !== undefined && answer !== "");
       const clickedVocabulary = data.discoveredVocabulary?.[article.id]?.length || 0;
       const isRead = readIds.has(article.id);
-      const active = isRead || progress.done > 0 || articlePractices.length > 0 || answers.length > 0 || clickedVocabulary > 0;
-      return { article, progress, articlePractices, answers, clickedVocabulary, isRead, active };
+      const isAssigned = assignedIds.has(article.id);
+      const active = isAssigned || isRead || progress.done > 0 || articlePractices.length > 0 || answers.length > 0 || clickedVocabulary > 0;
+      return { article, progress, articlePractices, answers, clickedVocabulary, isRead, isAssigned, active };
     });
     const activeArticles = articleSummaries.filter(item => item.active);
     const totalTasks = articleSummaries.reduce((sum, item) => sum + item.progress.total, 0);
@@ -5353,7 +5571,7 @@ async function renderTeacherOverview() {
     const completionPercent = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
     const articleCards = activeArticles.map(item => {
       const progressLabel = item.progress.total ? `${item.progress.done}/${item.progress.total}` : "0/0";
-      const status = item.isRead ? "Prečítané" : item.progress.done ? "Rozpracované" : "Začaté";
+      const status = item.isRead ? "Prečítané" : item.isAssigned ? "Zadané" : item.progress.done ? "Rozpracované" : "Začaté";
       const answerCards = item.answers.map(([index, answer]) => {
         const question = item.article.questions?.[Number(index)];
         const statement = question?.statement || question || `Otázka ${Number(index) + 1}`;
@@ -5394,6 +5612,7 @@ async function renderTeacherOverview() {
         </div>
         <div class="dashboard-stats">
           <div class="dashboard-stat"><strong>${readIds.size}</strong><span>prečítané</span></div>
+          <div class="dashboard-stat"><strong>${doneAssigned}/${assignments.length}</strong><span>zadania</span></div>
           <div class="dashboard-stat"><strong>${doneTasks}/${totalTasks}</strong><span>úlohy</span></div>
           <div class="dashboard-stat"><strong>${practiceLog.length}</strong><span>cvičenia</span></div>
           <div class="dashboard-stat"><strong>${clickedCount}</strong><span>slovíčka/frázy</span></div>
@@ -5676,6 +5895,7 @@ onClick("newArticleBtn", () => {
 });
 onClick("saveArticleBtn", saveArticleFromEditor);
 onClick("deleteArticleBtn", deleteArticleFromEditor);
+onClick("assignArticleBtn", assignSelectedArticleToStudents);
 onChange("articleEditorSelect", () => {
   const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
   fillArticleEditor(article || null);
@@ -5699,7 +5919,12 @@ onChange("articleCategorySelect", () => {
   updateArticleCategoryMode();
   updateArticleEditorFlow();
 });
+onChange("articleCategory2Select", () => {
+  updateArticleCategoryMode();
+  updateArticleEditorFlow();
+});
 onEvent("articleCategoryInput", "input", updateArticleEditorFlow);
+onEvent("articleCategory2Input", "input", updateArticleEditorFlow);
 onChange("articleRequiredWordsMode", () => {
   updateArticleRequiredWordsMode();
   updateArticleEditorFlow();

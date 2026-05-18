@@ -1,0 +1,29 @@
+Najväčší prínos podľa mňa:
+
+Zadávanie článkov žiakom
+Učiteľ by pri článku mohol označiť, ktorým žiakom ho zadáva. V dashboarde by potom bolo jasné: „toto má spraviť“, „toto už spravil“, „toto mešká“.
+
+Lepší učiteľský dashboard
+Teraz je prvá verzia. Ďalší krok by bol:
+
+filtrovať podľa žiaka, článku, aktivity,
+zvýrazniť neaktívnych žiakov,
+ukázať poslednú aktivitu,
+zobraziť „čo mám skontrolovať“.
+Komentáre učiteľa k odpovediam
+Učiteľ by mohol pri otvorenej odpovedi napísať spätnú väzbu. Žiak by ju videl vo svojom profile.
+
+Domáce úlohy / lekcie
+Namiesto voľného zoznamu článkov by učiteľ vytvoril jednoduchú lekciu: článok + slovíčka + cvičenia + termín.
+
+Označenie obtiažnosti a témy
+Články by sa dali filtrovať podľa A1/A2/B1, témy, gramatiky, typu slovnej zásoby. Toto by veľmi pomohlo, keď článkov pribudne viac.
+
+Opakovanie slovíčok
+Appka už vie, na ktoré slovíčka žiak kliká. Z toho sa dá spraviť samostatný tréning: „zopakuj si slovíčka z posledných článkov“.
+
+Lepší mobilný režim
+Doladiť dashboard, editor a článok na mobile, aby sa všetko dobre čítalo a nič nepôsobilo natlačene.
+
+Admin pohľad
+Pre teba ako admina by sa hodil samostatný režim: všetci učitelia, ich skupiny, žiaci, posledná aktivita, prípadne problémové profily.

@@ -111,6 +111,7 @@
           <button id="logoutBtn" class="text-btn">Odhlásiť</button>
         </div>
 
+        <div class="filters" id="levelFilters"></div>
         <div class="filters" id="categoryFilters"></div>
 
         <div class="section-title">
@@ -433,6 +434,14 @@
               <input id="articleCategoryInput">
             </label>
             <label class="field-row">
+              Druha kategoria
+              <select id="articleCategory2Select"></select>
+            </label>
+            <label id="articleNewCategory2Wrap" class="field-row hidden">
+              Nova druha kategoria
+              <input id="articleCategory2Input">
+            </label>
+            <label class="field-row">
               Krátky popis
               <textarea id="articleSummaryInput" class="editor-textarea compact"></textarea>
             </label>
@@ -480,6 +489,13 @@
             <button id="saveArticleBtn" class="primary-btn hidden" type="button">Uložiť článok</button>
             <button id="deleteArticleBtn" class="secondary-btn danger hidden" type="button">Vymazať článok</button>
           </div>
+          <section id="articleAssignmentPanel" class="assignment-panel hidden">
+            <p class="eyebrow">Zadanie</p>
+            <h3>Zadat clanok ziakom</h3>
+            <div id="articleAssignmentList" class="assignment-list"></div>
+            <button id="assignArticleBtn" class="secondary-btn" type="button">Ulozit zadanie</button>
+            <p id="articleAssignmentStatus" class="muted"></p>
+          </section>
           <button id="articleEditorBottomBackBtn" class="back-btn editor-bottom-back" type="button">← Späť</button>
         </div>
       </section>
