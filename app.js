@@ -1355,6 +1355,11 @@ function getVocabularyTranslation(item, language = getNativeLanguage()) {
   return language === DEFAULT_NATIVE_LANGUAGE ? item.translation || "" : "";
 }
 
+function shouldShowVocabularyBase(item) {
+  if (!item?.base) return false;
+  return normalizeVocabularyKey(item.base) !== normalizeVocabularyKey(item.de);
+}
+
 function makeVocabularyItem(de, translation, language = getNativeLanguage()) {
   return {
     de: (de || "").trim(),
@@ -2949,7 +2954,7 @@ function renderVocabulary() {
   const article = state.currentArticle;
   $("vocabList").innerHTML = getVisibleVocabulary(article)
     .map(v => {
-      const base = v.base ? ` <span class="vocab-base">(${escapeHtml(v.base)})</span>` : "";
+      const base = shouldShowVocabularyBase(v) ? ` <span class="vocab-base">(${escapeHtml(v.base)})</span>` : "";
       return `<li><strong>${escapeHtml(v.de)}</strong>${base} – ${escapeHtml(getVocabularyTranslation(v))}</li>`;
     })
     .join("");
