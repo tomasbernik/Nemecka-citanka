@@ -1505,7 +1505,9 @@ function emptyProfileData() {
     answers: {},
     practiceLog: [],
     completedTasks: {},
-    assignments: []
+    assignments: [],
+    seenAssignmentIds: [],
+    openedAssignmentIds: []
   };
 }
 
@@ -2945,6 +2947,10 @@ function getAssignments(data = state.profileData) {
   return Array.isArray(data?.assignments) ? data.assignments : [];
 }
 
+function getAssignmentKey(assignment) {
+  return `${assignment.articleId}:${assignment.assignedAt || ""}`;
+}
+
 function isArticleAssignedToProfile(articleId, data = state.profileData) {
   return getAssignments(data).some(assignment => assignment.articleId === articleId);
 }
@@ -2955,6 +2961,121 @@ function getAssignmentForArticle(articleId, data = state.profileData) {
 
 function getTeacherStudents() {
   return state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile));
+}
+
+function getArticleForAssignment(assignment) {
+  return state.articles.find(article => article.id === assignment.articleId) || null;
+}
+
+function getAssignmentStatus(assignment, data = state.profileData) {
+  const article = getArticleForAssignment(assignment);
+  if ((data.readIds || []).includes(assignment.articleId)) return "Hotové";
+  if (article && getArticleTaskProgress(article, data).done > 0) return "Rozpracované";
+  if ((data.openedAssignmentIds || []).includes(getAssignmentKey(assignment))) return "Otvorené";
+  return "Nové";
+}
+
+async function markAssignmentSeen(assignment, opened = false) {
+  if (!assignment || !state.currentProfile) return;
+  const key = getAssignmentKey(assignment);
+  const seen = new Set(state.profileData.seenAssignmentIds || []);
+  const openedSet = new Set(state.profileData.openedAssignmentIds || []);
+  seen.add(key);
+  if (opened) openedSet.add(key);
+  state.profileData.seenAssignmentIds = [...seen];
+  state.profileData.openedAssignmentIds = [...openedSet];
+  await saveProfileData();
+}
+
+function getSortedAssignments() {
+  return getAssignments()
+    .map(assignment => ({ ...assignment, article: getArticleForAssignment(assignment) }))
+    .sort((a, b) => {
+      const aDone = (state.profileData.readIds || []).includes(a.articleId);
+      const bDone = (state.profileData.readIds || []).includes(b.articleId);
+      if (aDone !== bDone) return aDone ? 1 : -1;
+      return String(b.assignedAt || "").localeCompare(String(a.assignedAt || ""));
+    });
+}
+
+function hasUnseenAssignments() {
+  const seen = new Set(state.profileData.seenAssignmentIds || []);
+  return getSortedAssignments().some(assignment => !seen.has(getAssignmentKey(assignment)));
+}
+
+function renderAssignmentInbox() {
+  const panel = $("assignmentInbox");
+  const list = $("assignmentInboxList");
+  if (!panel || !list) return;
+
+  const assignments = getSortedAssignments();
+  panel.classList.toggle("hidden", !assignments.length);
+  if (!assignments.length) {
+    list.innerHTML = "";
+    return;
+  }
+
+  list.innerHTML = assignments.map(assignment => {
+    const article = assignment.article;
+    const status = getAssignmentStatus(assignment);
+    const canOpen = Boolean(article);
+    return `
+      <article class="assignment-inbox-card ${status === "Hotové" ? "done" : ""}">
+        <div>
+          <span class="dashboard-pill">${escapeHtml(status)}</span>
+          <h4>${escapeHtml(article?.title || assignment.articleTitle || assignment.articleId)}</h4>
+          <p class="muted">${assignment.assignedAt ? `Zadané ${escapeHtml(formatDateTime(assignment.assignedAt))}` : "Zadaný článok"}</p>
+        </div>
+        <button class="secondary-btn compact" type="button" data-assignment-open="${escapeHtml(getAssignmentKey(assignment))}" ${canOpen ? "" : "disabled"}>Otvoriť</button>
+      </article>
+    `;
+  }).join("");
+}
+
+function renderAssignmentNotice() {
+  const notice = $("assignmentNotice");
+  if (!notice) return;
+
+  const seen = new Set(state.profileData.seenAssignmentIds || []);
+  const assignment = getSortedAssignments().find(item => !seen.has(getAssignmentKey(item)));
+  notice.classList.toggle("hidden", !assignment);
+  if (!assignment) {
+    notice.innerHTML = "";
+    return;
+  }
+
+  const title = assignment.article?.title || assignment.articleTitle || assignment.articleId;
+  notice.innerHTML = `
+    <div>
+      <p class="eyebrow">Nové zadanie</p>
+      <h3>${escapeHtml(title)}</h3>
+      <p class="muted">Učiteľ ti zadal nový článok.</p>
+    </div>
+    <div class="assignment-notice-actions">
+      <button class="secondary-btn compact" type="button" data-assignment-open="${escapeHtml(getAssignmentKey(assignment))}" ${assignment.article ? "" : "disabled"}>Otvoriť</button>
+      <button class="text-btn" type="button" data-assignment-dismiss="${escapeHtml(getAssignmentKey(assignment))}">Zavrieť</button>
+    </div>
+  `;
+}
+
+function renderHomeAssignments() {
+  renderAssignmentNotice();
+  renderAssignmentInbox();
+}
+
+async function openAssignmentByKey(key) {
+  const assignment = getAssignments().find(item => getAssignmentKey(item) === key);
+  if (!assignment) return;
+  await markAssignmentSeen(assignment, true);
+  renderHomeAssignments();
+  await openArticle(assignment.articleId);
+}
+
+async function dismissAssignmentNotice(key) {
+  const assignment = getAssignments().find(item => getAssignmentKey(item) === key);
+  if (!assignment) return;
+  await markAssignmentSeen(assignment, false);
+  renderHomeAssignments();
 }
 
 function logPractice(type, details = {}) {
@@ -3722,11 +3843,15 @@ function markCurrentArticleRead(source = "manual") {
   renderCategories();
   renderLevelFilters();
   renderArticles();
+  renderHomeAssignments();
 }
 
-function openArticle(id) {
+async function openArticle(id) {
   const article = state.articles.find(a => a.id === id);
   if (!article || !canViewArticle(article)) return;
+
+  const assignment = getAssignmentForArticle(article.id);
+  if (assignment) await markAssignmentSeen(assignment, true);
 
   stopReading();
   state.currentArticle = article;
@@ -3793,7 +3918,9 @@ function showHome() {
   stopReading();
   state.currentArticle = null;
   showView("homeView");
+  renderHomeAssignments();
   renderCategories();
+  renderLevelFilters();
   renderArticles();
 }
 
@@ -3918,7 +4045,7 @@ async function setCurrentProfile(profile) {
   $("teacherBtn").classList.remove("hidden");
   $("shareAppBtn").classList.remove("hidden");
   showHome();
-  showStartupQuiz();
+  if (!hasUnseenAssignments()) showStartupQuiz();
 }
 
 function showLogin() {
@@ -5994,6 +6121,19 @@ onClick("articleText", (event) => {
   const button = event.target.closest(".inline-word");
   if (!button) return;
   showInlineTranslation(button);
+});
+
+onEvent("homeView", "click", async event => {
+  const openButton = event.target.closest("[data-assignment-open]");
+  if (openButton) {
+    await openAssignmentByKey(openButton.dataset.assignmentOpen);
+    return;
+  }
+
+  const dismissButton = event.target.closest("[data-assignment-dismiss]");
+  if (dismissButton) {
+    await dismissAssignmentNotice(dismissButton.dataset.assignmentDismiss);
+  }
 });
 
 onEvent("articleText", "keydown", event => {
