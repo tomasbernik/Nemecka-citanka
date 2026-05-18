@@ -57,7 +57,7 @@ const UI_TEXT = {
     read: "gelesen",
     setupEyebrow: "Einrichtung",
     setupTitle: "Zwei Profile erstellen",
-    setupNote: "Der PIN trennt die Profile in dieser privaten App.",
+    setupNote: "Neue Profile melden sich ueber Google, E-Mail oder Einladung an.",
     profile1Name: "Name Profil 1",
     profile1Pin: "PIN Profil 1",
     profile1Role: "Rolle Profil 1",
@@ -221,7 +221,7 @@ const UI_TEXT = {
     read: "prečítané",
     setupEyebrow: "Nastavenie",
     setupTitle: "Vytvoriť dva profily",
-    setupNote: "PIN slúži len na oddelenie profilov v tejto súkromnej appke.",
+    setupNote: "Nové profily sa prihlasujú cez Google, email alebo pozvánku.",
     profile1Name: "Meno profil 1",
     profile1Pin: "PIN profil 1",
     profile1Role: "Rola profil 1",
@@ -3874,47 +3874,7 @@ async function login() {
 }
 
 async function registerProfileFromLogin() {
-  if (state.profiles.length) {
-    $("loginError").textContent = t("registrationClosed");
-    return;
-  }
-
-  const name = $("loginNameInput").value.trim();
-  const pin = $("loginPinInput").value.trim();
-  const nativeLanguage = $("loginNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
-  const ownerAuthUserId = getCurrentAuthUserId();
-
-  if (!name || !pin) {
-    $("loginError").textContent = t("loginFill");
-    return;
-  }
-
-  if (state.profiles.some(item => normalizeName(item.name) === normalizeName(name))) {
-    $("loginError").textContent = t("profileExists");
-    return;
-  }
-
-  const profile = {
-    id: makeProfileId(name),
-    name,
-    pin,
-    role: "student",
-    teacherGroupId: makeProfileId(name),
-    nativeLanguage,
-    ownerAuthUserId
-  };
-
-  state.profiles = [...state.profiles, profile];
-  await saveProfiles();
-  $("loginError").textContent = "";
-  $("loginPinInput").value = "";
-  await setCurrentProfile(profile);
-  logAppEvent("profile_created", {
-    profileId: profile.id,
-    role: profile.role,
-    nativeLanguage: profile.nativeLanguage,
-    source: "login_register"
-  });
+  $("loginError").textContent = t("registrationClosed");
 }
 
 async function createProfiles() {
@@ -3924,15 +3884,15 @@ async function createProfiles() {
   }
 
   const teacherName = $("teacherNameInput").value.trim();
-  const teacherPin = $("teacherPinInput").value.trim();
+  const teacherPin = makeRandomPin();
   const teacherRole = $("teacherRoleSelect").value;
   const teacherNativeLanguage = $("teacherNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
   const studentName = $("studentNameInput").value.trim();
-  const studentPin = $("studentPinInput").value.trim();
+  const studentPin = makeRandomPin();
   const studentRole = $("studentRoleSelect").value;
   const studentNativeLanguage = $("setupNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
 
-  if (!teacherName || !teacherPin || !studentName || !studentPin) {
+  if (!teacherName || !studentName) {
     $("setupError").textContent = t("setupFill");
     return;
   }
@@ -3994,7 +3954,7 @@ async function createSingleProfile() {
   }
 
   const name = $("newProfileNameInput").value.trim();
-  const pin = $("newProfilePinInput").value.trim() || makeRandomPin();
+  const pin = makeRandomPin();
   const nativeLanguage = $("newProfileNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
   const role = $("newProfileRoleSelect").value;
 
@@ -5204,6 +5164,10 @@ async function renderTeacherOverview() {
   const students = state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile));
   const root = $("teacherOverview");
   const visibleArticles = state.articles.filter(article => canViewArticle(article, state.currentProfile));
+  const currentGroupId = state.currentProfile?.teacherGroupId || state.currentProfile?.id || "";
+  const isAdmin = isAdminProfile();
+  const roleLabel = profile => profile.role === "teacher" ? t("teacherRole") : t("studentRole");
+  const profileTitle = profile => `${profile.name} • ${roleLabel(profile)} • skupina: ${profile.teacherGroupId || profile.id}`;
   const buildSection = async (profile, title) => {
     const data = profile.id === state.currentProfile?.id
       ? state.profileData
@@ -5272,6 +5236,27 @@ async function renderTeacherOverview() {
     await buildSection(state.currentProfile, t("myProgress")),
     ...(await Promise.all(students.map(student => buildSection(student, student.name))))
   ];
+
+  if (isAdmin) {
+    const otherProfiles = state.profiles
+      .filter(profile => profile.id !== state.currentProfile.id)
+      .filter(profile => (profile.teacherGroupId || profile.id) !== currentGroupId)
+      .sort((a, b) =>
+        String(a.teacherGroupId || a.id).localeCompare(String(b.teacherGroupId || b.id), "sk")
+        || a.role.localeCompare(b.role, "sk")
+        || a.name.localeCompare(b.name, "sk")
+      );
+
+    if (otherProfiles.length) {
+      sections.push(`
+        <section class="overview-section">
+          <h3>Ostatné profily mimo tvojej skupiny</h3>
+          <p class="muted">Admin pohľad na učiteľov a žiakov, ktorí nie sú v tvojej učiteľskej skupine.</p>
+        </section>
+      `);
+      sections.push(...await Promise.all(otherProfiles.map(profile => buildSection(profile, profileTitle(profile)))));
+    }
+  }
 
   root.innerHTML = sections.join("") || `<p class="muted">${escapeHtml(t("noStudentsInGroup"))}</p>`;
 }
