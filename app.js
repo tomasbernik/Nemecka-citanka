@@ -1232,6 +1232,46 @@ Object.entries(AUTH_TEXT).forEach(([language, text]) => {
   Object.assign(UI_TEXT[language], text);
 });
 
+Object.assign(UI_TEXT.de, {
+  clickedReviewEyebrow: "Wiederholung",
+  clickedReviewTitle: "Angeklickte Wörter",
+  clickedReviewEmpty: "Klicke Wörter im Artikel an, dann kannst du sie hier wiederholen.",
+  clickedReviewCount: "{count} angeklickte Wörter und Phrasen gesammelt.",
+  clickedReviewQuestion: "Was bedeutet dieses deutsche Wort?"
+});
+
+Object.assign(UI_TEXT.sk, {
+  clickedReviewEyebrow: "Opakovanie",
+  clickedReviewTitle: "Kliknuté slovíčka",
+  clickedReviewEmpty: "Klikni slovíčka v článku a tu si ich potom zopakuješ.",
+  clickedReviewCount: "Nazbierané slovíčka a frázy: {count}.",
+  clickedReviewQuestion: "Čo znamená toto nemecké slovíčko?"
+});
+
+Object.assign(UI_TEXT.ru, {
+  clickedReviewEyebrow: "Повторение",
+  clickedReviewTitle: "Нажатые слова",
+  clickedReviewEmpty: "Нажимайте слова в статье, и здесь можно будет их повторять.",
+  clickedReviewCount: "Собрано слов и фраз: {count}.",
+  clickedReviewQuestion: "Что означает это немецкое слово?"
+});
+
+Object.assign(UI_TEXT.pl, {
+  clickedReviewEyebrow: "Powtórka",
+  clickedReviewTitle: "Kliknięte słówka",
+  clickedReviewEmpty: "Klikaj słówka w artykule, a potem powtarzaj je tutaj.",
+  clickedReviewCount: "Zebrane słówka i frazy: {count}.",
+  clickedReviewQuestion: "Co oznacza to niemieckie słówko?"
+});
+
+Object.assign(UI_TEXT.hu, {
+  clickedReviewEyebrow: "Ismétlés",
+  clickedReviewTitle: "Kattintott szavak",
+  clickedReviewEmpty: "Koppints szavakra a cikkben, es itt gyakorolhatod oket.",
+  clickedReviewCount: "Osszegyujtott szavak es kifejezesek: {count}.",
+  clickedReviewQuestion: "Mit jelent ez a nemet szo?"
+});
+
 const state = {
   articles: [],
   profiles: [],
@@ -1267,6 +1307,7 @@ const state = {
     selectedIds: [],
     matchedIds: []
   },
+  clickedReviewGame: null,
   vocabChoiceGame: null,
   clozeGame: null,
   mistakeGame: null,
@@ -1564,6 +1605,9 @@ function updateStaticTexts() {
   setText("setupPairBtn", "setupPair");
 
   setText("logoutBtn", "logout");
+  setText("clickedReviewEyebrow", "clickedReviewEyebrow");
+  setText("clickedReviewTitle", "clickedReviewTitle");
+  setText("newClickedReviewBtn", "next");
   document.querySelector("#homeView .section-title h3").textContent = t("articles");
   setText("refreshBtn", "refresh");
 
@@ -2869,6 +2913,94 @@ function getAllVocabulary() {
   });
 }
 
+function getClickedReviewVocabulary() {
+  const seen = new Set();
+  const language = getNativeLanguage();
+  const locale = getNativeLanguageInfo(language).locale;
+  return Object.entries(state.profileData.discoveredVocabulary || {}).flatMap(([articleId, items]) => {
+    const article = state.articles.find(candidate => candidate.id === articleId);
+    return (items || []).map(item => ({ ...item, articleTitle: article?.title || "" }));
+  }).filter(item => {
+    const translation = getVocabularyTranslation(item, language);
+    if (!item.de || !translation) return false;
+    const key = `${normalizeVocabularyKey(item.de)}|${translation.toLocaleLowerCase(locale)}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function getClickedReviewOptions(correct, clickedVocabulary) {
+  const language = getNativeLanguage();
+  const correctTranslation = getVocabularyTranslation(correct, language);
+  const optionSource = [...clickedVocabulary, ...getAllVocabulary()];
+  const wrongOptions = shuffle(optionSource)
+    .map(item => getVocabularyTranslation(item, language))
+    .filter(option => option && option !== correctTranslation)
+    .filter((option, index, options) => options.indexOf(option) === index)
+    .slice(0, 3);
+
+  return shuffle([correctTranslation, ...wrongOptions]);
+}
+
+function startClickedReviewGame() {
+  const panel = $("clickedReviewPanel");
+  if (!panel) return;
+
+  const clickedVocabulary = getClickedReviewVocabulary();
+  panel.classList.remove("hidden");
+  $("clickedReviewMeta").textContent = clickedVocabulary.length
+    ? `${formatText("clickedReviewCount", { count: clickedVocabulary.length })} ${t("clickedReviewQuestion")}`
+    : t("clickedReviewEmpty");
+
+  if (!clickedVocabulary.length) {
+    state.clickedReviewGame = null;
+    $("clickedReviewPrompt").textContent = "";
+    $("clickedReviewOptions").innerHTML = "";
+    $("clickedReviewFeedback").textContent = "";
+    $("newClickedReviewBtn").classList.add("hidden");
+    return;
+  }
+
+  const correct = shuffle(clickedVocabulary)[0];
+  const correctTranslation = getVocabularyTranslation(correct);
+  const options = getClickedReviewOptions(correct, clickedVocabulary);
+  state.clickedReviewGame = { correct, correctTranslation, options, answered: false };
+  $("clickedReviewPrompt").textContent = correct.de;
+  $("clickedReviewOptions").innerHTML = options
+    .map(option => `<button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
+    .join("");
+  $("clickedReviewFeedback").textContent = "";
+  $("newClickedReviewBtn").classList.toggle("hidden", options.length < 2);
+}
+
+function renderClickedReview() {
+  startClickedReviewGame();
+}
+
+function answerClickedReview(answer) {
+  const game = state.clickedReviewGame;
+  if (!game || game.answered) return;
+
+  game.answered = true;
+  const isCorrect = answer === game.correctTranslation;
+  document.querySelectorAll("#clickedReviewOptions .quiz-option").forEach(button => {
+    const buttonIsCorrect = button.dataset.answer === game.correctTranslation;
+    const buttonIsChosen = button.dataset.answer === answer;
+    button.classList.toggle("correct", buttonIsCorrect);
+    button.classList.toggle("wrong", buttonIsChosen && !buttonIsCorrect);
+    button.disabled = true;
+  });
+
+  $("clickedReviewFeedback").textContent = isCorrect ? t("correct") : `${t("correctIs")} ${game.correctTranslation}`;
+  logPractice("clicked-vocabulary-review", {
+    correct: isCorrect,
+    prompt: game.correct.de,
+    answer,
+    expected: game.correctTranslation
+  });
+}
+
 function getPracticeVocabulary(article) {
   const seen = new Set();
   const language = getNativeLanguage();
@@ -3924,6 +4056,7 @@ function showHome() {
   state.currentArticle = null;
   showView("homeView");
   renderHomeAssignments();
+  renderClickedReview();
   renderCategories();
   renderLevelFilters();
   renderArticles();
@@ -4334,6 +4467,7 @@ function formatPracticeType(type) {
     "sentence-order": "Zoraď vetu",
     "match-pairs": "Nájdi dvojice",
     "startup-vocabulary": "Úvodné slovíčko",
+    "clicked-vocabulary-review": "Opakovanie kliknutých slovíčok",
     "true-false": "Pravda/nepravda",
     "vocab-choice": "4 možnosti",
     "cloze-word": "Doplň slovo",
@@ -6103,6 +6237,7 @@ onClick("pauseReadBtn", togglePauseReading);
 onClick("stopReadBtn", stopReading);
 onClick("newSentenceGameBtn", startSentenceGame);
 onClick("newMatchGameBtn", startMatchGame);
+onClick("newClickedReviewBtn", startClickedReviewGame);
 onClick("newVocabChoiceBtn", startVocabChoiceGame);
 onClick("newClozeGameBtn", startClozeGame);
 onClick("newMistakeGameBtn", startMistakeGame);
@@ -6212,6 +6347,12 @@ onClick("articleText", (event) => {
 });
 
 onEvent("homeView", "click", async event => {
+  const reviewOption = event.target.closest("#clickedReviewOptions .quiz-option");
+  if (reviewOption) {
+    answerClickedReview(reviewOption.dataset.answer);
+    return;
+  }
+
   const openButton = event.target.closest("[data-assignment-open]");
   if (openButton) {
     await openAssignmentByKey(openButton.dataset.assignmentOpen);

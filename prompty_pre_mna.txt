@@ -7,7 +7,7 @@ Vytvor krátky nemecký popis.
 JSON schéma:
 {
   "title": "nemecký názov článku",
-  "level": "B1",
+  "level": "A1",
   "category": "kategória alebo téma",
   "summary": "krátky nemecký popis článku",
   "text": ["odsek 1", "odsek 2", "odsek 3", "odsek 4"],

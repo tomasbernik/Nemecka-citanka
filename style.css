@@ -127,6 +127,24 @@ h3 { font-size: 1.1rem; }
   justify-content: space-between;
 }
 
+.clicked-review {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 16px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+}
+
+.clicked-review.hidden {
+  display: none;
+}
+
+.clicked-review .muted {
+  margin: 0;
+}
+
 .text-btn {
   background: transparent;
   color: var(--accent-dark);
