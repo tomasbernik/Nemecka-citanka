@@ -1551,7 +1551,8 @@ function emptyProfileData() {
     completedTasks: {},
     assignments: [],
     seenAssignmentIds: [],
-    openedAssignmentIds: []
+    openedAssignmentIds: [],
+    onboarding: {}
   };
 }
 
@@ -1559,6 +1560,54 @@ function showView(viewId) {
   ["setupView", "loginView", "homeView", "articleView", "settingsView", "teacherView"].forEach(id => {
     $(id).classList.toggle("hidden", id !== viewId);
   });
+}
+
+function isOnboardingDone(key) {
+  return Boolean(state.profileData.onboarding?.[key]);
+}
+
+async function completeOnboarding(key) {
+  if (!state.currentProfile || isOnboardingDone(key)) return;
+  state.profileData.onboarding = {
+    ...(state.profileData.onboarding || {}),
+    [key]: new Date().toISOString()
+  };
+  await saveProfileData();
+  if (key === "studentIntroDone") renderArticles();
+  renderOnboarding();
+}
+
+function renderOnboarding() {
+  const studentPanel = $("studentOnboarding");
+  if (studentPanel) {
+    const showStudentIntro = Boolean(
+      state.currentProfile
+      && state.currentProfile.role !== "teacher"
+      && !isOnboardingDone("studentIntroDone")
+    );
+    studentPanel.classList.toggle("hidden", !showStudentIntro);
+  }
+
+  const teacherPanel = $("teacherOnboarding");
+  if (teacherPanel) {
+    const showTeacherIntro = Boolean(
+      state.currentProfile?.role === "teacher"
+      && !isOnboardingDone("teacherIntroDone")
+      && !$("teacherView")?.classList.contains("hidden")
+    );
+    teacherPanel.classList.toggle("hidden", !showTeacherIntro);
+  }
+
+  const wordHint = $("wordOnboardingHint");
+  if (wordHint) {
+    const showWordHint = Boolean(
+      state.currentArticle
+      && !isOnboardingDone("firstWordHintDone")
+      && $("articleText")?.querySelector(".inline-word")
+    );
+    wordHint.classList.toggle("hidden", !showWordHint);
+    $("articleText")?.querySelector(".inline-word")?.classList.toggle("onboarding-focus", showWordHint);
+  }
 }
 
 function updateStaticTexts() {
@@ -2775,8 +2824,9 @@ function renderArticles() {
 
   root.innerHTML = "";
 
-  articles.forEach(article => {
+  articles.forEach((article, index) => {
     const isRead = state.profileData.readIds.includes(article.id);
+    const showStartBadge = index === 0 && state.currentProfile?.role !== "teacher" && !isOnboardingDone("studentIntroDone");
     const image = article.image || {};
     const imageSrc = image.desktop || `images/articles/${article.id}.jpg`;
     const imageAlt = image.alt || article.title || "";
@@ -2789,6 +2839,7 @@ function renderArticles() {
         <p>${escapeHtml(article.summary)}</p>
         <div class="badges">
           <span class="badge">${escapeHtml(article.level)}</span>
+          ${showStartBadge ? `<span class="badge start-badge">Začni tu</span>` : ""}
           ${getArticleCategoriesForFilter(article).map(category => `<span class="badge">${escapeHtml(getCategoryLabel(category))}</span>`).join("")}
           ${isArticleAssignedToProfile(article.id) ? `<span class="badge">Zadané</span>` : ""}
           ${article.visibility === "private" ? `<span class="badge">${escapeHtml(t("private"))}</span>` : ""}
@@ -4051,6 +4102,7 @@ async function openArticle(id) {
   startWordSearchGame();
 
   updateMarkReadButtons(state.profileData.readIds.includes(article.id) ? t("readDone") : t("markRead"));
+  renderOnboarding();
 }
 
 function addDiscoveredVocabulary(word, translation) {
@@ -4081,6 +4133,7 @@ function showInlineTranslation(button) {
 
   const isOpen = button.classList.toggle("active");
   button.setAttribute("aria-expanded", String(isOpen));
+  completeOnboarding("firstWordHintDone");
 }
 
 function showHome() {
@@ -4092,6 +4145,7 @@ function showHome() {
   renderCategories();
   renderLevelFilters();
   renderArticles();
+  renderOnboarding();
   scheduleInstallPrompt();
 }
 
@@ -4466,6 +4520,7 @@ function setTeacherPanel(panel) {
   $("teacherStudentsTabBtn").classList.toggle("quiet", !showStudents);
   $("teacherProfilesTabBtn").classList.toggle("quiet", !showProfiles);
   if (showProfiles) renderProfileManagerControls();
+  renderOnboarding();
 }
 
 async function showTeacherView() {
@@ -4478,6 +4533,7 @@ async function showTeacherView() {
     setTeacherPanel("students");
   }
   showView("teacherView");
+  renderOnboarding();
 }
 
 async function getProfileData(profile) {
@@ -6263,6 +6319,9 @@ onClick("articleEditorBottomBackBtn", showHome);
 onClick("settingsBtn", showSettings);
 onClick("shareAppBtn", shareApp);
 onClick("teacherBtn", showTeacherView);
+onClick("dismissStudentOnboardingBtn", () => completeOnboarding("studentIntroDone"));
+onClick("dismissWordHintBtn", () => completeOnboarding("firstWordHintDone"));
+onClick("dismissTeacherOnboardingBtn", () => completeOnboarding("teacherIntroDone"));
 onClick("teacherArticlesTabBtn", () => setTeacherPanel("articles"));
 onClick("teacherStudentsTabBtn", async () => {
   await renderTeacherOverview();

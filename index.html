@@ -111,6 +111,15 @@
           <button id="logoutBtn" class="text-btn">Odhlásiť</button>
         </div>
 
+        <section id="studentOnboarding" class="onboarding-panel hidden">
+          <div>
+            <p class="eyebrow">Rýchly štart</p>
+            <h3>Začni čítať po nemecky</h3>
+            <p class="muted">Vyber článok, klikni na neznáme slovíčko a potom si ho zopakuj doma v opakovaní.</p>
+          </div>
+          <button id="dismissStudentOnboardingBtn" class="text-btn" type="button">Rozumiem</button>
+        </section>
+
         <section id="assignmentNotice" class="assignment-notice hidden"></section>
         <section id="assignmentInbox" class="assignment-inbox hidden">
           <div class="section-title compact">
@@ -167,6 +176,11 @@
               </div>
             </div>
             <ul id="vocabList"></ul>
+          </section>
+
+          <section id="wordOnboardingHint" class="onboarding-panel compact hidden">
+            <p class="muted">Ťukni na zvýraznené slovíčka v texte. Uložia sa ti na opakovanie.</p>
+            <button id="dismissWordHintBtn" class="text-btn" type="button">Skryť</button>
           </section>
 
           <div id="articleText" class="article-text"></div>
@@ -330,6 +344,15 @@
           <button id="teacherStudentsTabBtn" class="secondary-btn quiet" type="button">Prehľad žiakov</button>
           <button id="teacherProfilesTabBtn" class="secondary-btn quiet hidden" type="button">Nové profily</button>
         </div>
+
+        <section id="teacherOnboarding" class="onboarding-panel hidden">
+          <div>
+            <p class="eyebrow">Rýchly štart</p>
+            <h3>Prvé zadanie pre žiaka</h3>
+            <p class="muted">Pridaj alebo vyber článok, zaškrtni žiakov a sleduj stav: Nové, Otvorené, Rozpracované, Hotové.</p>
+          </div>
+          <button id="dismissTeacherOnboardingBtn" class="text-btn" type="button">Rozumiem</button>
+        </section>
 
         <div id="teacherOverviewCard" class="reader-card hidden">
           <p class="eyebrow">Učiteľský pohľad</p>
