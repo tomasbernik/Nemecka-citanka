@@ -1232,6 +1232,12 @@ Object.entries(AUTH_TEXT).forEach(([language, text]) => {
   Object.assign(UI_TEXT[language], text);
 });
 
+Object.assign(UI_TEXT.de, { practiceGames: "Spiele" });
+Object.assign(UI_TEXT.sk, { practiceGames: "Hry" });
+Object.assign(UI_TEXT.ru, { practiceGames: "Игры" });
+Object.assign(UI_TEXT.pl, { practiceGames: "Gry" });
+Object.assign(UI_TEXT.hu, { practiceGames: "Játékok" });
+
 Object.assign(UI_TEXT.de, {
   clickedReviewEyebrow: "Wiederholung",
   clickedReviewTitle: "Angeklickte Wörter",
@@ -1279,6 +1285,7 @@ const state = {
   selectedCategory: ALL_CATEGORIES,
   selectedLevel: ALL_LEVELS,
   currentArticle: null,
+  activePracticeGroup: "vocab",
   currentProfile: null,
   authSession: null,
   authUser: null,
@@ -1595,6 +1602,38 @@ function getActiveViewId() {
     .find(id => !$(id)?.classList.contains("hidden")) || "";
 }
 
+function getPracticeGroupLabel(group) {
+  return {
+    vocab: t("vocabulary"),
+    questions: t("questions"),
+    games: t("practiceGames"),
+    search: t("wordSearch")
+  }[group] || group;
+}
+
+function renderArticlePracticeTabs() {
+  const activeGroup = state.activePracticeGroup || "vocab";
+  document.querySelectorAll("[data-practice-tab]").forEach(button => {
+    const isActive = button.dataset.practiceTab === activeGroup;
+    const label = getPracticeGroupLabel(button.dataset.practiceTab);
+    button.textContent = label;
+    button.classList.toggle("active", isActive);
+    button.setAttribute("aria-selected", String(isActive));
+  });
+  document.querySelectorAll("[data-practice-panel]").forEach(panel => {
+    panel.classList.toggle("active", panel.dataset.practicePanel === activeGroup);
+  });
+}
+
+function setArticlePracticeGroup(group, options = {}) {
+  if (!["vocab", "questions", "games", "search"].includes(group)) return;
+  state.activePracticeGroup = group;
+  renderArticlePracticeTabs();
+  if (options.scroll) {
+    document.querySelector(`[data-practice-panel="${group}"]`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+}
+
 function isOnboardingDone(key) {
   return Boolean(state.profileData.onboarding?.[key]);
 }
@@ -1808,6 +1847,7 @@ function updateStaticTexts() {
   renderLevelFilters();
   renderArticles();
   renderMobileBottomNav(getActiveViewId());
+  renderArticlePracticeTabs();
 }
 
 function getStoredAuthSession() {
@@ -4237,6 +4277,7 @@ async function openArticle(id) {
 
   stopReading();
   state.currentArticle = article;
+  state.activePracticeGroup = "vocab";
   logAppEvent("article_opened", {
     articleId: article.id,
     articleTitle: article.title,
@@ -4244,6 +4285,7 @@ async function openArticle(id) {
     level: article.level
   });
   showView("articleView");
+  renderArticlePracticeTabs();
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 
   $("articleMeta").textContent = `${article.level} • ${formatArticleCategories(article)}`;
@@ -6498,6 +6540,10 @@ onClick("mobileNavHomeBtn", showHome);
 onClick("mobileNavReviewBtn", showClickedReviewFromNav);
 onClick("mobileNavProgressBtn", showTeacherView);
 onClick("mobileNavSettingsBtn", showSettings);
+onClick("practiceTabVocab", () => setArticlePracticeGroup("vocab", { scroll: true }));
+onClick("practiceTabQuestions", () => setArticlePracticeGroup("questions", { scroll: true }));
+onClick("practiceTabGames", () => setArticlePracticeGroup("games", { scroll: true }));
+onClick("practiceTabSearch", () => setArticlePracticeGroup("search", { scroll: true }));
 onClick("dismissStudentOnboardingBtn", () => completeOnboarding("studentIntroDone"));
 onClick("dismissWordHintBtn", () => completeOnboarding("firstWordHintDone"));
 onClick("dismissTeacherOnboardingBtn", () => completeOnboarding("teacherIntroDone"));

@@ -584,6 +584,16 @@ h3 { font-size: 1.1rem; }
   gap: 12px;
 }
 
+.practice-tabs {
+  display: none;
+}
+
+.practice-tab {
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
 .practice-heading {
   display: flex;
   align-items: start;
@@ -1323,6 +1333,42 @@ select {
 @media (max-width: 700px) {
   body.has-mobile-nav #app {
     padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .practice-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 6;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    margin: 14px -4px 12px;
+    padding: 7px 4px;
+    background: color-mix(in srgb, var(--card) 88%, transparent);
+    backdrop-filter: blur(10px);
+  }
+
+  .practice-tab {
+    min-width: 0;
+    min-height: 42px;
+    padding: 8px 6px;
+    border-radius: 14px;
+    background: rgba(127, 127, 127, 0.09);
+    color: var(--muted);
+    font-size: 0.76rem;
+    font-weight: 900;
+    line-height: 1.12;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .practice-tab.active {
+    background: var(--accent);
+    color: #241a10;
+  }
+
+  [data-practice-panel]:not(.active) {
+    display: none;
   }
 
   .mobile-bottom-nav:not(.hidden) {

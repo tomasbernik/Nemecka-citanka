@@ -186,7 +186,14 @@
           </div>
           <div id="articleImageWrap" class="article-image-wrap hidden"></div>
 
-          <section class="panel practice-panel">
+          <div id="articlePracticeTabs" class="practice-tabs" role="tablist" aria-label="Cvicenia">
+            <button id="practiceTabVocab" class="practice-tab" type="button" data-practice-tab="vocab" role="tab">Slovicka</button>
+            <button id="practiceTabQuestions" class="practice-tab" type="button" data-practice-tab="questions" role="tab">Otazky</button>
+            <button id="practiceTabGames" class="practice-tab" type="button" data-practice-tab="games" role="tab">Hry</button>
+            <button id="practiceTabSearch" class="practice-tab" type="button" data-practice-tab="search" role="tab">Osemsmerovka</button>
+          </div>
+
+          <section class="panel practice-panel" data-practice-panel="vocab">
             <div class="practice-heading">
               <div>
                 <p id="vocabPanelEyebrow" class="eyebrow">Prehľad</p>
@@ -205,7 +212,7 @@
           <button id="markReadBtn" class="primary-btn">Označiť ako prečítané</button>
           <div id="articleTaskProgress" class="task-progress"></div>
 
-          <section class="panel practice-panel">
+          <section class="panel practice-panel" data-practice-panel="questions">
             <div class="practice-heading">
               <div>
                 <p id="questionsPanelEyebrow" class="eyebrow">Cvičenie</p>
@@ -215,7 +222,7 @@
             <ol id="questionList"></ol>
           </section>
 
-          <section class="panel practice-panel" aria-labelledby="sentenceGameTitle">
+          <section class="panel practice-panel" data-practice-panel="games" aria-labelledby="sentenceGameTitle">
             <div class="practice-heading">
               <div>
                 <p class="eyebrow">Hra</p>
@@ -228,7 +235,7 @@
             <p id="sentenceGameFeedback" class="practice-feedback"></p>
           </section>
 
-          <section class="panel practice-panel" aria-labelledby="matchGameTitle">
+          <section class="panel practice-panel" data-practice-panel="games" aria-labelledby="matchGameTitle">
             <div class="practice-heading">
               <div>
                 <p class="eyebrow">Hra</p>
@@ -240,7 +247,7 @@
             <p id="matchGameFeedback" class="practice-feedback"></p>
           </section>
 
-          <section class="panel practice-panel" aria-labelledby="vocabChoiceTitle">
+          <section class="panel practice-panel" data-practice-panel="games" aria-labelledby="vocabChoiceTitle">
             <div class="practice-heading">
               <div>
                 <p class="eyebrow">Hra</p>
@@ -253,7 +260,7 @@
             <p id="vocabChoiceFeedback" class="practice-feedback"></p>
           </section>
 
-          <section class="panel practice-panel" aria-labelledby="clozeGameTitle">
+          <section class="panel practice-panel" data-practice-panel="games" aria-labelledby="clozeGameTitle">
             <div class="practice-heading">
               <div>
                 <p class="eyebrow">Hra</p>
@@ -266,7 +273,7 @@
             <p id="clozeFeedback" class="practice-feedback"></p>
           </section>
 
-          <section class="panel practice-panel" aria-labelledby="mistakeGameTitle">
+          <section class="panel practice-panel" data-practice-panel="games" aria-labelledby="mistakeGameTitle">
             <div class="practice-heading">
               <div>
                 <p class="eyebrow">Hra</p>
@@ -279,7 +286,7 @@
             <p id="mistakeFeedback" class="practice-feedback"></p>
           </section>
 
-          <section class="panel practice-panel" aria-labelledby="wordSearchTitle">
+          <section class="panel practice-panel" data-practice-panel="search" aria-labelledby="wordSearchTitle">
             <div class="practice-heading">
               <div>
                 <p class="eyebrow">Hra</p>
