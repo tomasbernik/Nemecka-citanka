@@ -1867,7 +1867,7 @@ async function handlePendingAuthAction() {
       profile = await createFirstGoogleTeacherProfile();
     }
     if (!profile) {
-      profile = await createAuthStudentProfile();
+      profile = await createAuthTeacherProfile();
     }
 
     if (!profile) {
@@ -1943,12 +1943,10 @@ function canCreateStudentProfiles() {
 }
 
 function renderProfileCreationControls() {
-  const canBootstrap = !state.profiles.length;
   $("registerProfileBtn")?.classList.add("hidden");
   $("setupPairBtn")?.classList.add("hidden");
-  $("googleLoginBtn")?.classList.toggle("primary-btn", canBootstrap);
-  $("googleLoginBtn")?.classList.toggle("secondary-btn", !canBootstrap);
-  $("googleLoginBtn")?.classList.toggle("quiet", !canBootstrap);
+  $("googleLoginBtn")?.classList.add("primary-btn");
+  $("googleLoginBtn")?.classList.remove("secondary-btn", "quiet");
   $("teacherProfilesTabBtn")?.classList.toggle("hidden", !canCreateProfiles());
   renderProfileManagerControls();
 }
@@ -2001,11 +1999,11 @@ async function createFirstGoogleTeacherProfile() {
   return state.profiles.find(item => item.authUserId === state.authUser.id) || profile;
 }
 
-async function createAuthStudentProfile() {
+async function createAuthTeacherProfile() {
   if (!state.authUser?.id) return null;
 
   const baseName = getAuthProfileName();
-  const baseId = makeProfileId(baseName) || `student-${state.authUser.id.slice(0, 8)}`;
+  const baseId = makeProfileId(baseName) || `teacher-${state.authUser.id.slice(0, 8)}`;
   let id = baseId;
   let name = baseName;
   let counter = 2;
@@ -2019,7 +2017,7 @@ async function createAuthStudentProfile() {
     id,
     name,
     pin: makeRandomPin(),
-    role: "student",
+    role: "teacher",
     teacherGroupId: id,
     nativeLanguage: DEFAULT_NATIVE_LANGUAGE,
     authUserId: state.authUser.id,

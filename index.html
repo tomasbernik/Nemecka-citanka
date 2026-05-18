@@ -78,7 +78,14 @@
         <div class="reader-card">
           <p class="eyebrow">Anmeldung</p>
           <h2>Wer liest?</h2>
-          <label class="field-row">
+          <p id="loginError" class="form-error"></p>
+          <button id="googleLoginBtn" class="primary-btn" type="button">Mit Google anmelden</button>
+          <label class="field-row auth-email-row">
+            E-Mail
+            <input id="magicEmailInput" type="email" autocomplete="email">
+          </label>
+          <button id="magicLinkBtn" class="secondary-btn quiet" type="button">Anmeldelink senden</button>
+          <label class="field-row legacy-login-row">
             Name
             <input id="loginNameInput" autocomplete="username">
           </label>
@@ -90,14 +97,7 @@
             Muttersprache
             <select id="loginNativeLanguageSelect"></select>
           </label>
-          <p id="loginError" class="form-error"></p>
-          <button id="loginBtn" class="primary-btn">Anmelden</button>
-          <button id="googleLoginBtn" class="secondary-btn quiet" type="button">Mit Google anmelden</button>
-          <label class="field-row auth-email-row">
-            E-Mail
-            <input id="magicEmailInput" type="email" autocomplete="email">
-          </label>
-          <button id="magicLinkBtn" class="secondary-btn quiet" type="button">Anmeldelink senden</button>
+          <button id="loginBtn" class="secondary-btn quiet">Anmelden</button>
           <button id="registerProfileBtn" class="secondary-btn quiet hidden" type="button">Neues Profil erstellen</button>
           <button id="setupPairBtn" class="secondary-btn quiet hidden" type="button">Zwei Profile einrichten</button>
         </div>

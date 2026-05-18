@@ -307,6 +307,12 @@ h3 { font-size: 1.1rem; }
   margin-top: 14px;
 }
 
+.legacy-login-row {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
 .secondary-btn.danger {
   background: rgba(180, 35, 24, 0.12);
   color: #b42318;
