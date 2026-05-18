@@ -4,6 +4,7 @@ const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
 const DEVICE_ID_KEY = "deviceId";
 const AUTH_SESSION_KEY = "supabaseAuthSession";
 const AUTH_PENDING_ACTION_KEY = "supabaseAuthPendingAction";
+const AUTH_PENDING_INVITE_KEY = "supabaseAuthPendingInvite";
 const GEO_APP_OPENED_KEY_PREFIX = "geoAppOpened";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 const ADMIN_PROFILE_IDS = new Set(window.NC_ADMIN_PROFILE_IDS || []);
@@ -1130,6 +1131,16 @@ const AUTH_TEXT = {
     ,teacherCreationRestricted: "Učiteľský profil môže vytvoriť iba Google admin."
     ,profileCreated: "Profil bol vytvorený."
     ,myProgress: "Môj postup"
+    ,shareInviteLink: "Zdieľať pozývací link"
+    ,inviteCreated: "Pozývací link je pripravený: {url}"
+    ,inviteCopied: "Pozývací link je skopírovaný."
+    ,inviteShareText: "Otvor tento link a prihlás sa cez Google alebo email."
+    ,joinInviteTitle: "Pripojiť sa k učiteľovi"
+    ,joinInviteLabel: "Pozývací link alebo kód"
+    ,joinInvite: "Pripojiť sa"
+    ,inviteMissing: "Vlož pozývací link alebo kód."
+    ,inviteInvalid: "Pozvánka neexistuje alebo už bola použitá."
+    ,inviteClaimed: "Pozvánka je prijatá. Profil je pripojený."
   },
   ru: {
     googleLogin: "Войти через Google",
@@ -1227,6 +1238,7 @@ const state = {
   currentProfile: null,
   authSession: null,
   authUser: null,
+  lastInviteUrl: "",
   profileData: emptyProfileData(),
   speech: {
     sentenceIndex: 0,
@@ -1577,6 +1589,10 @@ function updateStaticTexts() {
   setOptionText("newProfileRoleSelect", "student", "studentRole");
   setLabelText("newProfileNativeLanguageSelect", "nativeLanguage");
   setText("createSingleProfileBtn", "createProfile");
+  setText("shareInviteLinkBtn", "shareInviteLink");
+  setText("joinInviteTitle", "joinInviteTitle");
+  setLabelText("joinInviteInput", "joinInviteLabel");
+  setText("joinInviteBtn", "joinInvite");
   document.querySelector("#teacherOverviewCard .eyebrow").textContent = t("teacherView");
   document.querySelector("#teacherOverviewCard h2").textContent = t("studentOverview");
   document.querySelector(".article-editor .practice-heading .eyebrow").textContent = t("teacherArticles");
@@ -1651,6 +1667,33 @@ function getAuthRedirectUrl() {
   }
 
   return `${location.origin}${location.pathname}`;
+}
+
+function getInviteTokenFromValue(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+
+  try {
+    const url = new URL(raw, location.href);
+    return url.searchParams.get("invite") || raw;
+  } catch {
+    return raw;
+  }
+}
+
+function getInviteUrl(token) {
+  const url = new URL(getAuthRedirectUrl(), location.href);
+  url.searchParams.set("invite", token);
+  return url.href;
+}
+
+function captureInviteFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const token = params.get("invite");
+  if (!token) return "";
+
+  localStorage.setItem(AUTH_PENDING_INVITE_KEY, token);
+  return token;
 }
 
 function getAuthAccessToken() {
@@ -1740,6 +1783,7 @@ async function loadAuthUser() {
 }
 
 async function initAuthFromRedirect() {
+  captureInviteFromUrl();
   const hashSession = readAuthSessionFromHash();
   if (hashSession) {
     saveAuthSession(hashSession);
@@ -1862,7 +1906,9 @@ async function handlePendingAuthAction() {
   localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
 
   if (action === "login" || action === "magic-login") {
-    let profile = state.profiles.find(item => item.authUserId === state.authUser.id);
+    const inviteToken = localStorage.getItem(AUTH_PENDING_INVITE_KEY);
+    let profile = inviteToken ? await claimInvite(inviteToken) : null;
+    profile = profile || state.profiles.find(item => item.authUserId === state.authUser.id);
     if (!profile && !state.profiles.length) {
       profile = await createFirstGoogleTeacherProfile();
     }
@@ -1893,6 +1939,22 @@ async function handlePendingAuthAction() {
   return false;
 }
 
+async function handlePendingInvite() {
+  if (!state.authUser?.id) return false;
+  const inviteToken = localStorage.getItem(AUTH_PENDING_INVITE_KEY);
+  if (!inviteToken) return false;
+
+  const profile = await claimInvite(inviteToken);
+  if (!profile) return false;
+
+  await setCurrentProfile(profile);
+  logAppEvent("profile_invite_claimed", {
+    profileId: profile.id,
+    role: profile.role
+  });
+  return true;
+}
+
 function renderAuthControls(message = "") {
   const status = $("authAccountStatus");
   if (!status) return;
@@ -1915,7 +1977,7 @@ function renderAuthControls(message = "") {
 }
 
 function canCreateProfiles() {
-  return canCreateStudentProfiles() || canCreateTeacherProfiles();
+  return Boolean(state.currentProfile);
 }
 
 function isCurrentGoogleAdmin() {
@@ -1935,11 +1997,11 @@ function isCurrentGoogleAdmin() {
 }
 
 function canCreateTeacherProfiles() {
-  return isCurrentGoogleAdmin();
+  return Boolean(state.currentProfile);
 }
 
 function canCreateStudentProfiles() {
-  return Boolean(state.currentProfile?.role === "teacher");
+  return Boolean(state.currentProfile);
 }
 
 function renderProfileCreationControls() {
@@ -1975,6 +2037,12 @@ function makeRandomPin() {
   const bytes = new Uint32Array(1);
   crypto.getRandomValues(bytes);
   return String(100000 + (bytes[0] % 900000));
+}
+
+function makeInviteToken() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
 async function createFirstGoogleTeacherProfile() {
@@ -2027,6 +2095,62 @@ async function createAuthTeacherProfile() {
   await insertProfile(profile);
   await loadProfiles();
   return state.profiles.find(item => item.authUserId === state.authUser.id) || profile;
+}
+
+async function claimInvite(tokenValue) {
+  const token = getInviteTokenFromValue(tokenValue);
+  if (!token || !state.authUser?.id) return null;
+
+  await loadProfiles();
+  const invited = state.profiles.find(profile =>
+    profile.inviteToken === token
+    && (!profile.inviteClaimedAt || profile.authUserId === state.authUser.id)
+  );
+  if (!invited) return null;
+
+  const claimedAt = new Date().toISOString();
+  if (state.remoteReady) {
+    const previousProfiles = state.profiles.filter(profile =>
+      profile.authUserId === state.authUser.id && profile.id !== invited.id
+    );
+    for (const profile of previousProfiles) {
+      await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(profile.id)}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ auth_user_id: null })
+      });
+    }
+    await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(invited.id)}`, {
+      method: "PATCH",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({
+        auth_user_id: state.authUser.id,
+        owner_auth_user_id: invited.ownerAuthUserId || state.authUser.id,
+        invite_claimed_at: claimedAt
+      })
+    });
+  }
+
+  state.profiles = state.profiles.map(profile => {
+    if (profile.authUserId === state.authUser.id && profile.id !== invited.id) {
+      return { ...profile, authUserId: null };
+    }
+    if (profile.id === invited.id) {
+      return {
+        ...profile,
+        authUserId: state.authUser.id,
+        ownerAuthUserId: profile.ownerAuthUserId || state.authUser.id,
+        inviteClaimedAt: claimedAt
+      };
+    }
+    return profile;
+  });
+
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
+  if (!state.remoteReady) await saveProfiles();
+  await loadProfiles();
+  localStorage.removeItem(AUTH_PENDING_INVITE_KEY);
+  return state.profiles.find(profile => profile.authUserId === state.authUser.id) || null;
 }
 
 async function supabaseRequest(path, options = {}) {
@@ -2170,9 +2294,13 @@ async function loadProfiles() {
   try {
     let profiles;
     try {
-      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id,auth_user_id,owner_auth_user_id&order=role.desc,name.asc");
+      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id,auth_user_id,owner_auth_user_id,invite_token,invite_claimed_at&order=role.desc,name.asc");
     } catch (error) {
-      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id&order=role.desc,name.asc");
+      try {
+        profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id,auth_user_id,owner_auth_user_id&order=role.desc,name.asc");
+      } catch {
+        profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id&order=role.desc,name.asc");
+      }
     }
     if (profiles?.length) {
       state.profiles = profiles.map(rowToProfile);
@@ -2229,6 +2357,8 @@ function normalizeProfile(profile) {
     teacherGroupId: profile?.teacherGroupId || profile?.teacher_group_id || null,
     authUserId: profile?.authUserId || profile?.auth_user_id || null,
     ownerAuthUserId: profile?.ownerAuthUserId || profile?.owner_auth_user_id || profile?.authUserId || profile?.auth_user_id || null,
+    inviteToken: profile?.inviteToken || profile?.invite_token || null,
+    inviteClaimedAt: profile?.inviteClaimedAt || profile?.invite_claimed_at || null,
     nativeLanguage: isSupportedNativeLanguage(profile?.nativeLanguage)
       ? profile.nativeLanguage
       : DEFAULT_NATIVE_LANGUAGE
@@ -2254,7 +2384,9 @@ function rowToProfile(row) {
     nativeLanguage: row.native_language,
     teacherGroupId: row.teacher_group_id,
     authUserId: row.auth_user_id,
-    ownerAuthUserId: row.owner_auth_user_id
+    ownerAuthUserId: row.owner_auth_user_id,
+    inviteToken: row.invite_token,
+    inviteClaimedAt: row.invite_claimed_at
   });
 }
 
@@ -2267,7 +2399,9 @@ function profileToRow(profile) {
     teacher_group_id: profile.teacherGroupId || profile.id,
     native_language: getNativeLanguage(profile),
     auth_user_id: profile.authUserId || null,
-    owner_auth_user_id: profile.ownerAuthUserId || profile.authUserId || null
+    owner_auth_user_id: profile.ownerAuthUserId || profile.authUserId || null,
+    invite_token: profile.inviteToken || null,
+    invite_claimed_at: profile.inviteClaimedAt || null
   };
 }
 
@@ -3570,6 +3704,55 @@ async function shareApp() {
   }
 }
 
+async function shareLastInviteLink() {
+  const url = state.lastInviteUrl;
+  if (!url) return;
+
+  const shareData = {
+    title: t("appTitle"),
+    text: t("inviteShareText"),
+    url
+  };
+
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(url);
+      $("newProfileStatus").textContent = t("inviteCopied");
+    }
+  } catch (error) {
+    if (error?.name !== "AbortError") {
+      $("newProfileStatus").textContent = url;
+    }
+  }
+}
+
+async function joinInviteFromSettings() {
+  const status = $("joinInviteStatus");
+  const token = getInviteTokenFromValue($("joinInviteInput").value);
+  if (!token) {
+    status.textContent = t("inviteMissing");
+    return;
+  }
+
+  if (!state.authUser?.id) {
+    localStorage.setItem(AUTH_PENDING_INVITE_KEY, token);
+    status.textContent = t("authSignInFirst");
+    return;
+  }
+
+  const profile = await claimInvite(token);
+  if (!profile) {
+    status.textContent = t("inviteInvalid");
+    return;
+  }
+
+  $("joinInviteInput").value = "";
+  status.textContent = t("inviteClaimed");
+  await setCurrentProfile(profile);
+}
+
 async function loadProfileData(profile) {
   const localData = JSON.parse(localStorage.getItem(profileDataKey(profile.id)) || "null");
   state.profileData = localData ? { ...emptyProfileData(), ...localData } : emptyProfileData();
@@ -3811,13 +3994,11 @@ async function createSingleProfile() {
   }
 
   const name = $("newProfileNameInput").value.trim();
-  const pin = $("newProfilePinInput").value.trim();
+  const pin = $("newProfilePinInput").value.trim() || makeRandomPin();
   const nativeLanguage = $("newProfileNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
-  const role = canCreateTeacherProfiles()
-    ? $("newProfileRoleSelect").value
-    : "student";
+  const role = $("newProfileRoleSelect").value;
 
-  if (!name || !pin) {
+  if (!name) {
     $("newProfileStatus").textContent = t("loginFill");
     return;
   }
@@ -3837,9 +4018,8 @@ async function createSingleProfile() {
     || state.currentProfile?.ownerAuthUserId
     || state.currentProfile?.authUserId
     || null;
-  const teacherGroupId = role === "teacher"
-    ? id
-    : state.currentProfile?.teacherGroupId || state.currentProfile?.id || id;
+  const teacherGroupId = state.currentProfile?.teacherGroupId || state.currentProfile?.id || id;
+  const inviteToken = makeInviteToken();
   const profile = {
     id,
     name,
@@ -3847,7 +4027,8 @@ async function createSingleProfile() {
     role,
     teacherGroupId,
     nativeLanguage,
-    ownerAuthUserId
+    ownerAuthUserId,
+    inviteToken
   };
 
   try {
@@ -3856,7 +4037,10 @@ async function createSingleProfile() {
     $("newProfileNameInput").value = "";
     $("newProfilePinInput").value = "";
     $("newProfileRoleSelect").value = "student";
-    $("newProfileStatus").textContent = t("profileCreated");
+    const inviteUrl = getInviteUrl(inviteToken);
+    state.lastInviteUrl = inviteUrl;
+    $("shareInviteLinkBtn")?.classList.remove("hidden");
+    $("newProfileStatus").textContent = formatText("inviteCreated", { url: inviteUrl });
     renderProfileManagerControls();
     logAppEvent("profile_created", {
       profileId: profile.id,
@@ -5308,6 +5492,8 @@ onClick("setupPairBtn", showSetup);
 onClick("setupBackBtn", () => state.currentProfile ? showHome() : showLogin());
 onClick("createProfilesBtn", createProfiles);
 onClick("createSingleProfileBtn", createSingleProfile);
+onClick("shareInviteLinkBtn", shareLastInviteLink);
+onClick("joinInviteBtn", joinInviteFromSettings);
 onClick("logoutBtn", logout);
 onClick("readAloudBtn", () => readSentence(0));
 onClick("pauseReadBtn", togglePauseReading);
@@ -5500,6 +5686,7 @@ async function init() {
   await initAuthFromRedirect();
   await loadProfiles();
   await loadArticles();
+  if (await handlePendingInvite()) return;
   logAppOpened({
     hasSavedProfile: Boolean(localStorage.getItem(CURRENT_PROFILE_KEY)),
     path: location.pathname

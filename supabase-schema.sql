@@ -6,6 +6,8 @@ create table if not exists public.app_profiles (
   auth_user_id uuid unique references auth.users(id) on delete set null,
   owner_auth_user_id uuid references auth.users(id) on delete set null,
   teacher_group_id text,
+  invite_token text unique,
+  invite_claimed_at timestamptz,
   native_language text not null default 'sk' check (native_language in ('sk', 'ru', 'pl', 'hu'))
 );
 
@@ -20,6 +22,12 @@ add column if not exists auth_user_id uuid unique references auth.users(id) on d
 
 alter table public.app_profiles
 add column if not exists owner_auth_user_id uuid references auth.users(id) on delete set null;
+
+alter table public.app_profiles
+add column if not exists invite_token text unique;
+
+alter table public.app_profiles
+add column if not exists invite_claimed_at timestamptz;
 
 update public.app_profiles
 set owner_auth_user_id = auth_user_id

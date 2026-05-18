@@ -277,6 +277,17 @@
           </div>
           <div class="setting-row stacked">
             <div>
+              <strong id="joinInviteTitle">Pripojiť sa k učiteľovi</strong>
+              <p id="joinInviteStatus" class="muted setting-note"></p>
+            </div>
+            <label class="field-row">
+              Pozývací link alebo kód
+              <input id="joinInviteInput" autocomplete="off">
+            </label>
+            <button id="joinInviteBtn" class="secondary-btn quiet" type="button">Pripojiť sa</button>
+          </div>
+          <div class="setting-row stacked">
+            <div>
               <strong>Upozornenia</strong>
               <p id="notificationStatus" class="muted setting-note">Pošli skúšobnú notifikáciu na toto zariadenie.</p>
             </div>
@@ -306,7 +317,7 @@
             Meno
             <input id="newProfileNameInput" autocomplete="given-name">
           </label>
-          <label class="field-row">
+          <label class="field-row hidden">
             PIN
             <input id="newProfilePinInput" inputmode="numeric" type="password" autocomplete="new-password">
           </label>
@@ -323,6 +334,7 @@
           </label>
           <p id="newProfileStatus" class="form-error"></p>
           <button id="createSingleProfileBtn" class="primary-btn" type="button">Vytvoriť profil</button>
+          <button id="shareInviteLinkBtn" class="secondary-btn quiet hidden" type="button">Zdieľať pozývací link</button>
         </div>
 
         <div id="articleEditorCard" class="reader-card article-editor">

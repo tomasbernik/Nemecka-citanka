@@ -79,6 +79,7 @@ window.NC_SUPABASE_CONFIG = {
 Pre prihlasenie cez Google aj magic link zapni v Supabase `Authentication`.
 Pri magic linku povol email prihlasovanie/OTP a v URL konfiguracii pridaj adresu appky medzi povolene redirect URL.
 V Supabase nastav `Site URL` aj `Redirect URLs` na realnu adresu appky, nie na `localhost`. `localhost` funguje iba na tom istom zariadeni, kde bezi vyvojovy server.
+Pozývacie linky potrebujú v `app_profiles` stĺpce `invite_token` a `invite_claimed_at`; ak aktualizuješ existujúci projekt, znovu spusti aktuálny `supabase-schema.sql`.
 
 Admini, ktorí môžu schvaľovať verejné články, sa nastavujú v `config.js`:
 
