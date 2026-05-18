@@ -1560,6 +1560,39 @@ function showView(viewId) {
   ["setupView", "loginView", "homeView", "articleView", "settingsView", "teacherView"].forEach(id => {
     $(id).classList.toggle("hidden", id !== viewId);
   });
+  renderMobileBottomNav(viewId);
+}
+
+function setMobileNavButton(id, label, active = false) {
+  const button = $(id);
+  if (!button) return;
+  button.classList.toggle("active", active);
+  button.setAttribute("aria-label", label);
+  button.setAttribute("title", label);
+  button.setAttribute("aria-current", active ? "page" : "false");
+  const labelElement = button.querySelector(".mobile-nav-label");
+  if (labelElement) labelElement.textContent = label;
+}
+
+function renderMobileBottomNav(activeViewId = "") {
+  const nav = $("mobileBottomNav");
+  if (!nav) return;
+
+  const isVisible = Boolean(state.currentProfile);
+  nav.classList.toggle("hidden", !isVisible);
+  document.body.classList.toggle("has-mobile-nav", isVisible);
+  if (!isVisible) return;
+
+  const isTeacher = state.currentProfile?.role === "teacher";
+  setMobileNavButton("mobileNavHomeBtn", t("articles"), activeViewId === "homeView" || activeViewId === "articleView");
+  setMobileNavButton("mobileNavReviewBtn", t("clickedReviewEyebrow"), false);
+  setMobileNavButton("mobileNavProgressBtn", isTeacher ? t("articleEditor") : t("myProgress"), activeViewId === "teacherView");
+  setMobileNavButton("mobileNavSettingsBtn", t("settings"), activeViewId === "settingsView");
+}
+
+function getActiveViewId() {
+  return ["setupView", "loginView", "homeView", "articleView", "settingsView", "teacherView"]
+    .find(id => !$(id)?.classList.contains("hidden")) || "";
 }
 
 function isOnboardingDone(key) {
@@ -1774,6 +1807,7 @@ function updateStaticTexts() {
   renderCategories();
   renderLevelFilters();
   renderArticles();
+  renderMobileBottomNav(getActiveViewId());
 }
 
 function getStoredAuthSession() {
@@ -4281,6 +4315,16 @@ function showSettings() {
   showView("settingsView");
 }
 
+function showClickedReviewFromNav() {
+  showHome();
+  startClickedReviewGame();
+  setMobileNavButton("mobileNavHomeBtn", t("articles"), false);
+  setMobileNavButton("mobileNavReviewBtn", t("clickedReviewEyebrow"), true);
+  requestAnimationFrame(() => {
+    $("clickedReviewPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
 async function shareApp() {
   const shareData = {
     title: t("appTitle"),
@@ -4775,6 +4819,7 @@ async function updateCurrentProfileRole(role) {
   renderRoleControls();
   renderCurrentProfileLabel();
   $("teacherBtn").classList.remove("hidden");
+  renderMobileBottomNav(getActiveViewId());
   renderArticles();
 }
 
@@ -6449,6 +6494,10 @@ onClick("articleEditorBottomBackBtn", showHome);
 onClick("settingsBtn", showSettings);
 onClick("shareAppBtn", shareApp);
 onClick("teacherBtn", showTeacherView);
+onClick("mobileNavHomeBtn", showHome);
+onClick("mobileNavReviewBtn", showClickedReviewFromNav);
+onClick("mobileNavProgressBtn", showTeacherView);
+onClick("mobileNavSettingsBtn", showSettings);
 onClick("dismissStudentOnboardingBtn", () => completeOnboarding("studentIntroDone"));
 onClick("dismissWordHintBtn", () => completeOnboarding("firstWordHintDone"));
 onClick("dismissTeacherOnboardingBtn", () => completeOnboarding("teacherIntroDone"));
