@@ -6,6 +6,7 @@ const AUTH_SESSION_KEY = "supabaseAuthSession";
 const AUTH_PENDING_ACTION_KEY = "supabaseAuthPendingAction";
 const AUTH_PENDING_INVITE_KEY = "supabaseAuthPendingInvite";
 const GEO_APP_OPENED_KEY_PREFIX = "geoAppOpened";
+const INSTALL_PROMPT_DISMISSED_KEY = "installPromptDismissedSession";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 const ADMIN_PROFILE_IDS = new Set(window.NC_ADMIN_PROFILE_IDS || []);
 const VISIBLE_CATEGORY_LIMIT = 6;
@@ -1278,6 +1279,8 @@ const state = {
   editorBaseInlineVocabulary: [],
   editorManualInlineVocabulary: [],
   showAllCategories: false,
+  deferredInstallPrompt: null,
+  installPromptShown: false,
   remoteReady: Boolean(SUPABASE_CONFIG.url && SUPABASE_CONFIG.anonKey)
 };
 
@@ -1569,6 +1572,7 @@ function updateStaticTexts() {
   setButtonLabel("pauseReadBtn", "pause");
   setButtonLabel("stopReadBtn", "stop");
   setText("markReadBtn", "markRead");
+  setText("markReadBottomBtn", "markRead");
 
   document.querySelectorAll("#articleView .practice-heading .eyebrow").forEach(item => item.textContent = t("game"));
   setText("vocabPanelEyebrow", "overview");
@@ -3837,13 +3841,16 @@ function markCurrentArticleRead(source = "manual") {
     articleTitle: article.title,
     source
   });
-  $("markReadBtn").textContent = source === "auto"
-    ? t("markedRead")
-    : t("readDone");
+  updateMarkReadButtons(source === "auto" ? t("markedRead") : t("readDone"));
   renderCategories();
   renderLevelFilters();
   renderArticles();
   renderHomeAssignments();
+}
+
+function updateMarkReadButtons(label) {
+  $("markReadBtn").textContent = label;
+  $("markReadBottomBtn").textContent = label;
 }
 
 async function openArticle(id) {
@@ -3879,9 +3886,7 @@ async function openArticle(id) {
   startMistakeGame();
   startWordSearchGame();
 
-  $("markReadBtn").textContent = state.profileData.readIds.includes(article.id)
-    ? t("readDone")
-    : t("markRead");
+  updateMarkReadButtons(state.profileData.readIds.includes(article.id) ? t("readDone") : t("markRead"));
 }
 
 function addDiscoveredVocabulary(word, translation) {
@@ -3922,6 +3927,7 @@ function showHome() {
   renderCategories();
   renderLevelFilters();
   renderArticles();
+  scheduleInstallPrompt();
 }
 
 function showSettings() {
@@ -5867,6 +5873,7 @@ function renderStartupQuiz() {
 
 function showStartupQuiz() {
   if (state.startupQuiz.shown || !state.currentProfile || !state.articles.length) return;
+  if (!isInstallPromptHidden()) return;
   const questions = buildStartupQuizQuestions();
   if (!questions.length) return;
 
@@ -5881,6 +5888,67 @@ function showStartupQuiz() {
 
 function closeStartupQuiz() {
   $("startupQuiz").classList.add("hidden");
+}
+
+function isStandaloneDisplayMode() {
+  return window.matchMedia?.("(display-mode: standalone)")?.matches
+    || navigator.standalone === true;
+}
+
+function isInstallPromptHidden() {
+  return $("installPrompt")?.classList.contains("hidden") !== false;
+}
+
+function canShowInstallPrompt() {
+  return Boolean(
+    state.currentProfile
+    && state.deferredInstallPrompt
+    && !state.installPromptShown
+    && !sessionStorage.getItem(INSTALL_PROMPT_DISMISSED_KEY)
+    && isStandaloneDisplayMode() === false
+  );
+}
+
+function showInstallPrompt() {
+  if (!canShowInstallPrompt()) return;
+  state.installPromptShown = true;
+  $("installPrompt")?.classList.remove("hidden");
+}
+
+function scheduleInstallPrompt() {
+  if (!canShowInstallPrompt()) return;
+  window.setTimeout(() => {
+    if (document.hidden || !canShowInstallPrompt()) return;
+    showInstallPrompt();
+  }, 900);
+}
+
+function hideInstallPrompt() {
+  $("installPrompt")?.classList.add("hidden");
+}
+
+function dismissInstallPrompt() {
+  sessionStorage.setItem(INSTALL_PROMPT_DISMISSED_KEY, "true");
+  hideInstallPrompt();
+  if (!hasUnseenAssignments()) showStartupQuiz();
+}
+
+async function installAppFromPrompt() {
+  const promptEvent = state.deferredInstallPrompt;
+  if (!promptEvent) {
+    dismissInstallPrompt();
+    return;
+  }
+
+  hideInstallPrompt();
+  state.deferredInstallPrompt = null;
+  try {
+    promptEvent.prompt();
+    await promptEvent.userChoice;
+  } catch (error) {
+    console.info("Install prompt skipped:", error.message);
+  }
+  sessionStorage.setItem(INSTALL_PROMPT_DISMISSED_KEY, "true");
 }
 
 function answerStartupQuiz(answer) {
@@ -6026,6 +6094,8 @@ onClick("newMistakeGameBtn", startMistakeGame);
 onClick("newWordSearchBtn", startWordSearchGame);
 onClick("skipStartupQuizBtn", closeStartupQuiz);
 onClick("nextStartupQuizBtn", nextStartupQuizQuestion);
+onClick("installLaterBtn", dismissInstallPrompt);
+onClick("installAppBtn", installAppFromPrompt);
 onClick("testNotificationBtn", showTestNotification);
 onClick("linkGoogleAccountBtn", () => linkCurrentProfileToAuthUser());
 onClick("signOutGoogleBtn", signOutGoogle);
@@ -6114,6 +6184,9 @@ onChange("loginNativeLanguageSelect", (event) => {
 });
 
 onClick("markReadBtn", () => {
+  markCurrentArticleRead("manual");
+});
+onClick("markReadBottomBtn", () => {
   markCurrentArticleRead("manual");
 });
 
@@ -6219,6 +6292,18 @@ window.addEventListener("pagehide", forceStopSpeech);
 window.addEventListener("beforeunload", forceStopSpeech);
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) forceStopSpeech();
+});
+
+window.addEventListener("beforeinstallprompt", event => {
+  event.preventDefault();
+  state.deferredInstallPrompt = event;
+  scheduleInstallPrompt();
+});
+
+window.addEventListener("appinstalled", () => {
+  state.deferredInstallPrompt = null;
+  sessionStorage.setItem(INSTALL_PROMPT_DISMISSED_KEY, "true");
+  hideInstallPrompt();
 });
 
 if ("serviceWorker" in navigator) {

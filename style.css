@@ -1054,6 +1054,11 @@ h3 { font-size: 1.1rem; }
   box-shadow: var(--shadow);
 }
 
+.install-card {
+  display: grid;
+  gap: 10px;
+}
+
 .quiz-prompt {
   margin: 14px 0;
   font-size: 1.55rem;

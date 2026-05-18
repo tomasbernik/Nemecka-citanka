@@ -246,6 +246,8 @@
             <p id="wordSearchFeedback" class="practice-feedback"></p>
           </section>
 
+          <button id="markReadBottomBtn" class="primary-btn">Označiť ako prečítané</button>
+
         </article>
       </section>
 
@@ -519,6 +521,18 @@
         <div class="quiz-actions">
           <button id="skipStartupQuizBtn" class="text-btn" type="button">Preskočiť</button>
           <button id="nextStartupQuizBtn" class="primary-btn compact hidden" type="button">Ďalej</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="installPrompt" class="quiz-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="installPromptTitle">
+      <div class="quiz-card install-card">
+        <p class="eyebrow">Rychly pristup</p>
+        <h2 id="installPromptTitle">Pridat Citanku na plochu?</h2>
+        <p class="muted">Bude sa otvarat ako appka a najdes ju medzi ikonami v mobile.</p>
+        <div class="quiz-actions">
+          <button id="installLaterBtn" class="text-btn" type="button">Neskor</button>
+          <button id="installAppBtn" class="primary-btn compact" type="button">Pridat na plochu</button>
         </div>
       </div>
     </div>
