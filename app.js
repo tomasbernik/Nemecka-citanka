@@ -5202,7 +5202,7 @@ async function renderArticleAssignmentPanel(article = state.articles.find(item =
 
   const students = getTeacherStudents();
   if (!students.length) {
-    list.innerHTML = '<p class="muted">V skupine este nie su ziaci.</p>';
+    list.innerHTML = '<p class="muted">V skupine ešte nie sú žiaci.</p>';
     return;
   }
 
@@ -5215,7 +5215,7 @@ async function renderArticleAssignmentPanel(article = state.articles.find(item =
         <input type="checkbox" value="${escapeHtml(student.id)}" ${assigned ? "checked" : ""}>
         <span>
           <strong>${escapeHtml(student.name)}</strong>
-          <small>${assigned ? "zadane" : "nezadane"}${read ? " • precitane" : ""}</small>
+          <small>${assigned ? "zadané" : "nezadané"}${read ? " • prečítané" : ""}</small>
         </span>
       </label>
     `;
@@ -5251,7 +5251,7 @@ async function assignSelectedArticleToStudents() {
         : existing;
       await saveProfileDataForProfile(student, { ...data, assignments });
     }));
-    $("articleAssignmentStatus").textContent = "Zadanie je ulozene.";
+    $("articleAssignmentStatus").textContent = "Zadanie je uložené.";
     renderArticleAssignmentPanel(article);
     await renderTeacherOverview();
   } catch (error) {
@@ -5895,6 +5895,13 @@ function isStandaloneDisplayMode() {
     || navigator.standalone === true;
 }
 
+function isIosInstallInstructionDevice() {
+  const platform = navigator.platform || "";
+  const userAgent = navigator.userAgent || "";
+  const isiPadOS = platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  return /iPhone|iPad|iPod/i.test(userAgent) || isiPadOS;
+}
+
 function isInstallPromptHidden() {
   return $("installPrompt")?.classList.contains("hidden") !== false;
 }
@@ -5902,7 +5909,7 @@ function isInstallPromptHidden() {
 function canShowInstallPrompt() {
   return Boolean(
     state.currentProfile
-    && state.deferredInstallPrompt
+    && (state.deferredInstallPrompt || isIosInstallInstructionDevice())
     && !state.installPromptShown
     && !sessionStorage.getItem(INSTALL_PROMPT_DISMISSED_KEY)
     && isStandaloneDisplayMode() === false
@@ -5912,6 +5919,14 @@ function canShowInstallPrompt() {
 function showInstallPrompt() {
   if (!canShowInstallPrompt()) return;
   state.installPromptShown = true;
+  const isIos = isIosInstallInstructionDevice() && !state.deferredInstallPrompt;
+  $("installPromptTitle").textContent = isIos
+    ? "Pridať Čítanku na plochu"
+    : "Pridať Čítanku na plochu?";
+  $("installPromptText").textContent = isIos
+    ? "Na iPhone klepni v Safari na Zdieľať a potom vyber Pridať na plochu."
+    : "Bude sa otvárať ako appka a nájdeš ju medzi ikonami v mobile.";
+  $("installAppBtn").textContent = isIos ? "Rozumiem" : "Pridať na plochu";
   $("installPrompt")?.classList.remove("hidden");
 }
 
