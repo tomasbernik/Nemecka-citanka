@@ -1496,8 +1496,9 @@ function updateStaticTexts() {
   document.title = t("appTitle");
   document.querySelector(".topbar h1").textContent = t("appTitle");
   document.querySelector(".topbar .eyebrow").textContent = t("languageLabel");
-  $("teacherBtn").setAttribute("aria-label", t("articleEditor"));
-  $("teacherBtn").setAttribute("title", t("articleEditor"));
+  const teacherButtonLabel = state.currentProfile?.role === "teacher" ? t("articleEditor") : t("myProgress");
+  $("teacherBtn").setAttribute("aria-label", teacherButtonLabel);
+  $("teacherBtn").setAttribute("title", teacherButtonLabel);
   $("shareAppBtn").setAttribute("aria-label", t("shareApp"));
   $("shareAppBtn").setAttribute("title", t("shareApp"));
   $("settingsBtn").setAttribute("aria-label", t("settings"));
@@ -4048,18 +4049,23 @@ function logout() {
 }
 
 function setTeacherPanel(panel) {
-  const canShowStudents = state.currentProfile?.role === "teacher";
-  const showStudents = canShowStudents && panel === "students";
-  const showProfiles = canCreateProfiles() && panel === "profiles";
-  $("articleEditorCard").classList.toggle("hidden", showStudents || showProfiles);
+  const canShowOverview = Boolean(state.currentProfile);
+  const canEditArticles = state.currentProfile?.role === "teacher";
+  const activePanel = canEditArticles || panel !== "articles" ? panel : "students";
+  const showStudents = canShowOverview && activePanel === "students";
+  const showProfiles = canCreateProfiles() && activePanel === "profiles";
+  $("teacherStudentsTabBtn").textContent = state.currentProfile?.role === "teacher" ? t("studentOverview") : t("myProgress");
+  document.querySelector("#teacherOverviewCard h2").textContent = state.currentProfile?.role === "teacher" ? t("studentOverview") : t("myProgress");
+  $("articleEditorCard").classList.toggle("hidden", !canEditArticles || showStudents || showProfiles);
   $("teacherOverviewCard").classList.toggle("hidden", !showStudents);
   $("profileManagerCard").classList.toggle("hidden", !showProfiles);
-  $("teacherStudentsTabBtn").classList.toggle("hidden", !canShowStudents);
+  $("teacherArticlesTabBtn").classList.toggle("hidden", !canEditArticles);
+  $("teacherStudentsTabBtn").classList.toggle("hidden", !canShowOverview);
   $("teacherProfilesTabBtn").classList.toggle("hidden", !canCreateProfiles());
-  $("teacherArticlesTabBtn").classList.toggle("active", !showStudents && !showProfiles);
+  $("teacherArticlesTabBtn").classList.toggle("active", canEditArticles && !showStudents && !showProfiles);
   $("teacherStudentsTabBtn").classList.toggle("active", showStudents);
   $("teacherProfilesTabBtn").classList.toggle("active", showProfiles);
-  $("teacherArticlesTabBtn").classList.toggle("quiet", showStudents || showProfiles);
+  $("teacherArticlesTabBtn").classList.toggle("quiet", showStudents || showProfiles || !canEditArticles);
   $("teacherStudentsTabBtn").classList.toggle("quiet", !showStudents);
   $("teacherProfilesTabBtn").classList.toggle("quiet", !showProfiles);
   if (showProfiles) renderProfileManagerControls();
@@ -4068,7 +4074,12 @@ function setTeacherPanel(panel) {
 async function showTeacherView() {
   if (!state.currentProfile) return;
   renderArticleEditorList();
-  setTeacherPanel("articles");
+  if (state.currentProfile.role === "teacher") {
+    setTeacherPanel("articles");
+  } else {
+    await renderTeacherOverview();
+    setTeacherPanel("students");
+  }
   showView("teacherView");
 }
 
@@ -5200,7 +5211,7 @@ async function deleteArticleFromEditor() {
   }
 }
 
-async function renderTeacherOverview() {
+async function renderTeacherOverviewLegacy() {
   const students = state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile));
   const root = $("teacherOverview");
   const visibleArticles = state.articles.filter(article => canViewArticle(article, state.currentProfile));
@@ -5276,6 +5287,130 @@ async function renderTeacherOverview() {
     await buildSection(state.currentProfile, t("myProgress")),
     ...(await Promise.all(students.map(student => buildSection(student, student.name))))
   ];
+
+  if (isAdmin) {
+    const otherProfiles = state.profiles
+      .filter(profile => profile.id !== state.currentProfile.id)
+      .filter(profile => (profile.teacherGroupId || profile.id) !== currentGroupId)
+      .sort((a, b) =>
+        String(a.teacherGroupId || a.id).localeCompare(String(b.teacherGroupId || b.id), "sk")
+        || a.role.localeCompare(b.role, "sk")
+        || a.name.localeCompare(b.name, "sk")
+      );
+
+    if (otherProfiles.length) {
+      sections.push(`
+        <section class="overview-section">
+          <h3>Ostatné profily mimo tvojej skupiny</h3>
+          <p class="muted">Admin pohľad na učiteľov a žiakov, ktorí nie sú v tvojej učiteľskej skupine.</p>
+        </section>
+      `);
+      sections.push(...await Promise.all(otherProfiles.map(profile => buildSection(profile, profileTitle(profile)))));
+    }
+  }
+
+  root.innerHTML = sections.join("") || `<p class="muted">${escapeHtml(t("noStudentsInGroup"))}</p>`;
+}
+
+async function renderTeacherOverview() {
+  const root = $("teacherOverview");
+  const visibleArticles = state.articles.filter(article => canViewArticle(article, state.currentProfile));
+  const currentGroupId = state.currentProfile?.teacherGroupId || state.currentProfile?.id || "";
+  const isAdmin = isAdminProfile();
+  const roleLabel = profile => profile.role === "teacher" ? t("teacherRole") : t("studentRole");
+  const profileTitle = profile => `${profile.name} - ${roleLabel(profile)} - skupina: ${profile.teacherGroupId || profile.id}`;
+  const formatAnswer = answer => answer === true ? "Pravda" : answer === false ? "Nepravda" : String(answer);
+  const buildPracticeList = entries => entries.slice(0, 4).map(entry => `
+    <li>
+      <strong>${escapeHtml(formatPracticeType(entry.type))}</strong>
+      ${typeof entry.correct === "boolean" ? ` &bull; ${entry.correct ? "správne" : "nesprávne"}` : ""}
+      <span class="muted"> &bull; ${escapeHtml(formatDateTime(entry.at))}</span>
+    </li>
+  `).join("");
+
+  const buildSection = async (profile, title) => {
+    const data = profile.id === state.currentProfile?.id
+      ? state.profileData
+      : await getProfileData(profile);
+    const readIds = new Set(data.readIds || []);
+    const clickedCount = Object.values(data.discoveredVocabulary || {}).reduce((sum, items) => sum + items.length, 0);
+    const practiceLog = data.practiceLog || [];
+    const articleSummaries = visibleArticles.map(article => {
+      const progress = getArticleTaskProgress(article, data);
+      const articlePractices = practiceLog.filter(entry =>
+        entry.articleId === article.id || (!entry.articleId && entry.articleTitle === article.title)
+      );
+      const answers = Object.entries(data.answers?.[article.id] || {})
+        .filter(([, answer]) => answer !== null && answer !== undefined && answer !== "");
+      const clickedVocabulary = data.discoveredVocabulary?.[article.id]?.length || 0;
+      const isRead = readIds.has(article.id);
+      const active = isRead || progress.done > 0 || articlePractices.length > 0 || answers.length > 0 || clickedVocabulary > 0;
+      return { article, progress, articlePractices, answers, clickedVocabulary, isRead, active };
+    });
+    const activeArticles = articleSummaries.filter(item => item.active);
+    const totalTasks = articleSummaries.reduce((sum, item) => sum + item.progress.total, 0);
+    const doneTasks = articleSummaries.reduce((sum, item) => sum + item.progress.done, 0);
+    const completionPercent = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
+    const articleCards = activeArticles.map(item => {
+      const progressLabel = item.progress.total ? `${item.progress.done}/${item.progress.total}` : "0/0";
+      const status = item.isRead ? "Prečítané" : item.progress.done ? "Rozpracované" : "Začaté";
+      const answerCards = item.answers.map(([index, answer]) => {
+        const question = item.article.questions?.[Number(index)];
+        const statement = question?.statement || question || `Otázka ${Number(index) + 1}`;
+        return `
+          <div class="dashboard-answer">
+            <p><strong>${escapeHtml(statement)}</strong></p>
+            <p>${escapeHtml(formatAnswer(answer))}</p>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <details class="dashboard-article">
+          <summary>
+            <span>
+              <strong>${escapeHtml(item.article.title)}</strong>
+              <span class="dashboard-pill">${escapeHtml(status)}</span>
+            </span>
+            <span class="muted">Úlohy ${escapeHtml(progressLabel)}</span>
+          </summary>
+          <div class="dashboard-article-body">
+            <p class="muted">Kliknuté slovíčka/frázy: ${item.clickedVocabulary} &bull; Cvičenia: ${item.articlePractices.length}</p>
+            ${item.articlePractices.length ? `<ul class="dashboard-list">${buildPracticeList(item.articlePractices)}</ul>` : ""}
+            ${answerCards || '<p class="muted">Bez uložených odpovedí v tomto článku.</p>'}
+          </div>
+        </details>
+      `;
+    }).join("");
+
+    return `
+      <section class="overview-section dashboard-card">
+        <div class="dashboard-header">
+          <div>
+            <h3>${escapeHtml(title)}</h3>
+            <p class="dashboard-meta">${escapeHtml(roleLabel(profile))}${practiceLog[0]?.at ? ` &bull; posledná aktivita ${escapeHtml(formatDateTime(practiceLog[0].at))}` : ""}</p>
+          </div>
+          <strong class="dashboard-score">${completionPercent}%</strong>
+        </div>
+        <div class="dashboard-stats">
+          <div class="dashboard-stat"><strong>${readIds.size}</strong><span>prečítané</span></div>
+          <div class="dashboard-stat"><strong>${doneTasks}/${totalTasks}</strong><span>úlohy</span></div>
+          <div class="dashboard-stat"><strong>${practiceLog.length}</strong><span>cvičenia</span></div>
+          <div class="dashboard-stat"><strong>${clickedCount}</strong><span>slovíčka/frázy</span></div>
+        </div>
+        <div class="dashboard-articles">
+          ${articleCards || '<p class="muted">Zatiaľ tu nie je aktivita. Keď profil prečíta článok, klikne slovíčko alebo spraví cvičenie, objaví sa tu.</p>'}
+        </div>
+      </section>
+    `;
+  };
+
+  const sections = [await buildSection(state.currentProfile, t("myProgress"))];
+
+  if (state.currentProfile?.role === "teacher") {
+    const students = state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile));
+    sections.push(...await Promise.all(students.map(student => buildSection(student, student.name))));
+  }
 
   if (isAdmin) {
     const otherProfiles = state.profiles

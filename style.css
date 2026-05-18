@@ -756,6 +756,126 @@ h3 { font-size: 1.1rem; }
   padding-left: 20px;
 }
 
+.dashboard-card {
+  display: grid;
+  gap: 12px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dashboard-meta {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.dashboard-score {
+  min-width: 58px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--bg);
+  text-align: center;
+  font-size: 1.1rem;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.dashboard-stat {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  background: rgba(255, 246, 228, 0.58);
+}
+
+.dashboard-stat strong {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 1.1rem;
+}
+
+.dashboard-stat span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.dashboard-article {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-top: 8px;
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.dashboard-article summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 11px 12px;
+  cursor: pointer;
+}
+
+.dashboard-article summary > span:first-child {
+  min-width: 0;
+}
+
+.dashboard-pill {
+  display: inline-block;
+  margin-left: 6px;
+  border-radius: 999px;
+  padding: 2px 7px;
+  background: #f4dfad;
+  color: #5d4105;
+  font-size: 0.76rem;
+  font-weight: 900;
+  vertical-align: middle;
+}
+
+.dashboard-article-body {
+  display: grid;
+  gap: 8px;
+  padding: 0 12px 12px;
+}
+
+.dashboard-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.dashboard-answer {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.dashboard-answer p {
+  margin-bottom: 4px;
+}
+
+@media (max-width: 560px) {
+  .dashboard-header,
+  .dashboard-article summary {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    display: grid;
+  }
+
+  .dashboard-score {
+    width: max-content;
+  }
+}
+
 .answer-card {
   border: 1px solid var(--border);
   border-radius: 16px;
