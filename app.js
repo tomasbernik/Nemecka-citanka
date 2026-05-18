@@ -4427,6 +4427,19 @@ function normalizeQuestionImportItem(item) {
   };
 }
 
+function hasStrictAlternatingAnswers(questions) {
+  return questions.length > 2
+    && questions.every((question, index) => index === 0 || Boolean(question.answer) !== Boolean(questions[index - 1].answer));
+}
+
+function avoidAlternatingQuestionPattern(questions) {
+  if (!hasStrictAlternatingAnswers(questions)) return questions;
+
+  const adjusted = [...questions];
+  [adjusted[1], adjusted[2]] = [adjusted[2], adjusted[1]];
+  return adjusted;
+}
+
 function parseArticleImport(value) {
   const text = stripJsonCodeFence(value);
   if (!text) throw new Error(t("validationImportArticle"));
@@ -4462,7 +4475,7 @@ function parseArticleImport(value) {
     text: textParagraphs,
     vocabulary,
     inlineVocabulary,
-    questions
+    questions: avoidAlternatingQuestionPattern(questions)
   };
 
   if (!article.title || !article.summary || !article.text.length || !article.vocabulary.length || !article.questions.length) {
@@ -4772,6 +4785,7 @@ const PROMPT_TEXT = {
       "nemecká veta = true",
       "nemecká veta = false",
       "Použi mix pravdivých a nepravdivých viet. Nepíš nič navyše.",
+      "Odpovede nesmú byť v pravidelnom poradí true/false/true/false ani false/true/false/true. Môžu byť aj dve pravdivé alebo dve nepravdivé vety za sebou.",
       title ? `Názov: ${title}` : "",
       "",
       text
@@ -4898,7 +4912,7 @@ function getArticleJsonPromptInstructions(level) {
     "Text rozdeľ do poľa \"text\" podľa odsekov.",
     `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
     "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
-    "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false.",
+    "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false. Odpovede nesmú byť v pravidelnom poradí true/false/true/false ani false/true/false/true; poradie musí pôsobiť prirodzene a môže mať aj dve rovnaké odpovede za sebou.",
     "Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, base, sk, ru, pl, hu.",
     "Do \"base\" daj základný slovníkový tvar: pri podstatnom mene s určitým členom a v nominatíve jednotného čísla, napríklad \"der Mann\"; pri slovese infinitív, napríklad \"gehen\"; pri prídavnom mene základný tvar, napríklad \"freundlich\". Ak je \"de\" už základný tvar alebo ide o celú frázu, môže byť \"base\" rovnaké ako \"de\"."
   ];
@@ -5352,7 +5366,7 @@ function readArticleEditor() {
     image: existingArticle?.image || null,
     vocabulary: mergeVocabularyTranslations(existingArticle?.vocabulary || [], parsedVocabulary, language),
     inlineVocabulary: appendVocabularyTranslations(state.editorBaseInlineVocabulary || [], parsedInlineVocabulary, language),
-    questions: parseQuestionLines($("articleQuestionsInput").value)
+    questions: avoidAlternatingQuestionPattern(parseQuestionLines($("articleQuestionsInput").value))
   };
 
   if (!article.title || !article.id || !article.level || !article.category || !article.summary || !article.text.length) {
