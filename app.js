@@ -3111,6 +3111,37 @@ function getAssignmentStatus(assignment, data = state.profileData) {
   return "Nové";
 }
 
+function getAssignmentStatusInfo(assignment, data = state.profileData) {
+  if (!assignment) return { key: "not-assigned", label: "Nezadané", detail: "", done: 0, total: 0 };
+
+  const article = getArticleForAssignment(assignment);
+  if (!article) {
+    return { key: "missing", label: "Článok chýba", detail: "Zadanie odkazuje na článok, ktorý už nie je dostupný.", done: 0, total: 0 };
+  }
+
+  const progress = getArticleTaskProgress(article, data);
+  const isRead = (data.readIds || []).includes(assignment.articleId);
+  const isOpened = (data.openedAssignmentIds || []).includes(getAssignmentKey(assignment));
+  if (isRead) return { key: "completed", label: "Hotové", detail: `Úlohy ${progress.done}/${progress.total}`, ...progress };
+  if (progress.done > 0) return { key: "in-progress", label: "Rozpracované", detail: `Úlohy ${progress.done}/${progress.total}`, ...progress };
+  if (isOpened) return { key: "opened", label: "Otvorené", detail: "Článok otvorený, úlohy ešte nezačaté.", ...progress };
+  return { key: "new", label: "Nové", detail: "Zatiaľ neotvorené.", ...progress };
+}
+
+function getArticleAssignmentStatusInfo(article, data = state.profileData) {
+  const assignment = getAssignmentForArticle(article?.id, data);
+  if (assignment) return getAssignmentStatusInfo(assignment, data);
+
+  const progress = article ? getArticleTaskProgress(article, data) : { done: 0, total: 0 };
+  if (article && (data.readIds || []).includes(article.id)) {
+    return { key: "completed", label: "Prečítané mimo zadania", detail: `Úlohy ${progress.done}/${progress.total}`, ...progress };
+  }
+  if (progress.done > 0) {
+    return { key: "in-progress", label: "Rozpracované mimo zadania", detail: `Úlohy ${progress.done}/${progress.total}`, ...progress };
+  }
+  return { key: "not-assigned", label: "Nezadané", detail: "", ...progress };
+}
+
 async function markAssignmentSeen(assignment, opened = false) {
   if (!assignment || !state.currentProfile) return;
   const key = getAssignmentKey(assignment);
@@ -3154,11 +3185,12 @@ function renderAssignmentInbox() {
   list.innerHTML = assignments.map(assignment => {
     const article = assignment.article;
     const status = getAssignmentStatus(assignment);
+    const statusInfo = getAssignmentStatusInfo(assignment);
     const canOpen = Boolean(article);
     return `
       <article class="assignment-inbox-card ${status === "Hotové" ? "done" : ""}">
         <div>
-          <span class="dashboard-pill">${escapeHtml(status)}</span>
+          <span class="dashboard-pill status-${escapeHtml(statusInfo.key)}">${escapeHtml(statusInfo.label)}</span>
           <h4>${escapeHtml(article?.title || assignment.articleTitle || assignment.articleId)}</h4>
           <p class="muted">${assignment.assignedAt ? `Zadané ${escapeHtml(formatDateTime(assignment.assignedAt))}` : "Zadaný článok"}</p>
         </div>
@@ -5342,14 +5374,18 @@ async function renderArticleAssignmentPanel(article = state.articles.find(item =
 
   const rows = await Promise.all(students.map(async student => {
     const data = await getProfileData(student);
-    const assigned = isArticleAssignedToProfile(article.id, data);
-    const read = (data.readIds || []).includes(article.id);
+    const assignment = getAssignmentForArticle(article.id, data);
+    const assigned = Boolean(assignment);
+    const status = getArticleAssignmentStatusInfo(article, data);
     return `
-      <label class="assignment-row">
+      <label class="assignment-row assignment-row-${escapeHtml(status.key)}">
         <input type="checkbox" value="${escapeHtml(student.id)}" ${assigned ? "checked" : ""}>
         <span>
           <strong>${escapeHtml(student.name)}</strong>
-          <small>${assigned ? "zadané" : "nezadané"}${read ? " • prečítané" : ""}</small>
+          <small>
+            <span class="dashboard-pill status-${escapeHtml(status.key)}">${escapeHtml(status.label)}</span>
+            ${status.detail ? ` ${escapeHtml(status.detail)}` : ""}
+          </small>
         </span>
       </label>
     `;
@@ -5371,10 +5407,13 @@ async function assignSelectedArticleToStudents() {
   try {
     await Promise.all(students.map(async student => {
       const data = await getProfileData(student);
+      const currentAssignment = getAssignmentForArticle(article.id, data);
       const existing = getAssignments(data).filter(assignment => assignment.articleId !== article.id);
       const assignments = selectedIds.has(student.id)
         ? [
-            {
+            currentAssignment
+              ? { ...currentAssignment, articleTitle: article.title, teacherId: state.currentProfile.id }
+              : {
               articleId: article.id,
               articleTitle: article.title,
               teacherId: state.currentProfile.id,
@@ -5843,16 +5882,22 @@ async function renderTeacherOverview() {
       const clickedVocabulary = data.discoveredVocabulary?.[article.id]?.length || 0;
       const isRead = readIds.has(article.id);
       const isAssigned = assignedIds.has(article.id);
+      const assignmentStatus = getArticleAssignmentStatusInfo(article, data);
       const active = isAssigned || isRead || progress.done > 0 || articlePractices.length > 0 || answers.length > 0 || clickedVocabulary > 0;
-      return { article, progress, articlePractices, answers, clickedVocabulary, isRead, isAssigned, active };
+      return { article, progress, articlePractices, answers, clickedVocabulary, isRead, isAssigned, assignmentStatus, active };
     });
     const activeArticles = articleSummaries.filter(item => item.active);
     const totalTasks = articleSummaries.reduce((sum, item) => sum + item.progress.total, 0);
     const doneTasks = articleSummaries.reduce((sum, item) => sum + item.progress.done, 0);
+    const assignmentCounts = assignments.reduce((counts, assignment) => {
+      const status = getAssignmentStatusInfo(assignment, data).key;
+      counts[status] = (counts[status] || 0) + 1;
+      return counts;
+    }, {});
     const completionPercent = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
     const articleCards = activeArticles.map(item => {
       const progressLabel = item.progress.total ? `${item.progress.done}/${item.progress.total}` : "0/0";
-      const status = item.isRead ? "Prečítané" : item.isAssigned ? "Zadané" : item.progress.done ? "Rozpracované" : "Začaté";
+      const status = item.assignmentStatus;
       const answerCards = item.answers.map(([index, answer]) => {
         const question = item.article.questions?.[Number(index)];
         const statement = question?.statement || question || `Otázka ${Number(index) + 1}`;
@@ -5869,11 +5914,12 @@ async function renderTeacherOverview() {
           <summary>
             <span>
               <strong>${escapeHtml(item.article.title)}</strong>
-              <span class="dashboard-pill">${escapeHtml(status)}</span>
+              <span class="dashboard-pill status-${escapeHtml(status.key)}">${escapeHtml(status.label)}</span>
             </span>
             <span class="muted">Úlohy ${escapeHtml(progressLabel)}</span>
           </summary>
           <div class="dashboard-article-body">
+            ${status.detail ? `<p class="muted">${escapeHtml(status.detail)}</p>` : ""}
             <p class="muted">Kliknuté slovíčka/frázy: ${item.clickedVocabulary} &bull; Cvičenia: ${item.articlePractices.length}</p>
             ${item.articlePractices.length ? `<ul class="dashboard-list">${buildPracticeList(item.articlePractices)}</ul>` : ""}
             ${answerCards || '<p class="muted">Bez uložených odpovedí v tomto článku.</p>'}
@@ -5894,6 +5940,9 @@ async function renderTeacherOverview() {
         <div class="dashboard-stats">
           <div class="dashboard-stat"><strong>${readIds.size}</strong><span>prečítané</span></div>
           <div class="dashboard-stat"><strong>${doneAssigned}/${assignments.length}</strong><span>zadania</span></div>
+          <div class="dashboard-stat"><strong>${assignmentCounts.new || 0}</strong><span>nové zadania</span></div>
+          <div class="dashboard-stat"><strong>${assignmentCounts.opened || 0}</strong><span>otvorené</span></div>
+          <div class="dashboard-stat"><strong>${assignmentCounts["in-progress"] || 0}</strong><span>rozpracované</span></div>
           <div class="dashboard-stat"><strong>${doneTasks}/${totalTasks}</strong><span>úlohy</span></div>
           <div class="dashboard-stat"><strong>${practiceLog.length}</strong><span>cvičenia</span></div>
           <div class="dashboard-stat"><strong>${clickedCount}</strong><span>slovíčka/frázy</span></div>

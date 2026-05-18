@@ -920,6 +920,32 @@ h3 { font-size: 1.1rem; }
   vertical-align: middle;
 }
 
+.dashboard-pill.status-not-assigned,
+.dashboard-pill.status-missing {
+  background: rgba(127, 127, 127, 0.13);
+  color: var(--muted);
+}
+
+.dashboard-pill.status-new {
+  background: #ffe4a8;
+  color: #5d4105;
+}
+
+.dashboard-pill.status-opened {
+  background: #dcecff;
+  color: #21466f;
+}
+
+.dashboard-pill.status-in-progress {
+  background: #efe1ff;
+  color: #50306f;
+}
+
+.dashboard-pill.status-completed {
+  background: #dff3df;
+  color: #285d34;
+}
+
 .dashboard-article-body {
   display: grid;
   gap: 8px;
@@ -960,6 +986,16 @@ h3 { font-size: 1.1rem; }
   border-radius: 8px;
   padding: 10px;
   background: var(--bg);
+}
+
+.assignment-row-completed {
+  border-color: rgba(62, 139, 91, 0.35);
+  background: rgba(62, 139, 91, 0.08);
+}
+
+.assignment-row-in-progress {
+  border-color: rgba(116, 85, 156, 0.28);
+  background: rgba(116, 85, 156, 0.08);
 }
 
 .assignment-row input {
