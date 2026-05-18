@@ -3022,7 +3022,7 @@ function renderArticleText(article) {
       const vocab = lookup.get(word.toLocaleLowerCase("de"));
       if (!vocab) return match;
 
-      return `${prefix}<button class="inline-word" type="button" data-word="${escapeHtml(vocab.de)}" data-translation="${escapeHtml(getVocabularyTranslation(vocab))}" aria-expanded="false">${word}</button>`;
+      return `${prefix}<span class="inline-word" role="button" tabindex="0" data-word="${escapeHtml(vocab.de)}" data-translation="${escapeHtml(getVocabularyTranslation(vocab))}" aria-expanded="false">${word}</span>`;
     });
 
     return `<span class="reading-sentence" data-sentence-index="${index}">${html}</span>`;
@@ -5619,6 +5619,13 @@ onClick("markReadBtn", () => {
 onClick("articleText", (event) => {
   const button = event.target.closest(".inline-word");
   if (!button) return;
+  showInlineTranslation(button);
+});
+
+onEvent("articleText", "keydown", event => {
+  const button = event.target.closest(".inline-word");
+  if (!button || !["Enter", " "].includes(event.key)) return;
+  event.preventDefault();
   showInlineTranslation(button);
 });
 

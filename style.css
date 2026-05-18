@@ -344,6 +344,10 @@ h3 { font-size: 1.1rem; }
   color: inherit;
   font: inherit;
   line-height: inherit;
+  white-space: normal;
+  text-align: inherit;
+  word-break: normal;
+  overflow-wrap: normal;
   text-decoration: underline;
   text-decoration-color: var(--accent-dark);
   text-decoration-thickness: 2px;
