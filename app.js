@@ -3052,6 +3052,92 @@ function answerClickedReview(answer) {
   });
 }
 
+const GAMIFICATION_LEVELS = [
+  { min: 0, title: "Level 1 - Začíname" },
+  { min: 40, title: "Level 2 - Čitateľ" },
+  { min: 100, title: "Level 3 - Lovec slovíčok" },
+  { min: 200, title: "Level 4 - Samostatný čitateľ" },
+  { min: 360, title: "Level 5 - Nemecký maratónec" }
+];
+
+function countCompletedTasks(data = state.profileData) {
+  return Object.values(data.completedTasks || {}).reduce((sum, tasks) => sum + (Array.isArray(tasks) ? tasks.length : 0), 0);
+}
+
+function countClickedVocabulary(data = state.profileData) {
+  return Object.values(data.discoveredVocabulary || {}).reduce((sum, items) => sum + (Array.isArray(items) ? items.length : 0), 0);
+}
+
+function countCompletedAssignments(data = state.profileData) {
+  const readIds = new Set(data.readIds || []);
+  return getAssignments(data).filter(assignment => readIds.has(assignment.articleId)).length;
+}
+
+function getGamificationStats(data = state.profileData) {
+  const readCount = (data.readIds || []).length;
+  const clickedCount = countClickedVocabulary(data);
+  const practiceLog = data.practiceLog || [];
+  const completedTasks = countCompletedTasks(data);
+  const completedAssignments = countCompletedAssignments(data);
+  const correctPractice = practiceLog.filter(entry => entry.correct === true).length;
+  const reviewPractice = practiceLog.filter(entry => entry.type === "clicked-vocabulary-review").length;
+  const points =
+    readCount * 10
+    + clickedCount
+    + completedTasks * 2
+    + completedAssignments * 15
+    + correctPractice * 3
+    + reviewPractice * 2;
+
+  const levelIndex = GAMIFICATION_LEVELS.reduce((current, level, index) => points >= level.min ? index : current, 0);
+  const level = GAMIFICATION_LEVELS[levelIndex];
+  const nextLevel = GAMIFICATION_LEVELS[levelIndex + 1] || null;
+  const levelStart = level.min;
+  const levelEnd = nextLevel?.min || Math.max(points, levelStart + 1);
+  const progress = nextLevel
+    ? Math.min(100, Math.round(((points - levelStart) / (levelEnd - levelStart)) * 100))
+    : 100;
+  const badges = [
+    { id: "first-article", label: "Prvý článok", earned: readCount >= 1 },
+    { id: "five-articles", label: "5 článkov", earned: readCount >= 5 },
+    { id: "word-hunter", label: "10 slovíčok", earned: clickedCount >= 10 },
+    { id: "review-master", label: "Majster opakovania", earned: reviewPractice >= 5 },
+    { id: "task-finisher", label: "Riešiteľ úloh", earned: completedTasks >= 10 },
+    { id: "assignment-done", label: "Hotové zadanie", earned: completedAssignments >= 1 }
+  ];
+
+  return {
+    points,
+    level,
+    nextLevel,
+    progress,
+    readCount,
+    clickedCount,
+    practiceCount: practiceLog.length,
+    completedTasks,
+    completedAssignments,
+    badges,
+    earnedBadges: badges.filter(badge => badge.earned)
+  };
+}
+
+function renderGamification() {
+  const panel = $("gamificationPanel");
+  if (!panel || !state.currentProfile) return;
+
+  const stats = getGamificationStats();
+  panel.classList.remove("hidden");
+  $("gamificationPoints").textContent = `${stats.points} b`;
+  $("gamificationLevel").textContent = stats.level.title;
+  $("gamificationNext").textContent = stats.nextLevel
+    ? `${stats.nextLevel.min - stats.points} b do ďalšieho levelu`
+    : "Najvyšší level";
+  $("gamificationProgressFill").style.width = `${stats.progress}%`;
+  $("gamificationBadges").innerHTML = stats.badges
+    .map(badge => `<span class="gamification-badge ${badge.earned ? "earned" : ""}">${escapeHtml(badge.label)}</span>`)
+    .join("");
+}
+
 function getPracticeVocabulary(article) {
   const seen = new Set();
   const language = getNativeLanguage();
@@ -3313,6 +3399,7 @@ function logPractice(type, details = {}) {
     ...(state.profileData.practiceLog || [])
   ].slice(0, 80);
   saveProfileData();
+  renderGamification();
 }
 
 function getQuestionTaskId(index) {
@@ -3363,6 +3450,7 @@ function markTaskCompleted(taskId) {
   };
   saveProfileData();
   renderArticleTaskProgress();
+  renderGamification();
 }
 
 function getArticleTaskProgress(article, data = state.profileData) {
@@ -4061,6 +4149,7 @@ function markCurrentArticleRead(source = "manual") {
   renderLevelFilters();
   renderArticles();
   renderHomeAssignments();
+  renderGamification();
 }
 
 function updateMarkReadButtons(label) {
@@ -4118,6 +4207,7 @@ function addDiscoveredVocabulary(word, translation) {
     ];
     saveProfileData();
     renderVocabulary();
+    renderGamification();
   }
 }
 
@@ -4141,6 +4231,7 @@ function showHome() {
   state.currentArticle = null;
   showView("homeView");
   renderHomeAssignments();
+  renderGamification();
   renderClickedReview();
   renderCategories();
   renderLevelFilters();
@@ -5928,6 +6019,7 @@ async function renderTeacherOverview() {
     const doneAssigned = assignments.filter(assignment => readIds.has(assignment.articleId)).length;
     const clickedCount = Object.values(data.discoveredVocabulary || {}).reduce((sum, items) => sum + items.length, 0);
     const practiceLog = data.practiceLog || [];
+    const gamification = getGamificationStats(data);
     const articleSummaries = visibleArticles.map(article => {
       const progress = getArticleTaskProgress(article, data);
       const articlePractices = practiceLog.filter(entry =>
@@ -5989,7 +6081,7 @@ async function renderTeacherOverview() {
         <div class="dashboard-header">
           <div>
             <h3>${escapeHtml(title)}</h3>
-            <p class="dashboard-meta">${escapeHtml(roleLabel(profile))}${practiceLog[0]?.at ? ` &bull; posledná aktivita ${escapeHtml(formatDateTime(practiceLog[0].at))}` : ""}</p>
+            <p class="dashboard-meta">${escapeHtml(roleLabel(profile))} &bull; ${escapeHtml(gamification.level.title)} &bull; ${gamification.points} b${practiceLog[0]?.at ? ` &bull; posledná aktivita ${escapeHtml(formatDateTime(practiceLog[0].at))}` : ""}</p>
           </div>
           <strong class="dashboard-score">${completionPercent}%</strong>
         </div>
@@ -6002,6 +6094,7 @@ async function renderTeacherOverview() {
           <div class="dashboard-stat"><strong>${doneTasks}/${totalTasks}</strong><span>úlohy</span></div>
           <div class="dashboard-stat"><strong>${practiceLog.length}</strong><span>cvičenia</span></div>
           <div class="dashboard-stat"><strong>${clickedCount}</strong><span>slovíčka/frázy</span></div>
+          <div class="dashboard-stat"><strong>${gamification.earnedBadges.length}/${gamification.badges.length}</strong><span>odznaky</span></div>
         </div>
         <div class="dashboard-articles">
           ${articleCards || '<p class="muted">Zatiaľ tu nie je aktivita. Keď profil prečíta článok, klikne slovíčko alebo spraví cvičenie, objaví sa tu.</p>'}

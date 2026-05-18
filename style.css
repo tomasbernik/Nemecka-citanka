@@ -854,6 +854,78 @@ h3 { font-size: 1.1rem; }
   opacity: 0.7;
 }
 
+.gamification-panel {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0 18px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: 0 10px 28px rgba(53, 37, 10, 0.08);
+}
+
+.gamification-panel.hidden {
+  display: none;
+}
+
+.gamification-head,
+.gamification-level-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.gamification-head h3 {
+  margin-bottom: 0;
+}
+
+.gamification-score {
+  min-width: 74px;
+  border-radius: 8px;
+  padding: 8px 10px;
+  background: var(--accent);
+  color: #241a10;
+  text-align: center;
+}
+
+.gamification-progress {
+  height: 9px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: rgba(127, 127, 127, 0.14);
+  overflow: hidden;
+}
+
+.gamification-progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.gamification-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gamification-badge {
+  border-radius: 999px;
+  padding: 6px 9px;
+  background: rgba(127, 127, 127, 0.12);
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 900;
+}
+
+.gamification-badge.earned {
+  background: #dff3df;
+  color: #285d34;
+}
+
 .overview-section {
   border-top: 1px solid var(--border);
   padding: 14px 0;

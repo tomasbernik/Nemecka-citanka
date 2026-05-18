@@ -120,6 +120,24 @@
           <button id="dismissStudentOnboardingBtn" class="text-btn" type="button">Rozumiem</button>
         </section>
 
+        <section id="gamificationPanel" class="gamification-panel hidden" aria-labelledby="gamificationTitle">
+          <div class="gamification-head">
+            <div>
+              <p class="eyebrow">Pokrok</p>
+              <h3 id="gamificationTitle">Tvoje body a odznaky</h3>
+            </div>
+            <strong id="gamificationPoints" class="gamification-score">0 b</strong>
+          </div>
+          <div>
+            <div class="gamification-level-row">
+              <span id="gamificationLevel">Level 1</span>
+              <span id="gamificationNext" class="muted"></span>
+            </div>
+            <div class="gamification-progress" aria-hidden="true"><span id="gamificationProgressFill"></span></div>
+          </div>
+          <div id="gamificationBadges" class="gamification-badges"></div>
+        </section>
+
         <section id="assignmentNotice" class="assignment-notice hidden"></section>
         <section id="assignmentInbox" class="assignment-inbox hidden">
           <div class="section-title compact">
