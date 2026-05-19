@@ -65,15 +65,15 @@ async function showTeacherView() {
 
 function formatPracticeType(type) {
   return {
-    "sentence-order": "Zoraď vetu",
-    "match-pairs": "Nájdi dvojice",
-    "startup-vocabulary": "Úvodné slovíčko",
-    "clicked-vocabulary-review": "Opakovanie kliknutých slovíčok",
-    "true-false": "Pravda/nepravda",
-    "vocab-choice": "4 možnosti",
-    "cloze-word": "Doplň slovo",
-    "find-mistake": "Nahraď chybné slovo",
-    "word-search": "Osemsmerovka"
+    "sentence-order": t("sentenceOrder"),
+    "match-pairs": t("matchPairs"),
+    "startup-vocabulary": t("startupWarmup"),
+    "clicked-vocabulary-review": t("clickedReviewTitle"),
+    "true-false": `${t("trueLabel")}/${t("falseLabel")}`,
+    "vocab-choice": t("vocabChoice"),
+    "cloze-word": t("cloze"),
+    "find-mistake": t("mistake"),
+    "word-search": t("wordSearch")
   }[type] || type;
 }
 
@@ -259,13 +259,13 @@ async function renderTeacherOverview() {
               <strong>${escapeHtml(item.article.title)}</strong>
               <span class="dashboard-pill status-${escapeHtml(status.key)}">${escapeHtml(status.label)}</span>
             </span>
-            <span class="muted">Úlohy ${escapeHtml(progressLabel)}</span>
+            <span class="muted">${escapeHtml(formatText("tasksProgressShort", { progress: progressLabel }))}</span>
           </summary>
           <div class="dashboard-article-body">
             ${status.detail ? `<p class="muted">${escapeHtml(status.detail)}</p>` : ""}
-            <p class="muted">Kliknuté slovíčka/frázy: ${item.clickedVocabulary} &bull; Cvičenia: ${item.articlePractices.length}</p>
+            <p class="muted">${escapeHtml(formatText("clickedVocabularyCount", { count: item.clickedVocabulary }))} &bull; ${escapeHtml(formatText("practiceCount", { count: item.articlePractices.length }))}</p>
             ${item.articlePractices.length ? `<ul class="dashboard-list">${buildPracticeList(item.articlePractices)}</ul>` : ""}
-            ${answerCards || '<p class="muted">Bez uložených odpovedí v tomto článku.</p>'}
+            ${answerCards || `<p class="muted">${escapeHtml(t("noSavedAnswersForArticle"))}</p>`}
           </div>
         </details>
       `;
@@ -276,23 +276,22 @@ async function renderTeacherOverview() {
         <div class="dashboard-header">
           <div>
             <h3>${escapeHtml(title)}</h3>
-            <p class="dashboard-meta">${escapeHtml(roleLabel(profile))} &bull; ${escapeHtml(gamification.level.title)} &bull; ${gamification.points} b${practiceLog[0]?.at ? ` &bull; posledná aktivita ${escapeHtml(formatDateTime(practiceLog[0].at))}` : ""}</p>
+            <p class="dashboard-meta">${escapeHtml(roleLabel(profile))} &bull; ${escapeHtml(t(gamification.level.titleKey))} &bull; ${escapeHtml(formatText("pointsShort", { points: gamification.points }))}${practiceLog[0]?.at ? ` &bull; ${escapeHtml(formatText("lastActivity", { date: formatDateTime(practiceLog[0].at) }))}` : ""}</p>
           </div>
           <strong class="dashboard-score">${completionPercent}%</strong>
         </div>
         <div class="dashboard-stats">
-          <div class="dashboard-stat"><strong>${readIds.size}</strong><span>prečítané</span></div>
-          <div class="dashboard-stat"><strong>${doneAssigned}/${assignments.length}</strong><span>zadania</span></div>
-          <div class="dashboard-stat"><strong>${assignmentCounts.new || 0}</strong><span>nové zadania</span></div>
-          <div class="dashboard-stat"><strong>${assignmentCounts.opened || 0}</strong><span>otvorené</span></div>
-          <div class="dashboard-stat"><strong>${assignmentCounts["in-progress"] || 0}</strong><span>rozpracované</span></div>
-          <div class="dashboard-stat"><strong>${doneTasks}/${totalTasks}</strong><span>úlohy</span></div>
-          <div class="dashboard-stat"><strong>${practiceLog.length}</strong><span>cvičenia</span></div>
-          <div class="dashboard-stat"><strong>${clickedCount}</strong><span>slovíčka/frázy</span></div>
-          <div class="dashboard-stat"><strong>${gamification.earnedBadges.length}/${gamification.badges.length}</strong><span>odznaky</span></div>
+          <div class="dashboard-stat"><strong>${readIds.size}</strong><span>${escapeHtml(t("readPlural"))}</span></div>
+          <div class="dashboard-stat"><strong>${doneAssigned}/${assignments.length}</strong><span>${escapeHtml(t("assignments"))}</span></div>
+          <div class="dashboard-stat"><strong>${assignmentCounts.new || 0}</strong><span>${escapeHtml(t("newAssignments"))}</span></div>
+          <div class="dashboard-stat"><strong>${assignmentCounts.opened || 0}</strong><span>${escapeHtml(t("opened"))}</span></div>
+          <div class="dashboard-stat"><strong>${assignmentCounts["in-progress"] || 0}</strong><span>${escapeHtml(t("inProgress"))}</span></div>
+          <div class="dashboard-stat"><strong>${doneTasks}/${totalTasks}</strong><span>${escapeHtml(t("tasks"))}</span></div>
+          <div class="dashboard-stat"><strong>${practiceLog.length}</strong><span>${escapeHtml(t("practicePlural"))}</span></div>
+          <div class="dashboard-stat"><strong>${clickedCount}</strong><span>${escapeHtml(t("vocabularyPhrases"))}</span></div>
         </div>
         <div class="dashboard-articles">
-          ${articleCards || '<p class="muted">Zatiaľ tu nie je aktivita. Keď profil prečíta článok, klikne slovíčko alebo spraví cvičenie, objaví sa tu.</p>'}
+          ${articleCards || `<p class="muted">${escapeHtml(t("noDashboardActivity"))}</p>`}
         </div>
       </section>
     `;

@@ -712,7 +712,7 @@ function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
   if (!select) return;
 
   select.innerHTML = [
-    '<option value="">-- nový článok --</option>',
+    `<option value="">${escapeHtml(t("newArticleOption"))}</option>`,
     ...getEditableArticles().map(article => `<option value="${escapeHtml(article.id)}">${escapeHtml(article.title)}</option>`)
   ].join("");
   select.value = selectedId && getEditableArticles().some(article => article.id === selectedId) ? selectedId : "";

@@ -120,11 +120,11 @@ function answerClickedReview(answer) {
 }
 
 const GAMIFICATION_LEVELS = [
-  { min: 0, title: "Level 1 - Začíname" },
-  { min: 40, title: "Level 2 - Čitateľ" },
-  { min: 100, title: "Level 3 - Lovec slovíčok" },
-  { min: 200, title: "Level 4 - Samostatný čitateľ" },
-  { min: 360, title: "Level 5 - Nemecký maratónec" }
+  { min: 0, titleKey: "gamificationLevel1" },
+  { min: 40, titleKey: "gamificationLevel2" },
+  { min: 100, titleKey: "gamificationLevel3" },
+  { min: 200, titleKey: "gamificationLevel4" },
+  { min: 360, titleKey: "gamificationLevel5" }
 ];
 
 function countCompletedTasks(data = state.profileData) {
@@ -164,15 +164,6 @@ function getGamificationStats(data = state.profileData) {
   const progress = nextLevel
     ? Math.min(100, Math.round(((points - levelStart) / (levelEnd - levelStart)) * 100))
     : 100;
-  const badges = [
-    { id: "first-article", label: "Prvý článok", earned: readCount >= 1 },
-    { id: "five-articles", label: "5 článkov", earned: readCount >= 5 },
-    { id: "word-hunter", label: "10 slovíčok", earned: clickedCount >= 10 },
-    { id: "review-master", label: "Majster opakovania", earned: reviewPractice >= 5 },
-    { id: "task-finisher", label: "Riešiteľ úloh", earned: completedTasks >= 10 },
-    { id: "assignment-done", label: "Hotové zadanie", earned: completedAssignments >= 1 }
-  ];
-
   return {
     points,
     level,
@@ -182,9 +173,7 @@ function getGamificationStats(data = state.profileData) {
     clickedCount,
     practiceCount: practiceLog.length,
     completedTasks,
-    completedAssignments,
-    badges,
-    earnedBadges: badges.filter(badge => badge.earned)
+    completedAssignments
   };
 }
 
@@ -194,15 +183,12 @@ function renderGamification() {
 
   const stats = getGamificationStats();
   panel.classList.remove("hidden");
-  $("gamificationPoints").textContent = `${stats.points} b`;
-  $("gamificationLevel").textContent = stats.level.title;
+  $("gamificationPoints").textContent = formatText("pointsShort", { points: stats.points });
+  $("gamificationLevel").textContent = t(stats.level.titleKey);
   $("gamificationNext").textContent = stats.nextLevel
-    ? `${stats.nextLevel.min - stats.points} b do ďalšieho levelu`
-    : "Najvyšší level";
+    ? formatText("pointsToNextLevel", { points: stats.nextLevel.min - stats.points })
+    : t("topLevel");
   $("gamificationProgressFill").style.width = `${stats.progress}%`;
-  $("gamificationBadges").innerHTML = stats.badges
-    .map(badge => `<span class="gamification-badge ${badge.earned ? "earned" : ""}">${escapeHtml(badge.label)}</span>`)
-    .join("");
 }
 
 function getPracticeVocabulary(article) {
@@ -346,27 +332,27 @@ function getArticleForAssignment(assignment) {
 
 function getAssignmentStatus(assignment, data = state.profileData) {
   const article = getArticleForAssignment(assignment);
-  if ((data.readIds || []).includes(assignment.articleId)) return "Hotové";
-  if (article && getArticleTaskProgress(article, data).done > 0) return "Rozpracované";
-  if ((data.openedAssignmentIds || []).includes(getAssignmentKey(assignment))) return "Otvorené";
-  return "Nové";
+  if ((data.readIds || []).includes(assignment.articleId)) return t("assignmentCompleted");
+  if (article && getArticleTaskProgress(article, data).done > 0) return t("assignmentInProgress");
+  if ((data.openedAssignmentIds || []).includes(getAssignmentKey(assignment))) return t("assignmentOpened");
+  return t("assignmentNew");
 }
 
 function getAssignmentStatusInfo(assignment, data = state.profileData) {
-  if (!assignment) return { key: "not-assigned", label: "Nezadané", detail: "", done: 0, total: 0 };
+  if (!assignment) return { key: "not-assigned", label: t("assignmentNotAssigned"), detail: "", done: 0, total: 0 };
 
   const article = getArticleForAssignment(assignment);
   if (!article) {
-    return { key: "missing", label: "Článok chýba", detail: "Zadanie odkazuje na článok, ktorý už nie je dostupný.", done: 0, total: 0 };
+    return { key: "missing", label: t("assignmentMissingArticle"), detail: t("assignmentMissingArticleDetail"), done: 0, total: 0 };
   }
 
   const progress = getArticleTaskProgress(article, data);
   const isRead = (data.readIds || []).includes(assignment.articleId);
   const isOpened = (data.openedAssignmentIds || []).includes(getAssignmentKey(assignment));
-  if (isRead) return { key: "completed", label: "Hotové", detail: `Úlohy ${progress.done}/${progress.total}`, ...progress };
-  if (progress.done > 0) return { key: "in-progress", label: "Rozpracované", detail: `Úlohy ${progress.done}/${progress.total}`, ...progress };
-  if (isOpened) return { key: "opened", label: "Otvorené", detail: "Článok otvorený, úlohy ešte nezačaté.", ...progress };
-  return { key: "new", label: "Nové", detail: "Zatiaľ neotvorené.", ...progress };
+  if (isRead) return { key: "completed", label: t("assignmentCompleted"), detail: formatText("tasksProgress", progress), ...progress };
+  if (progress.done > 0) return { key: "in-progress", label: t("assignmentInProgress"), detail: formatText("tasksProgress", progress), ...progress };
+  if (isOpened) return { key: "opened", label: t("assignmentOpened"), detail: t("assignmentOpenedDetail"), ...progress };
+  return { key: "new", label: t("assignmentNew"), detail: t("assignmentNewDetail"), ...progress };
 }
 
 function getArticleAssignmentStatusInfo(article, data = state.profileData) {
@@ -375,12 +361,12 @@ function getArticleAssignmentStatusInfo(article, data = state.profileData) {
 
   const progress = article ? getArticleTaskProgress(article, data) : { done: 0, total: 0 };
   if (article && (data.readIds || []).includes(article.id)) {
-    return { key: "completed", label: "Prečítané mimo zadania", detail: `Úlohy ${progress.done}/${progress.total}`, ...progress };
+    return { key: "completed", label: t("readOutsideAssignment"), detail: formatText("tasksProgress", progress), ...progress };
   }
   if (progress.done > 0) {
-    return { key: "in-progress", label: "Rozpracované mimo zadania", detail: `Úlohy ${progress.done}/${progress.total}`, ...progress };
+    return { key: "in-progress", label: t("inProgressOutsideAssignment"), detail: formatText("tasksProgress", progress), ...progress };
   }
-  return { key: "not-assigned", label: "Nezadané", detail: "", ...progress };
+  return { key: "not-assigned", label: t("assignmentNotAssigned"), detail: "", ...progress };
 }
 
 async function markAssignmentSeen(assignment, opened = false) {
@@ -425,17 +411,16 @@ function renderAssignmentInbox() {
 
   list.innerHTML = assignments.map(assignment => {
     const article = assignment.article;
-    const status = getAssignmentStatus(assignment);
     const statusInfo = getAssignmentStatusInfo(assignment);
     const canOpen = Boolean(article);
     return `
-      <article class="assignment-inbox-card ${status === "Hotové" ? "done" : ""}">
+      <article class="assignment-inbox-card ${statusInfo.key === "completed" ? "done" : ""}">
         <div>
           <span class="dashboard-pill status-${escapeHtml(statusInfo.key)}">${escapeHtml(statusInfo.label)}</span>
           <h4>${escapeHtml(article?.title || assignment.articleTitle || assignment.articleId)}</h4>
-          <p class="muted">${assignment.assignedAt ? `Zadané ${escapeHtml(formatDateTime(assignment.assignedAt))}` : "Zadaný článok"}</p>
+          <p class="muted">${assignment.assignedAt ? escapeHtml(formatText("assignedAt", { date: formatDateTime(assignment.assignedAt) })) : escapeHtml(t("assignedArticle"))}</p>
         </div>
-        <button class="secondary-btn compact" type="button" data-assignment-open="${escapeHtml(getAssignmentKey(assignment))}" ${canOpen ? "" : "disabled"}>Otvoriť</button>
+        <button class="secondary-btn compact" type="button" data-assignment-open="${escapeHtml(getAssignmentKey(assignment))}" ${canOpen ? "" : "disabled"}>${escapeHtml(t("open"))}</button>
       </article>
     `;
   }).join("");
@@ -456,13 +441,13 @@ function renderAssignmentNotice() {
   const title = assignment.article?.title || assignment.articleTitle || assignment.articleId;
   notice.innerHTML = `
     <div>
-      <p class="eyebrow">Nové zadanie</p>
+      <p class="eyebrow">${escapeHtml(t("newAssignment"))}</p>
       <h3>${escapeHtml(title)}</h3>
-      <p class="muted">Učiteľ ti zadal nový článok.</p>
+      <p class="muted">${escapeHtml(t("teacherAssignedArticle"))}</p>
     </div>
     <div class="assignment-notice-actions">
-      <button class="secondary-btn compact" type="button" data-assignment-open="${escapeHtml(getAssignmentKey(assignment))}" ${assignment.article ? "" : "disabled"}>Otvoriť</button>
-      <button class="text-btn" type="button" data-assignment-dismiss="${escapeHtml(getAssignmentKey(assignment))}">Zavrieť</button>
+      <button class="secondary-btn compact" type="button" data-assignment-open="${escapeHtml(getAssignmentKey(assignment))}" ${assignment.article ? "" : "disabled"}>${escapeHtml(t("open"))}</button>
+      <button class="text-btn" type="button" data-assignment-dismiss="${escapeHtml(getAssignmentKey(assignment))}">${escapeHtml(t("close"))}</button>
     </div>
   `;
 }

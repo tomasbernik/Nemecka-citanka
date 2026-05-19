@@ -457,6 +457,13 @@ function updateStaticTexts() {
 
   $("logoutBtn")?.setAttribute("aria-label", t("logout"));
   $("logoutBtn")?.setAttribute("title", t("logout"));
+  document.querySelector("#studentOnboarding .eyebrow").textContent = t("quickStart");
+  document.querySelector("#studentOnboarding h3").textContent = t("studentOnboardingTitle");
+  document.querySelector("#studentOnboarding .muted").textContent = t("studentOnboardingText");
+  setText("dismissStudentOnboardingBtn", "understand");
+  document.querySelector("#wordOnboardingHint .muted").textContent = t("wordOnboardingText");
+  setText("dismissWordHintBtn", "hide");
+  document.querySelector("#assignmentInbox .section-title h3").textContent = t("myAssignments");
   setText("clickedReviewEyebrow", "clickedReviewEyebrow");
   setText("clickedReviewTitle", "clickedReviewTitle");
   setText("newClickedReviewBtn", "next");
@@ -509,6 +516,12 @@ function updateStaticTexts() {
 
   setText("teacherBackBtn", "back");
   setText("articleEditorBottomBackBtn", "back");
+  setText("gamificationEyebrow", "gamificationEyebrow");
+  setText("gamificationTitle", "gamificationTitle");
+  document.querySelector("#teacherOnboarding .eyebrow").textContent = t("quickStart");
+  document.querySelector("#teacherOnboarding h3").textContent = t("teacherOnboardingTitle");
+  document.querySelector("#teacherOnboarding .muted").textContent = t("teacherOnboardingText");
+  setText("dismissTeacherOnboardingBtn", "understand");
   setText("teacherArticlesTabBtn", "articleEditor");
   setText("teacherStudentsTabBtn", "studentOverview");
   setText("teacherProfilesTabBtn", "profileSetup");
@@ -577,6 +590,8 @@ function updateStaticTexts() {
   renderCategories();
   renderLevelFilters();
   renderArticles();
+  renderArticleEditorList();
+  renderGamification();
   renderMobileBottomNav(getActiveViewId());
   renderArticlePracticeTabs();
 }
@@ -743,12 +758,12 @@ function showInstallPrompt() {
   state.installPromptShown = true;
   const isIos = isIosInstallInstructionDevice() && !state.deferredInstallPrompt;
   $("installPromptTitle").textContent = isIos
-    ? "Pridať Čítanku na plochu"
-    : "Pridať Čítanku na plochu?";
+    ? t("installPromptTitleIos")
+    : t("installPromptTitle");
   $("installPromptText").textContent = isIos
-    ? "Na iPhone klepni v Safari na Zdieľať a potom vyber Pridať na plochu."
-    : "Bude sa otvárať ako appka a nájdeš ju medzi ikonami v mobile.";
-  $("installAppBtn").textContent = isIos ? "Rozumiem" : "Pridať na plochu";
+    ? t("installPromptTextIos")
+    : t("installPromptText");
+  $("installAppBtn").textContent = isIos ? t("understand") : t("installApp");
   $("installPrompt")?.classList.remove("hidden");
 }
 

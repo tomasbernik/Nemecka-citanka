@@ -1088,26 +1088,6 @@ body.has-mobile-nav .top-actions #logoutBtn {
   background: var(--accent);
 }
 
-.gamification-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.gamification-badge {
-  border-radius: 999px;
-  padding: 6px 9px;
-  background: rgba(127, 127, 127, 0.12);
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 900;
-}
-
-.gamification-badge.earned {
-  background: #dff3df;
-  color: #285d34;
-}
-
 .overview-section {
   border-top: 1px solid var(--border);
   padding: 14px 0;
