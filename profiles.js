@@ -158,7 +158,7 @@ async function setCurrentProfile(profile) {
   renderProfileCreationControls();
   updateStaticTexts();
   $("settingsBtn").classList.remove("hidden");
-  $("teacherBtn").classList.remove("hidden");
+  $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.remove("hidden");
   showHome();
   if (!hasUnseenAssignments()) showStartupQuiz();
@@ -182,7 +182,7 @@ function showSetup() {
   }
   stopReading();
   $("settingsBtn").classList.toggle("hidden", !state.currentProfile);
-  $("teacherBtn").classList.toggle("hidden", !state.currentProfile);
+  $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.toggle("hidden", !state.currentProfile);
   renderNativeLanguageControls();
   updateStaticTexts();
@@ -462,7 +462,7 @@ async function updateCurrentProfileRole(role) {
   await saveProfiles();
   renderRoleControls();
   renderCurrentProfileLabel();
-  $("teacherBtn").classList.remove("hidden");
+  $("teacherBtn").classList.add("hidden");
   renderMobileBottomNav(getActiveViewId());
   renderArticles();
 }

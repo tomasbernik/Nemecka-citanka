@@ -71,6 +71,10 @@ h3 { font-size: 1.1rem; }
   gap: 8px;
 }
 
+.top-actions #teacherBtn {
+  display: none;
+}
+
 .reader-card, .article-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -140,7 +144,7 @@ h3 { font-size: 1.1rem; }
 .clicked-review {
   display: grid;
   gap: 12px;
-  margin: 0 0 18px;
+  margin: 18px 0 0;
   padding: 16px;
   background: var(--card);
   border: 1px solid var(--border);
@@ -153,6 +157,25 @@ h3 { font-size: 1.1rem; }
 
 .clicked-review .muted {
   margin: 0;
+}
+
+.clicked-review-compact {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.clicked-review-compact .practice-heading {
+  display: contents;
+}
+
+.clicked-review-compact .muted {
+  grid-column: 1 / -1;
+}
+
+.clicked-review-compact .quiz-prompt,
+.clicked-review-compact .quiz-options,
+.clicked-review-compact .practice-feedback {
+  display: none;
 }
 
 .text-btn {
@@ -231,6 +254,13 @@ h3 { font-size: 1.1rem; }
   margin-bottom: 14px;
   color: var(--muted);
   font-weight: 800;
+}
+
+.profile-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  white-space: nowrap;
 }
 
 .back-btn {

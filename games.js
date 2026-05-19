@@ -50,6 +50,7 @@ function startClickedReviewGame() {
   if (!panel) return;
 
   const clickedVocabulary = getClickedReviewVocabulary();
+  panel.classList.remove("clicked-review-compact");
   panel.classList.remove("hidden");
   $("clickedReviewMeta").textContent = clickedVocabulary.length
     ? `${formatText("clickedReviewCount", { count: clickedVocabulary.length })} ${t("clickedReviewQuestion")}`
@@ -73,11 +74,26 @@ function startClickedReviewGame() {
     .map(option => `<button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
     .join("");
   $("clickedReviewFeedback").textContent = "";
+  $("newClickedReviewBtn").textContent = t("next");
   $("newClickedReviewBtn").classList.toggle("hidden", options.length < 2);
 }
 
 function renderClickedReview() {
-  startClickedReviewGame();
+  const panel = $("clickedReviewPanel");
+  if (!panel) return;
+
+  const clickedVocabulary = getClickedReviewVocabulary();
+  panel.classList.remove("hidden");
+  panel.classList.add("clicked-review-compact");
+  $("clickedReviewMeta").textContent = clickedVocabulary.length
+    ? `${formatText("clickedReviewCount", { count: clickedVocabulary.length })} Precvič si ich, keď budeš mať chvíľu.`
+    : t("clickedReviewEmpty");
+  $("clickedReviewPrompt").textContent = "";
+  $("clickedReviewOptions").innerHTML = "";
+  $("clickedReviewFeedback").textContent = "";
+  $("newClickedReviewBtn").textContent = "Precvičiť";
+  $("newClickedReviewBtn").classList.toggle("hidden", !clickedVocabulary.length);
+  state.clickedReviewGame = null;
 }
 
 function answerClickedReview(answer) {

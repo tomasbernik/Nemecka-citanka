@@ -405,6 +405,7 @@ function updateStaticTexts() {
   const teacherButtonLabel = state.currentProfile?.role === "teacher" ? t("articleEditor") : t("myProgress");
   $("teacherBtn").setAttribute("aria-label", teacherButtonLabel);
   $("teacherBtn").setAttribute("title", teacherButtonLabel);
+  setText("profileProgressBtn", state.currentProfile?.role === "teacher" ? "articleEditor" : "myProgress");
   $("shareAppBtn").setAttribute("aria-label", t("shareApp"));
   $("shareAppBtn").setAttribute("title", t("shareApp"));
   $("settingsBtn").setAttribute("aria-label", t("settings"));
@@ -587,7 +588,6 @@ function showHome() {
   state.currentArticle = null;
   showView("homeView");
   renderHomeAssignments();
-  renderGamification();
   renderClickedReview();
   renderCategories();
   renderLevelFilters();
@@ -720,6 +720,7 @@ async function showTeacherView() {
     setTeacherPanel("students");
   }
   showView("teacherView");
+  renderGamification();
   renderOnboarding();
 }
 
@@ -1075,7 +1076,7 @@ function renderStartupQuiz() {
 function showStartupQuiz() {
   if (state.startupQuiz.shown || !state.currentProfile || !state.articles.length) return;
   if (!isInstallPromptHidden()) return;
-  const questions = buildStartupQuizQuestions();
+  const questions = buildStartupQuizQuestions().slice(0, 1);
   if (!questions.length) return;
 
   state.startupQuiz = {
@@ -1281,6 +1282,7 @@ onClick("articleEditorBottomBackBtn", showHome);
 onClick("settingsBtn", showSettings);
 onClick("shareAppBtn", shareApp);
 onClick("teacherBtn", showTeacherView);
+onClick("profileProgressBtn", showTeacherView);
 onClick("mobileNavHomeBtn", showHome);
 onClick("mobileNavReviewBtn", showClickedReviewFromNav);
 onClick("mobileNavProgressBtn", showTeacherView);
