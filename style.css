@@ -1,13 +1,19 @@
 
 :root {
-  --bg: #fff8ed;
+  --bg: #f5fbff;
   --card: #ffffff;
-  --text: #241a10;
-  --muted: #746554;
-  --accent: #f6b73c;
-  --accent-dark: #b77400;
-  --border: rgba(36, 26, 16, 0.12);
-  --shadow: 0 18px 45px rgba(80, 50, 10, 0.12);
+  --text: #13202d;
+  --muted: #627386;
+  --accent: #27c7c0;
+  --accent-dark: #116d9b;
+  --accent-text: #081b22;
+  --accent-rgb: 39, 199, 192;
+  --accent-dark-rgb: 17, 109, 155;
+  --support: #ffbd2f;
+  --support-dark: #b56f00;
+  --support-rgb: 255, 189, 47;
+  --border: rgba(19, 32, 45, 0.12);
+  --shadow: 0 18px 45px rgba(17, 109, 155, 0.13);
   --reader-size: 1.08rem;
 }
 
@@ -25,7 +31,10 @@ body.dark {
 body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: radial-gradient(circle at top left, rgba(246, 183, 60, 0.22), transparent 32rem), var(--bg);
+  background:
+    radial-gradient(circle at top left, rgba(var(--accent-rgb), 0.2), transparent 32rem),
+    radial-gradient(circle at bottom right, rgba(var(--support-rgb), 0.15), transparent 26rem),
+    var(--bg);
   color: var(--text);
 }
 
@@ -162,12 +171,12 @@ body.has-mobile-nav .top-actions #logoutBtn {
   width: 100%;
   min-height: 44px;
   padding: 10px 42px 10px 14px;
-  border: 1px solid rgba(246, 183, 60, 0.28);
+  border: 1px solid rgba(var(--accent-rgb), 0.28);
   border-radius: 999px;
   background:
     linear-gradient(45deg, transparent 50%, var(--accent-dark) 50%) calc(100% - 20px) 19px / 7px 7px no-repeat,
     linear-gradient(135deg, var(--accent-dark) 50%, transparent 50%) calc(100% - 15px) 19px / 7px 7px no-repeat,
-    rgba(246, 183, 60, 0.16);
+    rgba(var(--accent-rgb), 0.14);
   color: var(--text);
   font: inherit;
   font-weight: 850;
@@ -175,7 +184,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
 }
 
 .filter-select:focus {
-  outline: 3px solid rgba(246, 183, 60, 0.28);
+  outline: 3px solid rgba(var(--accent-rgb), 0.28);
   outline-offset: 2px;
 }
 
@@ -183,13 +192,13 @@ body.has-mobile-nav .top-actions #logoutBtn {
   white-space: nowrap;
   padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(246, 183, 60, 0.16);
+  background: rgba(var(--accent-rgb), 0.14);
   color: var(--text);
 }
 
 .chip.active {
   background: var(--accent);
-  color: #241a10;
+  color: var(--accent-text);
   font-weight: 800;
 }
 
@@ -304,7 +313,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
 
 .start-badge {
   background: var(--accent);
-  color: #241a10;
+  color: var(--accent-text);
   font-weight: 900;
 }
 
@@ -422,7 +431,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
 }
 
 .secondary-btn.quiet {
-  background: rgba(246, 183, 60, 0.2);
+  background: rgba(var(--accent-rgb), 0.16);
   color: var(--text);
 }
 
@@ -458,8 +467,8 @@ body.has-mobile-nav .top-actions #logoutBtn {
 }
 
 .reading-sentence.active {
-  background: rgba(246, 183, 60, 0.3);
-  box-shadow: 0 0 0 3px rgba(246, 183, 60, 0.18);
+  background: rgba(var(--accent-rgb), 0.22);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
 }
 
 .inline-word {
@@ -485,7 +494,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
 }
 
 .inline-word.active {
-  background: rgba(246, 183, 60, 0.24);
+  background: rgba(var(--accent-rgb), 0.18);
 }
 
 .inline-word.active::after {
@@ -640,8 +649,8 @@ body.has-mobile-nav .top-actions #logoutBtn {
 .editor-inline-hit {
   border-radius: 6px;
   padding: 1px 3px;
-  background: rgba(246, 183, 60, 0.32);
-  box-shadow: inset 0 -2px 0 rgba(178, 111, 22, 0.65);
+  background: rgba(var(--accent-rgb), 0.24);
+  box-shadow: inset 0 -2px 0 rgba(var(--accent-dark-rgb), 0.55);
   font-weight: 850;
 }
 
@@ -664,7 +673,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
 
 .choice-btn.selected {
   background: var(--accent);
-  color: #241a10;
+  color: var(--accent-text);
 }
 
 .true-false-item.task-complete {
@@ -739,9 +748,9 @@ body.has-mobile-nav .top-actions #logoutBtn {
   gap: 14px;
   margin: 12px 0 18px;
   padding: 14px;
-  border: 1px solid rgba(246, 183, 60, 0.48);
+  border: 1px solid rgba(var(--support-rgb), 0.52);
   border-radius: 8px;
-  background: #fff4d6;
+  background: rgba(var(--support-rgb), 0.18);
 }
 
 .onboarding-panel.hidden {
@@ -759,13 +768,13 @@ body.has-mobile-nav .top-actions #logoutBtn {
 }
 
 .inline-word.onboarding-focus {
-  background: rgba(246, 183, 60, 0.28);
-  box-shadow: 0 0 0 3px rgba(246, 183, 60, 0.2);
+  background: rgba(var(--accent-rgb), 0.2);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
 }
 
 .word-chip.selected {
   background: var(--accent);
-  color: #241a10;
+  color: var(--accent-text);
 }
 
 .vocab-base {
@@ -786,7 +795,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
 }
 
 .match-card.selected {
-  background: rgba(246, 183, 60, 0.24);
+  background: rgba(var(--accent-rgb), 0.18);
   border-color: var(--accent-dark);
 }
 
@@ -855,7 +864,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
 
 .letter-cell.selected {
   background: var(--accent);
-  color: #241a10;
+  color: var(--accent-text);
 }
 
 .letter-cell.found {
@@ -927,7 +936,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  background: #fff4d6;
+  background: rgba(var(--support-rgb), 0.18);
 }
 
 .assignment-notice.hidden,
@@ -1000,7 +1009,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
   border-radius: 8px;
   padding: 8px 10px;
   background: var(--accent);
-  color: #241a10;
+  color: var(--accent-text);
   text-align: center;
 }
 
@@ -1289,7 +1298,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
 
 .teacher-tabs .secondary-btn.active {
   background: var(--accent);
-  color: #241a10;
+  color: var(--accent-text);
 }
 
 .primary-btn {
@@ -1298,7 +1307,7 @@ body.has-mobile-nav .top-actions #logoutBtn {
   padding: 15px 18px;
   border-radius: 18px;
   background: var(--accent);
-  color: #241a10;
+  color: var(--accent-text);
   font-weight: 900;
 }
 
@@ -1458,7 +1467,7 @@ select {
 
   .practice-tab.active {
     background: var(--accent);
-    color: #241a10;
+    color: var(--accent-text);
   }
 
   [data-practice-panel]:not(.active) {
@@ -1498,7 +1507,7 @@ select {
   }
 
   .mobile-nav-btn.active {
-    background: rgba(246, 183, 60, 0.22);
+    background: rgba(var(--accent-rgb), 0.18);
     color: var(--text);
   }
 

@@ -3,8 +3,8 @@
   "short_name": "Čítanka",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#fff8ed",
-  "theme_color": "#f6b73c",
+  "background_color": "#f5fbff",
+  "theme_color": "#27c7c0",
   "description": "Krátke nemecké texty na čítanie offline.",
   "icons": [
     {
