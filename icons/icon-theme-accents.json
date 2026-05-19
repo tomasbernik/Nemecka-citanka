@@ -13,6 +13,13 @@
     "background": "#fff8ed",
     "note": "Warmer version close to the previous app colors."
   },
+  "warmCoral": {
+    "accent": "#e66f4f",
+    "accentDark": "#a43f2d",
+    "support": "#2eb8aa",
+    "background": "#fff7f0",
+    "note": "Warm but not yellow-only: coral/terracotta with a muted turquoise support accent."
+  },
   "iconBlue": {
     "accent": "#3388f4",
     "accentDark": "#3154c9",

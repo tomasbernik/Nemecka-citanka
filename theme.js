@@ -1,6 +1,6 @@
 window.NC_THEME = {
   // Change this value to try another palette from the list below.
-  activePalette: "iconWarm",
+  activePalette: "iconCoral",
   palettes: {
     icon: {
       accent: "#27c7c0",
@@ -35,6 +35,23 @@ window.NC_THEME = {
       border: "rgba(36, 26, 16, 0.12)",
       shadow: "0 18px 45px rgba(80, 50, 10, 0.12)",
       note: "Warmer variant close to the original app colors, with icon turquoise as support."
+    },
+    warmCoral: {
+      accent: "#e66f4f",
+      accentDark: "#a43f2d",
+      accentText: "#ffffff",
+      accentRgb: "230, 111, 79",
+      accentDarkRgb: "164, 63, 45",
+      support: "#2eb8aa",
+      supportDark: "#14736f",
+      supportRgb: "46, 184, 170",
+      background: "#fff7f0",
+      card: "#ffffff",
+      text: "#2b1d18",
+      muted: "#77645c",
+      border: "rgba(43, 29, 24, 0.12)",
+      shadow: "0 18px 45px rgba(119, 73, 53, 0.12)",
+      note: "Warm but calmer than yellow: coral/terracotta accent with muted turquoise support."
     },
     iconBlue: {
       accent: "#3388f4",
