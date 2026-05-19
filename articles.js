@@ -204,52 +204,53 @@ function getArticleCategories() {
 function renderCategories() {
   const root = $("categoryFilters");
   const categories = getCategories();
-  const visibleCategories = state.showAllCategories
-    ? categories
-    : categories.slice(0, VISIBLE_CATEGORY_LIMIT);
-  const hasMore = categories.length > VISIBLE_CATEGORY_LIMIT;
+  if (!root) return;
 
-  root.innerHTML = "";
-  visibleCategories.forEach(category => {
-    const btn = document.createElement("button");
-    btn.className = "chip" + (category === state.selectedCategory ? " active" : "");
-    btn.textContent = getCategoryLabel(category);
-    btn.onclick = () => {
-      state.selectedCategory = category;
-      renderCategories();
-      renderArticles();
-    };
-    root.appendChild(btn);
-  });
+  root.classList.add("filter-select-wrap");
+  root.innerHTML = `
+    <label class="filter-select-label">
+      <span>Témy</span>
+      <select id="categoryFilterSelect" class="filter-select"></select>
+    </label>
+  `;
 
-  if (hasMore) {
-    const btn = document.createElement("button");
-    btn.className = "chip more-chip";
-    btn.textContent = state.showAllCategories ? t("lessTopics") : t("moreTopics");
-    btn.onclick = () => {
-      state.showAllCategories = !state.showAllCategories;
-      renderCategories();
-    };
-    root.appendChild(btn);
-  }
+  const select = $("categoryFilterSelect");
+  select.innerHTML = categories
+    .map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category === ALL_CATEGORIES ? "Všetky témy" : getCategoryLabel(category))}</option>`)
+    .join("");
+  select.value = categories.includes(state.selectedCategory) ? state.selectedCategory : ALL_CATEGORIES;
+  if (select.value !== state.selectedCategory) state.selectedCategory = select.value;
+  select.onchange = () => {
+    state.selectedCategory = select.value;
+    renderCategories();
+    renderArticles();
+  };
 }
 
 function renderLevelFilters() {
   const root = $("levelFilters");
   if (!root) return;
   const levels = getArticleLevels();
-  root.innerHTML = "";
-  levels.forEach(level => {
-    const btn = document.createElement("button");
-    btn.className = "chip" + (level === state.selectedLevel ? " active" : "");
-    btn.textContent = level === ALL_LEVELS ? "Všetky úrovne" : level;
-    btn.onclick = () => {
-      state.selectedLevel = level;
-      renderLevelFilters();
-      renderArticles();
-    };
-    root.appendChild(btn);
-  });
+
+  root.classList.add("filter-select-wrap");
+  root.innerHTML = `
+    <label class="filter-select-label">
+      <span>Úroveň</span>
+      <select id="levelFilterSelect" class="filter-select"></select>
+    </label>
+  `;
+
+  const select = $("levelFilterSelect");
+  select.innerHTML = levels
+    .map(level => `<option value="${escapeHtml(level)}">${escapeHtml(level === ALL_LEVELS ? "Všetky úrovne" : level)}</option>`)
+    .join("");
+  select.value = levels.includes(state.selectedLevel) ? state.selectedLevel : ALL_LEVELS;
+  if (select.value !== state.selectedLevel) state.selectedLevel = select.value;
+  select.onchange = () => {
+    state.selectedLevel = select.value;
+    renderLevelFilters();
+    renderArticles();
+  };
 }
 
 function renderArticles() {

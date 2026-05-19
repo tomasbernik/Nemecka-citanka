@@ -132,11 +132,51 @@ body.has-mobile-nav .top-actions #logoutBtn {
   font: inherit;
 }
 
-.filters {
+.filter-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   padding: 4px 0 18px;
+}
+
+.filters {
+  min-width: 0;
+}
+
+.filter-select-wrap {
+  flex: 1 1 180px;
+}
+
+.filter-select-label {
+  display: grid;
+  gap: 5px;
+}
+
+.filter-select-label span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.filter-select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 42px 10px 14px;
+  border: 1px solid rgba(246, 183, 60, 0.28);
+  border-radius: 999px;
+  background:
+    linear-gradient(45deg, transparent 50%, var(--accent-dark) 50%) calc(100% - 20px) 19px / 7px 7px no-repeat,
+    linear-gradient(135deg, var(--accent-dark) 50%, transparent 50%) calc(100% - 15px) 19px / 7px 7px no-repeat,
+    rgba(246, 183, 60, 0.16);
+  color: var(--text);
+  font: inherit;
+  font-weight: 850;
+  appearance: none;
+}
+
+.filter-select:focus {
+  outline: 3px solid rgba(246, 183, 60, 0.28);
+  outline-offset: 2px;
 }
 
 .chip {
