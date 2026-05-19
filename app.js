@@ -1570,6 +1570,11 @@ function showView(viewId) {
   renderMobileBottomNav(viewId);
 }
 
+function scrollToPageTop() {
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
+}
+
 function setMobileNavButton(id, label, active = false) {
   const button = $(id);
   if (!button) return;
@@ -2095,32 +2100,80 @@ async function signOutGoogle() {
 }
 
 async function linkCurrentProfileToAuthUser(statusTarget = "authAccountStatus") {
+  const target = $(statusTarget) || $("loginError");
   if (!state.currentProfile) {
-    const target = $(statusTarget) || $("loginError");
     if (target) target.textContent = t("authSignInFirst");
     return false;
   }
 
   const user = state.authUser || await loadAuthUser();
   if (!user?.id) {
+    if (target) target.textContent = state.remoteReady ? t("authLinkStarted") : t("authUnavailable");
     startGoogleAuth("link-profile");
     return false;
   }
 
-  state.currentProfile.authUserId = user.id;
-  state.currentProfile.ownerAuthUserId = state.currentProfile.ownerAuthUserId || user.id;
-  state.profiles = state.profiles.map(profile =>
-    profile.id === state.currentProfile.id
-      ? { ...profile, authUserId: user.id, ownerAuthUserId: profile.ownerAuthUserId || user.id }
-      : profile
-  );
-  await saveProfiles();
-  renderAuthControls(t("authLinkSuccess"));
-  logAppEvent("profile_google_linked", {
-    profileId: state.currentProfile.id,
-    email: user.email || null
+  try {
+    await linkProfileToAuthUser(state.currentProfile, user);
+    renderAuthControls(t("authLinkSuccess"));
+    logAppEvent("profile_google_linked", {
+      profileId: state.currentProfile.id,
+      email: user.email || null
+    });
+    return true;
+  } catch (error) {
+    console.error(error);
+    if (target) target.textContent = error.message || t("authUnavailable");
+    return false;
+  }
+}
+
+async function linkProfileToAuthUser(profile, user) {
+  if (!profile?.id || !user?.id) return null;
+
+  if (state.remoteReady) {
+    const previousProfiles = state.profiles.filter(item =>
+      item.authUserId === user.id && item.id !== profile.id
+    );
+    for (const previousProfile of previousProfiles) {
+      await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(previousProfile.id)}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ auth_user_id: null })
+      });
+    }
+
+    await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(profile.id)}`, {
+      method: "PATCH",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({
+        auth_user_id: user.id,
+        owner_auth_user_id: profile.ownerAuthUserId || user.id
+      })
+    });
+  }
+
+  state.profiles = state.profiles.map(item => {
+    if (item.authUserId === user.id && item.id !== profile.id) {
+      return { ...item, authUserId: null };
+    }
+    if (item.id === profile.id) {
+      return {
+        ...item,
+        authUserId: user.id,
+        ownerAuthUserId: item.ownerAuthUserId || user.id
+      };
+    }
+    return item;
   });
-  return true;
+  if (state.currentProfile?.id === profile.id) {
+    state.currentProfile = normalizeProfile(state.profiles.find(item => item.id === profile.id));
+  }
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
+  await loadProfiles();
+  const linkedProfile = state.profiles.find(item => item.id === profile.id) || null;
+  if (linkedProfile && state.currentProfile?.id === profile.id) state.currentProfile = linkedProfile;
+  return linkedProfile;
 }
 
 async function handlePendingAuthAction() {
@@ -2136,10 +2189,6 @@ async function handlePendingAuthAction() {
     if (!profile && !state.profiles.length) {
       profile = await createFirstGoogleTeacherProfile();
     }
-    if (!profile) {
-      profile = await createAuthTeacherProfile();
-    }
-
     if (!profile) {
       showLogin();
       $("loginError").textContent = t("authLoginNoProfile");
@@ -4305,6 +4354,7 @@ async function openArticle(id) {
 
   updateMarkReadButtons(state.profileData.readIds.includes(article.id) ? t("readDone") : t("markRead"));
   renderOnboarding();
+  scrollToPageTop();
 }
 
 function addDiscoveredVocabulary(word, translation) {
@@ -4351,6 +4401,7 @@ function showHome() {
   renderArticles();
   renderOnboarding();
   scheduleInstallPrompt();
+  scrollToPageTop();
 }
 
 function showSettings() {

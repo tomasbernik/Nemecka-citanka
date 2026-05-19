@@ -272,6 +272,7 @@ alter table public.app_devices enable row level security;
 drop policy if exists "app_profiles_select" on public.app_profiles;
 drop policy if exists "app_profiles_insert" on public.app_profiles;
 drop policy if exists "app_profiles_update" on public.app_profiles;
+drop policy if exists "app_profiles_claim_unlinked_pin_profile" on public.app_profiles;
 drop policy if exists "app_profile_data_select" on public.app_profile_data;
 drop policy if exists "app_profile_data_insert" on public.app_profile_data;
 drop policy if exists "app_profile_data_update" on public.app_profile_data;
@@ -312,6 +313,12 @@ with check (
   or owner_auth_user_id = auth.uid()
   or auth_user_id = auth.uid()
 );
+
+create policy "app_profiles_claim_unlinked_pin_profile"
+on public.app_profiles for update
+to authenticated
+using (auth_user_id is null)
+with check (auth_user_id = auth.uid());
 
 create policy "app_profile_data_select"
 on public.app_profile_data for select
