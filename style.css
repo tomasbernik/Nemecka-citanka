@@ -75,6 +75,18 @@ h3 { font-size: 1.1rem; }
   display: none;
 }
 
+.top-actions #settingsBtn {
+  display: none;
+}
+
+.top-actions #logoutBtn {
+  display: none;
+}
+
+body.has-mobile-nav .top-actions #logoutBtn {
+  display: grid;
+}
+
 .reader-card, .article-card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -89,6 +101,8 @@ h3 { font-size: 1.1rem; }
 }
 
 .icon-btn {
+  display: grid;
+  place-items: center;
   width: 48px;
   height: 48px;
   border-radius: 18px;
@@ -96,6 +110,16 @@ h3 { font-size: 1.1rem; }
   color: var(--text);
   box-shadow: var(--shadow);
   font-weight: 800;
+}
+
+.icon-btn svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .mobile-bottom-nav {

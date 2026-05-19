@@ -160,6 +160,7 @@ async function setCurrentProfile(profile) {
   $("settingsBtn").classList.remove("hidden");
   $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.remove("hidden");
+  $("logoutBtn").classList.remove("hidden");
   showHome();
   if (!hasUnseenAssignments()) showStartupQuiz();
 }
@@ -169,6 +170,7 @@ function showLogin() {
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.add("hidden");
+  $("logoutBtn").classList.add("hidden");
   renderNativeLanguageControls();
   updateStaticTexts();
   renderProfileCreationControls();
@@ -184,6 +186,7 @@ function showSetup() {
   $("settingsBtn").classList.toggle("hidden", !state.currentProfile);
   $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.toggle("hidden", !state.currentProfile);
+  $("logoutBtn").classList.toggle("hidden", !state.currentProfile);
   renderNativeLanguageControls();
   updateStaticTexts();
   showView("setupView");

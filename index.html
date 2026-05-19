@@ -19,8 +19,23 @@
       </div>
       <div class="top-actions">
         <button id="teacherBtn" class="icon-btn hidden" aria-label="Editor článkov">✎</button>
-        <button id="shareAppBtn" class="icon-btn hidden" aria-label="Zdieľať appku">↗</button>
+        <button id="shareAppBtn" class="icon-btn hidden" aria-label="Zdieľať appku">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <path d="M8.7 10.7 15.3 6.3"></path>
+            <path d="M8.7 13.3 15.3 17.7"></path>
+          </svg>
+        </button>
         <button id="settingsBtn" class="icon-btn hidden" aria-label="Nastavenia">Aa</button>
+        <button id="logoutBtn" class="icon-btn hidden" aria-label="Odhlásiť">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <path d="M16 17l5-5-5-5"></path>
+            <path d="M21 12H9"></path>
+          </svg>
+        </button>
       </div>
     </header>
 
@@ -110,7 +125,6 @@
           <span id="currentProfileLabel"></span>
           <div class="profile-actions">
             <button id="profileProgressBtn" class="text-btn" type="button">Môj postup</button>
-            <button id="logoutBtn" class="text-btn">Odhlásiť</button>
           </div>
         </div>
 

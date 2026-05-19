@@ -441,7 +441,8 @@ function updateStaticTexts() {
   setText("registerProfileBtn", "newProfile");
   setText("setupPairBtn", "setupPair");
 
-  setText("logoutBtn", "logout");
+  $("logoutBtn")?.setAttribute("aria-label", t("logout"));
+  $("logoutBtn")?.setAttribute("title", t("logout"));
   setText("clickedReviewEyebrow", "clickedReviewEyebrow");
   setText("clickedReviewTitle", "clickedReviewTitle");
   setText("newClickedReviewBtn", "next");
