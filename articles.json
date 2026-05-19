@@ -134,7 +134,7 @@
         "de": "besondere",
         "sk": "špeciálna / výnimočná",
         "ru": "особенный/исключительный",
-        "pl": "wyjątkowy/wyjątkowy",
+        "pl": "szczególny / wyjątkowy",
         "hu": "különleges / kivételes"
       },
       {
@@ -161,8 +161,8 @@
       {
         "de": "unbedingt",
         "sk": "určite / bezpodmienečne",
-        "ru": "определенно/безоговорочно",
-        "pl": "zdecydowanie/bezwarunkowo",
+        "ru": "обязательно / непременно",
+        "pl": "koniecznie / zdecydowanie",
         "hu": "határozottan / feltétel nélkül"
       },
       {
@@ -175,7 +175,7 @@
       {
         "de": "ruhig",
         "sk": "pokojný",
-        "ru": "мирный",
+        "ru": "спокойный",
         "pl": "spokojny",
         "hu": "békés"
       },
@@ -217,15 +217,15 @@
       {
         "de": "einig",
         "sk": "jednotní / zhodli sa",
-        "ru": "единый / согласованный",
-        "pl": "zjednoczeni / zgodzili się",
+        "ru": "согласны / сошлись во мнении",
+        "pl": "zgodni / zgodzili się",
         "hu": "egységes / egyetértett"
       },
       {
         "de": "erlebt",
         "sk": "zažili",
-        "ru": "опытный",
-        "pl": "doświadczony",
+        "ru": "пережили / испытали",
+        "pl": "przeżyli / doświadczyli",
         "hu": "tapasztalt"
       }
     ],
@@ -285,7 +285,7 @@
       {
         "de": "gestresst",
         "sk": "stresovaný",
-        "ru": "подчеркнутый",
+        "ru": "в стрессе",
         "pl": "zestresowany",
         "hu": "hangsúlyozta"
       },
@@ -320,8 +320,8 @@
       {
         "de": "der Verkehr",
         "sk": "doprava",
-        "ru": "транспорт",
-        "pl": "transportu",
+        "ru": "движение / транспорт",
+        "pl": "ruch uliczny / transport",
         "hu": "szállítás"
       },
       {
@@ -343,7 +343,7 @@
       {
         "de": "ruhig",
         "sk": "pokojný",
-        "ru": "мирный",
+        "ru": "спокойный",
         "pl": "spokojny",
         "hu": "békés"
       },
@@ -420,8 +420,8 @@
       {
         "de": "bewundert",
         "sk": "obdivovali",
-        "ru": "восхищался",
-        "pl": "podziwiany",
+        "ru": "восхищались",
+        "pl": "podziwiali",
         "hu": "csodálta"
       },
       {
@@ -442,7 +442,7 @@
         "de": "belegte Baguette",
         "sk": "obložená bageta",
         "ru": "багет с начинкой",
-        "pl": "bagietka z dodatkami",
+        "pl": "kanapka z bagietki",
         "hu": "megrakott bagett"
       },
       {
@@ -490,8 +490,8 @@
       {
         "de": "Verkehr",
         "sk": "doprava",
-        "ru": "транспорт",
-        "pl": "transportu",
+        "ru": "движение / транспорт",
+        "pl": "ruch uliczny / transport",
         "hu": "szállítás"
       },
       {
@@ -833,7 +833,7 @@
       {
         "de": "ruhig",
         "sk": "kľudný, pokojný",
-        "ru": "спокойный, мирный",
+        "ru": "спокойный, тихий",
         "pl": "spokojny",
         "hu": "nyugodt, békés"
       },

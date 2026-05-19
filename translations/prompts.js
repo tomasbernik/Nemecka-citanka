@@ -80,6 +80,7 @@ const PROMPT_TEXT = {
       "немецкое предложение = true",
       "немецкое предложение = false",
       "Используй смесь правдивых и ложных предложений. Не добавляй ничего лишнего.",
+      "Ответы не должны идти в регулярном порядке true/false/true/false или false/true/false/true. Могут быть и два правдивых или два ложных предложения подряд.",
       title ? `Название: ${title}` : "",
       "",
       text
@@ -110,6 +111,7 @@ const PROMPT_TEXT = {
       "niemieckie zdanie = true",
       "niemieckie zdanie = false",
       "Użyj mieszanki zdań prawdziwych i fałszywych. Nie dodawaj niczego więcej.",
+      "Odpowiedzi nie mogą być w regularnej kolejności true/false/true/false ani false/true/false/true. Mogą też wystąpić dwa zdania prawdziwe albo dwa fałszywe pod rząd.",
       title ? `Tytuł: ${title}` : "",
       "",
       text

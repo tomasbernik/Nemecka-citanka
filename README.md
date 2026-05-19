@@ -41,6 +41,16 @@ Uprav súbor `articles.json`. Každý článok má:
 
 Po nahratí novej verzie na hosting stačí v appke kliknúť na „Aktualizovať“.
 
+## Kontrola prekladov
+
+Po pridaní nového textu alebo nového jazyka spusti:
+
+```bash
+node scripts/check-translations.mjs
+```
+
+Skript porovná všetky podporované jazyky so slovenským zdrojom pravdy, skontroluje chýbajúce UI kľúče, prompt preklady, placeholdery typu `{count}` a preklady kategórií. Ak niečo chýba, skončí chybou a vypíše konkrétne kľúče.
+
 ## Obrázky k článkom
 
 V editore článkov môžeš vybrať obrázok zo zariadenia. Appka ho pri uložení článku automaticky prevedie na JPG, nahrá do Supabase Storage bucketu `article-images` a uloží k článku URL obrázka.
