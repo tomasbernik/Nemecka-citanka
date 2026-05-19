@@ -1112,8 +1112,23 @@ window.addEventListener("appinstalled", () => {
 });
 
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("service-worker.js");
+  let refreshingForServiceWorkerUpdate = false;
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshingForServiceWorkerUpdate) return;
+    refreshingForServiceWorkerUpdate = true;
+    window.location.reload();
+  });
+
+  window.addEventListener("load", async () => {
+    try {
+      const registration = await navigator.serviceWorker.register("service-worker.js", {
+        updateViaCache: "none"
+      });
+      await registration.update();
+    } catch (error) {
+      console.info("Service worker registration skipped:", error.message);
+    }
   });
 }
 
