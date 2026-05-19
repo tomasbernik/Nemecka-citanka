@@ -129,6 +129,20 @@ function getVocabularyTranslation(item, language = getNativeLanguage()) {
   return language === DEFAULT_NATIVE_LANGUAGE ? item.translation || "" : "";
 }
 
+function getVocabularyTranslations(item = {}) {
+  return Object.fromEntries(VOCABULARY_LANGUAGE_CODES
+    .filter(code => item[code])
+    .map(code => [code, String(item[code]).trim()]));
+}
+
+function hasAnyVocabularyTranslation(item = {}) {
+  return VOCABULARY_LANGUAGE_CODES.some(code => Boolean(item[code]));
+}
+
+function hasAllVocabularyTranslations(item = {}) {
+  return VOCABULARY_LANGUAGE_CODES.every(code => Boolean(item[code]));
+}
+
 function shouldShowVocabularyBase(item) {
   if (!item?.base) return false;
   return normalizeVocabularyKey(item.base) !== normalizeVocabularyKey(item.de);

@@ -1,11 +1,25 @@
-Najväčší prínos podľa mňa:
+pridanie Info o tom, aka gramatika je v texte
 
-Zadávanie článkov žiakom
-Učiteľ by pri článku mohol označiť, ktorým žiakom ho zadáva. V dashboarde by potom bolo jasné: „toto má spraviť“, „toto už spravil“, „toto mešká“.
+dat appku aj celu do nemciny (okrem prekladov slov) pre nemeckych ucitelov a aj do anglictiny
+
+rozsirit preklady ro rumunstiny, talianciny, anglictiny, francuzstiny, turectiny
+
+po registracii na byt rola automaticky ziak, ale da sa vzdy zmenit na ucitela. aj terajsi ziaci si mozu zmenit rolu a aj naopak
+
+
+od claude:
+. Chýba mi onboarding pre nových používateľov – nie je hneď jasné, kde začať
+. Učenie
+(Spaced repetition pre slovíčka (zopakovať to, čo si zabudol)
+Štatistiky pokroku – koľko slovíčok viem, aké mám skóre v hrách
+História prečítaných článkov)
+ 
+
+
+Najväčší prínos podľa mňa:
 
 Lepší učiteľský dashboard
 Teraz je prvá verzia. Ďalší krok by bol:
-
 filtrovať podľa žiaka, článku, aktivity,
 zvýrazniť neaktívnych žiakov,
 ukázať poslednú aktivitu,
@@ -27,3 +41,22 @@ Doladiť dashboard, editor a článok na mobile, aby sa všetko dobre čítalo a
 
 Admin pohľad
 Pre teba ako admina by sa hodil samostatný režim: všetci učitelia, ich skupiny, žiaci, posledná aktivita, prípadne problémové profily.
+
+Opakovanie kliknutých slovíčok
+Toto by malo veľký prínos pre žiakov. Appka už vie, na ktoré slovíčka klikli. Spravil by som sekciu „Moje slovíčka“, kde si môžu precvičiť vlastné výrazy z článkov: kartičky, 4 možnosti, prípadne „viem / neviem“.
+
+Lepšie stavy zadaní pre učiteľa
+Teraz už žiak vidí zadania. Učiteľ by mohol ešte jasnejšie vidieť:
+
+kto zadanie neotvoril,
+kto ho otvoril,
+kto ho rozpracoval,
+kto ho dokončil.
+Gramatický fokus pri článku
+Pridať pole „Gramatika“ v editore článkov, napr. Perfekt, Dativ, weil, Modalverben, a neskôr podľa toho filtrovať.
+
+Komentár učiteľa k odpovediam
+Učiteľ by si otvoril odpovede žiaka a mohol napísať krátku spätnú väzbu. Žiak by ju videl pri článku alebo v zadaniach.
+
+Lepší editor článkov
+Editor už veľa vie, ale je dosť dlhý. Dalo by sa ho rozdeliť na kroky alebo spraviť prehľadnejší stav „1. text, 2. slovíčka, 3. otázky, 4. obrázok, 5. zadanie“.

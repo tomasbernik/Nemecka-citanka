@@ -52,7 +52,7 @@ function getVocabularySourceItem(article, word) {
 function makeDiscoveredVocabularyItem(article, word, translation) {
   const source = getVocabularySourceItem(article, word) || {};
   const item = { de: word };
-  ["sk", "ru", "pl", "hu"].forEach(language => {
+  VOCABULARY_LANGUAGE_CODES.forEach(language => {
     if (source[language]) item[language] = source[language];
   });
 

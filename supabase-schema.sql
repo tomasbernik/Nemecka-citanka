@@ -8,11 +8,21 @@ create table if not exists public.app_profiles (
   teacher_group_id text,
   invite_token text unique,
   invite_claimed_at timestamptz,
-  native_language text not null default 'sk' check (native_language in ('sk', 'ru', 'pl', 'hu'))
+  native_language text not null default 'sk' check (native_language in ('sk', 'ru', 'pl', 'hu', 'ro', 'it', 'en', 'fr', 'tr'))
 );
 
 alter table public.app_profiles
 add column if not exists native_language text not null default 'sk';
+
+do $$
+begin
+  alter table public.app_profiles
+  drop constraint if exists app_profiles_native_language_check;
+
+  alter table public.app_profiles
+  add constraint app_profiles_native_language_check
+  check (native_language in ('sk', 'ru', 'pl', 'hu', 'ro', 'it', 'en', 'fr', 'tr'));
+end $$;
 
 alter table public.app_profiles
 add column if not exists teacher_group_id text;
@@ -137,7 +147,12 @@ missing as (
       case when coalesce(item ->> 'sk', '') = '' then 'sk' end,
       case when coalesce(item ->> 'ru', '') = '' then 'ru' end,
       case when coalesce(item ->> 'pl', '') = '' then 'pl' end,
-      case when coalesce(item ->> 'hu', '') = '' then 'hu' end
+      case when coalesce(item ->> 'hu', '') = '' then 'hu' end,
+      case when coalesce(item ->> 'ro', '') = '' then 'ro' end,
+      case when coalesce(item ->> 'it', '') = '' then 'it' end,
+      case when coalesce(item ->> 'en', '') = '' then 'en' end,
+      case when coalesce(item ->> 'fr', '') = '' then 'fr' end,
+      case when coalesce(item ->> 'tr', '') = '' then 'tr' end
     ], null) as missing_languages,
     item
   from article_vocabulary

@@ -8,14 +8,9 @@ function parseVocabularyJson(value, allowDraft = false) {
 
   const parsed = JSON.parse(text);
   const items = Array.isArray(parsed) ? parsed : [parsed];
-  return items.map(item => ({
-    de: (item.de || "").trim(),
-    base: (item.base || item.lemma || item.basic || item.grundform || "").trim(),
-    sk: (item.sk || "").trim(),
-    ru: (item.ru || "").trim(),
-    pl: (item.pl || "").trim(),
-    hu: (item.hu || "").trim()
-  })).filter(item => item.de && (allowDraft || item.sk || item.ru || item.pl || item.hu));
+  return items.map(normalizeVocabularyImportItem)
+    .filter(Boolean)
+    .filter(item => item.de && (allowDraft || hasAnyVocabularyTranslation(item)));
 }
 
 function parseVocabularyLines(value) {
@@ -43,7 +38,7 @@ function parseVocabularyDraftLines(value) {
 function formatVocabularyLines(items = []) {
   const language = getNativeLanguage();
   const hasMultipleTranslations = items.some(item =>
-    ["sk", "ru", "pl", "hu"].filter(code => item[code]).length > (item[language] ? 1 : 0)
+    VOCABULARY_LANGUAGE_CODES.filter(code => item[code]).length > (item[language] ? 1 : 0)
     || item.base
   );
   if (hasMultipleTranslations) {
@@ -56,9 +51,7 @@ function mergeVocabularyTranslations(existingItems = [], parsedItems = [], langu
   const existingByKey = new Map(existingItems.map(item => [normalizeVocabularyKey(item.de), item]));
   return parsedItems.map(item => {
     const existing = existingByKey.get(normalizeVocabularyKey(item.de)) || {};
-    const translations = Object.fromEntries(["sk", "ru", "pl", "hu"]
-      .filter(code => item[code])
-      .map(code => [code, item[code]]));
+    const translations = getVocabularyTranslations(item);
     return {
       ...existing,
       ...translations,
@@ -75,9 +68,7 @@ function appendVocabularyTranslations(existingItems = [], parsedItems = [], lang
   parsedItems.forEach(item => {
     const key = normalizeVocabularyKey(item.de);
     const existing = byKey.get(key) || {};
-    const translations = Object.fromEntries(["sk", "ru", "pl", "hu"]
-      .filter(code => item[code])
-      .map(code => [code, item[code]]));
+    const translations = getVocabularyTranslations(item);
     byKey.set(key, {
       ...existing,
       ...translations,
@@ -101,15 +92,12 @@ function normalizeVocabularyImportItem(item) {
   if (!item || typeof item !== "object") return null;
   const normalized = {
     de: (item.de || item.german || item.word || item.phrase || "").trim(),
-    base: (item.base || item.lemma || item.basic || item.grundform || "").trim(),
-    sk: (item.sk || "").trim(),
-    ru: (item.ru || "").trim(),
-    pl: (item.pl || "").trim(),
-    hu: (item.hu || "").trim()
+    base: (item.base || item.lemma || item.basic || item.grundform || "").trim()
   };
-  return normalized.de && (normalized.sk || normalized.ru || normalized.pl || normalized.hu)
-    ? normalized
-    : null;
+  VOCABULARY_LANGUAGE_CODES.forEach(code => {
+    normalized[code] = (item[code] || "").trim();
+  });
+  return normalized.de ? normalized : null;
 }
 
 function normalizeQuestionImportItem(item) {
@@ -467,6 +455,13 @@ function getPromptText() {
 }
 
 function getArticleJsonPromptInstructions(level) {
+  const vocabularyExample = `{\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",${VOCABULARY_LANGUAGE_CODES
+    .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
+    .join(",")}}`;
+  const inlineVocabularyExample = `{\"de\":\"presný súvislý úsek skopírovaný z textu článku\",\"base\":\"základný tvar\",${VOCABULARY_LANGUAGE_CODES
+    .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
+    .join(",")}}`;
+
   return [
     "",
     "JSON schéma:",
@@ -477,10 +472,10 @@ function getArticleJsonPromptInstructions(level) {
     "  \"summary\": \"krátky nemecký popis článku\",",
     "  \"text\": [\"odsek 1\", \"odsek 2\", \"odsek 3\", \"odsek 4\"],",
     "  \"vocabulary\": [",
-    "    {\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",\"sk\":\"slovenský preklad\",\"ru\":\"ruský preklad\",\"pl\":\"poľský preklad\",\"hu\":\"maďarský preklad\"}",
+    `    ${vocabularyExample}`,
     "  ],",
     "  \"inlineVocabulary\": [",
-    "    {\"de\":\"presný súvislý úsek skopírovaný z textu článku\",\"base\":\"základný tvar\",\"sk\":\"slovenský preklad\",\"ru\":\"ruský preklad\",\"pl\":\"poľský preklad\",\"hu\":\"maďarský preklad\"}",
+    `    ${inlineVocabularyExample}`,
     "  ],",
     "  \"questions\": [",
     "    {\"statement\":\"nemecká pravda/nepravda veta\",\"answer\":true}",
@@ -492,7 +487,7 @@ function getArticleJsonPromptInstructions(level) {
     `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
     "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
     "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false. Odpovede nesmú byť v pravidelnom poradí true/false/true/false ani false/true/false/true; poradie musí pôsobiť prirodzene a môže mať aj dve rovnaké odpovede za sebou.",
-    "Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, base, sk, ru, pl, hu.",
+    `Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, base, ${VOCABULARY_LANGUAGE_CODES.join(", ")}.`,
     "Do \"base\" daj základný slovníkový tvar: pri podstatnom mene s určitým členom a v nominatíve jednotného čísla, napríklad \"der Mann\"; pri slovese infinitív, napríklad \"gehen\"; pri prídavnom mene základný tvar, napríklad \"freundlich\". Ak je \"de\" už základný tvar alebo ide o celú frázu, môže byť \"base\" rovnaké ako \"de\"."
   ];
 }
@@ -579,13 +574,13 @@ function addRequiredWordsToVocabulary() {
 
 function buildTranslationPrompt() {
   const translatedKeys = new Set(getDraftInlineVocabularyItems()
-    .filter(item => item.sk || item.ru || item.pl || item.hu)
+    .filter(hasAnyVocabularyTranslation)
     .map(item => normalizeVocabularyKey(item.de)));
   const words = (state.editorManualInlineVocabulary || [])
     .filter(item => !translatedKeys.has(normalizeVocabularyKey(item.de)));
   const seen = new Set();
   const missing = words
-    .filter(item => !item.sk || !item.ru || !item.pl || !item.hu)
+    .filter(item => !hasAllVocabularyTranslations(item))
     .filter(item => {
       const key = normalizeVocabularyKey(item.de);
       if (seen.has(key)) return false;
@@ -937,7 +932,7 @@ function readArticleEditor() {
     : DEFAULT_ARTICLE_APPROVAL_STATUS;
   const parsedVocabulary = parseVocabularyLines($("articleVocabularyInput").value);
   const parsedInlineVocabulary = parseVocabularyDraftLines($("articleInlineVocabularyInput").value)
-    .filter(item => item.sk || item.ru || item.pl || item.hu);
+    .filter(hasAnyVocabularyTranslation);
   const article = {
     id,
     ownerProfileId: existingArticle?.ownerProfileId || state.currentProfile?.id || null,

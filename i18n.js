@@ -1246,6 +1246,31 @@ Object.assign(UI_TEXT.hu, {
   clickedReviewQuestion: "Mit jelent ez a nemet szo?"
 });
 
+function getPromptVocabularyLanguageList() {
+  return VOCABULARY_LANGUAGE_CODES
+    .map(code => NATIVE_LANGUAGES[code]?.promptName || code)
+    .join(", ");
+}
+
+function getPromptVocabularyKeys() {
+  return ["de", ...VOCABULARY_LANGUAGE_CODES].join(", ");
+}
+
+function getPromptVocabularyExample() {
+  return JSON.stringify({
+    de: "die Erfahrung",
+    sk: "skúsenosť",
+    ru: "опыт",
+    pl: "doświadczenie",
+    hu: "tapasztalat",
+    ro: "experiență",
+    it: "esperienza",
+    en: "experience",
+    fr: "expérience",
+    tr: "deneyim"
+  });
+}
+
 const PROMPT_TEXT = {
   sk: {
     article: ({ level, category, topic, requiredWords }) => [
@@ -1258,11 +1283,11 @@ const PROMPT_TEXT = {
       "Vráť iba validný JSON podľa schémy nižšie. Nepíš žiadne vysvetlenia."
     ],
     translation: (missing) => [
-      "Prelož tieto nemecké slová a frázy do slovenčiny, ruštiny, poľštiny a maďarčiny.",
+      `Prelož tieto nemecké slová a frázy do týchto jazykov: ${getPromptVocabularyLanguageList()}.`,
       "Vráť iba validné JSON pole. Nepíš vysvetlenia navyše a nepoužívaj markdown blok ```json.",
-      "Každá položka musí mať presne tieto kľúče: de, sk, ru, pl, hu.",
+      `Každá položka musí mať presne tieto kľúče: ${getPromptVocabularyKeys()}.`,
       "Formát jednej položky:",
-      "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",
+      getPromptVocabularyExample(),
       "",
       missing.join("\n")
     ],
@@ -1289,11 +1314,11 @@ const PROMPT_TEXT = {
       "Верни только валидный JSON по схеме ниже. Не добавляй объяснений."
     ],
     translation: (missing) => [
-      "Переведи эти немецкие слова и фразы на словацкий, русский, польский и венгерский.",
+      `Переведи эти немецкие слова и фразы на эти языки: ${getPromptVocabularyLanguageList()}.`,
       "Верни только валидный JSON-массив. Не добавляй никаких объяснений.",
-      "Каждый объект должен иметь ровно эти ключи: de, sk, ru, pl, hu.",
+      `Каждый объект должен иметь ровно эти ключи: ${getPromptVocabularyKeys()}.`,
       "Формат одного объекта:",
-      "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",
+      getPromptVocabularyExample(),
       "",
       missing.join("\n")
     ],
@@ -1319,11 +1344,11 @@ const PROMPT_TEXT = {
       "Zwróć tylko poprawny JSON według schematu poniżej. Nie dodawaj wyjaśnień."
     ],
     translation: (missing) => [
-      "Przetłumacz te niemieckie słowa i frazy na słowacki, rosyjski, polski i węgierski.",
+      `Przetłumacz te niemieckie słowa i frazy na te języki: ${getPromptVocabularyLanguageList()}.`,
       "Zwróć tylko poprawną tablicę JSON. Nie dodawaj żadnych wyjaśnień.",
-      "Każdy obiekt musi mieć dokładnie te klucze: de, sk, ru, pl, hu.",
+      `Każdy obiekt musi mieć dokładnie te klucze: ${getPromptVocabularyKeys()}.`,
       "Format jednego obiektu:",
-      "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",
+      getPromptVocabularyExample(),
       "",
       missing.join("\n")
     ],
@@ -1349,11 +1374,11 @@ const PROMPT_TEXT = {
       "Csak érvényes JSON-t adj vissza az alábbi séma szerint. Ne írj magyarázatot."
     ],
     translation: (missing) => [
-      "Fordítsd le ezeket a német szavakat és kifejezéseket szlovákra, oroszra, lengyelre és magyarra.",
+      `Fordítsd le ezeket a német szavakat és kifejezéseket ezekre a nyelvekre: ${getPromptVocabularyLanguageList()}.`,
       "Csak érvényes JSON tömböt adj vissza. Ne írj semmilyen magyarázatot.",
-      "Minden objektumnak pontosan ezek a kulcsai legyenek: de, sk, ru, pl, hu.",
+      `Minden objektumnak pontosan ezek a kulcsai legyenek: ${getPromptVocabularyKeys()}.`,
       "Egy objektum formátuma:",
-      "{\"de\":\"die Erfahrung\",\"sk\":\"skúsenosť\",\"ru\":\"опыт\",\"pl\":\"doświadczenie\",\"hu\":\"tapasztalat\"}",
+      getPromptVocabularyExample(),
       "",
       missing.join("\n")
     ],
