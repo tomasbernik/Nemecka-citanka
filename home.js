@@ -26,12 +26,13 @@ function showClickedReviewFromNav() {
 
 function setTeacherPanel(panel) {
   const canShowOverview = Boolean(state.currentProfile);
-  const canEditArticles = state.currentProfile?.role === "teacher";
+  const canEditArticles = Boolean(state.currentProfile);
+  const isTeacher = state.currentProfile?.role === "teacher";
   const activePanel = canEditArticles || panel !== "articles" ? panel : "students";
   const showStudents = canShowOverview && activePanel === "students";
   const showProfiles = canCreateProfiles() && activePanel === "profiles";
-  $("teacherStudentsTabBtn").textContent = state.currentProfile?.role === "teacher" ? t("studentOverview") : t("myProgress");
-  document.querySelector("#teacherOverviewCard h2").textContent = state.currentProfile?.role === "teacher" ? t("studentOverview") : t("myProgress");
+  $("teacherStudentsTabBtn").textContent = isTeacher ? t("studentOverview") : t("myProgress");
+  document.querySelector("#teacherOverviewCard h2").textContent = isTeacher ? t("studentOverview") : t("myProgress");
   $("articleEditorCard").classList.toggle("hidden", !canEditArticles || showStudents || showProfiles);
   $("teacherOverviewCard").classList.toggle("hidden", !showStudents);
   $("profileManagerCard").classList.toggle("hidden", !showProfiles);
