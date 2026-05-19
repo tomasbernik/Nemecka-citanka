@@ -1,6 +1,6 @@
 window.NC_THEME = {
   // Change this value to try another palette from the list below.
-  activePalette: "iconBlue",
+  activePalette: "iconWarm",
   palettes: {
     icon: {
       accent: "#27c7c0",
