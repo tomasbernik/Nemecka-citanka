@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "citanka-v91";
+const CACHE_NAME = "citanka-v92";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -10,8 +10,8 @@ const APP_FILES = [
   "./config.js",
   "./articles.json",
   "./manifest.json",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png",
+  "./icons/icon-v2-192.png",
+  "./icons/icon-v2-512.png",
   "./images/articles/wohin-fahren-wir-dieses-jahr.jpg",
   "./images/articles/ein-lustiger-einkauf-im-urlaub.jpg"
 ];
@@ -71,8 +71,8 @@ self.addEventListener("push", event => {
   event.waitUntil(
     self.registration.showNotification(data.title || "Čítanka", {
       body: data.body || "Dnes stačí pár minút nemčiny.",
-      icon: "icons/icon-192.png",
-      badge: "icons/icon-192.png",
+      icon: "icons/icon-v2-192.png",
+      badge: "icons/icon-v2-192.png",
       data: { url: data.url || "./index.html" }
     })
   );

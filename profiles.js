@@ -105,7 +105,7 @@ function rowToProfile(row) {
 }
 
 function profileToRow(profile) {
-  return {
+  const row = {
     id: profile.id,
     name: profile.name,
     pin: profile.pin,
@@ -113,10 +113,13 @@ function profileToRow(profile) {
     teacher_group_id: profile.teacherGroupId || profile.id,
     native_language: getNativeLanguage(profile),
     auth_user_id: profile.authUserId || null,
-    owner_auth_user_id: profile.ownerAuthUserId || profile.authUserId || null,
-    invite_token: profile.inviteToken || null,
-    invite_claimed_at: profile.inviteClaimedAt || null
+    owner_auth_user_id: profile.ownerAuthUserId || profile.authUserId || null
   };
+
+  if (profile.inviteToken) row.invite_token = profile.inviteToken;
+  if (profile.inviteClaimedAt) row.invite_claimed_at = profile.inviteClaimedAt;
+
+  return row;
 }
 
 async function loadProfileData(profile) {

@@ -536,15 +536,26 @@ async function claimInvite(tokenValue) {
         body: JSON.stringify({ auth_user_id: null })
       });
     }
-    await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(invited.id)}`, {
-      method: "PATCH",
-      headers: { Prefer: "return=minimal" },
-      body: JSON.stringify({
-        auth_user_id: state.authUser.id,
-        owner_auth_user_id: invited.ownerAuthUserId || state.authUser.id,
-        invite_claimed_at: claimedAt
-      })
-    });
+    const claimedProfileUpdate = {
+      auth_user_id: state.authUser.id,
+      owner_auth_user_id: invited.ownerAuthUserId || state.authUser.id,
+      invite_claimed_at: claimedAt
+    };
+    try {
+      await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(invited.id)}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify(claimedProfileUpdate)
+      });
+    } catch (error) {
+      if (!error.message.includes("invite_claimed_at")) throw error;
+      const { invite_claimed_at, ...claimWithoutTimestamp } = claimedProfileUpdate;
+      await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(invited.id)}`, {
+        method: "PATCH",
+        headers: { Prefer: "return=minimal" },
+        body: JSON.stringify(claimWithoutTimestamp)
+      });
+    }
   }
 
   state.profiles = state.profiles.map(profile => {

@@ -829,7 +829,7 @@ async function showTestNotification() {
   if (!registration?.showNotification) {
     new Notification("Čítanka", {
       body: t("notificationBody"),
-      icon: "icons/icon-192.png"
+      icon: "icons/icon-v2-192.png"
     });
     updateNotificationStatus(t("notificationSent"));
     return;
@@ -837,8 +837,8 @@ async function showTestNotification() {
 
   await registration.showNotification("Čítanka", {
     body: t("pushBody"),
-    icon: "icons/icon-192.png",
-    badge: "icons/icon-192.png",
+    icon: "icons/icon-v2-192.png",
+    badge: "icons/icon-v2-192.png",
     data: { url: "./index.html" }
   });
   updateNotificationStatus(t("notificationSent"));
