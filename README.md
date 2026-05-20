@@ -51,6 +51,44 @@ node scripts/check-translations.mjs
 
 Skript porovná všetky podporované jazyky so slovenským zdrojom pravdy, skontroluje chýbajúce UI kľúče, prompt preklady, placeholdery typu `{count}` a preklady kategórií. Ak niečo chýba, skončí chybou a vypíše konkrétne kľúče.
 
+## Evidencia a AI kontrola prekladov
+
+Preklady, ktoré treba neskôr filtrovať a kontrolovať, sa evidujú v Supabase tabuľke `app_translation_entries`. Najprv v Supabase SQL editore znovu spusti aktuálny `supabase-schema.sql`.
+
+Generovanie nových jazykov cez Google Translate skript teraz okrem `translations/new-languages.js` vytvorí aj audit súbor:
+
+```bash
+node scripts/generate-new-language-translations.mjs
+```
+
+Audit sa uloží do `translations/generated-translation-audit.json` a označí položky ako `provider = google_translate_script`, `review_status = unreviewed`.
+
+Synchronizácia všetkých lokálnych viacjazyčných textov do evidencie:
+
+```bash
+SUPABASE_URL="https://tvoj-projekt.supabase.co" SUPABASE_SERVICE_ROLE_KEY="..." node scripts/sync-translation-entries.mjs --supabase
+```
+
+Bez Supabase zápisu si vieš najprv vytvoriť kontrolný JSON:
+
+```bash
+node scripts/sync-translation-entries.mjs --output translations/translation-entries.preview.json
+```
+
+Export dávky pre AI kontrolu, napríklad všetky anglické preklady vytvorené Google skriptom:
+
+```bash
+SUPABASE_URL="https://tvoj-projekt.supabase.co" SUPABASE_SERVICE_ROLE_KEY="..." node scripts/export-translation-review-batch.mjs --provider google_translate_script --language en --limit 100 --output translations/review-en.json
+```
+
+AI má v exporte meniť iba `corrected_text` a prípadne `notes`. Import opravenej dávky:
+
+```bash
+SUPABASE_URL="https://tvoj-projekt.supabase.co" SUPABASE_SERVICE_ROLE_KEY="..." node scripts/import-reviewed-translations.mjs --input translations/review-en.json --review-provider chatgpt
+```
+
+Import nastaví `review_status = ai_reviewed`, zachová pôvodného poskytovateľa prekladu a uloží `review_provider`.
+
 ## Obrázky k článkom
 
 V editore článkov môžeš vybrať obrázok zo zariadenia. Appka ho pri uložení článku automaticky prevedie na JPG, nahrá do Supabase Storage bucketu `article-images` a uloží k článku URL obrázka.

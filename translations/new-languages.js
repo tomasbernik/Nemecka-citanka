@@ -1306,3 +1306,41 @@ const NEW_LANGUAGE_UI_TEXT = {
 Object.entries(NEW_LANGUAGE_UI_TEXT).forEach(([language, text]) => {
   assignUiText(language, text);
 });
+
+Object.entries({
+  ro: {
+    topics: "Subiecte",
+    allTopics: "Toate subiectele",
+    allLevels: "Toate nivelurile",
+    startHere: "Începe aici",
+    assignedBadge: "Atribuit"
+  },
+  it: {
+    topics: "Temi",
+    allTopics: "Tutti i temi",
+    allLevels: "Tutti i livelli",
+    startHere: "Inizia qui",
+    assignedBadge: "Assegnato"
+  },
+  en: {
+    topics: "Topics",
+    allTopics: "All topics",
+    allLevels: "All levels",
+    startHere: "Start here",
+    assignedBadge: "Assigned"
+  },
+  fr: {
+    topics: "Thèmes",
+    allTopics: "Tous les thèmes",
+    allLevels: "Tous les niveaux",
+    startHere: "Commence ici",
+    assignedBadge: "Assigné"
+  },
+  tr: {
+    topics: "Konular",
+    allTopics: "Tüm konular",
+    allLevels: "Tüm seviyeler",
+    startHere: "Buradan başla",
+    assignedBadge: "Atandı"
+  }
+}).forEach(([language, text]) => assignUiText(language, text));

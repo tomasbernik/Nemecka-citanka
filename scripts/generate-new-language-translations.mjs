@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import vm from "node:vm";
+import { AUDIT_FILE, writeJsonFile } from "./translation-entry-utils.mjs";
 
 const TARGET_LANGUAGES = {
   ro: "Romanian",
@@ -85,11 +86,30 @@ async function main() {
   const reference = await loadReferenceText();
   const keys = Object.keys(reference);
   const output = {};
+  const providerRunId = `google-translate-script:${new Date().toISOString()}`;
+  const auditEntries = [];
 
   for (const [language, label] of Object.entries(TARGET_LANGUAGES)) {
     output[language] = {};
     for (const [index, key] of keys.entries()) {
       output[language][key] = await translateText(reference[key], language);
+      auditEntries.push({
+        namespace: "ui",
+        source_entity_id: key,
+        source_field: "text",
+        source_path: "",
+        source_language: "sk",
+        target_language: language,
+        source_text: reference[key],
+        translated_text: output[language][key],
+        provider: "google_translate_script",
+        provider_run_id: providerRunId,
+        review_status: "unreviewed",
+        metadata: {
+          script: "scripts/generate-new-language-translations.mjs",
+          target_language_label: label
+        }
+      });
       await wait(TRANSLATE_DELAY_MS);
       if ((index + 1) % 25 === 0) {
         console.log(`${language}: ${index + 1}/${keys.length}`);
@@ -104,6 +124,13 @@ async function main() {
   const file = `const NEW_LANGUAGE_UI_TEXT = {\n${blocks}\n};\n\nObject.entries(NEW_LANGUAGE_UI_TEXT).forEach(([language, text]) => {\n  assignUiText(language, text);\n});\n`;
 
   await fs.writeFile("translations/new-languages.js", file);
+  await writeJsonFile(AUDIT_FILE, {
+    provider: "google_translate_script",
+    provider_run_id: providerRunId,
+    generated_at: new Date().toISOString(),
+    source_language: "sk",
+    entries: auditEntries
+  });
 }
 
 main().catch(error => {

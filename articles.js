@@ -209,14 +209,14 @@ function renderCategories() {
   root.classList.add("filter-select-wrap");
   root.innerHTML = `
     <label class="filter-select-label">
-      <span>Témy</span>
+      <span>${escapeHtml(t("topics"))}</span>
       <select id="categoryFilterSelect" class="filter-select"></select>
     </label>
   `;
 
   const select = $("categoryFilterSelect");
   select.innerHTML = categories
-    .map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category === ALL_CATEGORIES ? "Všetky témy" : getCategoryLabel(category))}</option>`)
+    .map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category === ALL_CATEGORIES ? t("allTopics") : getCategoryLabel(category))}</option>`)
     .join("");
   select.value = categories.includes(state.selectedCategory) ? state.selectedCategory : ALL_CATEGORIES;
   if (select.value !== state.selectedCategory) state.selectedCategory = select.value;
@@ -235,14 +235,14 @@ function renderLevelFilters() {
   root.classList.add("filter-select-wrap");
   root.innerHTML = `
     <label class="filter-select-label">
-      <span>Úroveň</span>
+      <span>${escapeHtml(t("level"))}</span>
       <select id="levelFilterSelect" class="filter-select"></select>
     </label>
   `;
 
   const select = $("levelFilterSelect");
   select.innerHTML = levels
-    .map(level => `<option value="${escapeHtml(level)}">${escapeHtml(level === ALL_LEVELS ? "Všetky úrovne" : level)}</option>`)
+    .map(level => `<option value="${escapeHtml(level)}">${escapeHtml(level === ALL_LEVELS ? t("allLevels") : level)}</option>`)
     .join("");
   select.value = levels.includes(state.selectedLevel) ? state.selectedLevel : ALL_LEVELS;
   if (select.value !== state.selectedLevel) state.selectedLevel = select.value;
@@ -283,9 +283,9 @@ function renderArticles() {
         <p>${escapeHtml(article.summary)}</p>
         <div class="badges">
           <span class="badge">${escapeHtml(article.level)}</span>
-          ${showStartBadge ? `<span class="badge start-badge">Začni tu</span>` : ""}
+          ${showStartBadge ? `<span class="badge start-badge">${escapeHtml(t("startHere"))}</span>` : ""}
           ${getArticleCategoriesForFilter(article).map(category => `<span class="badge">${escapeHtml(getCategoryLabel(category))}</span>`).join("")}
-          ${isArticleAssignedToProfile(article.id) ? `<span class="badge">Zadané</span>` : ""}
+          ${isArticleAssignedToProfile(article.id) ? `<span class="badge">${escapeHtml(t("assignedBadge"))}</span>` : ""}
           ${article.visibility === "private" ? `<span class="badge">${escapeHtml(t("private"))}</span>` : ""}
           ${article.visibility === "public" && article.approvalStatus !== "approved" ? `<span class="badge">${escapeHtml(t("pendingApproval"))}</span>` : ""}
           ${isRead ? `<span class="badge">✓ ${escapeHtml(t("read"))}</span>` : ""}

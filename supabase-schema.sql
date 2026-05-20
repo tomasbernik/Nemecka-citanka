@@ -103,6 +103,44 @@ create table if not exists public.app_events (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.app_translation_entries (
+  id uuid primary key default gen_random_uuid(),
+  namespace text not null,
+  source_entity_id text not null,
+  source_field text not null,
+  source_path text not null default '',
+  source_language text not null,
+  target_language text not null,
+  source_text text not null,
+  translated_text text not null,
+  provider text not null default 'unknown',
+  provider_run_id text,
+  review_status text not null default 'unreviewed',
+  review_provider text,
+  reviewed_at timestamptz,
+  notes text,
+  metadata jsonb not null default '{}'::jsonb,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  constraint app_translation_entries_language_check
+    check (
+      source_language in ('de', 'sk', 'ru', 'pl', 'hu', 'ro', 'it', 'en', 'fr', 'tr')
+      and target_language in ('de', 'sk', 'ru', 'pl', 'hu', 'ro', 'it', 'en', 'fr', 'tr')
+    ),
+  constraint app_translation_entries_review_status_check
+    check (review_status in ('unreviewed', 'ai_reviewed', 'human_reviewed', 'rejected')),
+  constraint app_translation_entries_provider_check
+    check (provider in ('unknown', 'manual', 'google_translate_script', 'chatgpt', 'deepl', 'human')),
+  constraint app_translation_entries_unique_source
+    unique (namespace, source_entity_id, source_field, source_path, source_language, target_language)
+);
+
+create index if not exists app_translation_entries_review_idx
+on public.app_translation_entries (review_status, provider, target_language, namespace);
+
+create index if not exists app_translation_entries_entity_idx
+on public.app_translation_entries (namespace, source_entity_id, source_field);
+
 create table if not exists public.app_devices (
   device_id text primary key,
   device_name text,
@@ -204,6 +242,21 @@ add column if not exists city text;
 alter table public.app_events
 add column if not exists ip_hash text;
 
+alter table public.app_translation_entries
+add column if not exists provider_run_id text;
+
+alter table public.app_translation_entries
+add column if not exists review_provider text;
+
+alter table public.app_translation_entries
+add column if not exists reviewed_at timestamptz;
+
+alter table public.app_translation_entries
+add column if not exists notes text;
+
+alter table public.app_translation_entries
+add column if not exists metadata jsonb not null default '{}'::jsonb;
+
 create table if not exists public.app_devices (
   device_id text primary key,
   device_name text,
@@ -282,6 +335,7 @@ alter table public.app_profiles enable row level security;
 alter table public.app_profile_data enable row level security;
 alter table public.app_articles enable row level security;
 alter table public.app_events enable row level security;
+alter table public.app_translation_entries enable row level security;
 alter table public.app_devices enable row level security;
 
 drop policy if exists "app_profiles_select" on public.app_profiles;
@@ -296,6 +350,9 @@ drop policy if exists "app_articles_insert" on public.app_articles;
 drop policy if exists "app_articles_update" on public.app_articles;
 drop policy if exists "app_articles_delete" on public.app_articles;
 drop policy if exists "app_events_insert" on public.app_events;
+drop policy if exists "app_translation_entries_select" on public.app_translation_entries;
+drop policy if exists "app_translation_entries_insert" on public.app_translation_entries;
+drop policy if exists "app_translation_entries_update" on public.app_translation_entries;
 drop policy if exists "app_devices_select" on public.app_devices;
 drop policy if exists "app_devices_insert" on public.app_devices;
 drop policy if exists "app_devices_update" on public.app_devices;
@@ -375,6 +432,22 @@ using (true);
 create policy "app_events_insert"
 on public.app_events for insert
 to anon, authenticated
+with check (true);
+
+create policy "app_translation_entries_select"
+on public.app_translation_entries for select
+to authenticated
+using (true);
+
+create policy "app_translation_entries_insert"
+on public.app_translation_entries for insert
+to authenticated
+with check (true);
+
+create policy "app_translation_entries_update"
+on public.app_translation_entries for update
+to authenticated
+using (true)
 with check (true);
 
 create policy "app_devices_select"

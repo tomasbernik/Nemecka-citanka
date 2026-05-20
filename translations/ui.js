@@ -1319,3 +1319,41 @@ assignUiText("pl", {
   inviteInvalid: "Zaproszenie nie istnieje albo zostało już użyte.",
   inviteClaimed: "Zaproszenie przyjęte. Profil jest połączony."
 });
+
+Object.entries({
+  sk: {
+    topics: "Témy",
+    allTopics: "Všetky témy",
+    allLevels: "Všetky úrovne",
+    startHere: "Začni tu",
+    assignedBadge: "Zadané"
+  },
+  de: {
+    topics: "Themen",
+    allTopics: "Alle Themen",
+    allLevels: "Alle Niveaus",
+    startHere: "Hier starten",
+    assignedBadge: "Zugewiesen"
+  },
+  ru: {
+    topics: "Темы",
+    allTopics: "Все темы",
+    allLevels: "Все уровни",
+    startHere: "Начни здесь",
+    assignedBadge: "Задано"
+  },
+  pl: {
+    topics: "Tematy",
+    allTopics: "Wszystkie tematy",
+    allLevels: "Wszystkie poziomy",
+    startHere: "Zacznij tutaj",
+    assignedBadge: "Przypisane"
+  },
+  hu: {
+    topics: "Témák",
+    allTopics: "Minden téma",
+    allLevels: "Minden szint",
+    startHere: "Kezdd itt",
+    assignedBadge: "Kiosztva"
+  }
+}).forEach(([language, text]) => assignUiText(language, text));
