@@ -1,5 +1,1 @@
-chcem skontrolovať a doladiť UI preklady.
-skontroluj najskor anglictinu, aby nam dala dobrý referenčný štýl pre ostatné jazyky
-
-
-chcem Skontrolovať krátke UI texty vo všetkých jazykoch. Tlačidlá, menu, navigácia, nastavenia, hry.
+chýbajú preklady v ru/pl/hu/ro/it/fr/tr a prompt preklady pre ro/it/en/fr/tr
