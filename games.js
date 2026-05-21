@@ -49,6 +49,7 @@ function startClickedReviewGame() {
   const panel = $("clickedReviewPanel");
   if (!panel) return;
 
+  $("clickedReviewDialog")?.classList.remove("hidden");
   const clickedVocabulary = getClickedReviewVocabulary();
   panel.classList.remove("clicked-review-compact");
   panel.classList.remove("hidden");
@@ -83,7 +84,8 @@ function renderClickedReview() {
   if (!panel) return;
 
   const clickedVocabulary = getClickedReviewVocabulary();
-  panel.classList.remove("hidden");
+  $("clickedReviewDialog")?.classList.add("hidden");
+  panel.classList.add("hidden");
   panel.classList.add("clicked-review-compact");
   $("clickedReviewMeta").textContent = clickedVocabulary.length
     ? `${formatText("clickedReviewCount", { count: clickedVocabulary.length })} Precvič si ich, keď budeš mať chvíľu.`
@@ -94,6 +96,13 @@ function renderClickedReview() {
   $("newClickedReviewBtn").textContent = "Precvičiť";
   $("newClickedReviewBtn").classList.toggle("hidden", !clickedVocabulary.length);
   state.clickedReviewGame = null;
+}
+
+function closeClickedReviewDialog() {
+  $("clickedReviewDialog")?.classList.add("hidden");
+  $("clickedReviewPanel")?.classList.add("hidden");
+  state.clickedReviewGame = null;
+  renderMobileBottomNav(getActiveViewId());
 }
 
 function answerClickedReview(answer) {

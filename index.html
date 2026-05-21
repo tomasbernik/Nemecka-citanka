@@ -168,19 +168,6 @@
 
         <div id="articleList" class="article-list"></div>
 
-        <section id="clickedReviewPanel" class="clicked-review panel hidden" aria-labelledby="clickedReviewTitle">
-          <div class="practice-heading">
-            <div>
-              <p id="clickedReviewEyebrow" class="eyebrow">Opakovanie</p>
-              <h3 id="clickedReviewTitle">Kliknuté slovíčka</h3>
-            </div>
-            <button id="newClickedReviewBtn" class="text-btn" type="button">Precvičiť</button>
-          </div>
-          <p id="clickedReviewMeta" class="muted"></p>
-          <p id="clickedReviewPrompt" class="quiz-prompt compact"></p>
-          <div id="clickedReviewOptions" class="quiz-options"></div>
-          <p id="clickedReviewFeedback" class="practice-feedback"></p>
-        </section>
       </section>
 
       <section id="articleView" class="hidden">
@@ -624,6 +611,25 @@
         <span class="mobile-nav-label">Prehľad</span>
       </button>
     </nav>
+
+    <div id="clickedReviewDialog" class="quiz-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="clickedReviewTitle">
+      <section id="clickedReviewPanel" class="clicked-review review-dialog-card" aria-labelledby="clickedReviewTitle">
+        <div class="practice-heading">
+          <div>
+            <p id="clickedReviewEyebrow" class="eyebrow">Opakovanie</p>
+            <h3 id="clickedReviewTitle">Kliknuté slovíčka</h3>
+          </div>
+          <div class="review-dialog-actions">
+            <button id="newClickedReviewBtn" class="text-btn" type="button">Precvičiť</button>
+            <button id="closeClickedReviewBtn" class="text-btn" type="button" aria-label="Zavrieť">Zavrieť</button>
+          </div>
+        </div>
+        <p id="clickedReviewMeta" class="muted"></p>
+        <p id="clickedReviewPrompt" class="quiz-prompt compact"></p>
+        <div id="clickedReviewOptions" class="quiz-options"></div>
+        <p id="clickedReviewFeedback" class="practice-feedback"></p>
+      </section>
+    </div>
 
     <div id="startupQuiz" class="quiz-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="startupQuizTitle">
       <div class="quiz-card">

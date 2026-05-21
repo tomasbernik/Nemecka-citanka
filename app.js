@@ -489,6 +489,7 @@ function updateStaticTexts() {
   setText("clickedReviewEyebrow", "clickedReviewEyebrow");
   setText("clickedReviewTitle", "clickedReviewTitle");
   setText("newClickedReviewBtn", "next");
+  setText("closeClickedReviewBtn", "close");
   setText("homeArticlesTitle", "articles");
   setText("refreshBtn", "refresh");
 
@@ -950,6 +951,7 @@ onClick("stopReadBtn", stopReading);
 onClick("newSentenceGameBtn", startSentenceGame);
 onClick("newMatchGameBtn", startMatchGame);
 onClick("newClickedReviewBtn", startClickedReviewGame);
+onClick("closeClickedReviewBtn", closeClickedReviewDialog);
 onClick("newVocabChoiceBtn", startVocabChoiceGame);
 onClick("newClozeGameBtn", startClozeGame);
 onClick("newMistakeGameBtn", startMistakeGame);
@@ -1057,6 +1059,24 @@ onClick("articleText", (event) => {
   const button = event.target.closest(".inline-word");
   if (!button) return;
   showInlineTranslation(button);
+});
+
+onEvent("clickedReviewDialog", "click", event => {
+  const reviewOption = event.target.closest("#clickedReviewOptions .quiz-option");
+  if (reviewOption) {
+    answerClickedReview(reviewOption.dataset.answer);
+    return;
+  }
+
+  if (event.target.id === "clickedReviewDialog") {
+    closeClickedReviewDialog();
+  }
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && !$("clickedReviewDialog")?.classList.contains("hidden")) {
+    closeClickedReviewDialog();
+  }
 });
 
 onEvent("homeView", "click", async event => {

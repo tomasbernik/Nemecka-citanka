@@ -15,13 +15,10 @@ function showHome() {
 }
 
 function showClickedReviewFromNav() {
-  showHome();
+  stopReading();
   startClickedReviewGame();
   setMobileNavButton("mobileNavHomeBtn", t("articles"), false);
   setMobileNavButton("mobileNavReviewBtn", t("clickedReviewEyebrow"), true);
-  requestAnimationFrame(() => {
-    $("clickedReviewPanel")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  });
 }
 
 function setTeacherPanel(panel) {

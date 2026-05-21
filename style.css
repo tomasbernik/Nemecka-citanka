@@ -276,7 +276,7 @@ h3 { font-size: 1.1rem; }
 .clicked-review {
   display: grid;
   gap: 12px;
-  margin: 18px 0 0;
+  margin: 0;
   padding: 16px;
   background: var(--card);
   border: 1px solid var(--border);
@@ -308,6 +308,19 @@ h3 { font-size: 1.1rem; }
 .clicked-review-compact .quiz-options,
 .clicked-review-compact .practice-feedback {
   display: none;
+}
+
+.review-dialog-card {
+  width: min(100%, 460px);
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  box-shadow: var(--shadow);
+}
+
+.review-dialog-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .text-btn {
