@@ -1,5 +1,7 @@
 async function loadArticles() {
   let localArticles = [];
+  const cacheLanguage = getArticleCacheLanguage();
+  const cachedArticles = await loadCachedArticles(cacheLanguage);
 
   try {
     const response = await fetch("articles.json", { cache: "no-store" });
@@ -9,7 +11,7 @@ async function loadArticles() {
     localArticles = [];
   }
 
-  state.articles = localArticles.map(normalizeArticle);
+  state.articles = mergeArticles(localArticles, cachedArticles).map(normalizeArticle);
 
   if (state.remoteReady) {
     try {
@@ -24,6 +26,7 @@ async function loadArticles() {
 
       if (remoteArticles.length) {
         state.articles = remoteArticles.map(normalizeArticle);
+        await saveCachedArticles(state.articles, cacheLanguage);
       }
     } catch (error) {
       console.error(error);
@@ -38,6 +41,154 @@ async function loadArticles() {
 async function loadRemoteArticles() {
   const rows = await supabaseRequest("app_articles?select=*&published=eq.true&order=updated_at.desc,title.asc");
   return (rows || []).map(rowToArticle);
+}
+
+function mergeArticles(...articleGroups) {
+  const merged = new Map();
+
+  articleGroups.flat().filter(Boolean).forEach(article => {
+    merged.set(article.id, article);
+  });
+
+  return Array.from(merged.values());
+}
+
+function getArticleCacheLanguage() {
+  if (state.currentProfile) return getNativeLanguage(state.currentProfile);
+
+  const savedProfileId = localStorage.getItem(CURRENT_PROFILE_KEY);
+  const storedLanguage = typeof getStoredProfileLanguage === "function"
+    ? getStoredProfileLanguage(savedProfileId)
+    : null;
+  const savedProfileLanguage = state.profiles
+    .find(profile => profile.id === savedProfileId)
+    ?.nativeLanguage;
+
+  return [storedLanguage, savedProfileLanguage, state.preLoginLanguage, DEFAULT_NATIVE_LANGUAGE]
+    .find(isSupportedNativeLanguage) || DEFAULT_NATIVE_LANGUAGE;
+}
+
+function getArticleCacheKey(language = getArticleCacheLanguage()) {
+  return `${ARTICLE_CACHE_KEY}:${language}`;
+}
+
+function getArticleLocalStorageCacheKey(language = getArticleCacheLanguage()) {
+  return `${ARTICLE_CACHE_LOCAL_STORAGE_KEY}:${language}`;
+}
+
+function openArticleCacheDb() {
+  if (!("indexedDB" in window)) return Promise.resolve(null);
+
+  return new Promise(resolve => {
+    const request = indexedDB.open(ARTICLE_CACHE_DB_NAME, 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(ARTICLE_CACHE_STORE_NAME, { keyPath: "key" });
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => resolve(null);
+    request.onblocked = () => resolve(null);
+  });
+}
+
+async function loadCachedArticles(language = getArticleCacheLanguage()) {
+  const localStorageKey = getArticleLocalStorageCacheKey(language);
+  const fallback = () => {
+    try {
+      return JSON.parse(localStorage.getItem(localStorageKey) || "[]");
+    } catch (error) {
+      console.info("Article cache fallback skipped:", error.message);
+      return [];
+    }
+  };
+  const db = await openArticleCacheDb();
+  if (!db) return fallback();
+
+  return new Promise(resolve => {
+    const transaction = db.transaction(ARTICLE_CACHE_STORE_NAME, "readonly");
+    const request = transaction.objectStore(ARTICLE_CACHE_STORE_NAME).get(getArticleCacheKey(language));
+    request.onsuccess = () => resolve(request.result?.articles || fallback());
+    request.onerror = () => resolve(fallback());
+    transaction.oncomplete = () => db.close();
+  });
+}
+
+function pickLanguageValue(values = {}, language) {
+  if (!values || typeof values !== "object") return {};
+  return values[language] ? { [language]: values[language] } : {};
+}
+
+function trimCategoryLabelsForCache(categoryLabels = {}, language) {
+  return Object.fromEntries(
+    Object.entries(categoryLabels)
+      .map(([category, labels]) => [category, pickLanguageValue(labels, language)])
+      .filter(([, labels]) => Object.keys(labels).length)
+  );
+}
+
+function trimVocabularyItemForCache(item = {}, language) {
+  const trimmed = {
+    de: item.de || "",
+    base: item.base || ""
+  };
+
+  if (item[language]) {
+    trimmed[language] = item[language];
+  } else if (language === DEFAULT_NATIVE_LANGUAGE && item.translation) {
+    trimmed.translation = item.translation;
+  }
+
+  return trimmed;
+}
+
+function trimArticleForCache(article, language) {
+  const normalized = normalizeArticle(article);
+  return {
+    ...normalized,
+    categoryLabels: trimCategoryLabelsForCache(normalized.categoryLabels, language),
+    vocabulary: (normalized.vocabulary || []).map(item => trimVocabularyItemForCache(item, language)),
+    inlineVocabulary: getInlineVocabulary(normalized).map(item => trimVocabularyItemForCache(item, language))
+  };
+}
+
+async function saveCachedArticles(articles, language = getArticleCacheLanguage()) {
+  const normalizedArticles = articles.map(article => trimArticleForCache(article, language));
+  const localStorageKey = getArticleLocalStorageCacheKey(language);
+
+  try {
+    VOCABULARY_LANGUAGE_CODES
+      .filter(code => code !== language)
+      .forEach(code => localStorage.removeItem(getArticleLocalStorageCacheKey(code)));
+    localStorage.setItem(localStorageKey, JSON.stringify(normalizedArticles));
+    localStorage.removeItem(ARTICLE_CACHE_LOCAL_STORAGE_KEY);
+  } catch (error) {
+    console.info("Article cache localStorage fallback skipped:", error.message);
+  }
+
+  const db = await openArticleCacheDb();
+  if (!db) return;
+
+  return new Promise(resolve => {
+    const transaction = db.transaction(ARTICLE_CACHE_STORE_NAME, "readwrite");
+    const store = transaction.objectStore(ARTICLE_CACHE_STORE_NAME);
+    store.delete(ARTICLE_CACHE_KEY);
+    VOCABULARY_LANGUAGE_CODES
+      .filter(code => code !== language)
+      .forEach(code => store.delete(getArticleCacheKey(code)));
+    store.put({
+      key: getArticleCacheKey(language),
+      savedAt: new Date().toISOString(),
+      language,
+      articles: normalizedArticles
+    });
+    transaction.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    transaction.onerror = () => {
+      db.close();
+      resolve();
+    };
+  });
 }
 
 function normalizeArticle(article) {
@@ -195,6 +346,7 @@ async function saveArticle(article) {
   } else {
     state.articles = [article, ...state.articles];
   }
+  await saveCachedArticles(state.articles);
   renderCategories();
   renderLevelFilters();
   renderArticles();

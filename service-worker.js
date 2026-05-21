@@ -1,43 +1,32 @@
 
-const CACHE_NAME = "citanka-v107";
+const CACHE_NAME = "citanka-v109";
+const IMAGE_CACHE_NAME = "citanka-article-images-v109";
+const IMAGE_CACHE_LIMIT = 25;
 const APP_FILES = [
   "./",
   "./index.html",
-  "./theme.js?v=107",
-  "./style.css?v=107",
-  "./constants.js?v=107",
-  "./translations/ui.js?v=107",
-  "./translations/auth.js?v=107",
-  "./translations/new-languages.js?v=107",
-  "./translations/prompts.js?v=107",
-  "./i18n.js?v=107",
-  "./auth.js?v=107",
-  "./api.js?v=107",
-  "./profiles.js?v=107",
-  "./articles.js?v=107",
-  "./reader.js?v=107",
-  "./games.js?v=107",
-  "./editor.js?v=107",
-  "./app.js?v=107",
-  "./home.js?v=107",
-  "./config.js?v=107",
+  "./theme.js?v=109",
+  "./style.css?v=109",
+  "./constants.js?v=109",
+  "./translations/ui.js?v=109",
+  "./translations/auth.js?v=109",
+  "./translations/new-languages.js?v=109",
+  "./translations/prompts.js?v=109",
+  "./i18n.js?v=109",
+  "./auth.js?v=109",
+  "./api.js?v=109",
+  "./profiles.js?v=109",
+  "./articles.js?v=109",
+  "./reader.js?v=109",
+  "./games.js?v=109",
+  "./editor.js?v=109",
+  "./app.js?v=109",
+  "./home.js?v=109",
+  "./config.js?v=109",
   "./articles.json",
   "./manifest.json",
   "./icons/icon-v2-192.png",
-  "./icons/icon-v2-512.png",
-  "./images/articles/wohin-fahren-wir-dieses-jahr.jpg",
-  "./images/articles/vor-dem-urlaub-chaos-mit-plan.jpg",
-  "./images/articles/tomas-lernt-eine-lustige-eiersuppe-zu-kochen.jpg",
-  "./images/articles/spaziergang-am-see.jpg",
-  "./images/articles/reise-suedspanien.jpg",
-  "./images/articles/paris-ein-tag.jpg",
-  "./images/articles/nachmittag-baggersee-tomas.jpg",
-  "./images/articles/kleines-fruehstueck.jpg",
-  "./images/articles/garten-nachmittag-kika.jpg",
-  "./images/articles/einkaufen-bei-temu.jpg",
-  "./images/articles/ein-sehr-gro-es-fruhstuck-am-samstag.jpg",
-  "./images/articles/ein-lustiger-fahrradausflug-zur-rheininsel.jpg",
-  "./images/articles/ein-lustiger-einkauf-im-urlaub.jpg"
+  "./icons/icon-v2-512.png"
 ];
 
 self.addEventListener("install", event => {
@@ -48,9 +37,10 @@ self.addEventListener("install", event => {
 });
 
 self.addEventListener("activate", event => {
+  const keepCaches = new Set([CACHE_NAME, IMAGE_CACHE_NAME]);
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key)))
+      Promise.all(keys.filter(key => !keepCaches.has(key)).map(key => caches.delete(key)))
     )
   );
   self.clients.claim();
@@ -58,6 +48,13 @@ self.addEventListener("activate", event => {
 
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
+  if (event.request.destination === "image") {
+    event.respondWith(cacheImageRequest(event.request));
+    return;
+  }
+
+  const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin) return;
 
   event.respondWith(
     fetch(event.request)
@@ -76,6 +73,31 @@ self.addEventListener("fetch", event => {
       })
   );
 });
+
+async function trimImageCache() {
+  const cache = await caches.open(IMAGE_CACHE_NAME);
+  const keys = await cache.keys();
+  if (keys.length <= IMAGE_CACHE_LIMIT) return;
+  await Promise.all(keys.slice(0, keys.length - IMAGE_CACHE_LIMIT).map(key => cache.delete(key)));
+}
+
+async function cacheImageRequest(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response.ok || response.type === "opaque") {
+      const copy = response.clone();
+      const cache = await caches.open(IMAGE_CACHE_NAME);
+      await cache.put(request, copy);
+      await trimImageCache();
+    }
+    return response;
+  } catch (error) {
+    return Response.error();
+  }
+}
 
 self.addEventListener("notificationclick", event => {
   event.notification.close();

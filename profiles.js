@@ -197,6 +197,7 @@ async function setCurrentProfile(profile) {
   state.currentProfile = normalizeProfile(profile);
   localStorage.setItem(CURRENT_PROFILE_KEY, profile.id);
   await loadProfileData(state.currentProfile);
+  if (state.articles.length) await saveCachedArticles(state.articles, getNativeLanguage(state.currentProfile));
   renderNativeLanguageControls();
   renderRoleControls();
   renderCurrentProfileLabel();
@@ -472,7 +473,10 @@ function renderCurrentProfileLabel() {
   const profile = state.currentProfile;
   if (!profile) return;
 
-  $("currentProfileLabel").textContent = `${profile.name} • ${profile.role === "teacher" ? t("teacher") : t("student")}${state.remoteReady ? ` • ${t("online")}` : ` • ${t("local")}`}`;
+  const connectionLabel = state.remoteReady
+    ? isRemoteNetworkAvailable() ? t("online") : t("offline")
+    : t("local");
+  $("currentProfileLabel").textContent = `${profile.name} • ${profile.role === "teacher" ? t("teacher") : t("student")} • ${connectionLabel}`;
 }
 
 async function updateCurrentProfileNativeLanguage(language) {
@@ -484,6 +488,7 @@ async function updateCurrentProfileNativeLanguage(language) {
     profile.id === state.currentProfile.id ? { ...profile, nativeLanguage: language } : profile
   );
   await saveProfiles();
+  if (state.articles.length) await saveCachedArticles(state.articles, language);
   renderNativeLanguageControls();
   updateStaticTexts();
 

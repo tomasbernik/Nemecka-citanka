@@ -87,6 +87,11 @@ function setOptionText(selectId, value, key) {
   if (option) option.textContent = t(key);
 }
 
+function setPlaceholder(id, key) {
+  const element = $(id);
+  if (element) element.placeholder = t(key);
+}
+
 function setButtonLabel(id, key) {
   const button = $(id);
   if (!button) return;
@@ -581,9 +586,15 @@ function updateStaticTexts() {
   setOptionText("articleApprovalStatusSelect", "rejected", "rejected");
   document.querySelector(".editor-helper .eyebrow").textContent = t("chatGptHelper");
   setLabelText("articlePromptInput", "articleTask");
+  setPlaceholder("articlePromptInput", "articleTaskPlaceholder");
   setLabelText("articleRequiredWordsMode", "requiredWordsMode");
+  setOptionText("articleRequiredWordsMode", "no", "no");
+  setOptionText("articleRequiredWordsMode", "yes", "yes");
   setLabelText("articleRequiredWordsInput", "requiredWords");
   setLabelText("articleLengthSelect", "articleLength");
+  setOptionText("articleLengthSelect", "220-260", "articleLengthShort");
+  setOptionText("articleLengthSelect", "300-350", "articleLengthMedium");
+  setOptionText("articleLengthSelect", "450-550", "articleLengthLong");
   setText("copyArticlePromptBtn", "copyArticlePrompt");
   setText("copyArticleJsonPromptBtn", "copyArticleJsonPrompt");
   setText("copyImagePromptBtn", "copyImagePrompt");
@@ -1194,6 +1205,9 @@ window.addEventListener("appinstalled", () => {
   sessionStorage.setItem(INSTALL_PROMPT_DISMISSED_KEY, "true");
   hideInstallPrompt();
 });
+
+window.addEventListener("online", renderCurrentProfileLabel);
+window.addEventListener("offline", renderCurrentProfileLabel);
 
 if ("serviceWorker" in navigator) {
   let refreshingForServiceWorkerUpdate = false;

@@ -22,6 +22,7 @@ const UI_TEXT = {
     teacher: "Lehrer/in",
     student: "Schüler/in",
     online: "online",
+    offline: "offline",
     local: "lokal",
     private: "privat",
     pendingApproval: "wartet auf Freigabe",
@@ -186,6 +187,7 @@ const UI_TEXT = {
     teacher: "učiteľ",
     student: "žiak",
     online: "online",
+    offline: "offline",
     local: "lokálne",
     private: "súkromné",
     pendingApproval: "čaká na schválenie",
@@ -350,6 +352,7 @@ const UI_TEXT = {
     teacher: "учитель",
     student: "ученик",
     online: "онлайн",
+    offline: "офлайн",
     local: "локально",
     private: "личное",
     pendingApproval: "ожидает одобрения",
@@ -514,6 +517,7 @@ const UI_TEXT = {
     teacher: "nauczyciel",
     student: "uczeń",
     online: "online",
+    offline: "offline",
     local: "lokalnie",
     private: "prywatne",
     pendingApproval: "czeka na zatwierdzenie",
@@ -678,6 +682,7 @@ const UI_TEXT = {
     teacher: "tanár",
     student: "tanuló",
     online: "online",
+    offline: "offline",
     local: "helyi",
     private: "privát",
     pendingApproval: "jóváhagyásra vár",
@@ -1319,6 +1324,89 @@ assignUiText("pl", {
   inviteInvalid: "Zaproszenie nie istnieje albo zostało już użyte.",
   inviteClaimed: "Zaproszenie przyjęte. Profil jest połączony."
 });
+
+Object.entries({
+  sk: {
+    yes: "Áno",
+    no: "Nie",
+    articleTaskPlaceholder: "Napr. článok o balení na dovolenku, použi jednoduché vety...",
+    articleLengthShort: "220-260 slov",
+    articleLengthMedium: "300-350 slov",
+    articleLengthLong: "450-550 slov"
+  },
+  de: {
+    yes: "Ja",
+    no: "Nein",
+    articleTaskPlaceholder: "Z. B. ein Artikel über das Packen für den Urlaub; verwende einfache Sätze...",
+    articleLengthShort: "220-260 Wörter",
+    articleLengthMedium: "300-350 Wörter",
+    articleLengthLong: "450-550 Wörter"
+  },
+  ru: {
+    yes: "Да",
+    no: "Нет",
+    articleTaskPlaceholder: "Напр. статья о сборах в отпуск, используй простые предложения...",
+    articleLengthShort: "220-260 слов",
+    articleLengthMedium: "300-350 слов",
+    articleLengthLong: "450-550 слов"
+  },
+  pl: {
+    yes: "Tak",
+    no: "Nie",
+    articleTaskPlaceholder: "Np. artykuł o pakowaniu na wakacje, użyj prostych zdań...",
+    articleLengthShort: "220-260 słów",
+    articleLengthMedium: "300-350 słów",
+    articleLengthLong: "450-550 słów"
+  },
+  hu: {
+    yes: "Igen",
+    no: "Nem",
+    articleTaskPlaceholder: "Pl. cikk a nyaralásra csomagolásról, használj egyszerű mondatokat...",
+    articleLengthShort: "220-260 szó",
+    articleLengthMedium: "300-350 szó",
+    articleLengthLong: "450-550 szó"
+  },
+  ro: {
+    yes: "Da",
+    no: "Nu",
+    articleTaskPlaceholder: "De ex. un articol despre bagajul pentru vacanță; folosește propoziții simple...",
+    articleLengthShort: "220-260 de cuvinte",
+    articleLengthMedium: "300-350 de cuvinte",
+    articleLengthLong: "450-550 de cuvinte"
+  },
+  it: {
+    yes: "Sì",
+    no: "No",
+    articleTaskPlaceholder: "Ad es. un articolo su come fare la valigia per le vacanze; usa frasi semplici...",
+    articleLengthShort: "220-260 parole",
+    articleLengthMedium: "300-350 parole",
+    articleLengthLong: "450-550 parole"
+  },
+  en: {
+    yes: "Yes",
+    no: "No",
+    articleTaskPlaceholder: "For example, an article about packing for a holiday; use simple sentences...",
+    articleLengthShort: "220-260 words",
+    articleLengthMedium: "300-350 words",
+    articleLengthLong: "450-550 words"
+  },
+  fr: {
+    yes: "Oui",
+    no: "Non",
+    articleTaskPlaceholder: "Par ex. un article sur la préparation des bagages pour les vacances; utilise des phrases simples...",
+    articleLengthShort: "220-260 mots",
+    articleLengthMedium: "300-350 mots",
+    articleLengthLong: "450-550 mots"
+  },
+  tr: {
+    yes: "Evet",
+    no: "Hayır",
+    articleTaskPlaceholder: "Örn. tatil için valiz hazırlama hakkında bir yazı; basit cümleler kullan...",
+    articleLengthShort: "220-260 kelime",
+    articleLengthMedium: "300-350 kelime",
+    articleLengthLong: "450-550 kelime"
+  }
+}).forEach(([language, text]) => assignUiText(language, text));
 
 Object.entries({
   sk: {

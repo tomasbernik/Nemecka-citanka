@@ -1,18 +1,16 @@
-skontrolovat - ak si student precita clanok, ktory mu zadal ucitel, nechcem aby sa mu tieto precitane clanky zobrazovali na hlavnej obrazovke pri vsetkych clankoch, ale len v prehlade. na tej hlavnej stranke sa maju zobrazovat len este nesplnene ulohy (zadania)
-
-tlacitka hore ked otvorim clanok nie su idealne nastavene, pretoze ak ziak na ne neklikne, tak sa nezobrazuju pod textom. asi by bolo lepsie, aby sa zobrazovali vzdy, aj ked na ne uzivatel neklikne a ked na ne klikne, tak sa dostane ( zoscroluje sa ) priamo k tomu, na co klikol.
-myslis si, ze takto by to bolo lepsie?
-
-skontrolovat - ak je slovo citanka dlhsie, napriklad v madarcine,tak sa pismena daju do noveho riadku. lepsie by bolo aby sa zmensili pismena, alebo aby sa slovo citanka dala na uroven, vyssie (tam, kde je napisane Necmina (resp. Nemet)).
-
-
-Opakonie (opakovanie kliknutych slovicok) nech vyskoci nove okno a nie aby sa Home zoscrolovalo az na koniec stranky - tam pod clankami to ani vobec nemusi byt.
-
-vyskakovacie okno Pridat na plochu, nech vyskakuje maximalne raz do dna.
+skontrolovat s Kikou - ak si student precita clanok, ktory mu zadal ucitel, nechcem aby sa mu tieto precitane clanky zobrazovali na hlavnej obrazovke pri vsetkych clankoch, ale len v prehlade. na tej hlavnej stranke sa maju zobrazovat len este nesplnene ulohy (zadania)
 
 
 
-chýbajú preklady v ru/pl/hu/ro/it/fr/tr a prompt preklady pre ro/it/en/fr/tr
 
-062053619325
+
+
+
+
+
+!!! dorobit aij UI texty, chybaju skoro vsade okrem SK a EN. dalej chýbajú preklady v ru/pl/hu/ro/it/fr/tr a prompt preklady pre ro/it/en/fr/tr
+
+skontrolovat - vyskakovacie okno Pridat na plochu, nech vyskakuje maximalne raz do dna.
+
+
 
