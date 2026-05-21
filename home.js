@@ -56,12 +56,13 @@ async function showTeacherView(panel = state.currentProfile?.role === "teacher" 
   if (!state.currentProfile) return;
   renderArticleEditorList();
   if (panel === "students" || state.currentProfile.role !== "teacher") {
-    await renderTeacherOverview();
     setTeacherPanel("students");
+    showView("teacherView");
+    await renderTeacherOverview();
   } else {
     setTeacherPanel("articles");
+    showView("teacherView");
   }
-  showView("teacherView");
   renderGamification();
   renderOnboarding();
 }
