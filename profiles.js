@@ -161,7 +161,7 @@ async function setCurrentProfile(profile) {
   renderProfileCreationControls();
   updateStaticTexts();
   $("settingsBtn").classList.remove("hidden");
-  $("teacherBtn").classList.toggle("hidden", state.currentProfile.role !== "teacher");
+  $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.remove("hidden");
   $("logoutBtn").classList.remove("hidden");
   showHome();
@@ -468,7 +468,7 @@ async function updateCurrentProfileRole(role) {
   await saveProfiles();
   renderRoleControls();
   renderCurrentProfileLabel();
-  $("teacherBtn").classList.toggle("hidden", role !== "teacher");
+  $("teacherBtn").classList.add("hidden");
   renderMobileBottomNav(getActiveViewId());
   renderArticles();
 }
