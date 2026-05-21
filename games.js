@@ -180,9 +180,14 @@ function getGamificationStats(data = state.profileData) {
 function renderGamification() {
   const panel = $("gamificationPanel");
   if (!panel || !state.currentProfile) return;
+  const shouldShow = Boolean(
+    !$("teacherView")?.classList.contains("hidden")
+    && !$("teacherOverviewCard")?.classList.contains("hidden")
+  );
+  panel.classList.toggle("hidden", !shouldShow);
+  if (!shouldShow) return;
 
   const stats = getGamificationStats();
-  panel.classList.remove("hidden");
   $("gamificationPoints").textContent = formatText("pointsShort", { points: stats.points });
   $("gamificationLevel").textContent = t(stats.level.titleKey);
   $("gamificationNext").textContent = stats.nextLevel

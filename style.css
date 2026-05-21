@@ -84,19 +84,9 @@ h3 { font-size: 1.1rem; }
   gap: 8px;
 }
 
-.top-actions #teacherBtn {
-  display: none;
-}
-
-.top-actions #settingsBtn {
-  display: none;
-}
-
-.top-actions #logoutBtn {
-  display: none;
-}
-
-body.has-mobile-nav .top-actions #logoutBtn {
+.top-actions #teacherBtn:not(.hidden),
+.top-actions #settingsBtn:not(.hidden),
+.top-actions #logoutBtn:not(.hidden) {
   display: grid;
 }
 

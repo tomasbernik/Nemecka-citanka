@@ -19,7 +19,12 @@
         <h1>Lesebuch</h1>
       </div>
       <div class="top-actions">
-        <button id="teacherBtn" class="icon-btn hidden" aria-label="Editor článkov">✎</button>
+        <button id="teacherBtn" class="icon-btn hidden" aria-label="Editor článkov">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+          </svg>
+        </button>
         <button id="shareAppBtn" class="icon-btn hidden" aria-label="Zdieľať appku">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="18" cy="5" r="3"></circle>
@@ -29,7 +34,12 @@
             <path d="M8.7 13.3 15.3 17.7"></path>
           </svg>
         </button>
-        <button id="settingsBtn" class="icon-btn hidden" aria-label="Nastavenia">Aa</button>
+        <button id="settingsBtn" class="icon-btn hidden" aria-label="Nastavenia">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z"></path>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06A1.65 1.65 0 0 0 15 19.4a1.65 1.65 0 0 0-1 .6 1.65 1.65 0 0 0-.33 1.82V22a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 8.6 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-.6-1 1.65 1.65 0 0 0-1.82-.33H2a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 8.6a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-.6 1.65 1.65 0 0 0 .33-1.82V2a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15.4 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9c.36.2.64.52.8.9.16.38.16.82 0 1.2-.16.38-.44.7-.8.9Z"></path>
+          </svg>
+        </button>
         <button id="logoutBtn" class="icon-btn hidden" aria-label="Odhlásiť">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -606,12 +616,12 @@
         <span class="mobile-nav-label">Opakovanie</span>
       </button>
       <button id="mobileNavProgressBtn" class="mobile-nav-btn" type="button">
-        <span class="mobile-nav-icon" aria-hidden="true">▦</span>
-        <span class="mobile-nav-label">Pokrok</span>
+        <span class="mobile-nav-icon" aria-hidden="true">✎</span>
+        <span class="mobile-nav-label">Editor</span>
       </button>
-      <button id="mobileNavSettingsBtn" class="mobile-nav-btn" type="button">
-        <span class="mobile-nav-icon" aria-hidden="true">Aa</span>
-        <span class="mobile-nav-label">Nastavenia</span>
+      <button id="mobileNavOverviewBtn" class="mobile-nav-btn" type="button">
+        <span class="mobile-nav-icon" aria-hidden="true">▦</span>
+        <span class="mobile-nav-label">Prehľad</span>
       </button>
     </nav>
 

@@ -334,10 +334,20 @@ function renderMobileBottomNav(activeViewId = "") {
   if (!isVisible) return;
 
   const isTeacher = state.currentProfile?.role === "teacher";
+  const editorButton = $("mobileNavProgressBtn");
+  const overviewButton = $("mobileNavOverviewBtn");
+  const editorActive = isTeacher
+    && activeViewId === "teacherView"
+    && !$("articleEditorCard")?.classList.contains("hidden");
+  const overviewActive = activeViewId === "teacherView"
+    && !$("teacherOverviewCard")?.classList.contains("hidden");
+  editorButton?.classList.toggle("hidden", !isTeacher);
+  overviewButton?.classList.toggle("hidden", false);
+  nav.style.gridTemplateColumns = `repeat(${isTeacher ? 4 : 3}, minmax(0, 1fr))`;
   setMobileNavButton("mobileNavHomeBtn", t("articles"), activeViewId === "homeView" || activeViewId === "articleView");
   setMobileNavButton("mobileNavReviewBtn", t("clickedReviewEyebrow"), false);
-  setMobileNavButton("mobileNavProgressBtn", isTeacher ? t("articleEditor") : t("myProgress"), activeViewId === "teacherView");
-  setMobileNavButton("mobileNavSettingsBtn", t("settings"), activeViewId === "settingsView");
+  setMobileNavButton("mobileNavProgressBtn", t("articleEditor"), editorActive);
+  setMobileNavButton("mobileNavOverviewBtn", t("overview"), overviewActive);
 }
 
 function getActiveViewId() {
@@ -430,10 +440,9 @@ function updateStaticTexts() {
   document.title = t("appTitle");
   document.querySelector(".topbar h1").textContent = t("appTitle");
   document.querySelector(".topbar .eyebrow").textContent = t("languageLabel");
-  const teacherButtonLabel = state.currentProfile?.role === "teacher" ? t("articleEditor") : t("myProgress");
-  $("teacherBtn").setAttribute("aria-label", teacherButtonLabel);
-  $("teacherBtn").setAttribute("title", teacherButtonLabel);
-  setText("profileProgressBtn", state.currentProfile?.role === "teacher" ? "articleEditor" : "myProgress");
+  $("teacherBtn").setAttribute("aria-label", t("articleEditor"));
+  $("teacherBtn").setAttribute("title", t("articleEditor"));
+  setText("profileProgressBtn", "overview");
   $("shareAppBtn").setAttribute("aria-label", t("shareApp"));
   $("shareAppBtn").setAttribute("title", t("shareApp"));
   $("settingsBtn").setAttribute("aria-label", t("settings"));
@@ -629,6 +638,18 @@ function shuffle(items) {
 
 function showSettings() {
   showView("settingsView");
+}
+
+function showArticleEditorView() {
+  if (state.currentProfile?.role !== "teacher") {
+    showOverviewView();
+    return;
+  }
+  showTeacherView("articles");
+}
+
+async function showOverviewView() {
+  await showTeacherView("students");
 }
 
 async function shareApp() {
@@ -893,12 +914,12 @@ onClick("teacherBackBtn", showHome);
 onClick("articleEditorBottomBackBtn", showHome);
 onClick("settingsBtn", showSettings);
 onClick("shareAppBtn", shareApp);
-onClick("teacherBtn", showTeacherView);
-onClick("profileProgressBtn", showTeacherView);
+onClick("teacherBtn", showArticleEditorView);
+onClick("profileProgressBtn", showOverviewView);
 onClick("mobileNavHomeBtn", showHome);
 onClick("mobileNavReviewBtn", showClickedReviewFromNav);
-onClick("mobileNavProgressBtn", showTeacherView);
-onClick("mobileNavSettingsBtn", showSettings);
+onClick("mobileNavProgressBtn", showArticleEditorView);
+onClick("mobileNavOverviewBtn", showOverviewView);
 onClick("practiceTabVocab", () => setArticlePracticeGroup("vocab", { scroll: true }));
 onClick("practiceTabQuestions", () => setArticlePracticeGroup("questions", { scroll: true }));
 onClick("practiceTabGames", () => setArticlePracticeGroup("games", { scroll: true }));

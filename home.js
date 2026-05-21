@@ -46,17 +46,19 @@ function setTeacherPanel(panel) {
   $("teacherStudentsTabBtn").classList.toggle("quiet", !showStudents);
   $("teacherProfilesTabBtn").classList.toggle("quiet", !showProfiles);
   if (showProfiles) renderProfileManagerControls();
+  renderGamification();
+  renderMobileBottomNav(getActiveViewId());
   renderOnboarding();
 }
 
-async function showTeacherView() {
+async function showTeacherView(panel = state.currentProfile?.role === "teacher" ? "articles" : "students") {
   if (!state.currentProfile) return;
   renderArticleEditorList();
-  if (state.currentProfile.role === "teacher") {
-    setTeacherPanel("articles");
-  } else {
+  if (panel === "students" || state.currentProfile.role !== "teacher") {
     await renderTeacherOverview();
     setTeacherPanel("students");
+  } else {
+    setTeacherPanel("articles");
   }
   showView("teacherView");
   renderGamification();
