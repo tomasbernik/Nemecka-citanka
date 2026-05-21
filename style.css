@@ -802,6 +802,7 @@ h3 { font-size: 1.1rem; }
 .practice-panel {
   display: grid;
   gap: 12px;
+  scroll-margin-top: 72px;
 }
 
 .practice-tabs {
@@ -1605,10 +1606,6 @@ select {
   .practice-tab.active {
     background: var(--accent);
     color: var(--accent-text);
-  }
-
-  [data-practice-panel]:not(.active) {
-    display: none;
   }
 
   .mobile-bottom-nav:not(.hidden) {

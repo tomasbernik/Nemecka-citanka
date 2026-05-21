@@ -371,10 +371,7 @@ function renderArticlePracticeTabs() {
     const label = getPracticeGroupLabel(button.dataset.practiceTab);
     button.textContent = label;
     button.classList.toggle("active", isActive);
-    button.setAttribute("aria-selected", String(isActive));
-  });
-  document.querySelectorAll("[data-practice-panel]").forEach(panel => {
-    panel.classList.toggle("active", panel.dataset.practicePanel === activeGroup);
+    button.setAttribute("aria-current", isActive ? "location" : "false");
   });
 }
 

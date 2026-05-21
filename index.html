@@ -198,12 +198,21 @@
           </div>
           <div id="articleImageWrap" class="article-image-wrap hidden"></div>
 
-          <div id="articlePracticeTabs" class="practice-tabs" role="tablist" aria-label="Cvicenia">
-            <button id="practiceTabVocab" class="practice-tab" type="button" data-practice-tab="vocab" role="tab">Slovicka</button>
-            <button id="practiceTabQuestions" class="practice-tab" type="button" data-practice-tab="questions" role="tab">Otazky</button>
-            <button id="practiceTabGames" class="practice-tab" type="button" data-practice-tab="games" role="tab">Hry</button>
-            <button id="practiceTabSearch" class="practice-tab" type="button" data-practice-tab="search" role="tab">Osemsmerovka</button>
-          </div>
+          <nav id="articlePracticeTabs" class="practice-tabs" aria-label="Cvicenia v clanku">
+            <button id="practiceTabVocab" class="practice-tab" type="button" data-practice-tab="vocab">Slovicka</button>
+            <button id="practiceTabQuestions" class="practice-tab" type="button" data-practice-tab="questions">Otazky</button>
+            <button id="practiceTabGames" class="practice-tab" type="button" data-practice-tab="games">Hry</button>
+            <button id="practiceTabSearch" class="practice-tab" type="button" data-practice-tab="search">Osemsmerovka</button>
+          </nav>
+
+          <section id="wordOnboardingHint" class="onboarding-panel compact hidden">
+            <p class="muted">Ťukni na zvýraznené slovíčka v texte. Uložia sa ti na opakovanie.</p>
+            <button id="dismissWordHintBtn" class="text-btn" type="button">Skryť</button>
+          </section>
+
+          <div id="articleText" class="article-text"></div>
+          <button id="markReadBtn" class="primary-btn">Označiť ako prečítané</button>
+          <div id="articleTaskProgress" class="task-progress"></div>
 
           <section class="panel practice-panel" data-practice-panel="vocab">
             <div class="practice-heading">
@@ -214,15 +223,6 @@
             </div>
             <ul id="vocabList"></ul>
           </section>
-
-          <section id="wordOnboardingHint" class="onboarding-panel compact hidden">
-            <p class="muted">Ťukni na zvýraznené slovíčka v texte. Uložia sa ti na opakovanie.</p>
-            <button id="dismissWordHintBtn" class="text-btn" type="button">Skryť</button>
-          </section>
-
-          <div id="articleText" class="article-text"></div>
-          <button id="markReadBtn" class="primary-btn">Označiť ako prečítané</button>
-          <div id="articleTaskProgress" class="task-progress"></div>
 
           <section class="panel practice-panel" data-practice-panel="questions">
             <div class="practice-heading">
