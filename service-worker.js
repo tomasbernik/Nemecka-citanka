@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "citanka-v95";
+const CACHE_NAME = "citanka-v96";
 const APP_FILES = [
   "./",
   "./index.html",
@@ -26,6 +26,17 @@ const APP_FILES = [
   "./icons/icon-v2-192.png",
   "./icons/icon-v2-512.png",
   "./images/articles/wohin-fahren-wir-dieses-jahr.jpg",
+  "./images/articles/vor-dem-urlaub-chaos-mit-plan.jpg",
+  "./images/articles/tomas-lernt-eine-lustige-eiersuppe-zu-kochen.jpg",
+  "./images/articles/spaziergang-am-see.jpg",
+  "./images/articles/reise-suedspanien.jpg",
+  "./images/articles/paris-ein-tag.jpg",
+  "./images/articles/nachmittag-baggersee-tomas.jpg",
+  "./images/articles/kleines-fruehstueck.jpg",
+  "./images/articles/garten-nachmittag-kika.jpg",
+  "./images/articles/einkaufen-bei-temu.jpg",
+  "./images/articles/ein-sehr-gro-es-fruhstuck-am-samstag.jpg",
+  "./images/articles/ein-lustiger-fahrradausflug-zur-rheininsel.jpg",
   "./images/articles/ein-lustiger-einkauf-im-urlaub.jpg"
 ];
 
@@ -46,14 +57,23 @@ self.addEventListener("activate", event => {
 });
 
 self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
+
   event.respondWith(
     fetch(event.request)
       .then(response => {
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        if (response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, copy));
+        }
         return response;
       })
-      .catch(() => caches.match(event.request))
+      .catch(async () => {
+        const cached = await caches.match(event.request);
+        if (cached) return cached;
+        if (event.request.mode === "navigate") return caches.match("./index.html");
+        return Response.error();
+      })
   );
 });
 

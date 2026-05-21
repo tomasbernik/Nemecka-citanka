@@ -1,8 +1,26 @@
+function isRemoteNetworkAvailable() {
+  return Boolean(state.remoteReady && navigator.onLine !== false);
+}
+
+async function remoteFetch(url, options = {}) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), REMOTE_REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: options.signal || controller.signal
+    });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
+
 async function supabaseRequest(path, options = {}) {
-  if (!state.remoteReady) return null;
+  if (!isRemoteNetworkAvailable()) return null;
   const accessToken = await getFreshAuthAccessToken();
 
-  const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/rest/v1/${path}`, {
+  const response = await remoteFetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/rest/v1/${path}`, {
     ...options,
     headers: {
       apikey: SUPABASE_CONFIG.anonKey,
@@ -21,10 +39,10 @@ async function supabaseRequest(path, options = {}) {
 }
 
 async function supabaseStorageRequest(path, options = {}) {
-  if (!state.remoteReady) return null;
+  if (!isRemoteNetworkAvailable()) return null;
   const accessToken = await getFreshAuthAccessToken();
 
-  const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/storage/v1/${path}`, {
+  const response = await remoteFetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/storage/v1/${path}`, {
     ...options,
     headers: {
       apikey: SUPABASE_CONFIG.anonKey,
@@ -96,7 +114,7 @@ function todayKey() {
 }
 
 async function logAppOpened(details = {}) {
-  if (!state.remoteReady) return;
+  if (!isRemoteNetworkAvailable()) return;
 
   const key = geoAppOpenedKey();
   const today = todayKey();
@@ -108,7 +126,7 @@ async function logAppOpened(details = {}) {
 
   try {
     const event = await buildAppEvent("app_opened", details);
-    const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/functions/v1/log-app-opened`, {
+    const response = await remoteFetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/functions/v1/log-app-opened`, {
       method: "POST",
       headers: {
         apikey: SUPABASE_CONFIG.anonKey,

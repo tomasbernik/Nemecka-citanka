@@ -59,9 +59,9 @@ function getCurrentAuthUserId() {
 }
 
 async function supabaseAuthRequest(path, options = {}) {
-  if (!state.remoteReady) return null;
+  if (!isRemoteNetworkAvailable()) return null;
 
-  const response = await fetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/auth/v1/${path}`, {
+  const response = await remoteFetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/auth/v1/${path}`, {
     ...options,
     headers: {
       apikey: SUPABASE_CONFIG.anonKey,
@@ -135,13 +135,13 @@ async function getFreshAuthAccessToken() {
 }
 
 async function loadAuthUser() {
-  const session = await refreshAuthSession();
-  if (!session?.access_token) {
-    state.authUser = null;
-    return null;
-  }
-
   try {
+    const session = await refreshAuthSession();
+    if (!session?.access_token) {
+      state.authUser = null;
+      return null;
+    }
+
     const user = await supabaseAuthRequest("user", {
       headers: { Authorization: `Bearer ${session.access_token}` }
     });

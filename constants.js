@@ -8,6 +8,7 @@ const AUTH_PENDING_INVITE_KEY = "supabaseAuthPendingInvite";
 const GEO_APP_OPENED_KEY_PREFIX = "geoAppOpened";
 const INSTALL_PROMPT_DISMISSED_KEY = "installPromptDismissedSession";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
+const REMOTE_REQUEST_TIMEOUT_MS = 8000;
 const ADMIN_PROFILE_IDS = new Set(window.NC_ADMIN_PROFILE_IDS || []);
 const VISIBLE_CATEGORY_LIMIT = 6;
 const DEFAULT_NATIVE_LANGUAGE = "sk";
