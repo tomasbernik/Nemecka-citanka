@@ -68,7 +68,9 @@ h1, h2, h3, p { margin-top: 0; }
 
 h1 {
   margin-bottom: 0;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 2rem;
   line-height: 1.05;
 }
@@ -1508,7 +1510,19 @@ select {
 
 @media (max-width: 460px) {
   #app { padding: 14px; }
-  h1 { font-size: 1.72rem; }
+  h1 { font-size: 1.38rem; }
+  .topbar {
+    gap: 10px;
+    align-items: flex-start;
+  }
+  .top-actions {
+    gap: 6px;
+  }
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 16px;
+  }
   .reader-card { border-radius: 24px; padding: 20px; }
   .article-card {
     grid-template-columns: 1fr;
@@ -1526,6 +1540,17 @@ select {
   }
   .word-search-grid { gap: 3px; }
   .letter-cell { border-radius: 6px; font-size: 0.72rem; }
+}
+
+@media (max-width: 380px) {
+  h1 { font-size: 1.18rem; }
+  .icon-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .top-actions {
+    gap: 5px;
+  }
 }
 
 @media (max-width: 700px) {

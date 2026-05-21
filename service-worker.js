@@ -1,10 +1,10 @@
 
-const CACHE_NAME = "citanka-v100";
+const CACHE_NAME = "citanka-v101";
 const APP_FILES = [
   "./",
   "./index.html",
   "./theme.js",
-  "./style.css?v=100",
+  "./style.css?v=101",
   "./constants.js",
   "./translations/ui.js",
   "./translations/auth.js",
