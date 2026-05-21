@@ -21,6 +21,7 @@ async function loadProfiles() {
       state.profiles = profiles.map(row => rowToProfile(row, localProfilesById.get(row.id)));
       ensureProfileGroups();
       localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
+      if (shouldSyncSavedProfileLanguage(localProfilesById)) await saveProfiles();
     } else if (state.profiles.length) {
       await saveProfiles();
     }
@@ -90,15 +91,54 @@ function ensureProfileGroups() {
   }));
 }
 
+function profileLanguageKey(profileId) {
+  return `${PROFILE_LANGUAGE_KEY_PREFIX}:${profileId}`;
+}
+
+function getStoredProfileLanguage(profileId) {
+  const language = localStorage.getItem(profileLanguageKey(profileId));
+  return isSupportedNativeLanguage(language) ? language : null;
+}
+
+function setStoredProfileLanguage(profileId, language) {
+  if (!profileId || !isSupportedNativeLanguage(language)) return;
+  localStorage.setItem(profileLanguageKey(profileId), language);
+}
+
+function resolveProfileNativeLanguage(row, fallbackProfile = null) {
+  const savedProfileId = localStorage.getItem(CURRENT_PROFILE_KEY);
+  const storedLanguage = getStoredProfileLanguage(row.id);
+  const localLanguage = isSupportedNativeLanguage(fallbackProfile?.nativeLanguage)
+    ? fallbackProfile.nativeLanguage
+    : null;
+  const remoteLanguage = isSupportedNativeLanguage(row.native_language)
+    ? row.native_language
+    : null;
+
+  if (storedLanguage) return storedLanguage;
+  if (row.id === savedProfileId && localLanguage) return localLanguage;
+  return remoteLanguage || localLanguage || DEFAULT_NATIVE_LANGUAGE;
+}
+
+function shouldSyncSavedProfileLanguage(localProfilesById) {
+  const savedProfileId = localStorage.getItem(CURRENT_PROFILE_KEY);
+  if (!savedProfileId) return false;
+
+  const localLanguage = getStoredProfileLanguage(savedProfileId)
+    || localProfilesById.get(savedProfileId)?.nativeLanguage;
+  const remoteProfile = state.profiles.find(profile => profile.id === savedProfileId);
+  return isSupportedNativeLanguage(localLanguage)
+    && remoteProfile
+    && remoteProfile.nativeLanguage === localLanguage;
+}
+
 function rowToProfile(row, fallbackProfile = null) {
   return normalizeProfile({
     id: row.id,
     name: row.name,
     pin: row.pin,
     role: row.role,
-    nativeLanguage: isSupportedNativeLanguage(row.native_language)
-      ? row.native_language
-      : fallbackProfile?.nativeLanguage,
+    nativeLanguage: resolveProfileNativeLanguage(row, fallbackProfile),
     teacherGroupId: row.teacher_group_id,
     authUserId: row.auth_user_id,
     ownerAuthUserId: row.owner_auth_user_id,
@@ -226,6 +266,7 @@ async function login() {
   $("loginPinInput").value = "";
   const nativeLanguage = $("loginNativeLanguageSelect").value;
   if (isSupportedNativeLanguage(nativeLanguage) && profile.nativeLanguage !== nativeLanguage) {
+    setStoredProfileLanguage(profile.id, nativeLanguage);
     profile.nativeLanguage = nativeLanguage;
     state.profiles = state.profiles.map(item => item.id === profile.id ? profile : item);
     await saveProfiles();
@@ -437,6 +478,7 @@ function renderCurrentProfileLabel() {
 async function updateCurrentProfileNativeLanguage(language) {
   if (!state.currentProfile || !isSupportedNativeLanguage(language)) return;
 
+  setStoredProfileLanguage(state.currentProfile.id, language);
   state.currentProfile.nativeLanguage = language;
   state.profiles = state.profiles.map(profile =>
     profile.id === state.currentProfile.id ? { ...profile, nativeLanguage: language } : profile

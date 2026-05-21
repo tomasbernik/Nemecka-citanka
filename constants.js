@@ -1,4 +1,5 @@
 const PROFILE_KEY = "profiles";
+const PROFILE_LANGUAGE_KEY_PREFIX = "profileLanguage";
 const CURRENT_PROFILE_KEY = "currentProfileId";
 const LEGACY_MIGRATION_KEY = "legacyProfileDataMigrated";
 const DEVICE_ID_KEY = "deviceId";
