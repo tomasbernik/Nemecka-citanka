@@ -1,4 +1,19 @@
-v anglictine su v Home v slovencine slova Clanky, Vsetky temy, Vsetky urovne a nazvy tem.
+v anglictine su v Home v slovencine je slovo Clanky. je zu osobitny subor (alebo viac suborov) cisto len na riadenie jazykov? ak ano, ako to, ze napriklad slovo clanky v Home je stale v slovencine?niekde to prepadlo?
+Dali by sa aj vsetky temy prelozit do inych jazykov (najskor do anglictiny)? a takisto pri vytvoreni novej temy.
+
+chcem aby v editore clankov sa dalo scrolovat aj text, v ktorom je vidiet podciarknute slova (ktore pojdu alebo su v inlineVocabulary). dalo by sa to spravit tak, ze by to vsetko bolo len v jednom texte a anie vo dvoch? je to neprehladne v dvoch textoch. idealne, aby som mal jeden text, ktory mozem aj upravovat, aj oznacovat slova, ktore chcem pridat a aj rovno vidiet, ktore slova a frazy su zu pridane.
+
+tlacidlo nastavenia dat znova hore (aj symbol nech je ako zvykne byt take ozubene kolieska) a zu nech nie je dole.
+tlacidlo editor clankov nech je osobitne a nech je nove tlacidlo prehlad (namiesto nastaveni)
+nech je moj pokrok zobrazovany len v Prehlade a v editore clankov nie.
+
+ak si student precita clanok, ktory mu zadal ucitel, nechcem aby sa mu tieto precitane clanky zobrazovali na hlavnej obrazovke pri vsetkych clankoch, ale len v prehlade. na tej hlavnej stranke sa maju zobrazovat len este nesplnene ulohy (zadania)
+
+Opakonie (opakovanie kliknutych slovicok) nech vyskoci nove okno a nie aby sa Home zoscrolovalo az na koniec stranky - tam pod clankami to ani vobec nemusi byt.
+
+vyskakovacie okno Pridat na plochu, nech vyskakuje maximalne raz do dna.
+
+
 
 chýbajú preklady v ru/pl/hu/ro/it/fr/tr a prompt preklady pre ro/it/en/fr/tr
 

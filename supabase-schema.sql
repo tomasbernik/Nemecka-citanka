@@ -75,6 +75,7 @@ create table if not exists public.app_articles (
   title text not null,
   level text not null,
   category text not null,
+  category_labels jsonb not null default '{}'::jsonb,
   summary text not null,
   text jsonb not null default '[]'::jsonb,
   vocabulary jsonb not null default '[]'::jsonb,
@@ -226,6 +227,9 @@ add column if not exists approval_status text not null default 'approved';
 
 alter table public.app_articles
 add column if not exists image jsonb;
+
+alter table public.app_articles
+add column if not exists category_labels jsonb not null default '{}'::jsonb;
 
 alter table public.app_events
 add column if not exists device_id text;

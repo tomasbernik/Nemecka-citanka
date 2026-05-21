@@ -1357,3 +1357,46 @@ Object.entries({
     assignedBadge: "Kiosztva"
   }
 }).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
+  sk: {
+    chooseCategory: "-- vyber kategóriu --",
+    categoryTranslations: "Preklady novej kategórie"
+  },
+  de: {
+    chooseCategory: "-- Kategorie wählen --",
+    categoryTranslations: "Übersetzungen der neuen Kategorie"
+  },
+  ru: {
+    chooseCategory: "-- выберите категорию --",
+    categoryTranslations: "Переводы новой категории"
+  },
+  pl: {
+    chooseCategory: "-- wybierz kategorię --",
+    categoryTranslations: "Tłumaczenia nowej kategorii"
+  },
+  hu: {
+    chooseCategory: "-- válassz kategóriát --",
+    categoryTranslations: "Az új kategória fordításai"
+  },
+  ro: {
+    chooseCategory: "-- alege categoria --",
+    categoryTranslations: "Traducerile noii categorii"
+  },
+  it: {
+    chooseCategory: "-- scegli categoria --",
+    categoryTranslations: "Traduzioni della nuova categoria"
+  },
+  en: {
+    chooseCategory: "-- choose category --",
+    categoryTranslations: "New category translations"
+  },
+  fr: {
+    chooseCategory: "-- choisir une catégorie --",
+    categoryTranslations: "Traductions de la nouvelle catégorie"
+  },
+  tr: {
+    chooseCategory: "-- kategori seç --",
+    categoryTranslations: "Yeni kategori çevirileri"
+  }
+}).forEach(([language, text]) => assignUiText(language, text));

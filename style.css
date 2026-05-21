@@ -649,6 +649,33 @@ body.has-mobile-nav .top-actions #logoutBtn {
   display: none;
 }
 
+.category-translations {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.category-translations.hidden {
+  display: none;
+}
+
+.category-translations .muted {
+  margin: 0 0 10px;
+}
+
+.category-translation-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.field-row.compact {
+  gap: 5px;
+  margin: 0;
+  font-size: 0.8rem;
+}
+
 .editor-actions {
   display: flex;
   flex-wrap: wrap;

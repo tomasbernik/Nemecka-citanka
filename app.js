@@ -46,6 +46,7 @@ const state = {
   articleImageFile: null,
   editorBaseInlineVocabulary: [],
   editorManualInlineVocabulary: [],
+  editorCategoryLabels: {},
   showAllCategories: false,
   deferredInstallPrompt: null,
   installPromptShown: false,
@@ -159,7 +160,20 @@ function makeVocabularyItem(de, translation, language = getNativeLanguage()) {
 function getCategoryLabel(category) {
   if (category === ALL_CATEGORIES) return t("all");
   if (category === UNREAD_CATEGORY) return t("unread");
-  return CATEGORY_LABELS[category]?.[getUiLanguage()] || category;
+  const labels = getCategoryLabels(category);
+  return labels?.[getUiLanguage()] || labels?.[DEFAULT_NATIVE_LANGUAGE] || category;
+}
+
+function getCategoryLabels(category) {
+  if (!category) return null;
+  if (CATEGORY_LABELS[category]) return CATEGORY_LABELS[category];
+
+  for (const article of state.articles || []) {
+    const labels = article.categoryLabels?.[category];
+    if (labels) return labels;
+  }
+
+  return null;
 }
 
 function getArticleCategoriesForFilter(article) {
@@ -467,7 +481,7 @@ function updateStaticTexts() {
   setText("clickedReviewEyebrow", "clickedReviewEyebrow");
   setText("clickedReviewTitle", "clickedReviewTitle");
   setText("newClickedReviewBtn", "next");
-  document.querySelector("#homeView .section-title h3").textContent = t("articles");
+  setText("homeArticlesTitle", "articles");
   setText("refreshBtn", "refresh");
 
   setText("backBtn", "back");

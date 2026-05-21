@@ -156,12 +156,17 @@ function parseArticleImport(value) {
   const questions = (Array.isArray(source.questions) ? source.questions : [])
     .map(normalizeQuestionImportItem)
     .filter(item => item?.statement);
+  const categoryLabels = normalizeArticleCategoryLabels(
+    source.categoryLabels || source.category_labels || {},
+    source.category || getArticleEditorCategory()
+  );
 
   const article = {
     id: (source.id || makeArticleId(title)).trim(),
     title,
     level: (source.level || $("articleLevelInput").value || "A2-B1").trim(),
     category: (source.category || getArticleEditorCategory()).trim(),
+    categoryLabels,
     summary: (source.summary || source.description || "").trim(),
     text: textParagraphs,
     vocabulary,
@@ -469,6 +474,7 @@ function getArticleJsonPromptInstructions(level) {
     "  \"title\": \"nemecký názov článku\",",
     `  \"level\": \"${level}\",`,
     "  \"category\": \"kategória alebo téma\",",
+    `  \"categoryLabels\": {\"názov kategórie alebo témy\":{\"${Object.keys(NATIVE_LANGUAGES).join("\":\"preklad\", \"")}\":\"preklad\"}},`,
     "  \"summary\": \"krátky nemecký popis článku\",",
     "  \"text\": [\"odsek 1\", \"odsek 2\", \"odsek 3\", \"odsek 4\"],",
     "  \"vocabulary\": [",
@@ -487,6 +493,7 @@ function getArticleJsonPromptInstructions(level) {
     `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
     "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
     "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false. Odpovede nesmú byť v pravidelnom poradí true/false/true/false ani false/true/false/true; poradie musí pôsobiť prirodzene a môže mať aj dve rovnaké odpovede za sebou.",
+    `Do \"categoryLabels\" pridaj pre každú kategóriu alebo tému preklady do všetkých jazykov: ${Object.keys(NATIVE_LANGUAGES).join(", ")}. Kľúč objektu musí presne zodpovedať hodnote v poli \"category\"; ak je viac kategórií oddelených znakom |, pridaj každú zvlášť.`,
     `Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, base, ${VOCABULARY_LANGUAGE_CODES.join(", ")}.`,
     "Do \"base\" daj základný slovníkový tvar: pri podstatnom mene s určitým členom a v nominatíve jednotného čísla, napríklad \"der Mann\"; pri slovese infinitív, napríklad \"gehen\"; pri prídavnom mene základný tvar, napríklad \"freundlich\". Ak je \"de\" už základný tvar alebo ide o celú frázu, môže byť \"base\" rovnaké ako \"de\"."
   ];
@@ -728,9 +735,9 @@ function renderArticleCategoryOptions(selectedCategory = "") {
   const categories = getArticleCategories();
   const selectedExists = selectedCategory && categories.includes(selectedCategory);
   select.innerHTML = [
-    '<option value="">-- vyber kategóriu --</option>',
+    `<option value="">${escapeHtml(t("chooseCategory"))}</option>`,
     ...categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(getCategoryLabel(category))}</option>`),
-    `<option value="${NEW_CATEGORY_VALUE}">+ nová kategória</option>`
+    `<option value="${NEW_CATEGORY_VALUE}">+ ${escapeHtml(t("newCategory"))}</option>`
   ].join("");
   select.value = selectedExists ? selectedCategory : selectedCategory ? NEW_CATEGORY_VALUE : "";
   $("articleCategoryInput").value = selectedExists ? "" : selectedCategory;
@@ -748,9 +755,9 @@ function fillCategorySelect(selectId, inputId, selectedCategory = "") {
   const categories = getArticleCategories();
   const selectedExists = selectedCategory && categories.includes(selectedCategory);
   select.innerHTML = [
-    '<option value="">-- vyber kategoriu --</option>',
+    `<option value="">${escapeHtml(t("chooseCategory"))}</option>`,
     ...categories.map(category => `<option value="${escapeHtml(category)}">${escapeHtml(getCategoryLabel(category))}</option>`),
-    `<option value="${NEW_CATEGORY_VALUE}">+ nova kategoria</option>`
+    `<option value="${NEW_CATEGORY_VALUE}">+ ${escapeHtml(t("newCategory"))}</option>`
   ].join("");
   select.value = selectedExists ? selectedCategory : selectedCategory ? NEW_CATEGORY_VALUE : "";
   $(inputId).value = selectedExists ? "" : selectedCategory;
@@ -763,6 +770,82 @@ function renderArticleCategoryOptionsMulti(selectedCategory = "") {
   fillCategorySelect("articleCategorySelect", "articleCategoryInput", primaryCategory);
   fillCategorySelect("articleCategory2Select", "articleCategory2Input", secondaryCategory);
   updateArticleCategoryMode();
+}
+
+function getEmptyCategoryLabels(category = "") {
+  return Object.fromEntries(Object.keys(NATIVE_LANGUAGES).map(code => [code, category]));
+}
+
+function normalizeCategoryLabels(labels = {}, category = "") {
+  const source = labels && typeof labels === "object" ? labels : {};
+  const normalized = getEmptyCategoryLabels(category);
+  Object.keys(NATIVE_LANGUAGES).forEach(code => {
+    if (source[code]) normalized[code] = String(source[code]).trim();
+  });
+  return normalized;
+}
+
+function normalizeArticleCategoryLabels(labels = {}, categoryValue = "") {
+  const categories = getArticleCategoriesForFilter({ category: categoryValue });
+  return Object.fromEntries(categories
+    .filter(category => !getCategoryLabels(category))
+    .map(category => {
+      const source = labels?.[category] || labels;
+      return [category, normalizeCategoryLabels(source, category)];
+    }));
+}
+
+function renderCategoryTranslationInputs(rootId, category, labels = {}) {
+  const root = $(rootId);
+  if (!root) return;
+
+  root.innerHTML = `
+    <p class="muted">${escapeHtml(t("categoryTranslations"))}</p>
+    <div class="category-translation-grid">
+      ${Object.entries(NATIVE_LANGUAGES).map(([code, language]) => `
+        <label class="field-row compact">
+          ${escapeHtml(language.label)}
+          <input data-category-translation="${escapeHtml(code)}" value="${escapeHtml(labels[code] || category || "")}">
+        </label>
+      `).join("")}
+    </div>
+  `;
+}
+
+function readCategoryTranslationInputs(rootId, category) {
+  const root = $(rootId);
+  if (!root || root.classList.contains("hidden")) return null;
+
+  const labels = getEmptyCategoryLabels(category);
+  root.querySelectorAll("[data-category-translation]").forEach(input => {
+    labels[input.dataset.categoryTranslation] = input.value.trim() || category;
+  });
+  return labels;
+}
+
+function getArticleEditorCategoryLabels() {
+  const categoryPairs = [
+    {
+      category: $("articleCategorySelect").value === NEW_CATEGORY_VALUE ? $("articleCategoryInput").value.trim() : $("articleCategorySelect").value.trim(),
+      rootId: "articleCategoryTranslations",
+      isNew: $("articleCategorySelect").value === NEW_CATEGORY_VALUE
+    },
+    {
+      category: $("articleCategory2Select").value === NEW_CATEGORY_VALUE ? $("articleCategory2Input").value.trim() : $("articleCategory2Select").value.trim(),
+      rootId: "articleCategory2Translations",
+      isNew: $("articleCategory2Select").value === NEW_CATEGORY_VALUE
+    }
+  ];
+
+  return categoryPairs.reduce((labelsByCategory, item) => {
+    if (!item.category) return labelsByCategory;
+    const enteredLabels = readCategoryTranslationInputs(item.rootId, item.category);
+    const existingArticleLabels = state.editorCategoryLabels?.[item.category];
+    if ((item.isNew && !getCategoryLabels(item.category)) || existingArticleLabels) {
+      labelsByCategory[item.category] = normalizeCategoryLabels(enteredLabels || existingArticleLabels || {}, item.category);
+    }
+    return labelsByCategory;
+  }, {});
 }
 
 function getArticleEditorCategories() {
@@ -801,6 +884,16 @@ function updateArticleCategoryMode() {
   $("articleNewCategoryWrap").classList.toggle("hidden", !isNewCategory);
   const isNewCategory2 = $("articleCategory2Select")?.value === NEW_CATEGORY_VALUE;
   $("articleNewCategory2Wrap")?.classList.toggle("hidden", !isNewCategory2);
+  $("articleCategoryTranslations")?.classList.toggle("hidden", !isNewCategory);
+  $("articleCategory2Translations")?.classList.toggle("hidden", !isNewCategory2);
+  if (isNewCategory) {
+    const category = $("articleCategoryInput").value.trim();
+    renderCategoryTranslationInputs("articleCategoryTranslations", category, state.editorCategoryLabels?.[category] || getEmptyCategoryLabels(category));
+  }
+  if (isNewCategory2) {
+    const category = $("articleCategory2Input").value.trim();
+    renderCategoryTranslationInputs("articleCategory2Translations", category, state.editorCategoryLabels?.[category] || getEmptyCategoryLabels(category));
+  }
 }
 
 function hasTranslatedVocabulary() {
@@ -843,6 +936,7 @@ function fillArticleEditor(article) {
   state.articleImageFile = null;
   state.editorBaseInlineVocabulary = getInlineVocabulary(article || {});
   state.editorManualInlineVocabulary = [];
+  state.editorCategoryLabels = article?.categoryLabels || {};
   $("articleRequiredWordsMode").value = "no";
   $("articleRequiredWordsInput").value = "";
   updateArticleRequiredWordsMode();
@@ -942,6 +1036,7 @@ function readArticleEditor() {
     title,
     level: $("articleLevelInput").value.trim(),
     category: getArticleEditorCategory(),
+    categoryLabels: getArticleEditorCategoryLabels(),
     summary: $("articleSummaryInput").value.trim(),
     text: linesToList($("articleTextInput").value),
     image: existingArticle?.image || null,

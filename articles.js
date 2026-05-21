@@ -45,6 +45,7 @@ function normalizeArticle(article) {
     ...article,
     ownerProfileId: article.ownerProfileId || article.owner_profile_id || null,
     teacherGroupId: article.teacherGroupId || article.teacher_group_id || null,
+    categoryLabels: article.categoryLabels || article.category_labels || {},
     image: article.image || null,
     visibility: article.visibility || "public",
     approvalStatus: article.approvalStatus || article.approval_status || "approved"
@@ -91,11 +92,32 @@ function getEditableArticles() {
 async function saveRemoteArticles(articles, options = {}) {
   if (!state.remoteReady || !articles.length) return;
 
-  await supabaseRequest("app_articles?on_conflict=id", {
-    method: "POST",
-    headers: { Prefer: "resolution=merge-duplicates" },
-    body: JSON.stringify(articles.map(article => articleToRow(article, options)))
-  });
+  await saveArticleRows(articles.map(article => articleToRow(article, options)));
+}
+
+function isMissingCategoryLabelsColumn(error) {
+  return error?.message?.includes("category_labels");
+}
+
+async function saveArticleRows(rows) {
+  try {
+    await supabaseRequest("app_articles?on_conflict=id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify(rows)
+    });
+  } catch (error) {
+    if (!isMissingCategoryLabelsColumn(error)) throw error;
+    await supabaseRequest("app_articles?on_conflict=id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates" },
+      body: JSON.stringify(rows.map(({ category_labels, ...row }) => row))
+    });
+  }
+}
+
+async function insertArticleRow(row) {
+  await saveArticleRows([row]);
 }
 
 function rowToArticle(row) {
@@ -108,6 +130,7 @@ function rowToArticle(row) {
     title: row.title,
     level: row.level,
     category: row.category,
+    categoryLabels: row.category_labels || {},
     summary: row.summary,
     text: row.text || [],
     vocabulary: row.vocabulary || [],
@@ -128,6 +151,7 @@ function articleToRow(article, options = {}) {
     title: article.title,
     level: article.level,
     category: article.category,
+    category_labels: article.categoryLabels || {},
     summary: article.summary,
     text: article.text || [],
     vocabulary: article.vocabulary || [],
@@ -151,11 +175,7 @@ async function saveArticle(article) {
 
   article = normalizeArticle(article);
 
-  await supabaseRequest("app_articles?on_conflict=id", {
-    method: "POST",
-    headers: { Prefer: "resolution=merge-duplicates" },
-    body: JSON.stringify([articleToRow(article)])
-  });
+  await insertArticleRow(articleToRow(article));
 
   const index = state.articles.findIndex(item => item.id === article.id);
   if (index >= 0) {

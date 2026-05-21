@@ -42,7 +42,11 @@ const CATEGORY_LABELS = {
   "Voľný čas": { sk: "Voľný čas", ru: "Свободное время", pl: "Czas wolny", hu: "Szabadidő", ro: "Timp liber", it: "Tempo libero", en: "Free time", fr: "Temps libre", tr: "Boş zaman" },
   "Každodenný život": { sk: "Každodenný život", ru: "Повседневная жизнь", pl: "Codzienne życie", hu: "Mindennapi élet", ro: "Viața de zi cu zi", it: "Vita quotidiana", en: "Everyday life", fr: "Vie quotidienne", tr: "Günlük yaşam" },
   "Cestovanie": { sk: "Cestovanie", ru: "Путешествия", pl: "Podróże", hu: "Utazás", ro: "Călătorii", it: "Viaggi", en: "Travel", fr: "Voyages", tr: "Seyahat" },
-  "Nakupovanie": { sk: "Nakupovanie", ru: "Покупки", pl: "Zakupy", hu: "Vásárlás", ro: "Cumpărături", it: "Acquisti", en: "Shopping", fr: "Achats", tr: "Alışveriş" }
+  "Nakupovanie": { sk: "Nakupovanie", ru: "Покупки", pl: "Zakupy", hu: "Vásárlás", ro: "Cumpărături", it: "Acquisti", en: "Shopping", fr: "Achats", tr: "Alışveriş" },
+  "Príbeh": { sk: "Príbeh", ru: "История", pl: "Historia", hu: "Történet", ro: "Poveste", it: "Storia", en: "Story", fr: "Histoire", tr: "Hikaye" },
+  "Romantika": { sk: "Romantika", ru: "Романтика", pl: "Romans", hu: "Romantika", ro: "Romantic", it: "Romantico", en: "Romance", fr: "Romance", tr: "Romantizm" },
+  "Zábava": { sk: "Zábava", ru: "Развлечения", pl: "Rozrywka", hu: "Szórakozás", ro: "Distracție", it: "Intrattenimento", en: "Entertainment", fr: "Divertissement", tr: "Eğlence" },
+  "Krimi": { sk: "Krimi", ru: "Криминал", pl: "Kryminał", hu: "Krimi", ro: "Crimă", it: "Giallo", en: "Crime", fr: "Polar", tr: "Polisiye" }
 };
 
 const ARTICLE_IMAGE_EXTENSIONS = ["jpg", "png"];
