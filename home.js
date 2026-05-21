@@ -14,11 +14,15 @@ function showHome() {
   scrollToPageTop();
 }
 
-function showClickedReviewFromNav() {
+function showClickedReviewFromNav(event) {
+  event?.preventDefault();
+  event?.stopPropagation();
   stopReading();
-  startClickedReviewGame();
-  setMobileNavButton("mobileNavHomeBtn", t("articles"), false);
-  setMobileNavButton("mobileNavReviewBtn", t("clickedReviewEyebrow"), true);
+  requestAnimationFrame(() => {
+    startClickedReviewGame();
+    setMobileNavButton("mobileNavHomeBtn", t("articles"), false);
+    setMobileNavButton("mobileNavReviewBtn", t("clickedReviewEyebrow"), true);
+  });
 }
 
 function setTeacherPanel(panel) {
