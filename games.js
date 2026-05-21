@@ -397,9 +397,14 @@ function getSortedAssignments() {
     });
 }
 
+function getOpenSortedAssignments() {
+  const readIds = new Set(state.profileData.readIds || []);
+  return getSortedAssignments().filter(assignment => !readIds.has(assignment.articleId));
+}
+
 function hasUnseenAssignments() {
   const seen = new Set(state.profileData.seenAssignmentIds || []);
-  return getSortedAssignments().some(assignment => !seen.has(getAssignmentKey(assignment)));
+  return getOpenSortedAssignments().some(assignment => !seen.has(getAssignmentKey(assignment)));
 }
 
 function renderAssignmentInbox() {
@@ -407,7 +412,7 @@ function renderAssignmentInbox() {
   const list = $("assignmentInboxList");
   if (!panel || !list) return;
 
-  const assignments = getSortedAssignments();
+  const assignments = getOpenSortedAssignments();
   panel.classList.toggle("hidden", !assignments.length);
   if (!assignments.length) {
     list.innerHTML = "";
@@ -436,7 +441,7 @@ function renderAssignmentNotice() {
   if (!notice) return;
 
   const seen = new Set(state.profileData.seenAssignmentIds || []);
-  const assignment = getSortedAssignments().find(item => !seen.has(getAssignmentKey(item)));
+  const assignment = getOpenSortedAssignments().find(item => !seen.has(getAssignmentKey(item)));
   notice.classList.toggle("hidden", !assignment);
   if (!assignment) {
     notice.innerHTML = "";

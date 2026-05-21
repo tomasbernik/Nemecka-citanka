@@ -1326,35 +1326,40 @@ Object.entries({
     allTopics: "Všetky témy",
     allLevels: "Všetky úrovne",
     startHere: "Začni tu",
-    assignedBadge: "Zadané"
+    assignedBadge: "Zadané",
+    noOpenAssignments: "Nemáš žiadne nesplnené zadania."
   },
   de: {
     topics: "Themen",
     allTopics: "Alle Themen",
     allLevels: "Alle Niveaus",
     startHere: "Hier starten",
-    assignedBadge: "Zugewiesen"
+    assignedBadge: "Zugewiesen",
+    noOpenAssignments: "Du hast keine offenen Aufgaben."
   },
   ru: {
     topics: "Темы",
     allTopics: "Все темы",
     allLevels: "Все уровни",
     startHere: "Начни здесь",
-    assignedBadge: "Задано"
+    assignedBadge: "Задано",
+    noOpenAssignments: "У тебя нет невыполненных заданий."
   },
   pl: {
     topics: "Tematy",
     allTopics: "Wszystkie tematy",
     allLevels: "Wszystkie poziomy",
     startHere: "Zacznij tutaj",
-    assignedBadge: "Przypisane"
+    assignedBadge: "Przypisane",
+    noOpenAssignments: "Nie masz żadnych otwartych zadań."
   },
   hu: {
     topics: "Témák",
     allTopics: "Minden téma",
     allLevels: "Minden szint",
     startHere: "Kezdd itt",
-    assignedBadge: "Kiosztva"
+    assignedBadge: "Kiosztva",
+    noOpenAssignments: "Nincs befejezetlen feladatod."
   }
 }).forEach(([language, text]) => assignUiText(language, text));
 

@@ -75,6 +75,18 @@ function getVisibleArticles() {
   return state.articles.filter(article => canViewArticle(article));
 }
 
+function getHomeArticles() {
+  const visibleArticles = getVisibleArticles();
+  if (!state.currentProfile || state.currentProfile.role === "teacher") return visibleArticles;
+
+  const openAssignmentArticleIds = new Set(
+    getAssignments()
+      .filter(assignment => !state.profileData.readIds.includes(assignment.articleId))
+      .map(assignment => assignment.articleId)
+  );
+  return visibleArticles.filter(article => openAssignmentArticleIds.has(article.id));
+}
+
 function isAdminProfile(profile = state.currentProfile) {
   return Boolean(profile?.id && ADMIN_PROFILE_IDS.has(profile.id));
 }
@@ -194,7 +206,7 @@ function getCategories() {
   const categories = [];
   const seen = new Set();
 
-  getVisibleArticles().forEach(article => {
+  getHomeArticles().forEach(article => {
     getArticleCategoriesForFilter(article).forEach(category => {
       if (!category || seen.has(category)) return;
       seen.add(category);
@@ -208,7 +220,7 @@ function getCategories() {
 function getArticleLevels() {
   const levels = [];
   const seen = new Set();
-  getVisibleArticles().forEach(article => {
+  getHomeArticles().forEach(article => {
     const level = normalizeArticleLevel(article.level);
     if (!level || seen.has(level)) return;
     seen.add(level);
@@ -275,7 +287,7 @@ function renderLevelFilters() {
 
 function renderArticles() {
   const root = $("articleList");
-  const articles = getVisibleArticles().filter(article => {
+  const articles = getHomeArticles().filter(article => {
     const levelMatches = state.selectedLevel === ALL_LEVELS
       || normalizeArticleLevel(article.level) === state.selectedLevel;
     if (!levelMatches) return false;
@@ -287,6 +299,11 @@ function renderArticles() {
   });
 
   root.innerHTML = "";
+
+  if (!articles.length) {
+    root.innerHTML = `<p class="muted">${escapeHtml(t("noOpenAssignments"))}</p>`;
+    return;
+  }
 
   articles.forEach((article, index) => {
     const isRead = state.profileData.readIds.includes(article.id);

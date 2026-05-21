@@ -771,6 +771,7 @@ const NEW_LANGUAGE_UI_TEXT = {
     practicePlural: "exercises",
     vocabularyPhrases: "words/phrases",
     noDashboardActivity: "No activity yet. When this profile reads an article, clicks a word or completes an exercise, it will appear here.",
+    noOpenAssignments: "You have no unfinished assignments.",
     assignmentCompleted: "Done",
     assignmentInProgress: "In progress",
     assignmentOpened: "Opened",
