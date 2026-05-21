@@ -285,6 +285,14 @@ function renderLevelFilters() {
   };
 }
 
+function getArticleApprovalBadge(article) {
+  if (article.visibility !== "public" || article.approvalStatus === "approved") return "";
+  const labelKey = ["draft", "pending", "rejected"].includes(article.approvalStatus)
+    ? article.approvalStatus
+    : "pendingApproval";
+  return `<span class="badge">${escapeHtml(t(labelKey))}</span>`;
+}
+
 function renderArticles() {
   const root = $("articleList");
   const articles = getHomeArticles().filter(article => {
@@ -324,7 +332,7 @@ function renderArticles() {
           ${getArticleCategoriesForFilter(article).map(category => `<span class="badge">${escapeHtml(getCategoryLabel(category))}</span>`).join("")}
           ${isArticleAssignedToProfile(article.id) ? `<span class="badge">${escapeHtml(t("assignedBadge"))}</span>` : ""}
           ${article.visibility === "private" ? `<span class="badge">${escapeHtml(t("private"))}</span>` : ""}
-          ${article.visibility === "public" && article.approvalStatus !== "approved" ? `<span class="badge">${escapeHtml(t("pendingApproval"))}</span>` : ""}
+          ${getArticleApprovalBadge(article)}
           ${isRead ? `<span class="badge">✓ ${escapeHtml(t("read"))}</span>` : ""}
         </div>
       </div>
