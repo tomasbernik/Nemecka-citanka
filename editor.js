@@ -376,29 +376,48 @@ function getAllEditorInlineVocabularyItems() {
   ];
 }
 
+function renderHighlightedArticleText(text, phrases) {
+  if (!text) return "";
+  if (!phrases.length) return escapeHtml(text);
+
+  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])(${phrases.map(escapeRegExp).join("|")})(?=$|[^\\p{L}\\p{N}_])`, "giu");
+  let html = "";
+  let cursor = 0;
+  let match;
+
+  while ((match = pattern.exec(text)) !== null) {
+    const prefix = match[1] || "";
+    const phrase = match[2] || "";
+    const phraseStart = match.index + prefix.length;
+    const phraseEnd = phraseStart + phrase.length;
+
+    html += escapeHtml(text.slice(cursor, phraseStart));
+    html += `<span class="editor-inline-hit">${escapeHtml(text.slice(phraseStart, phraseEnd))}</span>`;
+    cursor = phraseEnd;
+  }
+
+  return html + escapeHtml(text.slice(cursor));
+}
+
+function syncArticleInlineHighlightScroll() {
+  const input = $("articleTextInput");
+  const wrap = $("articleInlineHighlightPreview");
+  if (!input || !wrap) return;
+  wrap.style.transform = `translate(${-input.scrollLeft}px, ${-input.scrollTop}px)`;
+}
+
 function renderArticleInlineHighlightPreview() {
   const wrap = $("articleInlineHighlightPreview");
   if (!wrap) return;
 
-  const paragraphs = linesToList($("articleTextInput").value);
+  const text = $("articleTextInput").value;
   const phrases = getAllEditorInlineVocabularyItems()
     .map(item => item.de)
     .filter(Boolean)
     .sort((a, b) => b.length - a.length);
 
-  wrap.classList.toggle("hidden", !paragraphs.length || !phrases.length);
-  if (!paragraphs.length || !phrases.length) {
-    wrap.innerHTML = "";
-    return;
-  }
-
-  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])(${phrases.map(escapeRegExp).join("|")})(?=$|[^\\p{L}\\p{N}_])`, "giu");
-  wrap.innerHTML = paragraphs.map(paragraph => {
-    const html = escapeHtml(paragraph).replace(pattern, (match, prefix, phrase) =>
-      `${prefix}<span class="editor-inline-hit">${phrase}</span>`
-    );
-    return `<p>${html}</p>`;
-  }).join("");
+  wrap.innerHTML = renderHighlightedArticleText(text, phrases);
+  syncArticleInlineHighlightScroll();
 }
 
 function addManualInlineVocabularyItem(text) {

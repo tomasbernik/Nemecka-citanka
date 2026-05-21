@@ -986,6 +986,7 @@ onEvent("articlePromptInput", "input", updateArticleEditorFlow);
 onEvent("articleRequiredWordsInput", "input", updateArticleEditorFlow);
 onEvent("articleSummaryInput", "input", updateArticleEditorFlow);
 onEvent("articleTextInput", "input", updateArticleEditorFlow);
+onEvent("articleTextInput", "scroll", syncArticleInlineHighlightScroll);
 onChange("articleImageInput", (event) => {
   state.articleImageFile = event.target.files?.[0] || null;
   updateArticleImageStatus();
