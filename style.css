@@ -1510,10 +1510,32 @@ select {
 
 @media (max-width: 460px) {
   #app { padding: 14px; }
-  h1 { font-size: 1.38rem; }
+  h1 { font-size: 1.72rem; }
   .topbar {
     gap: 10px;
     align-items: flex-start;
+  }
+  .topbar.long-title {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+  .topbar.long-title > div:first-child {
+    display: contents;
+  }
+  .topbar.long-title .eyebrow {
+    grid-column: 1;
+    grid-row: 1;
+    align-self: center;
+  }
+  .topbar.long-title h1 {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    white-space: normal;
+  }
+  .topbar.long-title .top-actions {
+    grid-column: 2;
+    grid-row: 1;
   }
   .top-actions {
     gap: 6px;
@@ -1543,7 +1565,6 @@ select {
 }
 
 @media (max-width: 380px) {
-  h1 { font-size: 1.18rem; }
   .icon-btn {
     width: 40px;
     height: 40px;

@@ -438,7 +438,9 @@ function renderOnboarding() {
 function updateStaticTexts() {
   document.documentElement.lang = getUiLanguage();
   document.title = t("appTitle");
-  document.querySelector(".topbar h1").textContent = t("appTitle");
+  const appTitle = t("appTitle");
+  document.querySelector(".topbar h1").textContent = appTitle;
+  document.querySelector(".topbar")?.classList.toggle("long-title", Array.from(appTitle).length > 9);
   document.querySelector(".topbar .eyebrow").textContent = t("languageLabel");
   $("teacherBtn").setAttribute("aria-label", t("articleEditor"));
   $("teacherBtn").setAttribute("title", t("articleEditor"));
