@@ -5,7 +5,7 @@
   "display": "standalone",
   "background_color": "#f5fbff",
   "theme_color": "#27c7c0",
-  "description": "Krátke nemecké texty na čítanie offline.",
+  "description": "Short German reading texts available offline.",
   "icons": [
     {
       "src": "icons/icon-v2-192.png",

@@ -2,6 +2,7 @@ async function loadProfiles() {
   state.profiles = JSON.parse(localStorage.getItem(PROFILE_KEY) || "[]");
   state.profiles = state.profiles.map(normalizeProfile);
   ensureProfileGroups();
+  const localProfilesById = new Map(state.profiles.map(profile => [profile.id, profile]));
 
   if (!state.remoteReady) return;
 
@@ -17,7 +18,7 @@ async function loadProfiles() {
       }
     }
     if (profiles?.length) {
-      state.profiles = profiles.map(rowToProfile);
+      state.profiles = profiles.map(row => rowToProfile(row, localProfilesById.get(row.id)));
       ensureProfileGroups();
       localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
     } else if (state.profiles.length) {
@@ -89,13 +90,15 @@ function ensureProfileGroups() {
   }));
 }
 
-function rowToProfile(row) {
+function rowToProfile(row, fallbackProfile = null) {
   return normalizeProfile({
     id: row.id,
     name: row.name,
     pin: row.pin,
     role: row.role,
-    nativeLanguage: row.native_language,
+    nativeLanguage: isSupportedNativeLanguage(row.native_language)
+      ? row.native_language
+      : fallbackProfile?.nativeLanguage,
     teacherGroupId: row.teacher_group_id,
     authUserId: row.auth_user_id,
     ownerAuthUserId: row.owner_auth_user_id,
