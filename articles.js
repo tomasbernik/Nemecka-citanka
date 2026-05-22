@@ -227,15 +227,7 @@ function getVisibleArticles() {
 }
 
 function getHomeArticles() {
-  const visibleArticles = getVisibleArticles();
-  if (!state.currentProfile || state.currentProfile.role === "teacher") return visibleArticles;
-
-  const openAssignmentArticleIds = new Set(
-    getAssignments()
-      .filter(assignment => !state.profileData.readIds.includes(assignment.articleId))
-      .map(assignment => assignment.articleId)
-  );
-  return visibleArticles.filter(article => openAssignmentArticleIds.has(article.id));
+  return getVisibleArticles();
 }
 
 function isAdminProfile(profile = state.currentProfile) {
@@ -461,7 +453,7 @@ function renderArticles() {
   root.innerHTML = "";
 
   if (!articles.length) {
-    root.innerHTML = `<p class="muted">${escapeHtml(t("noOpenAssignments"))}</p>`;
+    root.innerHTML = `<p class="muted">${escapeHtml(t("noArticles"))}</p>`;
     return;
   }
 
