@@ -200,6 +200,35 @@ async function renderTeacherOverview() {
   const roleLabel = profile => profile.role === "teacher" ? t("teacherRole") : t("studentRole");
   const profileTitle = profile => `${profile.name} - ${roleLabel(profile)} - skupina: ${profile.teacherGroupId || profile.id}`;
   const formatAnswer = answer => answer === true ? "Pravda" : answer === false ? "Nepravda" : String(answer);
+  const inactiveAfterDays = 14;
+  const now = Date.now();
+  const labels = {
+    classSummary: "Súhrn triedy",
+    assignmentSummary: "Prehľad zadaní",
+    students: "Žiaci",
+    activeStudents: "aktívni",
+    inactiveStudents: "dlhodobo neaktívni",
+    assignedDone: "hotové zadania",
+    assignedOpen: "ešte neurobené",
+    noLastActivity: "bez aktivity",
+    noAssignments: "bez zadaní",
+    doneAssignments: "Hotové zadania",
+    unfinishedAssignments: "Ešte neurobené zadania",
+    otherActivity: "Ďalšia aktivita mimo zadaní",
+    details: "Detail",
+    assigned: "zadané",
+    done: "hotové",
+    open: "otvorené",
+    inactive: "dlhodobo neaktívny",
+    active: "aktívny",
+    noOpenAssignments: "Nemá žiadne nesplnené zadania.",
+    noDoneAssignments: "Zatiaľ nemá hotové zadania.",
+    noOtherActivity: "Zatiaľ nie je ďalšia aktivita mimo zadaní.",
+    noStudents: "V tvojej skupine zatiaľ nie sú žiadni žiaci.",
+    lastActivity: "posledná aktivita",
+    tasks: "úlohy",
+    answers: "odpovede"
+  };
   const buildPracticeList = entries => entries.slice(0, 4).map(entry => `
     <li>
       <strong>${escapeHtml(formatPracticeType(entry.type))}</strong>
@@ -208,17 +237,79 @@ async function renderTeacherOverview() {
     </li>
   `).join("");
 
-  const buildSection = async (profile, title) => {
+  const getLatestActivityDate = (data, assignments) => {
+    const dates = [
+      ...(data.practiceLog || []).map(entry => entry.at),
+      ...assignments.map(assignment => assignment.assignedAt)
+    ]
+      .map(value => value ? new Date(value).getTime() : NaN)
+      .filter(Number.isFinite);
+    return dates.length ? new Date(Math.max(...dates)) : null;
+  };
+
+  const isLongInactive = latestActivity => {
+    if (!latestActivity) return true;
+    return now - latestActivity.getTime() > inactiveAfterDays * 24 * 60 * 60 * 1000;
+  };
+
+  const buildArticleDetail = (item) => {
+    const progressLabel = item.progress.total ? `${item.progress.done}/${item.progress.total}` : "0/0";
+    const status = item.assignmentStatus;
+    const answerCards = item.answers.map(([index, answer]) => {
+      const question = item.article.questions?.[Number(index)];
+      const statement = question?.statement || question || `Otázka ${Number(index) + 1}`;
+      return `
+        <div class="dashboard-answer">
+          <p><strong>${escapeHtml(statement)}</strong></p>
+          <p>${escapeHtml(formatAnswer(answer))}</p>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <details class="dashboard-article">
+        <summary>
+          <span>
+            <strong>${escapeHtml(item.article.title)}</strong>
+            <span class="dashboard-pill status-${escapeHtml(status.key)}">${escapeHtml(status.label)}</span>
+          </span>
+          <span class="muted">${escapeHtml(labels.tasks)} ${escapeHtml(progressLabel)}</span>
+        </summary>
+        <div class="dashboard-article-body">
+          ${status.detail ? `<p class="muted">${escapeHtml(status.detail)}</p>` : ""}
+          <p class="muted">${escapeHtml(formatText("clickedVocabularyCount", { count: item.clickedVocabulary }))} &bull; ${escapeHtml(formatText("practiceCount", { count: item.articlePractices.length }))}</p>
+          ${item.articlePractices.length ? `<ul class="dashboard-list">${buildPracticeList(item.articlePractices)}</ul>` : ""}
+          ${answerCards || `<p class="muted">${escapeHtml(t("noSavedAnswersForArticle"))}</p>`}
+        </div>
+      </details>
+    `;
+  };
+
+  const buildAssignmentItem = item => {
+    const title = item.article?.title || item.assignment.articleTitle || item.assignment.articleId;
+    const assignedAt = item.assignment.assignedAt
+      ? `<span>${escapeHtml(formatText("assignedAt", { date: formatDateTime(item.assignment.assignedAt) }))}</span>`
+      : "";
+    const progress = item.status.total ? `${item.status.done}/${item.status.total}` : "0/0";
+    return `
+      <li class="dashboard-assignment-item">
+        <span>
+          <strong>${escapeHtml(title)}</strong>
+          <span class="dashboard-pill status-${escapeHtml(item.status.key)}">${escapeHtml(item.status.label)}</span>
+        </span>
+        <small>${assignedAt}${assignedAt ? " &bull; " : ""}${escapeHtml(labels.tasks)} ${escapeHtml(progress)}</small>
+      </li>
+    `;
+  };
+
+  const buildProfileSummary = async (profile, title) => {
     const data = profile.id === state.currentProfile?.id
       ? state.profileData
       : await getProfileData(profile);
     const readIds = new Set(data.readIds || []);
     const assignments = getAssignments(data);
-    const assignedIds = new Set(assignments.map(assignment => assignment.articleId));
-    const doneAssigned = assignments.filter(assignment => readIds.has(assignment.articleId)).length;
     const clickedCount = Object.values(data.discoveredVocabulary || {}).reduce((sum, items) => sum + items.length, 0);
     const practiceLog = data.practiceLog || [];
-    const gamification = getGamificationStats(data);
     const articleSummaries = visibleArticles.map(article => {
       const progress = getArticleTaskProgress(article, data);
       const articlePractices = practiceLog.filter(entry =>
@@ -228,84 +319,139 @@ async function renderTeacherOverview() {
         .filter(([, answer]) => answer !== null && answer !== undefined && answer !== "");
       const clickedVocabulary = data.discoveredVocabulary?.[article.id]?.length || 0;
       const isRead = readIds.has(article.id);
-      const isAssigned = assignedIds.has(article.id);
+      const isAssigned = assignments.some(assignment => assignment.articleId === article.id);
       const assignmentStatus = getArticleAssignmentStatusInfo(article, data);
       const active = isAssigned || isRead || progress.done > 0 || articlePractices.length > 0 || answers.length > 0 || clickedVocabulary > 0;
       return { article, progress, articlePractices, answers, clickedVocabulary, isRead, isAssigned, assignmentStatus, active };
     });
-    const activeArticles = articleSummaries.filter(item => item.active);
-    const totalTasks = articleSummaries.reduce((sum, item) => sum + item.progress.total, 0);
-    const doneTasks = articleSummaries.reduce((sum, item) => sum + item.progress.done, 0);
-    const assignmentCounts = assignments.reduce((counts, assignment) => {
-      const status = getAssignmentStatusInfo(assignment, data).key;
-      counts[status] = (counts[status] || 0) + 1;
-      return counts;
-    }, {});
-    const completionPercent = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
-    const articleCards = activeArticles.map(item => {
-      const progressLabel = item.progress.total ? `${item.progress.done}/${item.progress.total}` : "0/0";
-      const status = item.assignmentStatus;
-      const answerCards = item.answers.map(([index, answer]) => {
-        const question = item.article.questions?.[Number(index)];
-        const statement = question?.statement || question || `Otázka ${Number(index) + 1}`;
-        return `
-          <div class="dashboard-answer">
-            <p><strong>${escapeHtml(statement)}</strong></p>
-            <p>${escapeHtml(formatAnswer(answer))}</p>
-          </div>
-        `;
-      }).join("");
+    const assignmentSummaries = assignments.map(assignment => ({
+      assignment,
+      article: getArticleForAssignment(assignment),
+      status: getAssignmentStatusInfo(assignment, data)
+    }));
+    const doneAssignments = assignmentSummaries.filter(item => item.status.key === "completed");
+    const openAssignments = assignmentSummaries.filter(item => item.status.key !== "completed");
+    const otherActiveArticles = articleSummaries.filter(item => item.active && !item.isAssigned);
+    const latestActivity = getLatestActivityDate(data, assignments);
+    const inactive = isLongInactive(latestActivity);
 
-      return `
-        <details class="dashboard-article">
-          <summary>
-            <span>
-              <strong>${escapeHtml(item.article.title)}</strong>
-              <span class="dashboard-pill status-${escapeHtml(status.key)}">${escapeHtml(status.label)}</span>
-            </span>
-            <span class="muted">${escapeHtml(formatText("tasksProgressShort", { progress: progressLabel }))}</span>
-          </summary>
-          <div class="dashboard-article-body">
-            ${status.detail ? `<p class="muted">${escapeHtml(status.detail)}</p>` : ""}
-            <p class="muted">${escapeHtml(formatText("clickedVocabularyCount", { count: item.clickedVocabulary }))} &bull; ${escapeHtml(formatText("practiceCount", { count: item.articlePractices.length }))}</p>
-            ${item.articlePractices.length ? `<ul class="dashboard-list">${buildPracticeList(item.articlePractices)}</ul>` : ""}
-            ${answerCards || `<p class="muted">${escapeHtml(t("noSavedAnswersForArticle"))}</p>`}
-          </div>
-        </details>
-      `;
-    }).join("");
+    return {
+      profile,
+      title,
+      data,
+      readIds,
+      assignments,
+      assignmentSummaries,
+      doneAssignments,
+      openAssignments,
+      otherActiveArticles,
+      latestActivity,
+      inactive,
+      clickedCount,
+      practiceLog
+    };
+  };
+
+  const buildProfileRow = summary => {
+    const latest = summary.latestActivity
+      ? `${labels.lastActivity}: ${formatDateTime(summary.latestActivity.toISOString())}`
+      : labels.noLastActivity;
+    const openPreview = summary.openAssignments.slice(0, 2).map(item =>
+      item.article?.title || item.assignment.articleTitle || item.assignment.articleId
+    );
+    const openText = openPreview.length
+      ? openPreview.join(", ") + (summary.openAssignments.length > openPreview.length ? ` +${summary.openAssignments.length - openPreview.length}` : "")
+      : labels.noOpenAssignments;
+    const inactivePill = summary.inactive
+      ? `<span class="dashboard-pill status-inactive">${escapeHtml(labels.inactive)}</span>`
+      : `<span class="dashboard-pill status-active">${escapeHtml(labels.active)}</span>`;
+    const openClass = summary.openAssignments.length ? "has-open" : "all-done";
 
     return `
-      <section class="overview-section dashboard-card">
-        <div class="dashboard-header">
-          <div>
-            <h3>${escapeHtml(title)}</h3>
-            <p class="dashboard-meta">${escapeHtml(roleLabel(profile))} &bull; ${escapeHtml(t(gamification.level.titleKey))} &bull; ${escapeHtml(formatText("pointsShort", { points: gamification.points }))}${practiceLog[0]?.at ? ` &bull; ${escapeHtml(formatText("lastActivity", { date: formatDateTime(practiceLog[0].at) }))}` : ""}</p>
+      <details class="dashboard-student ${openClass} ${summary.inactive ? "is-inactive" : ""}">
+        <summary class="dashboard-student-summary">
+          <span class="dashboard-student-main">
+            <strong>${escapeHtml(summary.title)}</strong>
+            <small>${escapeHtml(latest)}</small>
+          </span>
+          <span class="dashboard-student-status">
+            ${inactivePill}
+            <span><strong>${summary.openAssignments.length}</strong> ${escapeHtml(labels.open)}</span>
+            <span><strong>${summary.doneAssignments.length}/${summary.assignments.length}</strong> ${escapeHtml(labels.done)}</span>
+          </span>
+          <span class="dashboard-student-open">
+            <small>${escapeHtml(labels.assignedOpen)}</small>
+            <span>${escapeHtml(openText)}</span>
+          </span>
+          <span class="dashboard-detail-link">${escapeHtml(labels.details)}</span>
+        </summary>
+        <div class="dashboard-student-detail">
+          <div class="dashboard-detail-grid">
+            <section>
+              <h4>${escapeHtml(labels.unfinishedAssignments)}</h4>
+              ${summary.openAssignments.length
+                ? `<ul class="dashboard-assignment-list">${summary.openAssignments.map(buildAssignmentItem).join("")}</ul>`
+                : `<p class="muted">${escapeHtml(labels.noOpenAssignments)}</p>`}
+            </section>
+            <section>
+              <h4>${escapeHtml(labels.doneAssignments)}</h4>
+              ${summary.doneAssignments.length
+                ? `<ul class="dashboard-assignment-list">${summary.doneAssignments.map(buildAssignmentItem).join("")}</ul>`
+                : `<p class="muted">${escapeHtml(labels.noDoneAssignments)}</p>`}
+            </section>
           </div>
-          <strong class="dashboard-score">${completionPercent}%</strong>
+          <section>
+            <h4>${escapeHtml(labels.otherActivity)}</h4>
+            ${summary.otherActiveArticles.length
+              ? summary.otherActiveArticles.map(buildArticleDetail).join("")
+              : `<p class="muted">${escapeHtml(labels.noOtherActivity)}</p>`}
+          </section>
         </div>
-        <div class="dashboard-stats">
-          <div class="dashboard-stat"><strong>${readIds.size}</strong><span>${escapeHtml(t("readPlural"))}</span></div>
-          <div class="dashboard-stat"><strong>${doneAssigned}/${assignments.length}</strong><span>${escapeHtml(t("assignments"))}</span></div>
-          <div class="dashboard-stat"><strong>${assignmentCounts.new || 0}</strong><span>${escapeHtml(t("newAssignments"))}</span></div>
-          <div class="dashboard-stat"><strong>${assignmentCounts.opened || 0}</strong><span>${escapeHtml(t("opened"))}</span></div>
-          <div class="dashboard-stat"><strong>${assignmentCounts["in-progress"] || 0}</strong><span>${escapeHtml(t("inProgress"))}</span></div>
-          <div class="dashboard-stat"><strong>${doneTasks}/${totalTasks}</strong><span>${escapeHtml(t("tasks"))}</span></div>
-          <div class="dashboard-stat"><strong>${practiceLog.length}</strong><span>${escapeHtml(t("practicePlural"))}</span></div>
-          <div class="dashboard-stat"><strong>${clickedCount}</strong><span>${escapeHtml(t("vocabularyPhrases"))}</span></div>
-        </div>
-        <div class="dashboard-articles">
-          ${articleCards || `<p class="muted">${escapeHtml(t("noDashboardActivity"))}</p>`}
-        </div>
+      </details>
+    `;
+  };
+
+  const buildClassSummary = summaries => {
+    const totalAssignments = summaries.reduce((sum, item) => sum + item.assignments.length, 0);
+    const doneAssignments = summaries.reduce((sum, item) => sum + item.doneAssignments.length, 0);
+    const openAssignments = summaries.reduce((sum, item) => sum + item.openAssignments.length, 0);
+    const inactiveCount = summaries.filter(item => item.inactive).length;
+    const activeCount = summaries.length - inactiveCount;
+    return `
+      <section class="dashboard-class-summary">
+        <div class="dashboard-stat"><strong>${summaries.length}</strong><span>${escapeHtml(labels.students)}</span></div>
+        <div class="dashboard-stat"><strong>${activeCount}</strong><span>${escapeHtml(labels.activeStudents)}</span></div>
+        <div class="dashboard-stat"><strong>${inactiveCount}</strong><span>${escapeHtml(labels.inactiveStudents)}</span></div>
+        <div class="dashboard-stat"><strong>${doneAssignments}/${totalAssignments}</strong><span>${escapeHtml(labels.assignedDone)}</span></div>
+        <div class="dashboard-stat"><strong>${openAssignments}</strong><span>${escapeHtml(labels.assignedOpen)}</span></div>
       </section>
     `;
   };
 
-  const sections = [await buildSection(state.currentProfile, t("myProgress"))];
+  const buildDashboard = (title, summaries, includeSummary = true, metaLabel = labels.classSummary) => `
+    <section class="overview-section dashboard-card">
+      <div class="dashboard-header">
+        <div>
+          <h3>${escapeHtml(title)}</h3>
+          <p class="dashboard-meta">${escapeHtml(metaLabel)}</p>
+        </div>
+      </div>
+      ${includeSummary ? buildClassSummary(summaries) : ""}
+      <div class="dashboard-student-list">
+        ${summaries.length ? summaries.map(buildProfileRow).join("") : `<p class="muted">${escapeHtml(labels.noStudents)}</p>`}
+      </div>
+    </section>
+  `;
+
+  const sections = [];
 
   if (state.currentProfile?.role === "teacher") {
     const students = state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile));
-    sections.push(...await Promise.all(students.map(student => buildSection(student, student.name))));
+    const studentSummaries = await Promise.all(students.map(student => buildProfileSummary(student, student.name)));
+    sections.push(buildDashboard(t("studentOverview"), studentSummaries));
+  } else {
+    const ownSummary = await buildProfileSummary(state.currentProfile, t("myProgress"));
+    sections.push(buildDashboard(t("myProgress"), [ownSummary], false, labels.assignmentSummary));
   }
 
   if (isAdmin) {
@@ -319,13 +465,8 @@ async function renderTeacherOverview() {
       );
 
     if (otherProfiles.length) {
-      sections.push(`
-        <section class="overview-section">
-          <h3>Ostatné profily mimo tvojej skupiny</h3>
-          <p class="muted">Admin pohľad na učiteľov a žiakov, ktorí nie sú v tvojej učiteľskej skupine.</p>
-        </section>
-      `);
-      sections.push(...await Promise.all(otherProfiles.map(profile => buildSection(profile, profileTitle(profile)))));
+      const otherSummaries = await Promise.all(otherProfiles.map(profile => buildProfileSummary(profile, profileTitle(profile))));
+      sections.push(buildDashboard("Ostatné profily mimo tvojej skupiny", otherSummaries));
     }
   }
 
