@@ -1415,7 +1415,8 @@ Object.entries({
     allLevels: "Všetky úrovne",
     startHere: "Začni tu",
     assignedBadge: "Zadané",
-    noOpenAssignments: "Nemáš žiadne nesplnené zadania."
+    noOpenAssignments: "Nemáš žiadne nesplnené zadania.",
+    noArticles: "Nenašli sa žiadne články."
   },
   de: {
     topics: "Themen",
@@ -1423,7 +1424,8 @@ Object.entries({
     allLevels: "Alle Niveaus",
     startHere: "Hier starten",
     assignedBadge: "Zugewiesen",
-    noOpenAssignments: "Du hast keine offenen Aufgaben."
+    noOpenAssignments: "Du hast keine offenen Aufgaben.",
+    noArticles: "Keine Artikel gefunden."
   },
   ru: {
     topics: "Темы",
@@ -1431,7 +1433,8 @@ Object.entries({
     allLevels: "Все уровни",
     startHere: "Начни здесь",
     assignedBadge: "Задано",
-    noOpenAssignments: "У тебя нет невыполненных заданий."
+    noOpenAssignments: "У тебя нет невыполненных заданий.",
+    noArticles: "Статьи не найдены."
   },
   pl: {
     topics: "Tematy",
@@ -1439,7 +1442,8 @@ Object.entries({
     allLevels: "Wszystkie poziomy",
     startHere: "Zacznij tutaj",
     assignedBadge: "Przypisane",
-    noOpenAssignments: "Nie masz żadnych otwartych zadań."
+    noOpenAssignments: "Nie masz żadnych otwartych zadań.",
+    noArticles: "Nie znaleziono artykułów."
   },
   hu: {
     topics: "Témák",
@@ -1447,7 +1451,8 @@ Object.entries({
     allLevels: "Minden szint",
     startHere: "Kezdd itt",
     assignedBadge: "Kiosztva",
-    noOpenAssignments: "Nincs befejezetlen feladatod."
+    noOpenAssignments: "Nincs befejezetlen feladatod.",
+    noArticles: "Nem találhatók cikkek."
   }
 }).forEach(([language, text]) => assignUiText(language, text));
 

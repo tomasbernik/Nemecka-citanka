@@ -1319,34 +1319,39 @@ Object.entries({
     allTopics: "Toate subiectele",
     allLevels: "Toate nivelurile",
     startHere: "Începe aici",
-    assignedBadge: "Atribuit"
+    assignedBadge: "Atribuit",
+    noArticles: "Nu s-au găsit articole."
   },
   it: {
     topics: "Temi",
     allTopics: "Tutti i temi",
     allLevels: "Tutti i livelli",
     startHere: "Inizia qui",
-    assignedBadge: "Assegnato"
+    assignedBadge: "Assegnato",
+    noArticles: "Nessun articolo trovato."
   },
   en: {
     topics: "Topics",
     allTopics: "All topics",
     allLevels: "All levels",
     startHere: "Start here",
-    assignedBadge: "Assigned"
+    assignedBadge: "Assigned",
+    noArticles: "No articles found."
   },
   fr: {
     topics: "Thèmes",
     allTopics: "Tous les thèmes",
     allLevels: "Tous les niveaux",
     startHere: "Commence ici",
-    assignedBadge: "Assigné"
+    assignedBadge: "Assigné",
+    noArticles: "Aucun article trouvé."
   },
   tr: {
     topics: "Konular",
     allTopics: "Tüm konular",
     allLevels: "Tüm seviyeler",
     startHere: "Buradan başla",
-    assignedBadge: "Atandı"
+    assignedBadge: "Atandı",
+    noArticles: "Makale bulunamadı."
   }
 }).forEach(([language, text]) => assignUiText(language, text));
