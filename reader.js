@@ -417,17 +417,93 @@ function addDiscoveredVocabulary(word, translation) {
   }
 }
 
+function getInlineTranslationTooltip() {
+  let tooltip = document.getElementById("inlineTranslationTooltip");
+  if (tooltip) return tooltip;
+
+  tooltip = document.createElement("div");
+  tooltip.id = "inlineTranslationTooltip";
+  tooltip.className = "inline-translation-tooltip hidden";
+  tooltip.setAttribute("role", "tooltip");
+  document.body.appendChild(tooltip);
+  return tooltip;
+}
+
+function hideInlineTranslation() {
+  document.querySelectorAll(".inline-word.active").forEach(activeButton => {
+    activeButton.classList.remove("active");
+    activeButton.setAttribute("aria-expanded", "false");
+    activeButton.removeAttribute("aria-describedby");
+  });
+
+  getInlineTranslationTooltip().classList.add("hidden");
+}
+
+function positionInlineTranslationTooltip(button, tooltip) {
+  const margin = 12;
+  const gap = 10;
+  const anchor = button.getBoundingClientRect();
+
+  tooltip.classList.remove("below");
+  tooltip.style.left = "0";
+  tooltip.style.top = "0";
+  tooltip.style.setProperty("--arrow-left", "50%");
+
+  const tooltipRect = tooltip.getBoundingClientRect();
+  const preferredLeft = anchor.left + (anchor.width / 2) - (tooltipRect.width / 2);
+  const maxLeft = window.innerWidth - tooltipRect.width - margin;
+  const left = Math.min(Math.max(preferredLeft, margin), Math.max(margin, maxLeft));
+  const anchorCenter = anchor.left + (anchor.width / 2);
+  const arrowLeft = Math.min(
+    Math.max(anchorCenter - left, 14),
+    Math.max(14, tooltipRect.width - 14)
+  );
+
+  let top = anchor.top - tooltipRect.height - gap;
+  const showBelow = top < margin;
+  if (showBelow) {
+    tooltip.classList.add("below");
+    top = anchor.bottom + gap;
+  }
+
+  const maxTop = window.innerHeight - tooltipRect.height - margin;
+  tooltip.style.left = `${left}px`;
+  tooltip.style.top = `${Math.min(Math.max(top, margin), Math.max(margin, maxTop))}px`;
+  tooltip.style.setProperty("--arrow-left", `${arrowLeft}px`);
+}
+
+function repositionActiveInlineTranslation() {
+  const activeButton = document.querySelector(".inline-word.active");
+  const tooltip = document.getElementById("inlineTranslationTooltip");
+  if (!activeButton || !tooltip || tooltip.classList.contains("hidden")) return;
+
+  positionInlineTranslationTooltip(activeButton, tooltip);
+}
+
 function showInlineTranslation(button) {
   const word = button.dataset.word;
   const translation = button.dataset.translation;
+  const wasOpen = button.classList.contains("active");
 
   addDiscoveredVocabulary(word, translation);
 
-  document.querySelectorAll(".inline-word.active").forEach(activeButton => {
-    if (activeButton !== button) activeButton.classList.remove("active");
-  });
+  hideInlineTranslation();
 
-  const isOpen = button.classList.toggle("active");
-  button.setAttribute("aria-expanded", String(isOpen));
+  if (wasOpen) {
+    completeOnboarding("firstWordHintDone");
+    return;
+  }
+
+  const tooltip = getInlineTranslationTooltip();
+  tooltip.textContent = translation;
+  tooltip.classList.remove("hidden");
+
+  button.classList.add("active");
+  button.setAttribute("aria-expanded", "true");
+  button.setAttribute("aria-describedby", tooltip.id);
+  positionInlineTranslationTooltip(button, tooltip);
   completeOnboarding("firstWordHintDone");
 }
+
+window.addEventListener("scroll", repositionActiveInlineTranslation, { passive: true });
+window.addEventListener("resize", repositionActiveInlineTranslation);

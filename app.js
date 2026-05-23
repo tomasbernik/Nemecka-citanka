@@ -308,6 +308,10 @@ function emptyProfileData() {
 }
 
 function showView(viewId) {
+  if (viewId !== "articleView" && typeof hideInlineTranslation === "function") {
+    hideInlineTranslation();
+  }
+
   ["setupView", "loginView", "homeView", "articleView", "settingsView", "teacherView"].forEach(id => {
     $(id).classList.toggle("hidden", id !== viewId);
   });

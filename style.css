@@ -569,15 +569,11 @@ h3 { font-size: 1.1rem; }
   background: rgba(var(--accent-rgb), 0.18);
 }
 
-.inline-word.active::after {
-  content: attr(data-translation);
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 8px);
-  z-index: 3;
-  min-width: max-content;
-  max-width: min(72vw, 18rem);
-  transform: translateX(-50%);
+.inline-translation-tooltip {
+  position: fixed;
+  z-index: 40;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 24px));
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 8px 10px;
@@ -589,20 +585,33 @@ h3 { font-size: 1.1rem; }
   line-height: 1.25;
   white-space: normal;
   text-align: center;
+  overflow-wrap: break-word;
+  pointer-events: none;
 }
 
-.inline-word.active::before {
+.inline-translation-tooltip.hidden {
+  display: none;
+}
+
+.inline-translation-tooltip::before {
   content: "";
   position: absolute;
-  left: 50%;
-  bottom: calc(100% + 3px);
-  z-index: 4;
+  left: var(--arrow-left, 50%);
+  top: 100%;
   width: 10px;
   height: 10px;
   transform: translateX(-50%) rotate(45deg);
   background: var(--card);
   border-bottom: 1px solid var(--border);
   border-right: 1px solid var(--border);
+}
+
+.inline-translation-tooltip.below::before {
+  top: auto;
+  bottom: 100%;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
 }
 
 .panel {
