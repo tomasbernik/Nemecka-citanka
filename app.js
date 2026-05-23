@@ -46,6 +46,7 @@ const state = {
   articleImageFile: null,
   editorBaseInlineVocabulary: [],
   editorManualInlineVocabulary: [],
+  editorTapSelectionAnchor: null,
   editorCategoryLabels: {},
   showAllCategories: false,
   deferredInstallPrompt: null,
@@ -1018,8 +1019,12 @@ onChange("articleRequiredWordsMode", () => {
 onEvent("articlePromptInput", "input", updateArticleEditorFlow);
 onEvent("articleRequiredWordsInput", "input", updateArticleEditorFlow);
 onEvent("articleSummaryInput", "input", updateArticleEditorFlow);
-onEvent("articleTextInput", "input", updateArticleEditorFlow);
+onEvent("articleTextInput", "input", () => {
+  state.editorTapSelectionAnchor = null;
+  updateArticleEditorFlow();
+});
 onEvent("articleTextInput", "scroll", syncArticleInlineHighlightScroll);
+onEvent("articleTextInput", "click", selectArticleTextWordFromCaret);
 onChange("articleImageInput", (event) => {
   state.articleImageFile = event.target.files?.[0] || null;
   updateArticleImageStatus();

@@ -327,6 +327,54 @@ function getSelectedArticleText() {
   return input.value.slice(input.selectionStart, input.selectionEnd).trim();
 }
 
+function isArticleTextWordChar(character) {
+  return /[\p{L}\p{N}_'-]/u.test(character || "");
+}
+
+function getArticleTextWordRange(text, position) {
+  if (!text) return null;
+  let index = Math.max(0, Math.min(position, text.length - 1));
+
+  if (!isArticleTextWordChar(text[index]) && index > 0 && isArticleTextWordChar(text[index - 1])) {
+    index -= 1;
+  }
+  if (!isArticleTextWordChar(text[index])) return null;
+
+  let start = index;
+  let end = index + 1;
+  while (start > 0 && isArticleTextWordChar(text[start - 1])) start -= 1;
+  while (end < text.length && isArticleTextWordChar(text[end])) end += 1;
+  return { start, end };
+}
+
+function selectArticleTextRange(input, start, end) {
+  const rangeStart = Math.max(0, Math.min(start, end));
+  const rangeEnd = Math.min(input.value.length, Math.max(start, end));
+  input.focus({ preventScroll: true });
+  input.setSelectionRange(rangeStart, rangeEnd);
+}
+
+function selectArticleTextWordFromCaret(event) {
+  const input = event.currentTarget;
+  if (!input || input.selectionStart !== input.selectionEnd) return;
+
+  const wordRange = getArticleTextWordRange(input.value, input.selectionStart);
+  if (!wordRange) {
+    state.editorTapSelectionAnchor = null;
+    return;
+  }
+
+  const anchor = state.editorTapSelectionAnchor;
+  if (anchor && (wordRange.end < anchor.start || wordRange.start > anchor.end)) {
+    selectArticleTextRange(input, Math.min(anchor.start, wordRange.start), Math.max(anchor.end, wordRange.end));
+    state.editorTapSelectionAnchor = anchor;
+    return;
+  }
+
+  selectArticleTextRange(input, wordRange.start, wordRange.end);
+  state.editorTapSelectionAnchor = wordRange;
+}
+
 function appendUniqueLine(textareaId, line) {
   const textarea = $(textareaId);
   const normalizedLine = line.trim();
@@ -403,7 +451,8 @@ function syncArticleInlineHighlightScroll() {
   const input = $("articleTextInput");
   const wrap = $("articleInlineHighlightPreview");
   if (!input || !wrap) return;
-  wrap.style.transform = `translate(${-input.scrollLeft}px, ${-input.scrollTop}px)`;
+  wrap.scrollLeft = input.scrollLeft;
+  wrap.scrollTop = input.scrollTop;
 }
 
 function renderArticleInlineHighlightPreview() {

@@ -762,6 +762,7 @@ h3 { font-size: 1.1rem; }
   z-index: 1;
   overflow: hidden;
   padding: 12px;
+  box-sizing: border-box;
   pointer-events: none;
   white-space: pre-wrap;
   overflow-wrap: break-word;
@@ -772,6 +773,11 @@ h3 { font-size: 1.1rem; }
   color: var(--text);
   font: inherit;
   line-height: 1.45;
+  scrollbar-width: none;
+}
+
+.inline-highlight-preview::-webkit-scrollbar {
+  display: none;
 }
 
 .editor-inline-hit {
