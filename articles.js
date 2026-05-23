@@ -1,41 +1,52 @@
 async function loadArticles() {
-  let localArticles = [];
   const cacheLanguage = getArticleCacheLanguage();
   const cachedArticles = await loadCachedArticles(cacheLanguage);
 
-  try {
-    const response = await fetch("articles.json", { cache: "no-store" });
-    localArticles = await response.json();
-  } catch (error) {
-    console.error(error);
-    localArticles = [];
-  }
-
-  state.articles = mergeArticles(localArticles, cachedArticles).map(normalizeArticle);
-
   if (state.remoteReady) {
     try {
-      let remoteArticles = await loadRemoteArticles();
-      const remoteIds = new Set(remoteArticles.map(article => article.id));
-      const missingLocalArticles = localArticles.filter(article => !remoteIds.has(article.id));
-
-      if (missingLocalArticles.length) {
-        await saveRemoteArticles(missingLocalArticles, { preserveUpdatedAt: true });
-        remoteArticles = await loadRemoteArticles();
-      }
-
+      const remoteArticles = await loadRemoteArticles();
       if (remoteArticles.length) {
         state.articles = remoteArticles.map(normalizeArticle);
         await saveCachedArticles(state.articles, cacheLanguage);
+      } else {
+        state.articles = cachedArticles.map(normalizeArticle);
+        await seedLocalArticlesToRemote();
       }
     } catch (error) {
       console.error(error);
+      const fallbackArticles = cachedArticles.length ? cachedArticles : await loadLocalSeedArticles();
+      state.articles = fallbackArticles.map(normalizeArticle);
     }
+  } else {
+    const localArticles = await loadLocalSeedArticles();
+    state.articles = mergeArticles(localArticles, cachedArticles).map(normalizeArticle);
   }
 
   renderCategories();
   renderLevelFilters();
   renderArticles();
+}
+
+async function loadLocalSeedArticles() {
+  try {
+    const response = await fetch("articles.json", { cache: "no-store" });
+    return await response.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+}
+
+async function seedLocalArticlesToRemote() {
+  const localArticles = await loadLocalSeedArticles();
+  if (!localArticles.length) return;
+
+  await saveRemoteArticles(localArticles, { preserveUpdatedAt: true });
+  const remoteArticles = await loadRemoteArticles();
+  if (remoteArticles.length) {
+    state.articles = remoteArticles.map(normalizeArticle);
+    await saveCachedArticles(state.articles);
+  }
 }
 
 async function loadRemoteArticles() {
