@@ -324,7 +324,8 @@ async function copyTextToClipboard(text, successMessage = t("copied")) {
 
 function getSelectedArticleText() {
   const input = $("articleTextInput");
-  return input.value.slice(input.selectionStart, input.selectionEnd).trim();
+  const selection = getArticleTextSelection(input);
+  return selection?.text || "";
 }
 
 function collapseArticleTextSelection(position = $("articleTextInput")?.selectionEnd || 0) {
@@ -333,6 +334,86 @@ function collapseArticleTextSelection(position = $("articleTextInput")?.selectio
   const safePosition = Math.max(0, Math.min(position, input.value.length));
   input.setSelectionRange(safePosition, safePosition);
   resetArticleTextSelectionAnchor();
+  hideInlineSelectionButton();
+}
+
+function getArticleTextSelection(input = $("articleTextInput")) {
+  if (!input || input.selectionStart === input.selectionEnd) return null;
+
+  let start = Math.min(input.selectionStart, input.selectionEnd);
+  let end = Math.max(input.selectionStart, input.selectionEnd);
+  while (start < end && /\s/u.test(input.value[start])) start += 1;
+  while (end > start && /\s/u.test(input.value[end - 1])) end -= 1;
+
+  const text = input.value.slice(start, end);
+  return text ? { start, end, text } : null;
+}
+
+function getTextareaSelectionPoint(input, position) {
+  const rect = input.getBoundingClientRect();
+  const mirror = document.createElement("div");
+  const style = getComputedStyle(input);
+  const properties = [
+    "boxSizing", "width", "paddingTop", "paddingRight", "paddingBottom", "paddingLeft",
+    "borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth",
+    "fontFamily", "fontSize", "fontWeight", "fontStyle", "lineHeight", "letterSpacing",
+    "textTransform", "textAlign", "wordSpacing", "tabSize"
+  ];
+
+  properties.forEach(property => {
+    mirror.style[property] = style[property];
+  });
+  mirror.style.position = "fixed";
+  mirror.style.left = `${rect.left}px`;
+  mirror.style.top = `${rect.top}px`;
+  mirror.style.width = `${input.clientWidth}px`;
+  mirror.style.visibility = "hidden";
+  mirror.style.whiteSpace = "pre-wrap";
+  mirror.style.overflowWrap = "break-word";
+  mirror.style.pointerEvents = "none";
+
+  const marker = document.createElement("span");
+  marker.textContent = input.value.slice(position, position + 1) || ".";
+  mirror.append(document.createTextNode(input.value.slice(0, position)), marker);
+  document.body.append(mirror);
+
+  const mirrorRect = mirror.getBoundingClientRect();
+  const markerRect = marker.getBoundingClientRect();
+  const point = {
+    left: rect.left + markerRect.left - mirrorRect.left - input.scrollLeft,
+    top: rect.top + markerRect.top - mirrorRect.top - input.scrollTop
+  };
+  mirror.remove();
+  return point;
+}
+
+function hideInlineSelectionButton() {
+  $("addSelectedInlineBtn")?.classList.add("hidden");
+}
+
+function updateInlineSelectionButton() {
+  const input = $("articleTextInput");
+  const button = $("addSelectedInlineBtn");
+  const editor = input?.closest(".article-text-editor");
+  if (!input || !button || !editor) return;
+
+  const selection = getArticleTextSelection(input);
+  state.editorInlineSelection = selection;
+  if (!selection) {
+    hideInlineSelectionButton();
+    return;
+  }
+
+  const point = getTextareaSelectionPoint(input, selection.end);
+  const editorRect = editor.getBoundingClientRect();
+  const buttonWidth = button.offsetWidth || 180;
+  const buttonHeight = button.offsetHeight || 42;
+  const left = Math.max(8, Math.min(point.left - editorRect.left - buttonWidth / 2, editor.clientWidth - buttonWidth - 8));
+  const top = Math.max(8, Math.min(point.top - editorRect.top - buttonHeight - 10, editor.clientHeight - buttonHeight - 8));
+
+  button.style.left = `${left}px`;
+  button.style.top = `${top}px`;
+  button.classList.remove("hidden");
 }
 
 function isArticleTextWordChar(character) {
@@ -490,21 +571,44 @@ function renderHighlightedArticleText(text, phrases) {
   if (!text) return "";
   if (!phrases.length) return escapeHtml(text);
 
-  const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])(${phrases.map(escapeRegExp).join("|")})(?=$|[^\\p{L}\\p{N}_])`, "giu");
+  const lowerText = text.toLocaleLowerCase("de");
+  const ranges = [];
+  phrases.forEach(phrase => {
+    const normalizedPhrase = String(phrase || "").trim();
+    if (!normalizedPhrase) return;
+
+    const lowerPhrase = normalizedPhrase.toLocaleLowerCase("de");
+    const needsBoundary = isArticleTextWordChar(normalizedPhrase[0])
+      && isArticleTextWordChar(normalizedPhrase[normalizedPhrase.length - 1]);
+    let index = lowerText.indexOf(lowerPhrase);
+
+    while (index >= 0) {
+      const end = index + lowerPhrase.length;
+      const hasBoundary = !needsBoundary
+        || (!isArticleTextWordChar(text[index - 1]) && !isArticleTextWordChar(text[end]));
+      if (hasBoundary) ranges.push({ start: index, end });
+      index = lowerText.indexOf(lowerPhrase, index + Math.max(1, lowerPhrase.length));
+    }
+  });
+
+  if (!ranges.length) return escapeHtml(text);
+
+  ranges.sort((a, b) => a.start - b.start || b.end - a.end);
+  const mergedRanges = [];
+  ranges.forEach(range => {
+    const last = mergedRanges[mergedRanges.length - 1];
+    if (last && range.start < last.end) return;
+    mergedRanges.push(range);
+  });
+
   let html = "";
   let cursor = 0;
-  let match;
 
-  while ((match = pattern.exec(text)) !== null) {
-    const prefix = match[1] || "";
-    const phrase = match[2] || "";
-    const phraseStart = match.index + prefix.length;
-    const phraseEnd = phraseStart + phrase.length;
-
-    html += escapeHtml(text.slice(cursor, phraseStart));
-    html += `<span class="editor-inline-hit">${escapeHtml(text.slice(phraseStart, phraseEnd))}</span>`;
-    cursor = phraseEnd;
-  }
+  mergedRanges.forEach(range => {
+    html += escapeHtml(text.slice(cursor, range.start));
+    html += `<span class="editor-inline-hit">${escapeHtml(text.slice(range.start, range.end))}</span>`;
+    cursor = range.end;
+  });
 
   return html + escapeHtml(text.slice(cursor));
 }
@@ -566,8 +670,9 @@ function isSelectionCoveredByInlineVocabulary(selected) {
 
 function addSelectedTextToVocabulary(addToVocabulary) {
   const input = $("articleTextInput");
-  const selectionEnd = input?.selectionEnd || 0;
-  const selected = getSelectedArticleText();
+  const selection = getArticleTextSelection(input) || state.editorInlineSelection;
+  const selectionEnd = selection?.end || input?.selectionEnd || 0;
+  const selected = selection?.text || "";
   if (!selected) {
     $("articleEditorStatus").textContent = t("selectWordFirst");
     return;
@@ -590,6 +695,7 @@ function addSelectedTextToVocabulary(addToVocabulary) {
   $("articleEditorStatus").textContent = inlineAdded || vocabAdded
     ? t("selectedAdded")
     : t("expressionExists");
+  hideInlineSelectionButton();
 }
 
 function getPromptText() {
@@ -1151,6 +1257,8 @@ function fillArticleEditor(article) {
   state.editorBaseInlineVocabulary = getInlineVocabulary(article || {});
   state.editorManualInlineVocabulary = [];
   state.editorCategoryLabels = article?.categoryLabels || {};
+  state.editorInlineSelection = null;
+  hideInlineSelectionButton();
   $("articleRequiredWordsMode").value = "no";
   $("articleRequiredWordsInput").value = "";
   updateArticleRequiredWordsMode();

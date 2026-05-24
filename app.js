@@ -46,6 +46,7 @@ const state = {
   articleImageFile: null,
   editorBaseInlineVocabulary: [],
   editorManualInlineVocabulary: [],
+  editorInlineSelection: null,
   editorTapSelectionAnchor: null,
   editorCategoryLabels: {},
   showAllCategories: false,
@@ -612,8 +613,6 @@ function updateStaticTexts() {
   setLabelText("articleSummaryInput", "summary");
   setLabelText("articleTextInput", "articleTextLabel");
   setLabelText("articleImageInput", "articleImage");
-  setText("selectArticleWordBtn", "selectWord");
-  setText("selectArticleSentenceBtn", "selectSentence");
   setText("addSelectedInlineBtn", "addSelectedInline");
   setLabelText("articleVocabularyInput", "vocabInputLabel");
   setLabelText("articleInlineVocabularyInput", "inlineVocabInputLabel");
@@ -1027,10 +1026,21 @@ onEvent("articleRequiredWordsInput", "input", updateArticleEditorFlow);
 onEvent("articleSummaryInput", "input", updateArticleEditorFlow);
 onEvent("articleTextInput", "input", () => {
   state.editorTapSelectionAnchor = null;
+  state.editorInlineSelection = null;
+  hideInlineSelectionButton();
   updateArticleEditorFlow();
 });
-onEvent("articleTextInput", "scroll", syncArticleInlineHighlightScroll);
-onEvent("articleTextInput", "select", resetArticleTextSelectionAnchor);
+onEvent("articleTextInput", "scroll", () => {
+  syncArticleInlineHighlightScroll();
+  updateInlineSelectionButton();
+});
+onEvent("articleTextInput", "select", updateInlineSelectionButton);
+onEvent("articleTextInput", "mouseup", updateInlineSelectionButton);
+onEvent("articleTextInput", "keyup", updateInlineSelectionButton);
+onEvent("articleTextInput", "touchend", () => setTimeout(updateInlineSelectionButton, 0));
+onEvent("articleTextInput", "blur", () => setTimeout(() => {
+  if (document.activeElement !== $("addSelectedInlineBtn")) hideInlineSelectionButton();
+}, 120));
 onChange("articleImageInput", (event) => {
   state.articleImageFile = event.target.files?.[0] || null;
   updateArticleImageStatus();
@@ -1038,8 +1048,7 @@ onChange("articleImageInput", (event) => {
 onEvent("articleQuestionsInput", "input", updateArticleEditorFlow);
 onEvent("articleVocabularyInput", "input", updateArticleEditorFlow);
 onEvent("articleInlineVocabularyInput", "input", updateArticleEditorFlow);
-onClick("selectArticleWordBtn", selectArticleTextWordFromCaret);
-onClick("selectArticleSentenceBtn", selectArticleTextSentenceFromCaret);
+onEvent("addSelectedInlineBtn", "pointerdown", event => event.preventDefault());
 onClick("addSelectedInlineBtn", () => {
   addSelectedTextToVocabulary(false);
   updateArticleEditorFlow();
