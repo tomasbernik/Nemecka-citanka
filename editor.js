@@ -347,6 +347,47 @@ function getArticleTextWordRange(text, position) {
   return { start, end };
 }
 
+function getArticleTextSentenceRange(text, position) {
+  if (!text?.trim()) return null;
+  let index = Math.max(0, Math.min(position, text.length - 1));
+
+  if (/\s/u.test(text[index] || "")) {
+    const before = text.slice(0, index).search(/\S\s*$/u);
+    const afterMatch = text.slice(index).match(/\S/u);
+    if (afterMatch && (before < 0 || afterMatch.index <= index - before)) {
+      index += afterMatch.index;
+    } else if (before >= 0) {
+      index = before;
+    }
+  }
+
+  const paragraphStart = text.lastIndexOf("\n", Math.max(0, index - 1)) + 1;
+  const nextBreak = text.indexOf("\n", index);
+  const paragraphEnd = nextBreak >= 0 ? nextBreak : text.length;
+  if (!text.slice(paragraphStart, paragraphEnd).trim()) return null;
+
+  let start = paragraphStart;
+  for (let i = index - 1; i >= paragraphStart; i -= 1) {
+    if (/[.!?]/u.test(text[i])) {
+      start = i + 1;
+      break;
+    }
+  }
+
+  let end = paragraphEnd;
+  for (let i = index; i < paragraphEnd; i += 1) {
+    if (/[.!?]/u.test(text[i])) {
+      end = i + 1;
+      while (end < paragraphEnd && /["'“”‘’»«)]/u.test(text[end])) end += 1;
+      break;
+    }
+  }
+
+  while (start < end && /\s/u.test(text[start])) start += 1;
+  while (end > start && /\s/u.test(text[end - 1])) end -= 1;
+  return start < end ? { start, end } : null;
+}
+
 function selectArticleTextRange(input, start, end) {
   const rangeStart = Math.max(0, Math.min(start, end));
   const rangeEnd = Math.min(input.value.length, Math.max(start, end));
@@ -354,25 +395,38 @@ function selectArticleTextRange(input, start, end) {
   input.setSelectionRange(rangeStart, rangeEnd);
 }
 
-function selectArticleTextWordFromCaret(event) {
-  const input = event.currentTarget;
-  if (!input || input.selectionStart !== input.selectionEnd) return;
+function resetArticleTextSelectionAnchor() {
+  state.editorTapSelectionAnchor = null;
+}
+
+function selectArticleTextWordFromCaret() {
+  const input = $("articleTextInput");
+  if (!input) return;
 
   const wordRange = getArticleTextWordRange(input.value, input.selectionStart);
   if (!wordRange) {
-    state.editorTapSelectionAnchor = null;
-    return;
-  }
-
-  const anchor = state.editorTapSelectionAnchor;
-  if (anchor && (wordRange.end < anchor.start || wordRange.start > anchor.end)) {
-    selectArticleTextRange(input, Math.min(anchor.start, wordRange.start), Math.max(anchor.end, wordRange.end));
-    state.editorTapSelectionAnchor = anchor;
+    resetArticleTextSelectionAnchor();
+    $("articleEditorStatus").textContent = t("selectWordFirst");
     return;
   }
 
   selectArticleTextRange(input, wordRange.start, wordRange.end);
-  state.editorTapSelectionAnchor = wordRange;
+  resetArticleTextSelectionAnchor();
+}
+
+function selectArticleTextSentenceFromCaret() {
+  const input = $("articleTextInput");
+  if (!input) return;
+
+  const sentenceRange = getArticleTextSentenceRange(input.value, input.selectionStart);
+  if (!sentenceRange) {
+    resetArticleTextSelectionAnchor();
+    $("articleEditorStatus").textContent = t("selectWordFirst");
+    return;
+  }
+
+  selectArticleTextRange(input, sentenceRange.start, sentenceRange.end);
+  resetArticleTextSelectionAnchor();
 }
 
 function appendUniqueLine(textareaId, line) {

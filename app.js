@@ -612,6 +612,8 @@ function updateStaticTexts() {
   setLabelText("articleSummaryInput", "summary");
   setLabelText("articleTextInput", "articleTextLabel");
   setLabelText("articleImageInput", "articleImage");
+  setText("selectArticleWordBtn", "selectWord");
+  setText("selectArticleSentenceBtn", "selectSentence");
   setText("addSelectedInlineBtn", "addSelectedInline");
   setLabelText("articleVocabularyInput", "vocabInputLabel");
   setLabelText("articleInlineVocabularyInput", "inlineVocabInputLabel");
@@ -1028,7 +1030,7 @@ onEvent("articleTextInput", "input", () => {
   updateArticleEditorFlow();
 });
 onEvent("articleTextInput", "scroll", syncArticleInlineHighlightScroll);
-onEvent("articleTextInput", "click", selectArticleTextWordFromCaret);
+onEvent("articleTextInput", "select", resetArticleTextSelectionAnchor);
 onChange("articleImageInput", (event) => {
   state.articleImageFile = event.target.files?.[0] || null;
   updateArticleImageStatus();
@@ -1036,6 +1038,8 @@ onChange("articleImageInput", (event) => {
 onEvent("articleQuestionsInput", "input", updateArticleEditorFlow);
 onEvent("articleVocabularyInput", "input", updateArticleEditorFlow);
 onEvent("articleInlineVocabularyInput", "input", updateArticleEditorFlow);
+onClick("selectArticleWordBtn", selectArticleTextWordFromCaret);
+onClick("selectArticleSentenceBtn", selectArticleTextSentenceFromCaret);
 onClick("addSelectedInlineBtn", () => {
   addSelectedTextToVocabulary(false);
   updateArticleEditorFlow();
