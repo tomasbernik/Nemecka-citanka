@@ -1,6 +1,6 @@
-function getPromptVocabularyLanguageList() {
+function getPromptVocabularyLanguageList(language = "sk") {
   return VOCABULARY_LANGUAGE_CODES
-    .map(code => NATIVE_LANGUAGES[code]?.promptName || code)
+    .map(code => language === "en" ? (NATIVE_LANGUAGES[code]?.label || code) : (NATIVE_LANGUAGES[code]?.promptName || code))
     .join(", ");
 }
 
@@ -24,6 +24,37 @@ function getPromptVocabularyExample() {
 }
 
 const PROMPT_TEXT = {
+  en: {
+    article: ({ level, category, topic, requiredWords }) => [
+      `Write a German story or article for level ${level}.`,
+      category ? `Category/topic: ${category}.` : "",
+      topic ? `Specific brief: ${topic}` : "",
+      requiredWords.length
+        ? `Use these German words or phrases naturally in the text: ${requiredWords.join(", ")}.`
+        : "",
+      "Return only the finished German content. Do not write JSON, vocabulary, questions, or explanations."
+    ],
+    translation: (missing) => [
+      `Translate these German words and phrases into these languages: ${getPromptVocabularyLanguageList("en")}.`,
+      "Return only a valid JSON array. Do not add explanations and do not use a markdown ```json block.",
+      `Every item must have exactly these keys: ${getPromptVocabularyKeys()}.`,
+      "Format of one item:",
+      getPromptVocabularyExample(),
+      "",
+      missing.join("\n")
+    ],
+    questions: ({ title, text }) => [
+      "Create true/false statements for this German article.",
+      "Return 6 to 8 lines in this format:",
+      "German sentence = true",
+      "German sentence = false",
+      "Use a mix of true and false statements. Do not write anything else.",
+      "The answers must not follow a regular true/false/true/false or false/true/false/true pattern. Two true or two false statements may appear in a row.",
+      title ? `Title: ${title}` : "",
+      "",
+      text
+    ]
+  },
   sk: {
     article: ({ level, category, topic, requiredWords }) => [
       `Napíš článok v nemčine pre úroveň ${level}.`,

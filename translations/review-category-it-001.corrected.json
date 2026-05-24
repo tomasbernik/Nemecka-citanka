@@ -1,0 +1,129 @@
+{
+  "instructions": [
+    "Review each translated_text against source_text.",
+    "Keep the target language natural and concise for a language-learning app.",
+    "Return the same JSON shape and change only corrected_text and notes.",
+    "Do not remove id values."
+  ],
+  "exported_at": "2026-05-23T09:37:18.996Z",
+  "count": 9,
+  "entries": [
+    {
+      "id": "ee92c20c-0c0c-4547-9630-f7c4dc74e580",
+      "namespace": "category",
+      "source_entity_id": "Cestovanie",
+      "source_field": "label",
+      "source_path": "",
+      "source_language": "en",
+      "target_language": "it",
+      "source_text": "Travel",
+      "translated_text": "Viaggi",
+      "corrected_text": "Viaggi",
+      "notes": ""
+    },
+    {
+      "id": "14bbca40-39cf-487f-b68e-c765fa6f90af",
+      "namespace": "category",
+      "source_entity_id": "Jedlo",
+      "source_field": "label",
+      "source_path": "",
+      "source_language": "en",
+      "target_language": "it",
+      "source_text": "Food",
+      "translated_text": "Cibo",
+      "corrected_text": "Cibo",
+      "notes": ""
+    },
+    {
+      "id": "0677a349-d434-4e83-93b4-0d274941b0a1",
+      "namespace": "category",
+      "source_entity_id": "Každodenný život",
+      "source_field": "label",
+      "source_path": "",
+      "source_language": "en",
+      "target_language": "it",
+      "source_text": "Everyday life",
+      "translated_text": "Vita quotidiana",
+      "corrected_text": "Vita quotidiana",
+      "notes": ""
+    },
+    {
+      "id": "5871a7d8-bed2-4041-aabc-97c2a92b27bb",
+      "namespace": "category",
+      "source_entity_id": "Krimi",
+      "source_field": "label",
+      "source_path": "",
+      "source_language": "en",
+      "target_language": "it",
+      "source_text": "Crime",
+      "translated_text": "Giallo",
+      "corrected_text": "Giallo",
+      "notes": ""
+    },
+    {
+      "id": "1e78a9b7-89b0-47d3-87ef-c978682148d7",
+      "namespace": "category",
+      "source_entity_id": "Nakupovanie",
+      "source_field": "label",
+      "source_path": "",
+      "source_language": "en",
+      "target_language": "it",
+      "source_text": "Shopping",
+      "translated_text": "Acquisti",
+      "corrected_text": "Shopping",
+      "notes": ""
+    },
+    {
+      "id": "6ffb34f1-86d6-4d6b-9f1b-3641d37ba6a0",
+      "namespace": "category",
+      "source_entity_id": "Príbeh",
+      "source_field": "label",
+      "source_path": "",
+      "source_language": "en",
+      "target_language": "it",
+      "source_text": "Story",
+      "translated_text": "Storia",
+      "corrected_text": "Storia",
+      "notes": ""
+    },
+    {
+      "id": "5dd79c7d-f62b-43f0-ad96-a023d7b964f5",
+      "namespace": "category",
+      "source_entity_id": "Romantika",
+      "source_field": "label",
+      "source_path": "",
+      "source_language": "en",
+      "target_language": "it",
+      "source_text": "Romance",
+      "translated_text": "Romantico",
+      "corrected_text": "Romantici",
+      "notes": ""
+    },
+    {
+      "id": "8d97f931-fe98-45b7-aee2-0dba34e31ac8",
+      "namespace": "category",
+      "source_entity_id": "Voľný čas",
+      "source_field": "label",
+      "source_path": "",
+      "source_language": "en",
+      "target_language": "it",
+      "source_text": "Free time",
+      "translated_text": "Tempo libero",
+      "corrected_text": "Tempo libero",
+      "notes": ""
+    },
+    {
+      "id": "bae8ac92-c919-47b1-848d-9a8b7c5b810a",
+      "namespace": "category",
+      "source_entity_id": "Zábava",
+      "source_field": "label",
+      "source_path": "",
+      "source_language": "en",
+      "target_language": "it",
+      "source_text": "Entertainment",
+      "translated_text": "Intrattenimento",
+      "corrected_text": "Intrattenimento",
+      "notes": ""
+    }
+  ]
+}

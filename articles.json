@@ -35,35 +35,60 @@
         "sk": "skúsenosť",
         "ru": "опыт",
         "pl": "doświadczenie",
-        "hu": "tapasztalat"
+        "hu": "tapasztalat",
+        "en": "experience",
+        "ro": "experiența",
+        "it": "l'esperienza",
+        "fr": "l'expérience",
+        "tr": "deneyim"
       },
       {
         "de": "erledigen",
         "sk": "vybaviť",
         "ru": "выполнить / уладить",
         "pl": "załatwić",
-        "hu": "elintézni"
+        "hu": "elintézni",
+        "en": "to take care of / to get done",
+        "ro": "complet",
+        "it": "completare",
+        "fr": "complet",
+        "tr": "tamamlamak"
       },
       {
         "de": "obwohl",
         "sk": "aj keď",
         "ru": "хотя",
         "pl": "chociaż",
-        "hu": "bár"
+        "hu": "bár",
+        "en": "although",
+        "ro": "deşi",
+        "it": "Sebbene",
+        "fr": "bien que",
+        "tr": "rağmen"
       },
       {
         "de": "wahrscheinlich",
         "sk": "pravdepodobne",
         "ru": "вероятно",
         "pl": "prawdopodobnie",
-        "hu": "valószínűleg"
+        "hu": "valószínűleg",
+        "en": "probably",
+        "ro": "probabil",
+        "it": "probabilmente",
+        "fr": "probablement",
+        "tr": "muhtemelen"
       },
       {
         "de": "meiner Meinung nach",
         "sk": "podľa môjho názoru",
         "ru": "по моему мнению",
         "pl": "moim zdaniem",
-        "hu": "véleményem szerint"
+        "hu": "véleményem szerint",
+        "en": "in my opinion",
+        "ro": "în opinia mea",
+        "it": "secondo me",
+        "fr": "à mon avis",
+        "tr": "Bence"
       }
     ],
     "inlineVocabulary": [
@@ -72,161 +97,276 @@
         "sk": "skúsenosť",
         "ru": "опыт",
         "pl": "doświadczenie",
-        "hu": "tapasztalat"
+        "hu": "tapasztalat",
+        "en": "experience",
+        "ro": "Experienţă",
+        "it": "Esperienza",
+        "fr": "Expérience",
+        "tr": "Deneyim"
       },
       {
         "de": "erledigen",
         "sk": "vybaviť",
         "ru": "выполнить / уладить",
         "pl": "załatwić",
-        "hu": "elintézni"
+        "hu": "elintézni",
+        "en": "to take care of / to get done",
+        "ro": "complet",
+        "it": "completare",
+        "fr": "complet",
+        "tr": "tamamlamak"
       },
       {
         "de": "obwohl",
         "sk": "aj keď",
         "ru": "хотя",
         "pl": "chociaż",
-        "hu": "bár"
+        "hu": "bár",
+        "en": "although",
+        "ro": "deşi",
+        "it": "Sebbene",
+        "fr": "bien que",
+        "tr": "rağmen"
       },
       {
         "de": "wahrscheinlich",
         "sk": "pravdepodobne",
         "ru": "вероятно",
         "pl": "prawdopodobnie",
-        "hu": "valószínűleg"
+        "hu": "valószínűleg",
+        "en": "probably",
+        "ro": "probabil",
+        "it": "probabilmente",
+        "fr": "probablement",
+        "tr": "muhtemelen"
       },
       {
         "de": "Meiner Meinung nach",
         "sk": "podľa môjho názoru",
         "ru": "по моему мнению",
         "pl": "moim zdaniem",
-        "hu": "véleményem szerint"
+        "hu": "véleményem szerint",
+        "en": "in my opinion",
+        "ro": "În opinia mea",
+        "it": "Secondo me",
+        "fr": "À mon avis",
+        "tr": "Bence"
       },
       {
         "de": "entschieden",
         "sk": "rozhodli sa",
         "ru": "они решили",
         "pl": "zdecydowali",
-        "hu": "úgy döntöttek"
+        "hu": "úgy döntöttek",
+        "en": "decided",
+        "ro": "hotărât",
+        "it": "deciso",
+        "fr": "décidé",
+        "tr": "karar verilmiş"
       },
       {
         "de": "erleben",
         "sk": "zažiť",
         "ru": "испытать",
         "pl": "doświadczyć",
-        "hu": "megtapasztalni"
+        "hu": "megtapasztalni",
+        "en": "to experience",
+        "ro": "experienţă",
+        "it": "esperienza",
+        "fr": "expérience",
+        "tr": "deneyim"
       },
       {
         "de": "Sie sind durch die Stadt gelaufen",
         "sk": "prešli sa mestom",
         "ru": "они гуляли по городу",
         "pl": "spacerowali po mieście",
-        "hu": "átsétáltak a városon"
+        "hu": "átsétáltak a városon",
+        "en": "they walked through the city",
+        "ro": "Au mers prin oraș",
+        "it": "Camminarono per la città",
+        "fr": "Ils ont parcouru la ville",
+        "tr": "Şehri dolaştılar"
       },
       {
         "de": "Orte",
         "sk": "miesta",
         "ru": "места",
         "pl": "miejsca",
-        "hu": "helyeken"
+        "hu": "helyeken",
+        "en": "places",
+        "ro": "Locuri",
+        "it": "Luoghi",
+        "fr": "Lieux",
+        "tr": "Yer"
       },
       {
         "de": "besondere",
         "sk": "špeciálna / výnimočná",
         "ru": "особенный/исключительный",
         "pl": "szczególny / wyjątkowy",
-        "hu": "különleges / kivételes"
+        "hu": "különleges / kivételes",
+        "en": "special / unusual",
+        "ro": "special",
+        "it": "speciale",
+        "fr": "spécial",
+        "tr": "özel"
       },
       {
         "de": "Das ist wahrscheinlich einer der schönsten Orte, die ich je gesehen habe",
         "sk": "To je pravdepodobne jedno z najkrajších miest, ktoré som kedy videl",
         "ru": "Наверное, это одно из самых красивых мест, которые я когда-либо видел",
         "pl": "To prawdopodobnie jedno z najpiękniejszych miejsc, jakie kiedykolwiek widziałem",
-        "hu": "Ez valószínűleg az egyik legszebb hely, amit valaha láttam"
+        "hu": "Ez valószínűleg az egyik legszebb hely, amit valaha láttam",
+        "en": "That is probably one of the most beautiful places I have ever seen",
+        "ro": "Acesta este probabil unul dintre cele mai frumoase locuri pe care le-am văzut vreodată",
+        "it": "Questo è probabilmente uno dei posti più belli che abbia mai visto",
+        "fr": "C'est probablement l'un des plus beaux endroits que j'ai jamais vu",
+        "tr": "Burası muhtemelen gördüğüm en güzel yerlerden biri"
       },
       {
         "de": "Ausflug",
         "sk": "výlet",
         "ru": "поездка",
         "pl": "wycieczka",
-        "hu": "utazás"
+        "hu": "utazás",
+        "en": "trip / excursion",
+        "ro": "Excursie laterală",
+        "it": "Viaggio laterale",
+        "fr": "Excursion secondaire",
+        "tr": "Yan yolculuk"
       },
       {
         "de": "aufgestanden",
         "sk": "vstali",
         "ru": "они встали",
         "pl": "wstali",
-        "hu": "felálltak"
+        "hu": "felálltak",
+        "en": "got up",
+        "ro": "s-a ridicat",
+        "it": "mi sono alzato",
+        "fr": "je me suis levé",
+        "tr": "kalktı"
       },
       {
         "de": "unbedingt",
         "sk": "určite / bezpodmienečne",
         "ru": "обязательно / непременно",
         "pl": "koniecznie / zdecydowanie",
-        "hu": "határozottan / feltétel nélkül"
+        "hu": "határozottan / feltétel nélkül",
+        "en": "definitely / absolutely",
+        "ro": "absolut",
+        "it": "assolutamente",
+        "fr": "absolument",
+        "tr": "kesinlikle"
       },
       {
         "de": "Sonst",
         "sk": "inak",
         "ru": "иначе",
         "pl": "inaczej",
-        "hu": "különben"
+        "hu": "különben",
+        "en": "otherwise",
+        "ro": "Altfel",
+        "it": "Altrimenti",
+        "fr": "Sinon",
+        "tr": "Aksi takdirde"
       },
       {
         "de": "ruhig",
         "sk": "pokojný",
         "ru": "спокойный",
         "pl": "spokojny",
-        "hu": "békés"
+        "hu": "békés",
+        "en": "quiet / calm",
+        "ro": "linişti",
+        "it": "Tranquillo",
+        "fr": "calme",
+        "tr": "sessizlik"
       },
       {
         "de": "entspannend",
         "sk": "relaxačný",
         "ru": "расслабляющий",
         "pl": "relaksujący",
-        "hu": "pihentető"
+        "hu": "pihentető",
+        "en": "relaxing",
+        "ro": "relaxant",
+        "it": "rilassante",
+        "fr": "relaxant",
+        "tr": "rahatlatıcı"
       },
       {
         "de": "genießen",
         "sk": "užívať si",
         "ru": "наслаждаться",
         "pl": "cieszyć się",
-        "hu": "élvezni"
+        "hu": "élvezni",
+        "en": "to enjoy",
+        "ro": "bucură-te",
+        "it": "Godere",
+        "fr": "apprécier",
+        "tr": "Eğlence"
       },
       {
         "de": "gesessen",
         "sk": "sedeli",
         "ru": "они сидели",
         "pl": "siedzieli",
-        "hu": "ültek"
+        "hu": "ültek",
+        "en": "sat",
+        "ro": "sat",
+        "it": "sab",
+        "fr": "assis",
+        "tr": "doygunluk"
       },
       {
         "de": "gegessen",
         "sk": "jedli",
         "ru": "они ели",
         "pl": "zjedli",
-        "hu": "ettek"
+        "hu": "ettek",
+        "en": "ate",
+        "ro": "mâncat",
+        "it": "mangiato",
+        "fr": "mangé",
+        "tr": "yemiş"
       },
       {
         "de": "Entscheidungen",
         "sk": "rozhodnutia",
         "ru": "решения",
         "pl": "decyzje",
-        "hu": "döntéseket"
+        "hu": "döntéseket",
+        "en": "decisions",
+        "ro": "Deciziile",
+        "it": "Decisioni",
+        "fr": "Décisions",
+        "tr": "Kararlar"
       },
       {
         "de": "einig",
         "sk": "jednotní / zhodli sa",
         "ru": "согласны / сошлись во мнении",
         "pl": "zgodni / zgodzili się",
-        "hu": "egységes / egyetértett"
+        "hu": "egységes / egyetértett",
+        "en": "in agreement",
+        "ro": "de acord",
+        "it": "Essere d'accordo",
+        "fr": "accepter",
+        "tr": "kabul etmek"
       },
       {
         "de": "erlebt",
         "sk": "zažili",
         "ru": "пережили / испытали",
         "pl": "przeżyli / doświadczyli",
-        "hu": "tapasztalt"
+        "hu": "tapasztalt",
+        "en": "experienced",
+        "ro": "experimentat",
+        "it": "sperimentato",
+        "fr": "expérimenté",
+        "tr": "deneyimli"
       }
     ],
     "questions": [
@@ -273,70 +413,120 @@
         "sk": "užívať si",
         "ru": "наслаждаться",
         "pl": "cieszyć się",
-        "hu": "élvezni"
+        "hu": "élvezni",
+        "en": "to enjoy",
+        "ro": "bucură-te",
+        "it": "Godere",
+        "fr": "apprécier",
+        "tr": "Eğlence"
       },
       {
         "de": "entspannt",
         "sk": "uvoľnený",
         "ru": "расслабленный",
         "pl": "zrelaksowany",
-        "hu": "ellazult"
+        "hu": "ellazult",
+        "en": "relaxed",
+        "ro": "relaxat",
+        "it": "rilassato",
+        "fr": "détendu",
+        "tr": "rahat"
       },
       {
         "de": "gestresst",
         "sk": "stresovaný",
         "ru": "в стрессе",
         "pl": "zestresowany",
-        "hu": "hangsúlyozta"
+        "hu": "hangsúlyozta",
+        "en": "stressed",
+        "ro": "stresat",
+        "it": "sottolineato",
+        "fr": "stressé",
+        "tr": "stresli"
       },
       {
         "de": "angenehm",
         "sk": "príjemný",
         "ru": "приятный",
         "pl": "przyjemny",
-        "hu": "kellemes"
+        "hu": "kellemes",
+        "en": "pleasant",
+        "ro": "plăcută",
+        "it": "piacevole",
+        "fr": "agréable",
+        "tr": "güzel"
       },
       {
         "de": "sich ausruhen",
         "sk": "oddýchnuť si",
         "ru": "отдыхать",
         "pl": "odpocząć",
-        "hu": "pihenni"
+        "hu": "pihenni",
+        "en": "to rest",
+        "ro": "odihnă",
+        "it": "riposo",
+        "fr": "repos",
+        "tr": "dinlenmek"
       },
       {
         "de": "entdecken",
         "sk": "objavovať",
         "ru": "обнаружить",
         "pl": "odkryć",
-        "hu": "felfedezni"
+        "hu": "felfedezni",
+        "en": "to discover",
+        "ro": "descoperi",
+        "it": "scoprire",
+        "fr": "découvrir",
+        "tr": "keşfetmek"
       },
       {
         "de": "gemütlich",
         "sk": "útulný",
         "ru": "уютный",
         "pl": "przytulny",
-        "hu": "hangulatos"
+        "hu": "hangulatos",
+        "en": "cozy",
+        "ro": "confortabil",
+        "it": "accogliente",
+        "fr": "confortable",
+        "tr": "samimi"
       },
       {
         "de": "der Verkehr",
         "sk": "doprava",
         "ru": "движение / транспорт",
         "pl": "ruch uliczny / transport",
-        "hu": "szállítás"
+        "hu": "szállítás",
+        "en": "traffic",
+        "ro": "traficul",
+        "it": "il traffico",
+        "fr": "le trafic",
+        "tr": "trafik"
       },
       {
         "de": "besichtigen",
         "sk": "navštíviť (pamiatku)",
         "ru": "посетить (памятник)",
         "pl": "odwiedzić (pomnik)",
-        "hu": "látogatás (egy emlékmű)"
+        "hu": "látogatás (egy emlékmű)",
+        "en": "to visit / to sightsee",
+        "ro": "vedere",
+        "it": "visualizzazione",
+        "fr": "voir",
+        "tr": "görüş"
       },
       {
         "de": "die Bank",
         "sk": "lavička",
         "ru": "скамейка",
         "pl": "ławka",
-        "hu": "pad"
+        "hu": "pad",
+        "en": "bench",
+        "ro": "Banca",
+        "it": "la Banca",
+        "fr": "la Banque",
+        "tr": "Banka"
       }
     ],
     "inlineVocabulary": [
@@ -345,161 +535,276 @@
         "sk": "pokojný",
         "ru": "спокойный",
         "pl": "spokojny",
-        "hu": "békés"
+        "hu": "békés",
+        "en": "quiet / calm",
+        "ro": "linişti",
+        "it": "Tranquillo",
+        "fr": "calme",
+        "tr": "sessizlik"
       },
       {
         "de": "genießen",
         "sk": "užívať si",
         "ru": "наслаждаться",
         "pl": "cieszyć się",
-        "hu": "élvezni"
+        "hu": "élvezni",
+        "en": "to enjoy",
+        "ro": "bucură-te",
+        "it": "Godere",
+        "fr": "apprécier",
+        "tr": "Eğlence"
       },
       {
         "de": "aufgestanden",
         "sk": "vstal",
         "ru": "встал",
         "pl": "wstałem",
-        "hu": "felkelt"
+        "hu": "felkelt",
+        "en": "got up",
+        "ro": "s-a ridicat",
+        "it": "mi sono alzato",
+        "fr": "je me suis levé",
+        "tr": "kalktı"
       },
       {
         "de": "Spaziergang",
         "sk": "prechádzka",
         "ru": "прогулка",
         "pl": "spacer",
-        "hu": "egy séta"
+        "hu": "egy séta",
+        "en": "walk",
+        "ro": "Plimbare",
+        "it": "Passeggiare",
+        "fr": "Flâner",
+        "tr": "Gezinti"
       },
       {
         "de": "lebendig",
         "sk": "živý",
         "ru": "жив",
         "pl": "żywy",
-        "hu": "élve"
+        "hu": "élve",
+        "en": "lively",
+        "ro": "plin de viaţă",
+        "it": "vivace",
+        "fr": "vivant",
+        "tr": "canlı"
       },
       {
         "de": "überall",
         "sk": "všade",
         "ru": "везде",
         "pl": "wszędzie",
-        "hu": "mindenhol"
+        "hu": "mindenhol",
+        "en": "everywhere",
+        "ro": "pretutindeni",
+        "it": "ovunque",
+        "fr": "partout",
+        "tr": "her yer"
       },
       {
         "de": "Geschäfte",
         "sk": "obchody",
         "ru": "магазины",
         "pl": "sklepy",
-        "hu": "üzletek"
+        "hu": "üzletek",
+        "en": "shops",
+        "ro": "magazine",
+        "it": "negozi",
+        "fr": "magasins",
+        "tr": "mağazalar"
       },
       {
         "de": "Bootsfahrt",
         "sk": "plavba loďou",
         "ru": "прогулка на лодке",
         "pl": "wycieczka łodzią",
-        "hu": "hajókirándulás"
+        "hu": "hajókirándulás",
+        "en": "boat trip",
+        "ro": "Excursie cu barca",
+        "it": "Gita in barca",
+        "fr": "Voyage en bateau",
+        "tr": "Tekne gezisi"
       },
       {
         "de": "entspannte",
         "sk": "uvoľnená",
         "ru": "расслабленный",
         "pl": "zrelaksowany",
-        "hu": "ellazult"
+        "hu": "ellazult",
+        "en": "relaxed",
+        "ro": "relaxat",
+        "it": "rilassato",
+        "fr": "détendu",
+        "tr": "rahat"
       },
       {
         "de": "entdecken",
         "sk": "objavovať",
         "ru": "обнаружить",
         "pl": "odkryć",
-        "hu": "felfedezni"
+        "hu": "felfedezni",
+        "en": "to discover",
+        "ro": "descoperi",
+        "it": "scoprire",
+        "fr": "découvrir",
+        "tr": "keşfetmek"
       },
       {
         "de": "besichtigen",
         "sk": "navštíviť (pamiatku)",
         "ru": "посетить (памятник)",
         "pl": "odwiedzić (pomnik)",
-        "hu": "látogatás (egy emlékmű)"
+        "hu": "látogatás (egy emlékmű)",
+        "en": "to visit / to sightsee",
+        "ro": "vedere",
+        "it": "visualizzazione",
+        "fr": "voir",
+        "tr": "görüş"
       },
       {
         "de": "bewundert",
         "sk": "obdivovali",
         "ru": "восхищались",
         "pl": "podziwiali",
-        "hu": "csodálta"
+        "hu": "csodálta",
+        "en": "admired",
+        "ro": "admirat",
+        "it": "ammirato",
+        "fr": "admiré",
+        "tr": "hayran kaldım"
       },
       {
         "de": "angenehm",
         "sk": "príjemný",
         "ru": "приятный",
         "pl": "przyjemny",
-        "hu": "kellemes"
+        "hu": "kellemes",
+        "en": "pleasant",
+        "ro": "plăcută",
+        "it": "piacevole",
+        "fr": "agréable",
+        "tr": "güzel"
       },
       {
         "de": "ausruhen",
         "sk": "oddýchnuť si",
         "ru": "отдыхать",
         "pl": "odpocząć",
-        "hu": "pihenni"
+        "hu": "pihenni",
+        "en": "to rest",
+        "ro": "Relaxați-vă",
+        "it": "relax",
+        "fr": "se détendre",
+        "tr": "rahatlamak"
       },
       {
         "de": "belegte Baguette",
         "sk": "obložená bageta",
         "ru": "багет с начинкой",
         "pl": "kanapka z bagietki",
-        "hu": "megrakott bagett"
+        "hu": "megrakott bagett",
+        "en": "filled baguette",
+        "ro": "baghetă umplută",
+        "it": "baguette ripiena",
+        "fr": "baguette fourrée",
+        "tr": "dolgulu baget"
       },
       {
         "de": "Sie haben sich auf eine Bank gesetzt",
         "sk": "sadli si na lavičku",
         "ru": "они сели на скамейку",
         "pl": "usiedli na ławce",
-        "hu": "leültek egy padra"
+        "hu": "leültek egy padra",
+        "en": "they sat down on a bench",
+        "ro": "S-au așezat pe o bancă",
+        "it": "Si sedettero su una panchina",
+        "fr": "Ils s'assirent sur un banc",
+        "tr": "Bir bankta oturdular"
       },
       {
         "de": "Eiffelturm",
         "sk": "Eiffelova veža",
         "ru": "Эйфелева башня",
         "pl": "Wieża Eiffla",
-        "hu": "Az Eiffel-torony"
+        "hu": "Az Eiffel-torony",
+        "en": "Eiffel Tower",
+        "ro": "Turnul Eiffel",
+        "it": "Torre Eiffel",
+        "fr": "Tour Eiffel",
+        "tr": "Eyfel Kulesi"
       },
       {
         "de": "beeindruckend",
         "sk": "pôsobivý",
         "ru": "впечатляющий",
         "pl": "imponujące",
-        "hu": "lenyűgöző"
+        "hu": "lenyűgöző",
+        "en": "impressive",
+        "ro": "impresionant",
+        "it": "impressionante",
+        "fr": "impressionnant",
+        "tr": "etkileyici"
       },
       {
         "de": "gemütlich",
         "sk": "útulný",
         "ru": "уютный",
         "pl": "przytulny",
-        "hu": "hangulatos"
+        "hu": "hangulatos",
+        "en": "cozy",
+        "ro": "confortabil",
+        "it": "accogliente",
+        "fr": "confortable",
+        "tr": "samimi"
       },
       {
         "de": "sie haben die Atmosphäre genossen",
         "sk": "užívali si atmosféru",
         "ru": "им понравилась атмосфера",
         "pl": "podobała im się atmosfera",
-        "hu": "élvezték a hangulatot"
+        "hu": "élvezték a hangulatot",
+        "en": "they enjoyed the atmosphere",
+        "ro": "s-au bucurat de atmosfera",
+        "it": "hanno apprezzato l'atmosfera",
+        "fr": "ils ont apprécié l'ambiance",
+        "tr": "atmosferin tadını çıkardılar"
       },
       {
         "de": "Später haben sie auch elektrische Roller ausprobiert",
         "sk": "neskôr si vyskúšali elektrické kolobežky",
         "ru": "позже они попробовали электросамокаты",
         "pl": "później wypróbowali hulajnogi elektryczne",
-        "hu": "később elektromos robogóval próbálkoztak"
+        "hu": "később elektromos robogóval próbálkoztak",
+        "en": "later they also tried electric scooters",
+        "ro": "Mai târziu au încercat și scutere electrice",
+        "it": "Successivamente hanno provato anche i monopattini elettrici",
+        "fr": "Plus tard, ils ont également essayé les scooters électriques",
+        "tr": "Daha sonra elektrikli scooterları da denediler"
       },
       {
         "de": "Verkehr",
         "sk": "doprava",
         "ru": "движение / транспорт",
         "pl": "ruch uliczny / transport",
-        "hu": "szállítás"
+        "hu": "szállítás",
+        "en": "traffic",
+        "ro": "Trafic",
+        "it": "Traffico",
+        "fr": "Trafic",
+        "tr": "Trafik"
       },
       {
         "de": "Erlebnisse",
         "sk": "zážitky",
         "ru": "опыт",
         "pl": "doświadczenia",
-        "hu": "tapasztalatokat"
+        "hu": "tapasztalatokat",
+        "en": "experiences",
+        "ro": "Experiențe",
+        "it": "Esperienze",
+        "fr": "Expériences",
+        "tr": "Deneyimler"
       }
     ],
     "questions": [
@@ -548,28 +853,48 @@
         "sk": "chatka",
         "ru": "коттедж",
         "pl": "domek",
-        "hu": "házikó"
+        "hu": "házikó",
+        "en": "hut / cabin",
+        "ro": "coliba",
+        "it": "la capanna",
+        "fr": "la cabane",
+        "tr": "kulübe"
       },
       {
         "de": "der Teich",
         "sk": "jazierko",
         "ru": "пруд",
         "pl": "staw",
-        "hu": "tó"
+        "hu": "tó",
+        "en": "pond",
+        "ro": "iazul",
+        "it": "lo stagno",
+        "fr": "l'étang",
+        "tr": "gölet"
       },
       {
         "de": "die Libelle",
         "sk": "vážka",
         "ru": "стрекоза",
         "pl": "ważka",
-        "hu": "szitakötő"
+        "hu": "szitakötő",
+        "en": "dragonfly",
+        "ro": "libelula",
+        "it": "la libellula",
+        "fr": "la libellule",
+        "tr": "yusufçuk"
       },
       {
         "de": "die Folge",
         "sk": "epizóda",
         "ru": "эпизод",
         "pl": "odcinek",
-        "hu": "epizód"
+        "hu": "epizód",
+        "en": "episode",
+        "ro": "consecinta",
+        "it": "la conseguenza",
+        "fr": "la conséquence",
+        "tr": "sonuç"
       }
     ],
     "inlineVocabulary": [
@@ -578,217 +903,372 @@
         "sk": "rozprávať",
         "ru": "говорить",
         "pl": "porozmawiać",
-        "hu": "beszélni"
+        "hu": "beszélni",
+        "en": "to tell / to talk",
+        "ro": "spune",
+        "it": "raccontare",
+        "fr": "dire",
+        "tr": "söylemek"
       },
       {
         "de": "irgendwann",
         "sk": "niekedy",
         "ru": "иногда",
         "pl": "czasami",
-        "hu": "néha"
+        "hu": "néha",
+        "en": "sometime / eventually",
+        "ro": "cândva",
+        "it": "qualche volta",
+        "fr": "un jour",
+        "tr": "bazen"
       },
       {
         "de": "gegen drei Uhr",
         "sk": "okolo 15:00",
         "ru": "около 15:00",
         "pl": "około 15:00",
-        "hu": "15:00 körül"
+        "hu": "15:00 körül",
+        "en": "around three o’clock",
+        "ro": "pe la ora trei",
+        "it": "verso le tre",
+        "fr": "vers trois heures",
+        "tr": "saat üç civarında"
       },
       {
         "de": "zuerst",
         "sk": "najskôr",
         "ru": "в ближайшее время",
         "pl": "najwcześniej",
-        "hu": "legkorábban"
+        "hu": "legkorábban",
+        "en": "first",
+        "ro": "primul",
+        "it": "Primo",
+        "fr": "d'abord",
+        "tr": "Birinci"
       },
       {
         "de": "hingesetzt",
         "sk": "posadil sa",
         "ru": "он сел",
         "pl": "usiadł",
-        "hu": "leült"
+        "hu": "leült",
+        "en": "sat down",
+        "ro": "s-a asezat",
+        "it": "si sedette",
+        "fr": "s'assit",
+        "tr": "oturdu"
       },
       {
         "de": "Boden",
         "sk": "pôda",
         "ru": "почва",
         "pl": "gleba",
-        "hu": "talaj"
+        "hu": "talaj",
+        "en": "soil / ground",
+        "ro": "Podea",
+        "it": "Pavimento",
+        "fr": "Sol",
+        "tr": "Zemin"
       },
       {
         "de": "Zaun",
         "sk": "plot",
         "ru": "забор",
         "pl": "płot",
-        "hu": "kerítés"
+        "hu": "kerítés",
+        "en": "fence",
+        "ro": "Gard",
+        "it": "Recinzione",
+        "fr": "Clôture",
+        "tr": "Çit"
       },
       {
         "de": "Tagetes",
         "sk": "aksamietnice",
         "ru": "бархатцы",
         "pl": "aksamitki",
-        "hu": "büdöske"
+        "hu": "büdöske",
+        "en": "marigolds",
+        "ro": "Tagetes",
+        "it": "Tagete",
+        "fr": "Tagètes",
+        "tr": "Tagetes"
       },
       {
         "de": "pflanzen",
         "sk": "sadiť",
         "ru": "сажать",
         "pl": "sadzić",
-        "hu": "ültetni"
+        "hu": "ültetni",
+        "en": "to plant",
+        "ro": "planta",
+        "it": "pianta",
+        "fr": "usine",
+        "tr": "bitki"
       },
       {
         "de": "Beeten",
         "sk": "záhony",
         "ru": "клумбы",
         "pl": "klomby kwiatowe",
-        "hu": "virágágyások"
+        "hu": "virágágyások",
+        "en": "beds / garden beds",
+        "ro": "Paturi",
+        "it": "Letti",
+        "fr": "Lits",
+        "tr": "Yataklar"
       },
       {
         "de": "am Rand",
         "sk": "na okraji",
         "ru": "на краю",
         "pl": "na krawędzi",
-        "hu": "a szélén"
+        "hu": "a szélén",
+        "en": "at the edge",
+        "ro": "pe margine",
+        "it": "sul bordo",
+        "fr": "sur le bord",
+        "tr": "kenarda"
       },
       {
         "de": "wachsen",
         "sk": "rásť",
         "ru": "расти",
         "pl": "rosnąć",
-        "hu": "növekedni"
+        "hu": "növekedni",
+        "en": "to grow",
+        "ro": "cresc",
+        "it": "crescere",
+        "fr": "grandir",
+        "tr": "büyümek"
       },
       {
         "de": "übrig",
         "sk": "zvyšné",
         "ru": "остальное",
         "pl": "reszta",
-        "hu": "a többit"
+        "hu": "a többit",
+        "en": "left over / remaining",
+        "ro": "rămase",
+        "it": "rimasto",
+        "fr": "reste",
+        "tr": "kalan"
       },
       {
         "de": "Während",
         "sk": "počas",
         "ru": "во время",
         "pl": "podczas",
-        "hu": "alatt"
+        "hu": "alatt",
+        "en": "during / while",
+        "ro": "în timp ce",
+        "it": "Mentre",
+        "fr": "Alors que",
+        "tr": "Sırasında"
       },
       {
         "de": "Hütte",
         "sk": "chatka",
         "ru": "коттедж",
         "pl": "domek",
-        "hu": "házikó"
+        "hu": "házikó",
+        "en": "hut / cabin",
+        "ro": "colibă",
+        "it": "capanna",
+        "fr": "cabane",
+        "tr": "kulübe"
       },
       {
         "de": "vorbereitet",
         "sk": "pripravil",
         "ru": "подготовленный",
         "pl": "przygotowany",
-        "hu": "felkészült"
+        "hu": "felkészült",
+        "en": "prepared",
+        "ro": "pregătit",
+        "it": "preparato",
+        "fr": "préparé",
+        "tr": "tedarikli"
       },
       {
         "de": "legen",
         "sk": "položiť",
         "ru": "положить",
         "pl": "odłożyć",
-        "hu": "letenni"
+        "hu": "letenni",
+        "en": "to put / to lay",
+        "ro": "loc",
+        "it": "posto",
+        "fr": "lieu",
+        "tr": "yer"
       },
       {
         "de": "gefüttert",
         "sk": "nakŕmil",
         "ru": "накормленный",
         "pl": "karmiony",
-        "hu": "táplált"
+        "hu": "táplált",
+        "en": "fed",
+        "ro": "hrănit",
+        "it": "alimentato",
+        "fr": "nourri",
+        "tr": "beslenen"
       },
       {
         "de": "Frösche",
         "sk": "žaby",
         "ru": "лягушки",
         "pl": "żaby",
-        "hu": "békák"
+        "hu": "békák",
+        "en": "frogs",
+        "ro": "broaște",
+        "it": "Rane",
+        "fr": "Grenouilles",
+        "tr": "Kurbağalar"
       },
       {
         "de": "Teich",
         "sk": "jazierko",
         "ru": "пруд",
         "pl": "staw",
-        "hu": "tó"
+        "hu": "tó",
+        "en": "pond",
+        "ro": "Iaz",
+        "it": "Stagno",
+        "fr": "Étang",
+        "tr": "Gölet"
       },
       {
         "de": "gequakt",
         "sk": "kvákali",
         "ru": "квакали",
         "pl": "kumkały",
-        "hu": "brekegtek"
+        "hu": "brekegtek",
+        "en": "croaked",
+        "ro": "croncăit",
+        "it": "gracchiato",
+        "fr": "croassa",
+        "tr": "vırakladı"
       },
       {
         "de": "lustig",
         "sk": "zábavné",
         "ru": "веселье",
         "pl": "zabawa",
-        "hu": "szórakoztató"
+        "hu": "szórakoztató",
+        "en": "funny",
+        "ro": "amuzant",
+        "it": "divertente",
+        "fr": "drôle",
+        "tr": "eğlenceli"
       },
       {
         "de": "Eidechsen",
         "sk": "jašterice",
         "ru": "ящерицы",
         "pl": "jaszczurki",
-        "hu": "gyíkok"
+        "hu": "gyíkok",
+        "en": "lizards",
+        "ro": "Șopârlele",
+        "it": "Lucertole",
+        "fr": "Lézards",
+        "tr": "Kertenkeleler"
       },
       {
         "de": "beobachtet",
         "sk": "pozorovali",
         "ru": "наблюдал",
         "pl": "zaobserwowane",
-        "hu": "megfigyelték"
+        "hu": "megfigyelték",
+        "en": "watched / observed",
+        "ro": "observat",
+        "it": "osservato",
+        "fr": "observé",
+        "tr": "gözlemlendi"
       },
       {
         "de": "Libellen",
         "sk": "vážky",
         "ru": "стрекозы",
         "pl": "ważki",
-        "hu": "szitakötők"
+        "hu": "szitakötők",
+        "en": "dragonflies",
+        "ro": "Libelule",
+        "it": "Libellule",
+        "fr": "Libellules",
+        "tr": "Yusufçuklar"
       },
       {
         "de": "geflogen",
         "sk": "leteli",
         "ru": "они летели",
         "pl": "polecieli",
-        "hu": "repültek"
+        "hu": "repültek",
+        "en": "flew",
+        "ro": "zburat",
+        "it": "volato",
+        "fr": "volé",
+        "tr": "uçtu"
       },
       {
         "de": "herausgefunden",
         "sk": "zistili",
         "ru": "они узнали",
         "pl": "dowiedzieli się",
-        "hu": "rájöttek"
+        "hu": "rájöttek",
+        "en": "found out",
+        "ro": "aflat",
+        "it": "scoperto",
+        "fr": "découvert",
+        "tr": "öğrendim"
       },
       {
         "de": "Spielerei",
         "sk": "hra",
         "ru": "игра",
         "pl": "gra",
-        "hu": "játék"
+        "hu": "játék",
+        "en": "playful thing / little game",
+        "ro": "Gimmick",
+        "it": "Trucco",
+        "fr": "Truc",
+        "tr": "Hile"
       },
       {
         "de": "ausgeruht",
         "sk": "oddýchli si",
         "ru": "отдохнул",
         "pl": "wypoczęty",
-        "hu": "pihent"
+        "hu": "pihent",
+        "en": "rested",
+        "ro": "odihnit",
+        "it": "riposato",
+        "fr": "reposé",
+        "tr": "dinlenmiş"
       },
       {
         "de": "Folge",
         "sk": "epizóda",
         "ru": "эпизод",
         "pl": "odcinek",
-        "hu": "epizód"
+        "hu": "epizód",
+        "en": "episode",
+        "ro": "Consecinţă",
+        "it": "Conseguenza",
+        "fr": "Conséquence",
+        "tr": "Sonuçlar"
       },
       {
         "de": "wach",
         "sk": "hore",
         "ru": "вверх",
         "pl": "w górę",
-        "hu": "fel"
+        "hu": "fel",
+        "en": "awake",
+        "ro": "treaz",
+        "it": "sveglio",
+        "fr": "éveillé",
+        "tr": "uyanmak"
       }
     ],
     "questions": [
@@ -835,49 +1315,84 @@
         "sk": "kľudný, pokojný",
         "ru": "спокойный, тихий",
         "pl": "spokojny",
-        "hu": "nyugodt, békés"
+        "hu": "nyugodt, békés",
+        "en": "quiet / calm",
+        "ro": "linişti",
+        "it": "Tranquillo",
+        "fr": "calme",
+        "tr": "sessizlik"
       },
       {
         "de": "die Zeitschrift",
         "sk": "časopis",
         "ru": "журнал",
         "pl": "magazyn",
-        "hu": "folyóiratban"
+        "hu": "folyóiratban",
+        "en": "magazine",
+        "ro": "revista",
+        "it": "la rivista",
+        "fr": "le magazine",
+        "tr": "dergi"
       },
       {
         "de": "sich entscheiden",
         "sk": "rozhodnúť sa",
         "ru": "решать",
         "pl": "zdecydować",
-        "hu": "dönteni"
+        "hu": "dönteni",
+        "en": "to decide",
+        "ro": "decide",
+        "it": "decidere",
+        "fr": "décider",
+        "tr": "karar vermek"
       },
       {
         "de": "die Bewegung",
         "sk": "pohyb",
         "ru": "движение",
         "pl": "ruch",
-        "hu": "mozgás"
+        "hu": "mozgás",
+        "en": "movement",
+        "ro": "miscarea",
+        "it": "il movimento",
+        "fr": "le mouvement",
+        "tr": "hareket"
       },
       {
         "de": "Ich freue mich sehr darauf, sie endlich wiederzusehen.",
         "sk": "Veľmi sa těším, až ju konečne znovu uvidím.",
         "ru": "Я очень жду возможности наконец увидеть ее снова.",
         "pl": "Nie mogę się doczekać, aż w końcu znów ją zobaczę.",
-        "hu": "Nagyon várom, hogy végre újra lássam."
+        "hu": "Nagyon várom, hogy végre újra lássam.",
+        "en": "I am really looking forward to finally seeing her again.",
+        "ro": "Aștept cu nerăbdare să o revăd în sfârșit.",
+        "it": "Non vedo davvero l'ora di rivederla finalmente.",
+        "fr": "J'ai vraiment hâte de la revoir enfin.",
+        "tr": "Nihayet onu tekrar görmeyi sabırsızlıkla bekliyorum."
       },
       {
         "de": "Die Zeit ist sehr schnell vergangen.",
         "sk": "Čas ubehol veľmi rýchlo.",
         "ru": "Время пролетело очень быстро.",
         "pl": "Czas minął bardzo szybko.",
-        "hu": "Az idő nagyon gyorsan eltelt."
+        "hu": "Az idő nagyon gyorsan eltelt.",
+        "en": "The time passed very quickly.",
+        "ro": "Timpul a trecut foarte repede.",
+        "it": "Il tempo è passato molto velocemente.",
+        "fr": "Le temps est passé très vite.",
+        "tr": "Zaman çok çabuk geçti."
       },
       {
         "de": "Ich habe die Zeit mit meinem Mann sehr genossen.",
         "sk": "Veľmi som si užila čas, ktorý som strávila s mojím mužom.",
         "ru": "Мне очень понравилось время, проведенное со своим мужчиной.",
         "pl": "Bardzo podobał mi się czas spędzony z moim mężczyzną.",
-        "hu": "Nagyon élveztem a párommal töltött időt."
+        "hu": "Nagyon élveztem a párommal töltött időt.",
+        "en": "I really enjoyed the time with my husband.",
+        "ro": "Mi-a plăcut foarte mult timpul cu soțul meu.",
+        "it": "Mi è piaciuto molto il tempo trascorso con mio marito.",
+        "fr": "J'ai vraiment apprécié le temps passé avec mon mari.",
+        "tr": "Kocamla geçirdiğim zamandan gerçekten keyif aldım."
       }
     ],
     "inlineVocabulary": [
@@ -886,168 +1401,288 @@
         "sk": "strávila som",
         "ru": "я потратил",
         "pl": "spędziłem",
-        "hu": "költöttem"
+        "hu": "költöttem",
+        "en": "spent",
+        "ro": "petrecut",
+        "it": "speso",
+        "fr": "dépensé",
+        "tr": "harcanan"
       },
       {
         "de": "der Ausflug",
         "sk": "výlet",
         "ru": "поездка",
         "pl": "wycieczka",
-        "hu": "utazás"
+        "hu": "utazás",
+        "en": "trip / excursion",
+        "ro": "excursia",
+        "it": "l'escursione",
+        "fr": "la randonnée",
+        "tr": "gezi"
       },
       {
         "de": "anhalten",
         "sk": "zastaviť",
         "ru": "остановить",
         "pl": "zatrzymać",
-        "hu": "megállni"
+        "hu": "megállni",
+        "en": "to stop",
+        "ro": "Stop",
+        "it": "fermare",
+        "fr": "arrêt",
+        "tr": "durmak"
       },
       {
         "de": "ankommen",
         "sk": "prísť",
         "ru": "прийти",
         "pl": "przyjść",
-        "hu": "hogy jöjjön"
+        "hu": "hogy jöjjön",
+        "en": "to arrive",
+        "ro": "ajunge",
+        "it": "arrivare",
+        "fr": "arriver",
+        "tr": "varmak"
       },
       {
         "de": "entschieden",
         "sk": "rozhodli sme sa",
         "ru": "мы решили",
         "pl": "zdecydowaliśmy",
-        "hu": "úgy döntöttünk"
+        "hu": "úgy döntöttünk",
+        "en": "decided",
+        "ro": "hotărât",
+        "it": "deciso",
+        "fr": "décidé",
+        "tr": "karar verilmiş"
       },
       {
         "de": "ruhigen Fahrten",
         "sk": "kľudné jazdy",
         "ru": "тихая езда",
         "pl": "cicha jazda",
-        "hu": "csendes vezetés"
+        "hu": "csendes vezetés",
+        "en": "quiet rides",
+        "ro": "plimbări liniștite",
+        "it": "corse tranquille",
+        "fr": "promenades tranquilles",
+        "tr": "sessiz sürüşler"
       },
       {
         "de": "Zeitschrift",
         "sk": "časopis",
         "ru": "журнал",
         "pl": "magazyn",
-        "hu": "folyóiratban"
+        "hu": "folyóiratban",
+        "en": "magazine",
+        "ro": "revistă",
+        "it": "rivista",
+        "fr": "revue",
+        "tr": "dergi"
       },
       {
         "de": "üben",
         "sk": "cvičiť, precvičovať",
         "ru": "практиковаться, репетировать",
         "pl": "ćwiczyć",
-        "hu": "gyakorolni, próbálni"
+        "hu": "gyakorolni, próbálni",
+        "en": "to practice",
+        "ro": "practica",
+        "it": "pratica",
+        "fr": "pratique",
+        "tr": "pratik"
       },
       {
         "de": "die Strecke",
         "sk": "trasa",
         "ru": "маршрут",
         "pl": "trasa",
-        "hu": "útvonalon"
+        "hu": "útvonalon",
+        "en": "route / distance",
+        "ro": "traseul",
+        "it": "il percorso",
+        "fr": "l'itinéraire",
+        "tr": "rota"
       },
       {
         "de": "abgestellt",
         "sk": "odstavili",
         "ru": "выключить",
         "pl": "zamknij się",
-        "hu": "lekapcsolni"
+        "hu": "lekapcsolni",
+        "en": "parked / put away",
+        "ro": "oprit",
+        "it": "spento",
+        "fr": "éteint",
+        "tr": "kapalı"
       },
       {
         "de": "hat gescheint",
         "sk": "svietilo",
         "ru": "оно сияло",
         "pl": "świeciło",
-        "hu": "ragyogott"
+        "hu": "ragyogott",
+        "en": "was shining",
+        "ro": "a aparut",
+        "it": "è apparso",
+        "fr": "est apparu",
+        "tr": "ortaya çıktı"
       },
       {
         "de": "Zuerst",
         "sk": "najskôr, najprv",
         "ru": "сначала",
         "pl": "najpierw",
-        "hu": "először"
+        "hu": "először",
+        "en": "first",
+        "ro": "Primul",
+        "it": "Primo",
+        "fr": "D'abord",
+        "tr": "Birinci"
       },
       {
         "de": "lieb",
         "sk": "milý, milá, milé",
         "ru": "милый",
         "pl": "miły",
-        "hu": "kedves"
+        "hu": "kedves",
+        "en": "kind / sweet",
+        "ro": "dragă",
+        "it": "Caro",
+        "fr": "cher",
+        "tr": "Sayın"
       },
       {
         "de": "Mir gefällt",
         "sk": "Páči sa mi",
         "ru": "мне это нравится",
         "pl": "Podoba mi się to",
-        "hu": "tetszik"
+        "hu": "tetszik",
+        "en": "I like",
+        "ro": "imi place",
+        "it": "Mi piace",
+        "fr": "J'aime",
+        "tr": "Severim"
       },
       {
         "de": "nah",
         "sk": "blízko",
         "ru": "рядом",
         "pl": "blisko",
-        "hu": "közel"
+        "hu": "közel",
+        "en": "near / close",
+        "ro": "aproape",
+        "it": "vicino",
+        "fr": "fermer",
+        "tr": "kapalı"
       },
       {
         "de": "Bewegung",
         "sk": "pohyb",
         "ru": "движение",
         "pl": "ruch",
-        "hu": "mozgás"
+        "hu": "mozgás",
+        "en": "movement",
+        "ro": "Circulaţie",
+        "it": "Movimento",
+        "fr": "Mouvement",
+        "tr": "Hareket"
       },
       {
         "de": "Besonders",
         "sk": "najviac, obzvlášť",
         "ru": "большинство, особенно",
         "pl": "większość, szczególnie",
-        "hu": "a legtöbb, főleg"
+        "hu": "a legtöbb, főleg",
+        "en": "especially",
+        "ro": "În special",
+        "it": "Particolarmente",
+        "fr": "Particulièrement",
+        "tr": "Özellikle"
       },
       {
         "de": "seit einigen Jahren",
         "sk": "od niekoľkých rokov",
         "ru": "уже несколько лет",
         "pl": "od kilku lat",
-        "hu": "több éve"
+        "hu": "több éve",
+        "en": "for several years",
+        "ro": "de câțiva ani",
+        "it": "per diversi anni",
+        "fr": "depuis plusieurs années",
+        "tr": "birkaç yıldır"
       },
       {
         "de": "Ausflug in die Berge",
         "sk": "výlet do hôr",
         "ru": "поездка в горы",
         "pl": "wycieczka w góry",
-        "hu": "kirándulás a hegyekbe"
+        "hu": "kirándulás a hegyekbe",
+        "en": "trip to the mountains",
+        "ro": "Excursie la munte",
+        "it": "Gita in montagna",
+        "fr": "Voyage à la montagne",
+        "tr": "Dağlara gezi"
       },
       {
         "de": "verbringen",
         "sk": "stráviť",
         "ru": "проводить время",
         "pl": "spędzić",
-        "hu": "eltölteni"
+        "hu": "eltölteni",
+        "en": "to spend",
+        "ro": "petrece",
+        "it": "trascorrere",
+        "fr": "dépenser",
+        "tr": "harcamak"
       },
       {
         "de": "keine Sorgen machen",
         "sk": "nerobiť si starosti",
         "ru": "не волнуйся",
         "pl": "nie martw się",
-        "hu": "ne aggódj"
+        "hu": "ne aggódj",
+        "en": "not to worry",
+        "ro": "nu vă faceți griji",
+        "it": "Non preoccuparti",
+        "fr": "Ne vous inquiétez pas",
+        "tr": "Merak etme"
       },
       {
         "de": "laut",
         "sk": "nahlas",
         "ru": "вслух",
         "pl": "głośno",
-        "hu": "hangosan"
+        "hu": "hangosan",
+        "en": "loud / loudly",
+        "ro": "tare",
+        "it": "forte",
+        "fr": "fort",
+        "tr": "yüksek sesle"
       },
       {
         "de": "lachen",
         "sk": "smiať sa",
         "ru": "смеяться",
         "pl": "śmiać się",
-        "hu": "nevetni"
+        "hu": "nevetni",
+        "en": "to laugh",
+        "ro": "râde",
+        "it": "ridere",
+        "fr": "rire",
+        "tr": "gülmek"
       },
       {
         "de": "die Bank",
         "sk": "lavička",
         "ru": "скамейка",
         "pl": "ławka",
-        "hu": "pad"
+        "hu": "pad",
+        "en": "bench",
+        "ro": "Banca",
+        "it": "la Banca",
+        "fr": "la Banque",
+        "tr": "Banka"
       }
     ],
     "questions": [
@@ -1087,35 +1722,60 @@
         "sk": "jazero (alebo more s inym clenom)",
         "ru": "озеро (или море с другим участником)",
         "pl": "jezioro (lub morze z innym członkiem)",
-        "hu": "tó (vagy tenger egy másik taggal)"
+        "hu": "tó (vagy tenger egy másik taggal)",
+        "en": "lake",
+        "ro": "lacul",
+        "it": "il lago",
+        "fr": "le lac",
+        "tr": "göl"
       },
       {
         "de": "die Wiese",
         "sk": "lúka",
         "ru": "луг",
         "pl": "łąka",
-        "hu": "rét"
+        "hu": "rét",
+        "en": "meadow",
+        "ro": "lunca",
+        "it": "il prato",
+        "fr": "le pré",
+        "tr": "çayır"
       },
       {
         "de": "müde",
         "sk": "unavená/unavený",
         "ru": "устал/устал",
         "pl": "zmęczony/zmęczony",
-        "hu": "fáradt/fáradt"
+        "hu": "fáradt/fáradt",
+        "en": "tired",
+        "ro": "obosit",
+        "it": "Stanco",
+        "fr": "fatigué",
+        "tr": "yorgun"
       },
       {
         "de": "genug",
         "sk": "dosť",
         "ru": "достаточно",
         "pl": "wystarczy",
-        "hu": "elég"
+        "hu": "elég",
+        "en": "enough",
+        "ro": "suficient",
+        "it": "Abbastanza",
+        "fr": "assez",
+        "tr": "yeterli"
       },
       {
         "de": "zu Fuß gehen",
         "sk": "ísť pešo",
         "ru": "идти пешком",
         "pl": "iść pieszo",
-        "hu": "menj gyalog"
+        "hu": "menj gyalog",
+        "en": "to go on foot / to walk",
+        "ro": "a merge",
+        "it": "camminare",
+        "fr": "marcher",
+        "tr": "yürümek"
       }
     ],
     "inlineVocabulary": [
@@ -1124,77 +1784,132 @@
         "sk": "kancelária",
         "ru": "офис",
         "pl": "biuro",
-        "hu": "iroda"
+        "hu": "iroda",
+        "en": "office",
+        "ro": "Birou",
+        "it": "Ufficio",
+        "fr": "Bureau",
+        "tr": "Ofis"
       },
       {
         "de": "sofort",
         "sk": "hneď, okamžite",
         "ru": "сразу",
         "pl": "od razu",
-        "hu": "azonnal"
+        "hu": "azonnal",
+        "en": "immediately",
+        "ro": "imediat",
+        "it": "immediatamente",
+        "fr": "immédiatement",
+        "tr": "hemen"
       },
       {
         "de": "zu Fuß",
         "sk": "pešo",
         "ru": "пешком",
         "pl": "pieszo",
-        "hu": "gyalog"
+        "hu": "gyalog",
+        "en": "on foot",
+        "ro": "pe jos",
+        "it": "a piedi",
+        "fr": "à pied",
+        "tr": "yürüyerek"
       },
       {
         "de": "Fahrrad",
         "sk": "bicykel",
         "ru": "велосипед",
         "pl": "rower",
-        "hu": "kerékpár"
+        "hu": "kerékpár",
+        "en": "bicycle",
+        "ro": "Bicicleta",
+        "it": "Bicicletta",
+        "fr": "Vélo",
+        "tr": "Bisiklet"
       },
       {
         "de": "Bank",
         "sk": "lavička",
         "ru": "скамейка",
         "pl": "ławka",
-        "hu": "pad"
+        "hu": "pad",
+        "en": "bench",
+        "ro": "bancar",
+        "it": "banca",
+        "fr": "banque",
+        "tr": "banka"
       },
       {
         "de": "setzt sich",
         "sk": "sadá si",
         "ru": "он садится",
         "pl": "on siada",
-        "hu": "leül"
+        "hu": "leül",
+        "en": "sits down",
+        "ro": "se aseaza",
+        "it": "si siede",
+        "fr": "s'assoit",
+        "tr": "oturur"
       },
       {
         "de": "schaut",
         "sk": "pozerá",
         "ru": "смотрит",
         "pl": "ogląda",
-        "hu": "figyel"
+        "hu": "figyel",
+        "en": "looks",
+        "ro": "arata",
+        "it": "sembra",
+        "fr": "regarde",
+        "tr": "görünüyor"
       },
       {
         "de": "Vögel",
         "sk": "vtáky",
         "ru": "птицы",
         "pl": "ptaki",
-        "hu": "madarak"
+        "hu": "madarak",
+        "en": "birds",
+        "ro": "Păsări",
+        "it": "Uccelli",
+        "fr": "Oiseaux",
+        "tr": "Kuşlar"
       },
       {
         "de": "Bäumen",
         "sk": "stromoch",
         "ru": "деревья",
         "pl": "drzewa",
-        "hu": "fák"
+        "hu": "fák",
+        "en": "trees",
+        "ro": "copaci",
+        "it": "alberi",
+        "fr": "arbres",
+        "tr": "ağaçlar"
       },
       {
         "de": "Nachricht",
         "sk": "správa",
         "ru": "сообщение",
         "pl": "wiadomość",
-        "hu": "üzenetet"
+        "hu": "üzenetet",
+        "en": "message",
+        "ro": "Ştiri",
+        "it": "Notizia",
+        "fr": "Nouvelles",
+        "tr": "Haberler"
       },
       {
         "de": "lächelt",
         "sk": "usmieva sa",
         "ru": "он улыбается",
         "pl": "uśmiecha się",
-        "hu": "elmosolyodik"
+        "hu": "elmosolyodik",
+        "en": "smiles",
+        "ro": "zâmbește",
+        "it": "sorrisi",
+        "fr": "des sourires",
+        "tr": "gülümsüyor"
       }
     ],
     "questions": [
@@ -1234,28 +1949,48 @@
         "sk": "chladnička",
         "ru": "холодильник",
         "pl": "lodówka",
-        "hu": "hűtőszekrény"
+        "hu": "hűtőszekrény",
+        "en": "refrigerator",
+        "ro": "frigiderul",
+        "it": "il frigorifero",
+        "fr": "le réfrigérateur",
+        "tr": "buzdolabı"
       },
       {
         "de": "der Honig",
         "sk": "med",
         "ru": "мёд",
         "pl": "miód",
-        "hu": "méz"
+        "hu": "méz",
+        "en": "honey",
+        "ro": "mierea",
+        "it": "il miele",
+        "fr": "le miel",
+        "tr": "bal"
       },
       {
         "de": "spazieren gehen",
         "sk": "ísť sa prejsť",
         "ru": "пойти на прогулку",
         "pl": "idź na spacer",
-        "hu": "menj sétálni"
+        "hu": "menj sétálni",
+        "en": "to go for a walk",
+        "ro": "mergi la plimbare",
+        "it": "andare a fare una passeggiata",
+        "fr": "flâner",
+        "tr": "yürüyüşe çıkmak"
       },
       {
         "de": "einfach",
         "sk": "jednoduchý",
         "ru": "простой",
         "pl": "proste",
-        "hu": "egyszerű"
+        "hu": "egyszerű",
+        "en": "simple",
+        "ro": "pur şi simplu",
+        "it": "semplicemente",
+        "fr": "simplement",
+        "tr": "basitçe"
       }
     ],
     "inlineVocabulary": [
@@ -1264,77 +1999,132 @@
         "sk": "sobota",
         "ru": "Суббота",
         "pl": "sobota",
-        "hu": "szombat"
+        "hu": "szombat",
+        "en": "Saturday",
+        "ro": "sâmbătă",
+        "it": "Sabato",
+        "fr": "Samedi",
+        "tr": "Cumartesi"
       },
       {
         "de": "Bett",
         "sk": "posteľ",
         "ru": "кровать",
         "pl": "łóżko",
-        "hu": "ágy"
+        "hu": "ágy",
+        "en": "bed",
+        "ro": "Pat",
+        "it": "Letto",
+        "fr": "Lit",
+        "tr": "Yatak"
       },
       {
         "de": "Küche",
         "sk": "kuchyňa",
         "ru": "кухня",
         "pl": "kuchnia",
-        "hu": "a konyha"
+        "hu": "a konyha",
+        "en": "kitchen",
+        "ro": "Bucătărie",
+        "it": "Cucina",
+        "fr": "Cuisine",
+        "tr": "Mutfak"
       },
       {
         "de": "Hunger",
         "sk": "hlad",
         "ru": "голод",
         "pl": "głód",
-        "hu": "éhség"
+        "hu": "éhség",
+        "en": "hunger",
+        "ro": "foame",
+        "it": "fame",
+        "fr": "faim",
+        "tr": "açlık"
       },
       {
         "de": "nichts",
         "sk": "nič",
         "ru": "ничего",
         "pl": "nic",
-        "hu": "semmi"
+        "hu": "semmi",
+        "en": "nothing",
+        "ro": "nimic",
+        "it": "Niente",
+        "fr": "rien",
+        "tr": "Hiçbir şey"
       },
       {
         "de": "schneidet",
         "sk": "krája",
         "ru": "порезы",
         "pl": "cięcia",
-        "hu": "vágások"
+        "hu": "vágások",
+        "en": "cuts",
+        "ro": "tăieturi",
+        "it": "tagli",
+        "fr": "coupes",
+        "tr": "kesikler"
       },
       {
         "de": "mischt",
         "sk": "mieša",
         "ru": "шевелится",
         "pl": "porusza",
-        "hu": "kavar"
+        "hu": "kavar",
+        "en": "mixes",
+        "ro": "amestecuri",
+        "it": "miscele",
+        "fr": "mélanges",
+        "tr": "karışımlar"
       },
       {
         "de": "Fenster",
         "sk": "okno",
         "ru": "окно",
         "pl": "okno",
-        "hu": "ablakot"
+        "hu": "ablakot",
+        "en": "window",
+        "ro": "Fereastră",
+        "it": "Finestra",
+        "fr": "Fenêtre",
+        "tr": "Pencere"
       },
       {
         "de": "Draußen",
         "sk": "vonku",
         "ru": "снаружи",
         "pl": "na zewnątrz",
-        "hu": "kívül"
+        "hu": "kívül",
+        "en": "outside",
+        "ro": "Exterior",
+        "it": "Al di fuori",
+        "fr": "Dehors",
+        "tr": "Dıştan"
       },
       {
         "de": "später",
         "sk": "neskôr",
         "ru": "позже",
         "pl": "później",
-        "hu": "később"
+        "hu": "később",
+        "en": "later",
+        "ro": "mai târziu",
+        "it": "Dopo",
+        "fr": "plus tard",
+        "tr": "Daha sonra"
       },
       {
         "de": "einkaufen gehen",
         "sk": "ísť nakupovať",
         "ru": "пойти по магазинам",
         "pl": "iść na zakupy",
-        "hu": "menni vásárolni"
+        "hu": "menni vásárolni",
+        "en": "to go shopping",
+        "ro": "mergi la cumparaturi",
+        "it": "andare a fare shopping",
+        "fr": "faire du shopping",
+        "tr": "alışverişe gitmek"
       }
     ],
     "questions": [
@@ -1376,35 +2166,60 @@
         "sk": "výhodný, lacný",
         "ru": "удобно, дешево",
         "pl": "wygodne, tanie",
-        "hu": "kényelmes, olcsó"
+        "hu": "kényelmes, olcsó",
+        "en": "cheap / good value",
+        "ro": "ieftin",
+        "it": "economico",
+        "fr": "bon marché",
+        "tr": "ucuz"
       },
       {
         "de": "die Qualität",
         "sk": "kvalita",
         "ru": "качество",
         "pl": "jakość",
-        "hu": "minőség"
+        "hu": "minőség",
+        "en": "quality",
+        "ro": "calitatea",
+        "it": "la qualità",
+        "fr": "la qualité",
+        "tr": "kalite"
       },
       {
         "de": "die Bewertung",
         "sk": "hodnotenie, recenzia",
         "ru": "оценка, обзор",
         "pl": "ocena, recenzja",
-        "hu": "értékelés, áttekintés"
+        "hu": "értékelés, áttekintés",
+        "en": "rating / review",
+        "ro": "evaluarea",
+        "it": "la valutazione",
+        "fr": "l'évaluation",
+        "tr": "değerlendirme"
       },
       {
         "de": "die Lieferung",
         "sk": "doručenie",
         "ru": "доставка",
         "pl": "dostawa",
-        "hu": "szállítás"
+        "hu": "szállítás",
+        "en": "delivery",
+        "ro": "livrarea",
+        "it": "la consegna",
+        "fr": "la livraison",
+        "tr": "teslimat"
       },
       {
         "de": "das Paket",
         "sk": "balík",
         "ru": "пакет",
         "pl": "pakiet",
-        "hu": "csomagot"
+        "hu": "csomagot",
+        "en": "package",
+        "ro": "pachetul",
+        "it": "il pacchetto",
+        "fr": "le paquet",
+        "tr": "paket"
       }
     ],
     "inlineVocabulary": [
@@ -1413,84 +2228,144 @@
         "sk": "slúchadlá",
         "ru": "наушники",
         "pl": "słuchawki",
-        "hu": "fejhallgató"
+        "hu": "fejhallgató",
+        "en": "headphones",
+        "ro": "căștile",
+        "it": "cuffie",
+        "fr": "écouteurs",
+        "tr": "kulaklıklar"
       },
       {
         "de": "ausgeben",
         "sk": "minúť",
         "ru": "потратить",
         "pl": "wydać",
-        "hu": "költeni"
+        "hu": "költeni",
+        "en": "to spend",
+        "ro": "petrece",
+        "it": "trascorrere",
+        "fr": "dépenser",
+        "tr": "harcamak"
       },
       {
         "de": "empfohlen",
         "sk": "odporučil",
         "ru": "он рекомендовал",
         "pl": "– polecił",
-        "hu": "– ajánlotta"
+        "hu": "– ajánlotta",
+        "en": "recommended",
+        "ro": "recomandat",
+        "it": "raccomandato",
+        "fr": "recommandé",
+        "tr": "tavsiye edilen"
       },
       {
         "de": "Kleidung",
         "sk": "oblečenie",
         "ru": "одежда",
         "pl": "odzież",
-        "hu": "ruházat"
+        "hu": "ruházat",
+        "en": "clothing",
+        "ro": "Îmbrăcăminte",
+        "it": "Vestiario",
+        "fr": "Vêtements",
+        "tr": "Giyim"
       },
       {
         "de": "Küchenartikel",
         "sk": "kuchynské potreby",
         "ru": "кухонная утварь",
         "pl": "przybory kuchenne",
-        "hu": "konyhai eszközök"
+        "hu": "konyhai eszközök",
+        "en": "kitchen items",
+        "ro": "Articole de bucătărie",
+        "it": "Articoli da cucina",
+        "fr": "Articles de cuisine",
+        "tr": "Mutfak eşyaları"
       },
       {
         "de": "Wohnung",
         "sk": "byt",
         "ru": "квартира",
         "pl": "mieszkanie",
-        "hu": "lakás"
+        "hu": "lakás",
+        "en": "apartment",
+        "ro": "Apartament",
+        "it": "Appartamento",
+        "fr": "Appartement",
+        "tr": "Daire"
       },
       {
         "de": "skeptisch",
         "sk": "skeptický",
         "ru": "скептический",
         "pl": "sceptyczny",
-        "hu": "szkeptikus"
+        "hu": "szkeptikus",
+        "en": "skeptical",
+        "ro": "sceptic",
+        "it": "scettico",
+        "fr": "sceptique",
+        "tr": "şüpheci"
       },
       {
         "de": "nickt",
         "sk": "prikývne",
         "ru": "кивает",
         "pl": "kiwa głową",
-        "hu": "bólogat"
+        "hu": "bólogat",
+        "en": "nods",
+        "ro": "dă din cap",
+        "it": "annuisce",
+        "fr": "hoche la tête",
+        "tr": "başını salladı"
       },
       {
         "de": "bestellt",
         "sk": "objednal / objednáva",
         "ru": "заказал/заказывает",
         "pl": "zamówił/zamawia",
-        "hu": "megrendelt / rendel"
+        "hu": "megrendelt / rendel",
+        "en": "ordered / orders",
+        "ro": "ordonat",
+        "it": "ordinato",
+        "fr": "ordonné",
+        "tr": "sipariş edildi"
       },
       {
         "de": "Handyhülle",
         "sk": "obal na mobil",
         "ru": "чехол для мобильного телефона",
         "pl": "etui na telefon komórkowy",
-        "hu": "mobiltelefon tok"
+        "hu": "mobiltelefon tok",
+        "en": "phone case",
+        "ro": "Husa pentru telefon mobil",
+        "it": "Custodia per cellulare",
+        "fr": "Étui pour téléphone portable",
+        "tr": "Cep telefonu kılıfı"
       },
       {
         "de": "neugierig",
         "sk": "zvedavý",
         "ru": "любопытный",
         "pl": "ciekawy",
-        "hu": "kíváncsi"
+        "hu": "kíváncsi",
+        "en": "curious",
+        "ro": "curios",
+        "it": "curioso",
+        "fr": "curieux",
+        "tr": "meraklı"
       },
       {
         "de": "zufrieden",
         "sk": "spokojný",
         "ru": "удовлетворен",
         "pl": "zadowolony",
-        "hu": "elégedett"
+        "hu": "elégedett",
+        "en": "satisfied",
+        "ro": "multumit",
+        "it": "soddisfatto",
+        "fr": "satisfait",
+        "tr": "memnun"
       }
     ],
     "questions": [

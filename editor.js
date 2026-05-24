@@ -582,12 +582,53 @@ function getPromptText() {
 }
 
 function getArticleJsonPromptInstructions(level) {
+  const isEnglish = getUiLanguage() === "en";
   const vocabularyExample = `{\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",${VOCABULARY_LANGUAGE_CODES
     .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
     .join(",")}}`;
   const inlineVocabularyExample = `{\"de\":\"presný súvislý úsek skopírovaný z textu článku\",\"base\":\"základný tvar\",${VOCABULARY_LANGUAGE_CODES
     .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
     .join(",")}}`;
+
+  if (isEnglish) {
+    const englishVocabularyExample = `{\"de\":\"word or phrase from the text\",\"base\":\"dictionary form\",${VOCABULARY_LANGUAGE_CODES
+      .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.label || code} translation\"`)
+      .join(",")}}`;
+    const englishInlineVocabularyExample = `{\"de\":\"exact continuous passage copied from the article text\",\"base\":\"dictionary form\",${VOCABULARY_LANGUAGE_CODES
+      .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.label || code} translation\"`)
+      .join(",")}}`;
+
+    return [
+      "",
+      "JSON schema:",
+      "{",
+      "  \"title\": \"German article title\",",
+      `  \"level\": \"${level}\",`,
+      "  \"category\": \"category or topic\",",
+      `  \"categoryLabels\": {\"category or topic name\":{\"${Object.keys(NATIVE_LANGUAGES).join("\":\"translation\", \"")}\":\"translation\"}},`,
+      "  \"summary\": \"short German article description\",",
+      "  \"text\": [\"paragraph 1\", \"paragraph 2\", \"paragraph 3\", \"paragraph 4\"],",
+      "  \"vocabulary\": [",
+      `    ${englishVocabularyExample}`,
+      "  ],",
+      "  \"inlineVocabulary\": [",
+      `    ${englishInlineVocabularyExample}`,
+      "  ],",
+      "  \"questions\": [",
+      "    {\"statement\":\"German true/false sentence\",\"answer\":true}",
+      "  ]",
+      "}",
+      "",
+      "Use the pasted text below exactly as it is. Do not rewrite it, shorten it, or change the length.",
+      "Split the text into the \"text\" array by paragraphs.",
+      `Add exactly 5 German words or phrases to \"vocabulary\" that fit level ${level} and are typically not already lower-level words. They must appear naturally in the text and should be useful new vocabulary for this level.`,
+      "Add 8 to 12 items to \"inlineVocabulary\": they may be individual words, short phrases, fixed expressions, or interesting expressions that may be unfamiliar to the student. The \"de\" value must be an exact continuous passage copied from the article text in the same form, word order, case, and tense. Do not use dictionary forms or infinitive paraphrases unless they appear exactly like that in the text. Repeat items from \"vocabulary\", but in the form in which they appear in the text.",
+      "Add 6 to 8 German true/false statements to \"questions\" with a mix of true and false answers. The answers must not follow a regular true/false/true/false or false/true/false/true pattern; the order should feel natural and may include two identical answers in a row.",
+      `Add translations for every category or topic to \"categoryLabels\" for all languages: ${Object.keys(NATIVE_LANGUAGES).join(", ")}. The object key must exactly match the value in \"category\"; if multiple categories are separated by |, add each one separately.`,
+      `All vocabulary and inlineVocabulary items must have these keys: de, base, ${VOCABULARY_LANGUAGE_CODES.join(", ")}.`,
+      "For \"base\", use the dictionary form: for a noun, include the definite article and nominative singular, for example \"der Mann\"; for a verb, use the infinitive, for example \"gehen\"; for an adjective, use the base form, for example \"freundlich\". If \"de\" is already the base form or is a whole phrase, \"base\" may be the same as \"de\"."
+    ];
+  }
 
   return [
     "",
@@ -637,6 +678,22 @@ function buildArticlePrompt() {
   const category = getArticleEditorCategory();
   const requiredWords = getArticleRequiredWords();
   const range = getSelectedArticleLengthRange();
+  const isEnglish = getUiLanguage() === "en";
+
+  if (isEnglish) {
+    return [
+      `Write a German story or article at level ${level}.`,
+      category ? `Category/topic: ${category}.` : "",
+      topic ? `Specific brief: ${topic}` : "",
+      requiredWords.length
+        ? `Use these German words or phrases naturally: ${requiredWords.join(", ")}.`
+        : "",
+      `Length: ${range.min} to ${range.max} words.`,
+      "The content must include at least one natural dialogue in German, for example 2 to 4 lines between characters.",
+      "The story can be practical, interesting, or gently funny.",
+      "Return only the finished German content. Do not write JSON, vocabulary, questions, or explanations."
+    ].filter(Boolean).join("\n");
+  }
 
   return [
     `Napíš nemecký príbeh alebo článok na úrovni ${level}.`,
@@ -658,8 +715,25 @@ function buildArticleJsonPrompt() {
   const category = getArticleEditorCategory();
   const title = $("articleTitleInput").value.trim();
   const summary = $("articleSummaryInput").value.trim();
+  const isEnglish = getUiLanguage() === "en";
 
   addRequiredWordsToVocabulary();
+
+  if (isEnglish) {
+    return [
+      "Convert this finished German text into JSON for the reading app.",
+      "Important: use the pasted text exactly. Do not rewrite it, shorten it, expand it, or change the wording.",
+      title ? `Use this title if it fits: ${title}` : "Create a short German title.",
+      summary ? `Use this short description if it fits: ${summary}` : "Create a short German description.",
+      category ? `Category: ${category}.` : "",
+      ...getArticleJsonPromptInstructions(level),
+      "",
+      text
+        ? "Finished German text:"
+        : "The finished German text is your last answer in this chat. Use exactly that last German answer.",
+      text
+    ].filter(Boolean).join("\n");
+  }
 
   return [
     "Premeň tento hotový nemecký text na JSON pre čítankovú appku.",
