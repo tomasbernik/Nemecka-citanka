@@ -327,6 +327,14 @@ function getSelectedArticleText() {
   return input.value.slice(input.selectionStart, input.selectionEnd).trim();
 }
 
+function collapseArticleTextSelection(position = $("articleTextInput")?.selectionEnd || 0) {
+  const input = $("articleTextInput");
+  if (!input) return;
+  const safePosition = Math.max(0, Math.min(position, input.value.length));
+  input.setSelectionRange(safePosition, safePosition);
+  resetArticleTextSelectionAnchor();
+}
+
 function isArticleTextWordChar(character) {
   return /[\p{L}\p{N}_'-]/u.test(character || "");
 }
@@ -557,6 +565,8 @@ function isSelectionCoveredByInlineVocabulary(selected) {
 }
 
 function addSelectedTextToVocabulary(addToVocabulary) {
+  const input = $("articleTextInput");
+  const selectionEnd = input?.selectionEnd || 0;
   const selected = getSelectedArticleText();
   if (!selected) {
     $("articleEditorStatus").textContent = t("selectWordFirst");
@@ -564,6 +574,7 @@ function addSelectedTextToVocabulary(addToVocabulary) {
   }
 
   if (isSelectionCoveredByInlineVocabulary(selected)) {
+    collapseArticleTextSelection(selectionEnd);
     $("articleEditorStatus").textContent = t("selectionAlreadyInline");
     return;
   }
@@ -572,6 +583,10 @@ function addSelectedTextToVocabulary(addToVocabulary) {
   const inlineAdded = addManualInlineVocabularyItem(selected);
   const vocabAdded = addToVocabulary ? appendUniqueLine("articleVocabularyInput", line) : false;
   if (inlineAdded) $("articleInlineVocabularyInput").dataset.manual = "true";
+  if (inlineAdded || vocabAdded) {
+    renderArticleInlineHighlightPreview();
+  }
+  collapseArticleTextSelection(selectionEnd);
   $("articleEditorStatus").textContent = inlineAdded || vocabAdded
     ? t("selectedAdded")
     : t("expressionExists");
@@ -1080,13 +1095,16 @@ function updateArticleCategoryMode() {
   $("articleNewCategoryWrap").classList.toggle("hidden", !isNewCategory);
   const isNewCategory2 = $("articleCategory2Select")?.value === NEW_CATEGORY_VALUE;
   $("articleNewCategory2Wrap")?.classList.toggle("hidden", !isNewCategory2);
-  $("articleCategoryTranslations")?.classList.toggle("hidden", !isNewCategory);
-  $("articleCategory2Translations")?.classList.toggle("hidden", !isNewCategory2);
-  if (isNewCategory) {
+  const isEditingArticle = Boolean($("articleEditorSelect")?.value);
+  const showCategoryTranslations = isNewCategory && isEditingArticle;
+  const showCategory2Translations = isNewCategory2 && isEditingArticle;
+  $("articleCategoryTranslations")?.classList.toggle("hidden", !showCategoryTranslations);
+  $("articleCategory2Translations")?.classList.toggle("hidden", !showCategory2Translations);
+  if (showCategoryTranslations) {
     const category = $("articleCategoryInput").value.trim();
     renderCategoryTranslationInputs("articleCategoryTranslations", category, state.editorCategoryLabels?.[category] || getEmptyCategoryLabels(category));
   }
-  if (isNewCategory2) {
+  if (showCategory2Translations) {
     const category = $("articleCategory2Input").value.trim();
     renderCategoryTranslationInputs("articleCategory2Translations", category, state.editorCategoryLabels?.[category] || getEmptyCategoryLabels(category));
   }
@@ -1124,7 +1142,7 @@ function updateArticleEditorFlow() {
   $("inlineTranslationActions").classList.toggle("hidden", !showInlineVocabularyEditor);
   $("articleInlineVocabularyWrap").classList.toggle("hidden", !showInlineVocabularyEditor);
   $("saveArticleBtn").classList.toggle("hidden", !(hasQuestions && hasVocabulary));
-  $("deleteArticleBtn").classList.toggle("hidden", !(selectedArticle && isAdminProfile()));
+  $("deleteArticleBtn").classList.toggle("hidden", !(selectedArticle && canDeleteArticle(selectedArticle)));
   renderArticleInlineHighlightPreview();
 }
 
@@ -1279,7 +1297,7 @@ async function saveArticleFromEditor() {
 
 async function deleteArticleFromEditor() {
   const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
-  if (!article || !isAdminProfile()) return;
+  if (!article || !canDeleteArticle(article)) return;
   if (!confirm(t("confirmDeleteArticle"))) return;
 
   try {

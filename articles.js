@@ -250,6 +250,10 @@ function canEditArticle(article, profile = state.currentProfile) {
   return isAdminProfile(profile) || article.ownerProfileId === profile.id;
 }
 
+function canDeleteArticle(article, profile = state.currentProfile) {
+  return canEditArticle(article, profile);
+}
+
 function getEditableArticles() {
   if (!state.currentProfile) return [];
   return state.articles.filter(article => canEditArticle(article));
