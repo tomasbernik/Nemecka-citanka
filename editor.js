@@ -406,14 +406,20 @@ function updateInlineSelectionButton() {
 
   const point = getTextareaSelectionPoint(input, selection.end);
   const editorRect = editor.getBoundingClientRect();
+  button.classList.remove("hidden");
   const buttonWidth = button.offsetWidth || 180;
   const buttonHeight = button.offsetHeight || 42;
+  const inputStyle = getComputedStyle(input);
+  const lineHeight = Number.parseFloat(inputStyle.lineHeight) || Number.parseFloat(inputStyle.fontSize) * 1.45 || 24;
   const left = Math.max(8, Math.min(point.left - editorRect.left - buttonWidth / 2, editor.clientWidth - buttonWidth - 8));
-  const top = Math.max(8, Math.min(point.top - editorRect.top - buttonHeight - 10, editor.clientHeight - buttonHeight - 8));
+  const belowTop = point.top - editorRect.top + lineHeight + 14;
+  const aboveTop = point.top - editorRect.top - buttonHeight - 72;
+  const top = belowTop + buttonHeight <= editor.clientHeight - 8
+    ? belowTop
+    : Math.max(8, aboveTop);
 
   button.style.left = `${left}px`;
-  button.style.top = `${top}px`;
-  button.classList.remove("hidden");
+  button.style.top = `${Math.max(8, Math.min(top, editor.clientHeight - buttonHeight - 8))}px`;
 }
 
 function isArticleTextWordChar(character) {
