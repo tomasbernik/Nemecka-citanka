@@ -6,6 +6,7 @@ function showHome() {
   showView("homeView");
   renderHomeAssignments();
   renderClickedReview();
+  renderArticleLanguageFilters();
   renderCategories();
   renderLevelFilters();
   renderArticles();

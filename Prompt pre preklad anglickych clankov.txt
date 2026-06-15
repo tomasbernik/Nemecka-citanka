@@ -16,6 +16,7 @@ Preklad:
 - Dialógy nech znejú prirodzene.
 - Zachovaj odseky a poradie viet, pokiaľ je to možné.
 - Zachovaj zámerné opakovanie slov a fráz, pretože slúžia na učenie.
+- Uprednostni prirodzenú angličtinu vhodnú pre študentov na úrovni B1 pred doslovným prekladom, ale zachovaj rovnaké udalosti v príbehu a zámerné opakovanie učebných slov a fráz.
 
 Vocabulary:
 - Nevychádzaj mechanicky z pôvodného nemeckého zoznamu slovíčok.

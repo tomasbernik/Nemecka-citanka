@@ -16,6 +16,8 @@ function getInlineVocabulary(article) {
 function normalizeArticle(article) {
   return {
     ...article,
+    language: article.language || "de",
+    variantGroupId: article.variantGroupId || article.variant_group_id || article.id,
     ownerProfileId: article.ownerProfileId || article.owner_profile_id || null,
     teacherGroupId: article.teacherGroupId || article.teacher_group_id || null,
     categoryLabels: article.categoryLabels || article.category_labels || {},
@@ -29,6 +31,8 @@ function articleToRow(article, options = {}) {
   const normalized = normalizeArticle(article);
   const row = {
     id: normalized.id,
+    language: normalized.language,
+    variant_group_id: normalized.variantGroupId,
     owner_profile_id: normalized.ownerProfileId,
     teacher_group_id: normalized.teacherGroupId,
     visibility: normalized.visibility,

@@ -4,6 +4,7 @@ const state = {
   preLoginLanguage: DEFAULT_PRELOGIN_LANGUAGE,
   selectedCategory: ALL_CATEGORIES,
   selectedLevel: ALL_LEVELS,
+  selectedArticleLanguage: localStorage.getItem(ARTICLE_LANGUAGE_KEY) || DEFAULT_ARTICLE_LANGUAGE,
   currentArticle: null,
   activePracticeGroup: "vocab",
   currentProfile: null,

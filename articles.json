@@ -1,6 +1,8 @@
 [
   {
     "id": "reise-suedspanien",
+    "language": "de",
+    "variantGroupId": "reise-suedspanien",
     "title": "Eine Reise nach Südspanien",
     "level": "B1",
     "category": "Cestovanie",
@@ -390,6 +392,8 @@
   },
   {
     "id": "paris-ein-tag",
+    "language": "de",
+    "variantGroupId": "paris-ein-tag",
     "title": "Ein Tag in Paris",
     "level": "B1",
     "category": "Cestovanie",
@@ -828,6 +832,8 @@
   },
   {
     "id": "garten-nachmittag-kika",
+    "language": "de",
+    "variantGroupId": "garten-nachmittag-kika",
     "title": "Ein Nachmittag im Garten",
     "level": "A2-B1",
     "category": "Voľný čas",
@@ -1292,6 +1298,8 @@
   },
   {
     "id": "nachmittag-baggersee-tomas",
+    "language": "de",
+    "variantGroupId": "nachmittag-baggersee-tomas",
     "title": "Ein sonniger Nachmittag mit Tomas",
     "level": "A2-B1",
     "category": "Voľný čas",
@@ -1706,6 +1714,8 @@
   },
   {
     "id": "spaziergang-am-see",
+    "language": "de",
+    "variantGroupId": "spaziergang-am-see",
     "title": "Ein Spaziergang am See",
     "level": "A2",
     "category": "Každodenný život",
@@ -1933,6 +1943,8 @@
   },
   {
     "id": "kleines-fruehstueck",
+    "language": "de",
+    "variantGroupId": "kleines-fruehstueck",
     "title": "Ein kleines Frühstück",
     "level": "A2",
     "category": "Jedlo",
@@ -2148,6 +2160,8 @@
   },
   {
     "id": "einkaufen-bei-temu",
+    "language": "de",
+    "variantGroupId": "einkaufen-bei-temu",
     "title": "Einkaufen bei Temu",
     "level": "B1",
     "category": "Nakupovanie",
@@ -2390,6 +2404,7 @@
   {
     "id": "en-a-very-big-breakfast-on-saturday",
     "language": "en",
+    "variantGroupId": "ein-sehr-gro-es-fruhstuck-am-samstag",
     "title": "A Very Big Breakfast on Saturday",
     "level": "B1",
     "category": "Jedlo",
@@ -2676,6 +2691,285 @@
       {
         "statement": "After breakfast, Tomas went outside and had coffee and fresh air.",
         "answer": true
+      }
+    ]
+  },
+  {
+    "id": "en-the-vanished-server",
+    "language": "en",
+    "variantGroupId": "der-verschwundene-server",
+    "title": "The Vanished Server",
+    "level": "C1",
+    "category": "Arbeitswelt",
+    "categoryLabels": {
+      "Arbeitswelt": {
+        "sk": "Pracovný svet",
+        "ru": "Рабочая среда",
+        "pl": "Świat pracy",
+        "hu": "Munka világa",
+        "ro": "Lumea muncii",
+        "it": "Mondo del lavoro",
+        "en": "Working life",
+        "fr": "Monde du travail",
+        "tr": "İş dünyası"
+      }
+    },
+    "summary": "A mysterious incident at the TechSolutions office makes everyone nervous and leads to an unexpected twist.",
+    "image": {
+      "alt": "The Vanished Server",
+      "desktop": "https://yeqxqwbjlhcwiikrmynl.supabase.co/storage/v1/object/public/article-images/der-verschwundene-server.jpg"
+    },
+    "text": [
+      "At the office of TechSolutions GmbH, Tuesday morning was unusually quiet. Normally, by eight o'clock, you could already hear frantic phone calls, keyboards rattling, and the coffee machine working without a break. But that morning, most employees were staring nervously at their screens.",
+      "“This cannot be happening,” Jonas muttered, running a hand through his hair. “The entire customer server has vanished.”",
+      "His colleague Miriam turned to him immediately. “Sorry, what? Vanished? A server does not simply vanish.”",
+      "Jonas pointed at the monitor. All the files for an important project were suddenly no longer accessible. Of all days, this happened on the day when a major client from Munich was supposed to visit.",
+      "Mrs. Schneider, the team leader, walked quickly into the open-plan office. “Please tell me this is only a technical fault.”",
+      "Nobody answered. All they could hear was the soft hum of the air conditioning.",
+      "Miriam stood up. “Maybe something was accidentally deleted. I will check the backups.”",
+      "Meanwhile, Jonas began to analyse the access logs. After a few minutes, he frowned. “Strange … someone logged in yesterday evening at 11:47 p.m.”",
+      "“Who is still working here at that time?” Mrs. Schneider asked suspiciously.",
+      "At that moment, the office door opened, and Mr. Becker from accounting walked in. As usual, he was wearing his perfectly ironed suit and a friendly smile. “Good morning, everyone. Why do you all look so tense?”",
+      "Jonas and Miriam exchanged a brief glance.",
+      "“Mr. Becker,” Miriam said slowly, “were you still in the office last night?”",
+      "The accountant stopped abruptly. “Um … yes. I still had a few invoices to deal with.”",
+      "Jonas pointed at the screen. “Interesting. Because the server was accessed with your access code.”",
+      "For a moment, the room became completely silent. Even the coffee machine seemed to have stopped working.",
+      "Then Mr. Becker suddenly burst out laughing.",
+      "“Relax,” he said with a grin. “I only carried out a security drill. The boss wanted to test how quickly you would react to an emergency.”",
+      "Mrs. Schneider folded her arms. “Mr. Becker,” she said dryly, “if we survive this, you will make coffee for the whole office for a month.”"
+    ],
+    "vocabulary": [
+      {
+        "de": "the access logs",
+        "base": "the access logs",
+        "sk": "prístupové protokoly",
+        "ru": "журналы доступа",
+        "pl": "dzienniki dostępu",
+        "hu": "hozzáférési naplók",
+        "en": "records showing who entered a system and when",
+        "ro": "jurnalele de acces",
+        "it": "i registri di accesso",
+        "fr": "les journaux d'accès",
+        "tr": "erişim günlükleri"
+      },
+      {
+        "de": "suspiciously",
+        "base": "suspiciously",
+        "sk": "podozrievavo",
+        "ru": "подозрительно",
+        "pl": "podejrzliwie",
+        "hu": "gyanakvóan",
+        "en": "in a way that shows you do not fully trust something",
+        "ro": "suspicios",
+        "it": "con sospetto",
+        "fr": "avec méfiance",
+        "tr": "şüpheyle"
+      },
+      {
+        "de": "accidentally deleted",
+        "base": "accidentally deleted",
+        "sk": "omylom vymazané",
+        "ru": "случайно удалено",
+        "pl": "przypadkowo usunięte",
+        "hu": "véletlenül törölve",
+        "en": "removed by mistake",
+        "ro": "șters din greșeală",
+        "it": "cancellato per errore",
+        "fr": "supprimé par accident",
+        "tr": "yanlışlıkla silinmiş"
+      },
+      {
+        "de": "a security drill",
+        "base": "a security drill",
+        "sk": "bezpečnostné cvičenie",
+        "ru": "учение по безопасности",
+        "pl": "ćwiczenie bezpieczeństwa",
+        "hu": "biztonsági gyakorlat",
+        "en": "a practice test for a security problem",
+        "ro": "un exercițiu de securitate",
+        "it": "un'esercitazione di sicurezza",
+        "fr": "un exercice de sécurité",
+        "tr": "güvenlik tatbikatı"
+      },
+      {
+        "de": "the open-plan office",
+        "base": "the open-plan office",
+        "sk": "otvorená kancelária",
+        "ru": "офис открытого типа",
+        "pl": "biuro typu open space",
+        "hu": "nyitott iroda",
+        "en": "a large office without many separate rooms",
+        "ro": "biroul open-space",
+        "it": "l'ufficio open space",
+        "fr": "le bureau en open space",
+        "tr": "açık planlı ofis"
+      }
+    ],
+    "inlineVocabulary": [
+      {
+        "de": "unusually quiet",
+        "base": "unusually quiet",
+        "sk": "nezvyčajne tiché",
+        "ru": "необычно тихо",
+        "pl": "niezwykle cicho",
+        "hu": "szokatlanul csendes",
+        "en": "much quieter than normal",
+        "ro": "neobișnuit de liniștit",
+        "it": "insolitamente silenzioso",
+        "fr": "inhabituellement calme",
+        "tr": "alışılmadık derecede sessiz"
+      },
+      {
+        "de": "frantic phone calls",
+        "base": "frantic phone calls",
+        "sk": "hektické telefonáty",
+        "ru": "суетливые телефонные звонки",
+        "pl": "gorączkowe rozmowy telefoniczne",
+        "hu": "kapkodó telefonhívások",
+        "en": "phone calls made in a stressed and rushed way",
+        "ro": "apeluri telefonice agitate",
+        "it": "telefonate frenetiche",
+        "fr": "appels téléphoniques frénétiques",
+        "tr": "telaşlı telefon görüşmeleri"
+      },
+      {
+        "de": "no longer accessible",
+        "base": "no longer accessible",
+        "sk": "už nedostupné",
+        "ru": "больше недоступно",
+        "pl": "już niedostępne",
+        "hu": "már nem elérhető",
+        "en": "not possible to open or reach anymore",
+        "ro": "nu mai este accesibil",
+        "it": "non più accessibile",
+        "fr": "plus accessible",
+        "tr": "artık erişilemez"
+      },
+      {
+        "de": "the soft hum of the air conditioning",
+        "base": "the soft hum of the air conditioning",
+        "sk": "tiché hučanie klimatizácie",
+        "ru": "тихое гудение кондиционера",
+        "pl": "cichy szum klimatyzacji",
+        "hu": "a légkondicionáló halk zúgása",
+        "en": "the low, steady sound of the air conditioning",
+        "ro": "zumzetul ușor al aerului condiționat",
+        "it": "il lieve ronzio dell'aria condizionata",
+        "fr": "le léger bourdonnement de la climatisation",
+        "tr": "klimanın hafif uğultusu"
+      },
+      {
+        "de": "analyse the access logs",
+        "base": "analyse the access logs",
+        "sk": "analyzovať prístupové protokoly",
+        "ru": "анализировать журналы доступа",
+        "pl": "analizować dzienniki dostępu",
+        "hu": "elemezni a hozzáférési naplókat",
+        "en": "study records of system access",
+        "ro": "a analiza jurnalele de acces",
+        "it": "analizzare i registri di accesso",
+        "fr": "analyser les journaux d'accès",
+        "tr": "erişim günlüklerini analiz etmek"
+      },
+      {
+        "de": "perfectly ironed suit",
+        "base": "perfectly ironed suit",
+        "sk": "dokonale vyžehlený oblek",
+        "ru": "идеально выглаженный костюм",
+        "pl": "idealnie wyprasowany garnitur",
+        "hu": "tökéletesen vasalt öltöny",
+        "en": "a suit with no visible creases",
+        "ro": "costum perfect călcat",
+        "it": "abito perfettamente stirato",
+        "fr": "costume parfaitement repassé",
+        "tr": "mükemmel ütülenmiş takım elbise"
+      },
+      {
+        "de": "exchanged a brief glance",
+        "base": "exchanged a brief glance",
+        "sk": "vymenili si krátky pohľad",
+        "ru": "обменялись коротким взглядом",
+        "pl": "wymienili krótkie spojrzenie",
+        "hu": "rövid pillantást váltottak",
+        "en": "looked at each other quickly",
+        "ro": "au schimbat o privire scurtă",
+        "it": "si scambiarono una breve occhiata",
+        "fr": "ont échangé un bref regard",
+        "tr": "kısa bir bakıştılar"
+      },
+      {
+        "de": "accessed with your access code",
+        "base": "accessed with your access code",
+        "sk": "prístup bol cez váš prístupový kód",
+        "ru": "доступ был выполнен с вашим кодом доступа",
+        "pl": "uzyskano dostęp za pomocą twojego kodu",
+        "hu": "az ön hozzáférési kódjával léptek be",
+        "en": "opened or entered using your personal code",
+        "ro": "accesat cu codul tău de acces",
+        "it": "accesso con il tuo codice",
+        "fr": "consulté avec votre code d'accès",
+        "tr": "erişim kodunuzla erişildi"
+      },
+      {
+        "de": "burst out laughing",
+        "base": "burst out laughing",
+        "sk": "vybuchol do smiechu",
+        "ru": "рассмеялся",
+        "pl": "wybuchnął śmiechem",
+        "hu": "kitört belőle a nevetés",
+        "en": "suddenly started laughing loudly",
+        "ro": "a izbucnit în râs",
+        "it": "scoppiò a ridere",
+        "fr": "a éclaté de rire",
+        "tr": "kahkahaya boğuldu"
+      },
+      {
+        "de": "said dryly",
+        "base": "said dryly",
+        "sk": "povedala sucho",
+        "ru": "сказала сухо",
+        "pl": "powiedziała sucho",
+        "hu": "szárazon mondta",
+        "en": "said in a calm but slightly ironic way",
+        "ro": "a spus sec",
+        "it": "disse seccamente",
+        "fr": "dit-elle sèchement",
+        "tr": "kuru bir şekilde söyledi"
+      }
+    ],
+    "questions": [
+      {
+        "statement": "Tuesday morning at the office was unusually loud.",
+        "answer": false
+      },
+      {
+        "statement": "Jonas noticed that the entire customer server had vanished.",
+        "answer": true
+      },
+      {
+        "statement": "Miriam worked in accounting.",
+        "answer": false
+      },
+      {
+        "statement": "The files for an important project were no longer accessible.",
+        "answer": true
+      },
+      {
+        "statement": "Mr. Becker was the major client from Munich.",
+        "answer": false
+      },
+      {
+        "statement": "Someone had logged in at 11:47 p.m. the previous evening.",
+        "answer": true
+      },
+      {
+        "statement": "Mr. Becker said he had carried out a security drill.",
+        "answer": true
+      },
+      {
+        "statement": "Mrs. Schneider reacted with clear enthusiasm about the drill.",
+        "answer": false
       }
     ]
   }

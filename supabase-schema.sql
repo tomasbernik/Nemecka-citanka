@@ -68,6 +68,8 @@ create table if not exists public.app_profile_data (
 
 create table if not exists public.app_articles (
   id text primary key,
+  language text not null default 'de' check (language in ('de', 'en', 'sk', 'ru', 'pl', 'hu', 'ro', 'it', 'fr', 'tr')),
+  variant_group_id text,
   owner_profile_id text references public.app_profiles(id) on delete set null,
   teacher_group_id text,
   visibility text not null default 'public' check (visibility in ('private', 'public')),
@@ -217,6 +219,12 @@ alter table public.app_articles
 add column if not exists owner_profile_id text references public.app_profiles(id) on delete set null;
 
 alter table public.app_articles
+add column if not exists language text not null default 'de';
+
+alter table public.app_articles
+add column if not exists variant_group_id text;
+
+alter table public.app_articles
 add column if not exists teacher_group_id text;
 
 alter table public.app_articles
@@ -230,6 +238,24 @@ add column if not exists image jsonb;
 
 alter table public.app_articles
 add column if not exists category_labels jsonb not null default '{}'::jsonb;
+
+update public.app_articles
+set language = case
+  when id like 'en-%' then 'en'
+  else 'de'
+end
+where language is null
+  or language = ''
+  or (id like 'en-%' and language <> 'en');
+
+update public.app_articles
+set variant_group_id = case
+  when id = 'en-a-very-big-breakfast-on-saturday' then 'ein-sehr-gro-es-fruhstuck-am-samstag'
+  when id = 'en-the-vanished-server' then 'der-verschwundene-server'
+  else id
+end
+where variant_group_id is null
+  or variant_group_id = '';
 
 alter table public.app_events
 add column if not exists device_id text;
@@ -332,6 +358,14 @@ begin
     alter table public.app_articles
     add constraint app_articles_approval_status_check
     check (approval_status in ('draft', 'pending', 'approved', 'rejected'));
+  end if;
+
+  if not exists (
+    select 1 from pg_constraint where conname = 'app_articles_language_check'
+  ) then
+    alter table public.app_articles
+    add constraint app_articles_language_check
+    check (language in ('de', 'en', 'sk', 'ru', 'pl', 'hu', 'ro', 'it', 'fr', 'tr'));
   end if;
 end $$;
 

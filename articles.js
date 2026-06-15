@@ -22,6 +22,7 @@ async function loadArticles() {
     state.articles = mergeArticles(localArticles, cachedArticles).map(normalizeArticle);
   }
 
+  renderArticleLanguageFilters();
   renderCategories();
   renderLevelFilters();
   renderArticles();
@@ -205,6 +206,8 @@ async function saveCachedArticles(articles, language = getArticleCacheLanguage()
 function normalizeArticle(article) {
   return {
     ...article,
+    language: article.language || "de",
+    variantGroupId: article.variantGroupId || article.variant_group_id || getInferredArticleVariantGroupId(article),
     ownerProfileId: article.ownerProfileId || article.owner_profile_id || null,
     teacherGroupId: article.teacherGroupId || article.teacher_group_id || null,
     categoryLabels: article.categoryLabels || article.category_labels || {},
@@ -237,8 +240,30 @@ function getVisibleArticles() {
   return state.articles.filter(article => canViewArticle(article));
 }
 
+function getArticleLanguage(article) {
+  return ARTICLE_LANGUAGES[article?.language] ? article.language : DEFAULT_ARTICLE_LANGUAGE;
+}
+
+function getArticleLanguageLabel(language) {
+  return ARTICLE_LANGUAGES[language]?.label || String(language || "").toUpperCase();
+}
+
+function getInferredArticleVariantGroupId(article = {}) {
+  const id = article.id || "";
+  if (id === "en-a-very-big-breakfast-on-saturday") return "ein-sehr-gro-es-fruhstuck-am-samstag";
+  if (id === "en-the-vanished-server") return "der-verschwundene-server";
+  return id.replace(/^en-/, "");
+}
+
+function getSelectedArticleLanguage() {
+  return ARTICLE_LANGUAGES[state.selectedArticleLanguage]
+    ? state.selectedArticleLanguage
+    : DEFAULT_ARTICLE_LANGUAGE;
+}
+
 function getHomeArticles() {
-  return getVisibleArticles();
+  const language = getSelectedArticleLanguage();
+  return getVisibleArticles().filter(article => getArticleLanguage(article) === language);
 }
 
 function isAdminProfile(profile = state.currentProfile) {
@@ -269,6 +294,12 @@ function isMissingCategoryLabelsColumn(error) {
   return error?.message?.includes("category_labels");
 }
 
+function omitArticleRowColumns(row, columns) {
+  return Object.fromEntries(
+    Object.entries(row).filter(([column]) => !columns.includes(column))
+  );
+}
+
 async function saveArticleRows(rows) {
   try {
     await supabaseRequest("app_articles?on_conflict=id", {
@@ -277,11 +308,16 @@ async function saveArticleRows(rows) {
       body: JSON.stringify(rows)
     });
   } catch (error) {
-    if (!isMissingCategoryLabelsColumn(error)) throw error;
+    const missingColumns = [
+      ...(isMissingCategoryLabelsColumn(error) ? ["category_labels"] : []),
+      ...(error?.message?.includes("language") ? ["language"] : []),
+      ...(error?.message?.includes("variant_group_id") ? ["variant_group_id"] : [])
+    ];
+    if (!missingColumns.length) throw error;
     await supabaseRequest("app_articles?on_conflict=id", {
       method: "POST",
       headers: { Prefer: "resolution=merge-duplicates" },
-      body: JSON.stringify(rows.map(({ category_labels, ...row }) => row))
+      body: JSON.stringify(rows.map(row => omitArticleRowColumns(row, missingColumns)))
     });
   }
 }
@@ -293,6 +329,8 @@ async function insertArticleRow(row) {
 function rowToArticle(row) {
   return {
     id: row.id,
+    language: row.language || "de",
+    variantGroupId: row.variant_group_id || getInferredArticleVariantGroupId(row),
     ownerProfileId: row.owner_profile_id || null,
     teacherGroupId: row.teacher_group_id || null,
     visibility: row.visibility || "public",
@@ -314,6 +352,8 @@ function rowToArticle(row) {
 function articleToRow(article, options = {}) {
   const row = {
     id: article.id,
+    language: article.language || "de",
+    variant_group_id: article.variantGroupId || getInferredArticleVariantGroupId(article),
     owner_profile_id: article.ownerProfileId || null,
     teacher_group_id: article.teacherGroupId || null,
     visibility: article.visibility || "public",
@@ -354,6 +394,7 @@ async function saveArticle(article) {
     state.articles = [article, ...state.articles];
   }
   await saveCachedArticles(state.articles);
+  renderArticleLanguageFilters();
   renderCategories();
   renderLevelFilters();
   renderArticles();
@@ -390,6 +431,56 @@ function getArticleLevels() {
 
 function getArticleCategories() {
   return getCategories().filter(category => category !== ALL_CATEGORIES && category !== UNREAD_CATEGORY);
+}
+
+function getAvailableArticleLanguages() {
+  const used = new Set(getVisibleArticles().map(getArticleLanguage));
+  used.add(getSelectedArticleLanguage());
+  used.add(DEFAULT_ARTICLE_LANGUAGE);
+  return Object.keys(ARTICLE_LANGUAGES).filter(language => used.has(language));
+}
+
+function renderArticleLanguageFilters() {
+  const root = $("articleLanguageFilters");
+  if (!root) return;
+
+  const languages = getAvailableArticleLanguages();
+  const selectedLanguage = getSelectedArticleLanguage();
+  const counts = getVisibleArticles().reduce((totals, article) => {
+    const language = getArticleLanguage(article);
+    totals[language] = (totals[language] || 0) + 1;
+    return totals;
+  }, {});
+
+  root.innerHTML = `
+    <div class="segmented-filter" role="group" aria-label="${escapeHtml(t("articleLanguage"))}">
+      <span class="segmented-filter-label">${escapeHtml(t("articleLanguage"))}</span>
+      ${languages.map(language => {
+        const isActive = language === selectedLanguage;
+        return `
+          <button class="segmented-filter-btn ${isActive ? "active" : ""}" type="button" data-article-language="${escapeHtml(language)}" aria-pressed="${isActive}">
+            <span>${escapeHtml(getArticleLanguageLabel(language))}</span>
+            <span class="segmented-filter-count">${counts[language] || 0}</span>
+          </button>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  root.querySelectorAll("[data-article-language]").forEach(button => {
+    button.onclick = () => {
+      const language = button.dataset.articleLanguage;
+      if (!ARTICLE_LANGUAGES[language] || language === state.selectedArticleLanguage) return;
+      state.selectedArticleLanguage = language;
+      localStorage.setItem(ARTICLE_LANGUAGE_KEY, language);
+      state.selectedCategory = ALL_CATEGORIES;
+      state.selectedLevel = ALL_LEVELS;
+      renderArticleLanguageFilters();
+      renderCategories();
+      renderLevelFilters();
+      renderArticles();
+    };
+  });
 }
 
 function renderCategories() {
