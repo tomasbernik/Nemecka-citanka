@@ -2386,5 +2386,297 @@
         "answer": false
       }
     ]
+  },
+  {
+    "id": "en-a-very-big-breakfast-on-saturday",
+    "language": "en",
+    "title": "A Very Big Breakfast on Saturday",
+    "level": "B1",
+    "category": "Jedlo",
+    "categoryLabels": {
+      "Jedlo": {
+        "sk": "Jedlo",
+        "ru": "Еда",
+        "pl": "Jedzenie",
+        "hu": "Étel",
+        "ro": "Mâncare",
+        "it": "Cibo",
+        "en": "Food",
+        "fr": "Nourriture",
+        "tr": "Yemek"
+      }
+    },
+    "summary": "Tomas tells a funny story about a quiet Saturday morning when Kristina makes a huge breakfast. The food is fantastic, but maybe a little too much.",
+    "text": [
+      "On Saturday morning, the situation was calm and relaxed. Tomas got up late, stretched, and slowly went into the kitchen. He was hungry, but he did not expect much. In my opinion, a simple breakfast on Saturday is completely enough.",
+      "When he entered the kitchen, he was surprised at once. Kristina was standing at the stove and cooking like in a restaurant. It smelled fantastic.",
+      "“What is happening here?” asked Tomas.",
+      "“I wanted to make something special, so that we can have a nice breakfast together,” said Kristina.",
+      "There were already plates, forks, knives, and even napkins on the table. Tomas sat down and watched Kristina prepare everything.",
+      "First, Kristina warmed the beans in tomato sauce. Then she fried the sausages. At the end, she made the fried eggs, just right, not too hard and not too soft.",
+      "“In my opinion, this looks like breakfast in a hotel,” said Tomas.",
+      "Kristina laughed. “Yes, but without hotel prices.”",
+      "She put everything nicely on the plate, so that it looked good. But the plate was very full. Really very full.",
+      "Tomas looked at the plate and said, “I think this situation is serious.”",
+      "They sat down and started to eat together. At the beginning, everything was perfect.",
+      "“This is incredibly good,” said Tomas. “The beans are great, the sausages too… and the eggs are perfect.”",
+      "“Thank you,” said Kristina. “I wanted to improve breakfast a little.”",
+      "After a few minutes, Tomas became slower.",
+      "“Is everything okay?” asked Kristina.",
+      "“Yes… yes… I am enjoying it,” said Tomas. “But the portion is… interesting.”",
+      "Kristina laughed. “You only need to improve your strategy.”",
+      "After ten minutes, Tomas was already quite full.",
+      "“I think I need a break,” he said.",
+      "“No break!” said Kristina. “You must keep eating, so that nothing is left.”",
+      "Tomas laughed. “In my opinion, this is now a competition.”",
+      "They continued eating together, but Tomas noticed that he was slowly losing.",
+      "“This situation is getting more and more difficult,” he said.",
+      "Kristina watched him and laughed. “You can do it!”",
+      "In the end, Tomas ate almost everything on the plate, but he was completely full.",
+      "He leaned back and said, “Okay… I won… I think.”",
+      "“Almost,” said Kristina and pointed to a small piece of sausage.",
+      "Tomas took a deep breath and ate that too.",
+      "“Now it is finished,” he said. “And in my opinion, that was the biggest breakfast of my life.”",
+      "After breakfast, Tomas slowly stood up.",
+      "“I really need to improve this situation now,” he said.",
+      "“How?” asked Kristina.",
+      "“With coffee and fresh air,” answered Tomas.",
+      "He went outside, sat down, made a coffee, and lit a cigarette.",
+      "He took a deep breath and looked at the sky.",
+      "“Now everything is good,” he said. “In my opinion, I need a break like this after every breakfast.”"
+    ],
+    "vocabulary": [
+      {
+        "de": "the situation",
+        "base": "the situation",
+        "sk": "situácia",
+        "ru": "ситуация",
+        "pl": "sytuacja",
+        "hu": "helyzet",
+        "en": "the facts or events at one moment",
+        "ro": "situația",
+        "it": "la situazione",
+        "fr": "la situation",
+        "tr": "durum"
+      },
+      {
+        "de": "to improve",
+        "base": "to improve",
+        "sk": "zlepšiť",
+        "ru": "улучшить",
+        "pl": "poprawić",
+        "hu": "javítani",
+        "en": "to make something better",
+        "ro": "a îmbunătăți",
+        "it": "migliorare",
+        "fr": "améliorer",
+        "tr": "geliştirmek"
+      },
+      {
+        "de": "together",
+        "base": "together",
+        "sk": "spolu",
+        "ru": "вместе",
+        "pl": "razem",
+        "hu": "együtt",
+        "en": "with another person or other people",
+        "ro": "împreună",
+        "it": "insieme",
+        "fr": "ensemble",
+        "tr": "birlikte"
+      },
+      {
+        "de": "in my opinion",
+        "base": "in my opinion",
+        "sk": "podľa môjho názoru",
+        "ru": "по моему мнению",
+        "pl": "moim zdaniem",
+        "hu": "véleményem szerint",
+        "en": "used before you say what you think",
+        "ro": "în opinia mea",
+        "it": "secondo me",
+        "fr": "à mon avis",
+        "tr": "bence"
+      },
+      {
+        "de": "a competition",
+        "base": "a competition",
+        "sk": "súťaž",
+        "ru": "соревнование",
+        "pl": "konkurs / zawody",
+        "hu": "verseny",
+        "en": "a situation where people try to win",
+        "ro": "o competiție",
+        "it": "una competizione",
+        "fr": "une compétition",
+        "tr": "yarışma"
+      }
+    ],
+    "inlineVocabulary": [
+      {
+        "de": "calm and relaxed",
+        "base": "calm and relaxed",
+        "sk": "pokojný a uvoľnený",
+        "ru": "спокойный и расслабленный",
+        "pl": "spokojny i zrelaksowany",
+        "hu": "nyugodt és laza",
+        "en": "quiet and not worried",
+        "ro": "calm și relaxat",
+        "it": "calmo e rilassato",
+        "fr": "calme et détendu",
+        "tr": "sakin ve rahat"
+      },
+      {
+        "de": "did not expect much",
+        "base": "to not expect much",
+        "sk": "neočakával veľa",
+        "ru": "не ожидал многого",
+        "pl": "nie oczekiwał wiele",
+        "hu": "nem várt sokat",
+        "en": "thought something would be simple or small",
+        "ro": "nu se aștepta la mult",
+        "it": "non si aspettava molto",
+        "fr": "ne s'attendait pas à grand-chose",
+        "tr": "çok şey beklemiyordu"
+      },
+      {
+        "de": "at the stove",
+        "base": "at the stove",
+        "sk": "pri sporáku",
+        "ru": "у плиты",
+        "pl": "przy kuchence",
+        "hu": "a tűzhelynél",
+        "en": "standing where food is cooked",
+        "ro": "la aragaz",
+        "it": "ai fornelli",
+        "fr": "à la cuisinière",
+        "tr": "ocağın başında"
+      },
+      {
+        "de": "It smelled fantastic",
+        "base": "to smell fantastic",
+        "sk": "fantasticky to voňalo",
+        "ru": "это пахло фантастически",
+        "pl": "pachniało fantastycznie",
+        "hu": "fantasztikus illata volt",
+        "en": "the smell was very good",
+        "ro": "mirosea fantastic",
+        "it": "aveva un profumo fantastico",
+        "fr": "ça sentait très bon",
+        "tr": "harika kokuyordu"
+      },
+      {
+        "de": "forks, knives, and even napkins",
+        "base": "forks, knives, and napkins",
+        "sk": "vidličky, nože a dokonca obrúsky",
+        "ru": "вилки, ножи и даже салфетки",
+        "pl": "widelce, noże, a nawet serwetki",
+        "hu": "villák, kések és még szalvéták is",
+        "en": "things used at the table for eating",
+        "ro": "furculițe, cuțite și chiar șervețele",
+        "it": "forchette, coltelli e persino tovaglioli",
+        "fr": "fourchettes, couteaux et même serviettes",
+        "tr": "çatallar, bıçaklar ve hatta peçeteler"
+      },
+      {
+        "de": "not too hard and not too soft",
+        "base": "not too hard and not too soft",
+        "sk": "nie príliš tvrdé a nie príliš mäkké",
+        "ru": "не слишком твёрдый и не слишком мягкий",
+        "pl": "nie za twarde i nie za miękkie",
+        "hu": "nem túl kemény és nem túl puha",
+        "en": "just right between hard and soft",
+        "ro": "nici prea tare, nici prea moale",
+        "it": "non troppo duro e non troppo morbido",
+        "fr": "ni trop dur ni trop mou",
+        "tr": "ne çok sert ne de çok yumuşak"
+      },
+      {
+        "de": "You can do it!",
+        "base": "You can do it!",
+        "sk": "Zvládneš to!",
+        "ru": "Ты справишься!",
+        "pl": "Dasz radę!",
+        "hu": "Meg tudod csinálni!",
+        "en": "used to encourage someone",
+        "ro": "Poți să faci asta!",
+        "it": "Ce la puoi fare!",
+        "fr": "Tu peux le faire !",
+        "tr": "Bunu yapabilirsin!"
+      },
+      {
+        "de": "the biggest breakfast of my life",
+        "base": "the biggest breakfast of my life",
+        "sk": "najväčšie raňajky môjho života",
+        "ru": "самый большой завтрак в моей жизни",
+        "pl": "największe śniadanie w moim życiu",
+        "hu": "életem legnagyobb reggelije",
+        "en": "the largest breakfast I have ever had",
+        "ro": "cel mai mare mic dejun din viața mea",
+        "it": "la colazione più grande della mia vita",
+        "fr": "le plus grand petit déjeuner de ma vie",
+        "tr": "hayatımın en büyük kahvaltısı"
+      },
+      {
+        "de": "fresh air",
+        "base": "fresh air",
+        "sk": "čerstvý vzduch",
+        "ru": "свежий воздух",
+        "pl": "świeże powietrze",
+        "hu": "friss levegő",
+        "en": "clean air outside",
+        "ro": "aer proaspăt",
+        "it": "aria fresca",
+        "fr": "air frais",
+        "tr": "temiz hava"
+      },
+      {
+        "de": "took a deep breath",
+        "base": "to take a deep breath",
+        "sk": "zhlboka sa nadýchol",
+        "ru": "глубоко вдохнул",
+        "pl": "wziął głęboki oddech",
+        "hu": "mély levegőt vett",
+        "en": "breathed in a lot of air",
+        "ro": "a respirat adânc",
+        "it": "ha fatto un respiro profondo",
+        "fr": "a pris une profonde inspiration",
+        "tr": "derin bir nefes aldı"
+      }
+    ],
+    "questions": [
+      {
+        "statement": "Tomas got up early and ran into the kitchen.",
+        "answer": false
+      },
+      {
+        "statement": "Kristina made beans, sausages, and fried eggs.",
+        "answer": true
+      },
+      {
+        "statement": "Tomas thought the breakfast looked like breakfast in a hotel.",
+        "answer": true
+      },
+      {
+        "statement": "The plate was almost empty when Kristina gave it to Tomas.",
+        "answer": false
+      },
+      {
+        "statement": "At the beginning, Tomas liked the breakfast very much.",
+        "answer": true
+      },
+      {
+        "statement": "Kristina told Tomas to take a long break immediately.",
+        "answer": false
+      },
+      {
+        "statement": "In the end, Tomas ate almost everything and felt completely full.",
+        "answer": true
+      },
+      {
+        "statement": "After breakfast, Tomas went outside and had coffee and fresh air.",
+        "answer": true
+      }
+    ]
   }
 ]
