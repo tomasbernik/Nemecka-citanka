@@ -710,18 +710,18 @@ function getPromptText() {
 
 function getArticleJsonPromptInstructions(level) {
   const isEnglish = getUiLanguage() === "en";
-  const vocabularyExample = `{\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",${VOCABULARY_LANGUAGE_CODES
+  const vocabularyExample = `{\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",${PROMPT_TRANSLATION_LANGUAGE_CODES
     .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
     .join(",")}}`;
-  const inlineVocabularyExample = `{\"de\":\"presný súvislý úsek skopírovaný z textu článku\",\"base\":\"základný tvar\",${VOCABULARY_LANGUAGE_CODES
+  const inlineVocabularyExample = `{\"de\":\"presný súvislý úsek skopírovaný z textu článku\",\"base\":\"základný tvar\",${PROMPT_TRANSLATION_LANGUAGE_CODES
     .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
     .join(",")}}`;
 
   if (isEnglish) {
-    const englishVocabularyExample = `{\"de\":\"word or phrase from the text\",\"base\":\"dictionary form\",${VOCABULARY_LANGUAGE_CODES
+    const englishVocabularyExample = `{\"de\":\"word or phrase from the text\",\"base\":\"dictionary form\",${PROMPT_TRANSLATION_LANGUAGE_CODES
       .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.label || code} translation\"`)
       .join(",")}}`;
-    const englishInlineVocabularyExample = `{\"de\":\"exact continuous passage copied from the article text\",\"base\":\"dictionary form\",${VOCABULARY_LANGUAGE_CODES
+    const englishInlineVocabularyExample = `{\"de\":\"exact continuous passage copied from the article text\",\"base\":\"dictionary form\",${PROMPT_TRANSLATION_LANGUAGE_CODES
       .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.label || code} translation\"`)
       .join(",")}}`;
 
@@ -732,7 +732,7 @@ function getArticleJsonPromptInstructions(level) {
       "  \"title\": \"German article title\",",
       `  \"level\": \"${level}\",`,
       "  \"category\": \"category or topic\",",
-      `  \"categoryLabels\": {\"category or topic name\":{\"${Object.keys(NATIVE_LANGUAGES).join("\":\"translation\", \"")}\":\"translation\"}},`,
+      `  \"categoryLabels\": {\"category or topic name\":{\"${PROMPT_TRANSLATION_LANGUAGE_CODES.join("\":\"translation\", \"")}\":\"translation\"}},`,
       "  \"summary\": \"short German article description\",",
       "  \"text\": [\"paragraph 1\", \"paragraph 2\", \"paragraph 3\", \"paragraph 4\"],",
       "  \"vocabulary\": [",
@@ -751,8 +751,8 @@ function getArticleJsonPromptInstructions(level) {
       `Add exactly 5 German words or phrases to \"vocabulary\" that fit level ${level} and are typically not already lower-level words. They must appear naturally in the text and should be useful new vocabulary for this level.`,
       "Add 8 to 12 items to \"inlineVocabulary\": they may be individual words, short phrases, fixed expressions, or interesting expressions that may be unfamiliar to the student. The \"de\" value must be an exact continuous passage copied from the article text in the same form, word order, case, and tense. Do not use dictionary forms or infinitive paraphrases unless they appear exactly like that in the text. Repeat items from \"vocabulary\", but in the form in which they appear in the text.",
       "Add 6 to 8 German true/false statements to \"questions\" with a mix of true and false answers. The answers must not follow a regular true/false/true/false or false/true/false/true pattern; the order should feel natural and may include two identical answers in a row.",
-      `Add translations for every category or topic to \"categoryLabels\" for all languages: ${Object.keys(NATIVE_LANGUAGES).join(", ")}. The object key must exactly match the value in \"category\"; if multiple categories are separated by |, add each one separately.`,
-      `All vocabulary and inlineVocabulary items must have these keys: de, base, ${VOCABULARY_LANGUAGE_CODES.join(", ")}.`,
+      `Add translations for every category or topic to \"categoryLabels\" for these languages: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}. The object key must exactly match the value in \"category\"; if multiple categories are separated by |, add each one separately.`,
+      `All vocabulary and inlineVocabulary items must have these keys: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
       "For \"base\", use the dictionary form: for a noun, include the definite article and nominative singular, for example \"der Mann\"; for a verb, use the infinitive, for example \"gehen\"; for an adjective, use the base form, for example \"freundlich\". If \"de\" is already the base form or is a whole phrase, \"base\" may be the same as \"de\"."
     ];
   }
@@ -764,7 +764,7 @@ function getArticleJsonPromptInstructions(level) {
     "  \"title\": \"nemecký názov článku\",",
     `  \"level\": \"${level}\",`,
     "  \"category\": \"kategória alebo téma\",",
-    `  \"categoryLabels\": {\"názov kategórie alebo témy\":{\"${Object.keys(NATIVE_LANGUAGES).join("\":\"preklad\", \"")}\":\"preklad\"}},`,
+    `  \"categoryLabels\": {\"názov kategórie alebo témy\":{\"${PROMPT_TRANSLATION_LANGUAGE_CODES.join("\":\"preklad\", \"")}\":\"preklad\"}},`,
     "  \"summary\": \"krátky nemecký popis článku\",",
     "  \"text\": [\"odsek 1\", \"odsek 2\", \"odsek 3\", \"odsek 4\"],",
     "  \"vocabulary\": [",
@@ -783,8 +783,8 @@ function getArticleJsonPromptInstructions(level) {
     `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
     "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
     "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false. Odpovede nesmú byť v pravidelnom poradí true/false/true/false ani false/true/false/true; poradie musí pôsobiť prirodzene a môže mať aj dve rovnaké odpovede za sebou.",
-    `Do \"categoryLabels\" pridaj pre každú kategóriu alebo tému preklady do všetkých jazykov: ${Object.keys(NATIVE_LANGUAGES).join(", ")}. Kľúč objektu musí presne zodpovedať hodnote v poli \"category\"; ak je viac kategórií oddelených znakom |, pridaj každú zvlášť.`,
-    `Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, base, ${VOCABULARY_LANGUAGE_CODES.join(", ")}.`,
+    `Do \"categoryLabels\" pridaj pre každú kategóriu alebo tému preklady do týchto jazykov: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}. Kľúč objektu musí presne zodpovedať hodnote v poli \"category\"; ak je viac kategórií oddelených znakom |, pridaj každú zvlášť.`,
+    `Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
     "Do \"base\" daj základný slovníkový tvar: pri podstatnom mene s určitým členom a v nominatíve jednotného čísla, napríklad \"der Mann\"; pri slovese infinitív, napríklad \"gehen\"; pri prídavnom mene základný tvar, napríklad \"freundlich\". Ak je \"de\" už základný tvar alebo ide o celú frázu, môže byť \"base\" rovnaké ako \"de\"."
   ];
 }
@@ -910,7 +910,7 @@ function buildTranslationPrompt() {
     .filter(item => !translatedKeys.has(normalizeVocabularyKey(item.de)));
   const seen = new Set();
   const missing = words
-    .filter(item => !hasAllVocabularyTranslations(item))
+    .filter(item => !PROMPT_TRANSLATION_LANGUAGE_CODES.every(code => Boolean(item[code])))
     .filter(item => {
       const key = normalizeVocabularyKey(item.de);
       if (seen.has(key)) return false;

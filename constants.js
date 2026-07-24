@@ -30,6 +30,7 @@ const NEW_CATEGORY_VALUE = "__new_category__";
 const ALL_LEVELS = "__all_levels__";
 const CATEGORY_SEPARATOR = " | ";
 const VOCABULARY_LANGUAGE_CODES = ["sk", "ru", "pl", "hu", "ro", "it", "en", "fr", "tr"];
+const PROMPT_TRANSLATION_LANGUAGE_CODES = ["sk", "pl", "hu", "ru"];
 const NATIVE_LANGUAGES = {
   sk: { label: "Slovenčina", promptName: "slovenčiny", lineFormat: "slovensky", locale: "sk" },
   ru: { label: "Русский", promptName: "ruštiny", lineFormat: "rusky", locale: "ru" },

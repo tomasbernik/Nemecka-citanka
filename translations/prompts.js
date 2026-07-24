@@ -1,25 +1,20 @@
 function getPromptVocabularyLanguageList(language = "sk") {
-  return VOCABULARY_LANGUAGE_CODES
+  return PROMPT_TRANSLATION_LANGUAGE_CODES
     .map(code => language === "en" ? (NATIVE_LANGUAGES[code]?.label || code) : (NATIVE_LANGUAGES[code]?.promptName || code))
     .join(", ");
 }
 
 function getPromptVocabularyKeys() {
-  return ["de", ...VOCABULARY_LANGUAGE_CODES].join(", ");
+  return ["de", ...PROMPT_TRANSLATION_LANGUAGE_CODES].join(", ");
 }
 
 function getPromptVocabularyExample() {
   return JSON.stringify({
     de: "die Erfahrung",
     sk: "skúsenosť",
-    ru: "опыт",
     pl: "doświadczenie",
     hu: "tapasztalat",
-    ro: "experiență",
-    it: "esperienza",
-    en: "experience",
-    fr: "expérience",
-    tr: "deneyim"
+    ru: "опыт"
   });
 }
 

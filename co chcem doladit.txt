@@ -1,16 +1,19 @@
-skontrolovat s Kikou - ak si student precita clanok, ktory mu zadal ucitel, nechcem aby sa mu tieto precitane clanky zobrazovali na hlavnej obrazovke pri vsetkych clankoch, ale len v prehlade. na tej hlavnej stranke sa maju zobrazovat len este nesplnene ulohy (zadania)
+v anglictine su v Home v slovencine slova Clanky, Vsetky temy, Vsetky urovne a nazvy tem.
 
+chýbajú preklady v ru/pl/hu/ro/it/fr/tr a prompt preklady pre ro/it/en/fr/tr
 
+hatwebtrade@gmail.com
 
+Kaufland 9,99€ - Rain Bird Druckminderer PSI-M20 1,4 bar 
+ebay 10,14€ - 2* Druckminderer 1 Bar
+Aktivshop 169,98€ - 2* Eloneo Klappmatratze 200*75*15cm Deluxe mit 4cm Visko
+Temu :
+- 3,93€ Set of 4 Female Thread Connectors for 3/4" to 16Mm
+- 5,46€ 14pcs of Drip Irrigation Additions, spojky z hrubej hadice do tenkych hadiciek
+- 2,72€ 6pcs Irrigation Fittings End Caps, 16Mm - koncovky na 16mm hadicu
+- 11,39€ 26FT 1/2" Irrigation Hose with 1/2" Elbow And Tee Connector - cca 8m hadica vonkajsi priemer 16mm
+- 1,46€ 30pcs/50pcs Drip Irrigation Parts 1/4 Inch End Plug - 50ks koncoviek na 4mm hadicku
+- 23,11€ toaleta 42*50*40cm 
 
-
-
-
-
-
-!!! dorobit aij UI texty, chybaju skoro vsade okrem SK a EN. dalej chýbajú preklady v ru/pl/hu/ro/it/fr/tr a prompt preklady pre ro/it/en/fr/tr
-
-skontrolovat - vyskakovacie okno Pridat na plochu, nech vyskakuje maximalne raz do dna.
-
-
+matrace, wc, doplnky k zavlahe - znizenie tlaku, hrubsia hlavna hadica, koncovky pre 4 a 16mm, 
 
