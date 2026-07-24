@@ -14,6 +14,7 @@ const ARTICLE_CACHE_DB_NAME = "citanka-article-cache";
 const ARTICLE_CACHE_STORE_NAME = "articleSnapshots";
 const ARTICLE_CACHE_KEY = "publishedArticles";
 const ARTICLE_CACHE_LOCAL_STORAGE_KEY = "cachedPublishedArticles";
+const ARTICLE_LANGUAGE_KEY = "selectedArticleLanguage";
 const ADMIN_PROFILE_IDS = new Set(window.NC_ADMIN_PROFILE_IDS || []);
 const VISIBLE_CATEGORY_LIMIT = 6;
 const DEFAULT_NATIVE_LANGUAGE = "en";
@@ -29,8 +30,13 @@ const UNREAD_CATEGORY = "__unread__";
 const NEW_CATEGORY_VALUE = "__new_category__";
 const ALL_LEVELS = "__all_levels__";
 const CATEGORY_SEPARATOR = " | ";
+const DEFAULT_ARTICLE_LANGUAGE = "de";
+const ARTICLE_LANGUAGES = {
+  de: { label: "Deutsch", shortLabel: "DE", speechLang: "de-DE" },
+  en: { label: "English", shortLabel: "EN", speechLang: "en-US" }
+};
 const VOCABULARY_LANGUAGE_CODES = ["sk", "ru", "pl", "hu", "ro", "it", "en", "fr", "tr"];
-const PROMPT_TRANSLATION_LANGUAGE_CODES = ["sk", "pl", "hu", "ru"];
+const PROMPT_TRANSLATION_LANGUAGE_CODES = ["sk", "pl", "hu", "ru", "en"];
 const NATIVE_LANGUAGES = {
   sk: { label: "Slovenčina", promptName: "slovenčiny", lineFormat: "slovensky", locale: "sk" },
   ru: { label: "Русский", promptName: "ruštiny", lineFormat: "rusky", locale: "ru" },

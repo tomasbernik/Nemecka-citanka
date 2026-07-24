@@ -1,0 +1,51 @@
+Chcem rozšíriť túto jazykovú čítanku o anglické verzie článkov.
+
+Úloha:
+Nájdi v projekte nemecký článok s názvom: "[NÁZOV ČLÁNKU]"
+a vytvor jeho anglickú verziu pre študentov angličtiny na úrovni CEFR B1.
+
+Najprv si pozri existujúcu dátovú štruktúru článkov v projekte a zachovaj rovnakú schému, názvy polí, typy polí a spôsob uloženia ako pri existujúcich článkoch. Nevymýšľaj novú JSON štruktúru, ak projekt už používa vlastnú.
+
+Preklad:
+- Prelož príbeh prirodzene do angličtiny na úrovni B1.
+- Zachovaj význam, humor, atmosféru, mená postáv a štruktúru príbehu.
+- Zachovaj približne rovnakú dĺžku ako originál.
+- Používaj krátke až stredne dlhé vety.
+- Nepoužívaj zbytočne pokročilé frázy, zriedkavé slová ani komplikovanú gramatiku.
+- Neprekladaj doslovne, ak by výsledok v angličtine znel neprirodzene.
+- Dialógy nech znejú prirodzene.
+- Zachovaj odseky a poradie viet, pokiaľ je to možné.
+- Zachovaj zámerné opakovanie slov a fráz, pretože slúžia na učenie.
+- Uprednostni prirodzenú angličtinu vhodnú pre študentov na úrovni B1 pred doslovným prekladom, ale zachovaj rovnaké udalosti v príbehu a zámerné opakovanie učebných slov a fráz.
+
+Vocabulary:
+- Nevychádzaj mechanicky z pôvodného nemeckého zoznamu slovíčok.
+- Vytvor nový anglický zoznam slovíčok podľa finálneho anglického textu.
+- Každé slovíčko alebo fráza vo vocabulary musí existovať v anglickom texte.
+- Vyber slová a frázy užitočné pre študenta angličtiny na úrovni B1.
+- Nepoužívaj príliš jednoduché slová ako "and", "go", "good", ak nie sú súčasťou užitočnej frázy.
+
+InlineVocabulary:
+- Vytvor inlineVocabulary podľa anglického textu.
+- Označ najmä užitočné frázy, slovesá, kolokácie a praktické výrazy.
+- Použi približne 10% označení na jeden článok.
+- Každý označený výraz musí presne existovať v texte.
+- Text musí zostať dobre čitateľný, neoznačuj príliš veľa slov.
+
+Exercises:
+- Zachovaj pôvodné typy cvičení, ak to dátová štruktúra umožňuje.
+- Uprav otázky, možnosti a odpovede tak, aby presne zodpovedali anglickému textu.
+- Každá odpoveď musí byť jednoznačne zistiteľná z príbehu.
+- Ak má cvičenie viac možností, skontroluj, že iba správna odpoveď je naozaj správna.
+
+Technické pravidlá:
+- Zachovaj existujúci štýl dát v projekte.
+- Pridaj jazykové označenie pre angličtinu podľa existujúceho systému alebo podľa najlogickejšieho rozšírenia.
+- Nemiešaj anglickú verziu s nemeckou tak, aby sa pokazila existujúca nemecká čítanka.
+- Ak treba upraviť kód aplikácie, aby vedela rozlišovať nemecké a anglické články, urob to konzistentne s existujúcou architektúrou.
+- Po úpravách over validitu dát a spusti dostupné testy alebo aspoň relevantnú kontrolu build/lint, ak v projekte existuje.
+
+Výstup pre používateľa:
+- Stručne napíš, ktoré súbory boli upravené.
+- Uveď, ako si overil validitu.
+- Nevypisuj celý JSON do odpovede, ak bol uložený priamo do projektu.

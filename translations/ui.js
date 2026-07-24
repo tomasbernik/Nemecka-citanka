@@ -1420,6 +1420,8 @@ Object.entries({
 
 Object.entries({
   sk: {
+    articleLanguage: "Jazyk článkov",
+    articleVariant: "Verzia článku",
     topics: "Témy",
     allTopics: "Všetky témy",
     allLevels: "Všetky úrovne",
@@ -1429,6 +1431,8 @@ Object.entries({
     noArticles: "Nenašli sa žiadne články."
   },
   de: {
+    articleLanguage: "Artikelsprache",
+    articleVariant: "Artikelversion",
     topics: "Themen",
     allTopics: "Alle Themen",
     allLevels: "Alle Niveaus",
@@ -1438,6 +1442,8 @@ Object.entries({
     noArticles: "Keine Artikel gefunden."
   },
   ru: {
+    articleLanguage: "Язык статей",
+    articleVariant: "Версия статьи",
     topics: "Темы",
     allTopics: "Все темы",
     allLevels: "Все уровни",
@@ -1447,6 +1453,8 @@ Object.entries({
     noArticles: "Статьи не найдены."
   },
   pl: {
+    articleLanguage: "Język artykułów",
+    articleVariant: "Wersja artykułu",
     topics: "Tematy",
     allTopics: "Wszystkie tematy",
     allLevels: "Wszystkie poziomy",
@@ -1456,6 +1464,8 @@ Object.entries({
     noArticles: "Nie znaleziono artykułów."
   },
   hu: {
+    articleLanguage: "Cikkek nyelve",
+    articleVariant: "Cikkverzió",
     topics: "Témák",
     allTopics: "Minden téma",
     allLevels: "Minden szint",
@@ -1463,6 +1473,26 @@ Object.entries({
     assignedBadge: "Kiosztva",
     noOpenAssignments: "Nincs befejezetlen feladatod.",
     noArticles: "Nem találhatók cikkek."
+  },
+  ro: {
+    articleLanguage: "Limba articolelor",
+    articleVariant: "Versiunea articolului"
+  },
+  it: {
+    articleLanguage: "Lingua degli articoli",
+    articleVariant: "Versione dell'articolo"
+  },
+  en: {
+    articleLanguage: "Reading language",
+    articleVariant: "Article version"
+  },
+  fr: {
+    articleLanguage: "Langue des articles",
+    articleVariant: "Version de l'article"
+  },
+  tr: {
+    articleLanguage: "Makale dili",
+    articleVariant: "Makale sürümü"
   }
 }).forEach(([language, text]) => assignUiText(language, text));
 

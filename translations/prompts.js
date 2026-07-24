@@ -14,7 +14,8 @@ function getPromptVocabularyExample() {
     sk: "skúsenosť",
     pl: "doświadczenie",
     hu: "tapasztalat",
-    ru: "опыт"
+    ru: "опыт",
+    en: "experience"
   });
 }
 

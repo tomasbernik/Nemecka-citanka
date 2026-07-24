@@ -201,10 +201,16 @@ function highlightSentence(index) {
   sentence.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
-function getGermanVoice() {
+function getArticleSpeechLanguage(article = state.currentArticle) {
+  return ARTICLE_LANGUAGES[getArticleLanguage(article)]?.speechLang || "de-DE";
+}
+
+function getArticleVoice(article = state.currentArticle) {
+  const speechLanguage = getArticleSpeechLanguage(article).toLocaleLowerCase();
+  const languagePrefix = speechLanguage.split("-")[0];
   const voices = window.speechSynthesis?.getVoices?.() || [];
-  return voices.find(voice => voice.lang?.toLocaleLowerCase("de").startsWith("de"))
-    || voices.find(voice => voice.lang?.toLocaleLowerCase().startsWith("de"))
+  return voices.find(voice => voice.lang?.toLocaleLowerCase() === speechLanguage)
+    || voices.find(voice => voice.lang?.toLocaleLowerCase().startsWith(languagePrefix))
     || null;
 }
 
@@ -284,9 +290,9 @@ async function readSentence(index = 0) {
   highlightSentence(index);
 
   const utterance = new SpeechSynthesisUtterance(sentences[index]);
-  utterance.lang = "de-DE";
+  utterance.lang = getArticleSpeechLanguage();
   utterance.rate = 1;
-  utterance.voice = getGermanVoice();
+  utterance.voice = getArticleVoice();
   utterance.onend = () => {
     if (state.speech.isReading && state.speech.utterance === utterance && state.speech.runId === runId) {
       readSentence(index + 1);
@@ -348,6 +354,7 @@ function markCurrentArticleRead(source = "manual") {
     source
   });
   updateMarkReadButtons(source === "auto" ? t("markedRead") : t("readDone"));
+  renderArticleLanguageFilters();
   renderCategories();
   renderLevelFilters();
   renderArticles();
@@ -358,6 +365,55 @@ function markCurrentArticleRead(source = "manual") {
 function updateMarkReadButtons(label) {
   $("markReadBtn").textContent = label;
   $("markReadBottomBtn").textContent = label;
+}
+
+function getArticleVariants(article) {
+  if (!article?.variantGroupId) return [];
+  return getVisibleArticles()
+    .filter(item => item.variantGroupId === article.variantGroupId)
+    .sort((a, b) => {
+      const languageOrder = Object.keys(ARTICLE_LANGUAGES);
+      return languageOrder.indexOf(getArticleLanguage(a)) - languageOrder.indexOf(getArticleLanguage(b))
+        || a.title.localeCompare(b.title, "sk");
+    });
+}
+
+function renderArticleVariantSwitch(article) {
+  const root = $("articleVariantSwitch");
+  if (!root) return;
+
+  const variants = getArticleVariants(article);
+  if (variants.length < 2) {
+    root.classList.add("hidden");
+    root.innerHTML = "";
+    return;
+  }
+
+  root.classList.remove("hidden");
+  root.innerHTML = `
+    <div class="segmented-filter compact" role="group" aria-label="${escapeHtml(t("articleVariant"))}">
+      <span class="segmented-filter-label">${escapeHtml(t("articleVariant"))}</span>
+      ${variants.map(variant => {
+        const isActive = variant.id === article.id;
+        const language = getArticleLanguage(variant);
+        return `
+          <button class="segmented-filter-btn ${isActive ? "active" : ""}" type="button" data-article-variant-id="${escapeHtml(variant.id)}" aria-pressed="${isActive}">
+            ${escapeHtml(getArticleLanguageLabel(language))}
+          </button>
+        `;
+      }).join("")}
+    </div>
+  `;
+
+  root.querySelectorAll("[data-article-variant-id]").forEach(button => {
+    button.onclick = () => {
+      const id = button.dataset.articleVariantId;
+      if (!id || id === article.id) return;
+      state.selectedArticleLanguage = getArticleLanguage(state.articles.find(item => item.id === id));
+      localStorage.setItem(ARTICLE_LANGUAGE_KEY, state.selectedArticleLanguage);
+      openArticle(id);
+    };
+  });
 }
 
 async function openArticle(id) {
@@ -382,6 +438,7 @@ async function openArticle(id) {
 
   $("articleMeta").textContent = `${article.level} • ${formatArticleCategories(article)}`;
   $("articleTitle").textContent = article.title;
+  renderArticleVariantSwitch(article);
   cleanupDiscoveredVocabulary(article);
   renderArticleImage(article);
   renderArticleText(article);

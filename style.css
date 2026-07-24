@@ -329,6 +329,70 @@ h3 { font-size: 1.1rem; }
   font-weight: 800;
 }
 
+.filter-bar {
+  align-items: end;
+}
+
+.article-language-filters {
+  min-width: 260px;
+}
+
+.segmented-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(127, 127, 127, 0.06);
+}
+
+.segmented-filter.compact {
+  margin: 4px 0 14px;
+}
+
+.segmented-filter-label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 900;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+.segmented-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  color: var(--text);
+  background: transparent;
+  font-weight: 900;
+}
+
+.segmented-filter-btn.active {
+  color: var(--accent-text);
+  background: var(--accent);
+}
+
+.segmented-filter-count {
+  min-width: 22px;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(127, 127, 127, 0.18);
+  font-size: 0.78rem;
+}
+
+.segmented-filter-btn.active .segmented-filter-count {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.article-variant-switch {
+  margin: -4px 0 12px;
+}
+
 .article-list {
   display: grid;
   gap: 12px;
