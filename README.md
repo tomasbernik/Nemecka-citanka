@@ -192,7 +192,7 @@ spracuje Supabase Edge Function `translate-text` a výsledok uloží do
 `app_text_translations`, aby sa rovnaký text neprekladal opakovane.
 
 1. V Supabase SQL editore spusti `supabase/add-text-translations.sql`.
-2. Vytvor si DeepL API Free účet a skopíruj API kľúč.
+2. Aktivuj DeepL Developer API a skopíruj API kľúč.
 3. Ulož kľúč ako Supabase secret:
 
 ```bash
@@ -205,8 +205,9 @@ supabase secrets set DEEPL_API_KEY="tvoj-deepl-api-kluc"
 supabase functions deploy translate-text
 ```
 
-Funkcia automaticky použije `https://api-free.deepl.com` pre Free kľúč končiaci
-na `:fx`. Adresu možno podľa potreby nastaviť explicitne:
+Funkcia automaticky použije `https://api-free.deepl.com` pre starší Free kľúč
+končiaci na `:fx`; pre Developer API použije `https://api.deepl.com`. Adresu
+možno podľa potreby nastaviť explicitne:
 
 ```bash
 supabase secrets set DEEPL_API_URL="https://api-free.deepl.com"
