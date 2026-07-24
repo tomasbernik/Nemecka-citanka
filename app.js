@@ -1090,9 +1090,9 @@ onClick("markReadBottomBtn", () => {
 });
 
 onClick("articleText", (event) => {
-  const button = event.target.closest(".inline-word");
-  if (!button) return;
-  showInlineTranslation(button);
+  const anchor = event.target.closest(".inline-word, .reader-word, .reading-sentence");
+  if (!anchor) return;
+  showTranslationChoices(anchor);
 });
 
 onEvent("clickedReviewDialog", "click", event => {
@@ -1133,10 +1133,10 @@ onEvent("homeView", "click", async event => {
 });
 
 onEvent("articleText", "keydown", event => {
-  const button = event.target.closest(".inline-word");
-  if (!button || !["Enter", " "].includes(event.key)) return;
+  const anchor = event.target.closest(".inline-word, .reading-sentence");
+  if (!anchor || !["Enter", " "].includes(event.key)) return;
   event.preventDefault();
-  showInlineTranslation(button);
+  showTranslationChoices(anchor);
 });
 
 onEvent("questionList", "click", event => {

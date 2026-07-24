@@ -59,6 +59,35 @@ async function supabaseStorageRequest(path, options = {}) {
   return text ? JSON.parse(text) : null;
 }
 
+async function translateArticleText({ articleId, sourceType, sourceText, sourceContext = "", targetLanguage }) {
+  if (!isRemoteNetworkAvailable()) {
+    throw new Error("translation_offline");
+  }
+
+  const accessToken = await getFreshAuthAccessToken();
+  const response = await remoteFetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/functions/v1/translate-text`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_CONFIG.anonKey,
+      Authorization: `Bearer ${accessToken || SUPABASE_CONFIG.anonKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      articleId,
+      sourceType,
+      sourceText,
+      sourceContext,
+      targetLanguage
+    })
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result.error || `translation_failed_${response.status}`);
+  }
+  return result;
+}
+
 async function buildAppEvent(eventType, details = {}) {
   const deviceId = getDeviceId();
   return {

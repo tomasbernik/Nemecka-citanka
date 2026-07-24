@@ -633,6 +633,18 @@ h3 { font-size: 1.1rem; }
   background: rgba(var(--accent-rgb), 0.18);
 }
 
+.reader-word {
+  border-radius: 4px;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.reader-word:hover,
+.reader-word.translation-anchor,
+.reading-sentence.translation-anchor {
+  background: rgba(var(--accent-rgb), 0.12);
+}
+
 .inline-translation-tooltip {
   position: fixed;
   z-index: 40;
@@ -650,7 +662,7 @@ h3 { font-size: 1.1rem; }
   white-space: normal;
   text-align: center;
   overflow-wrap: break-word;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .inline-translation-tooltip.hidden {
@@ -676,6 +688,58 @@ h3 { font-size: 1.1rem; }
   border: 0;
   border-top: 1px solid var(--border);
   border-left: 1px solid var(--border);
+}
+
+.translation-actions {
+  display: flex;
+  gap: 7px;
+}
+
+.translation-actions button {
+  border: 1px solid rgba(var(--accent-rgb), 0.35);
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(var(--accent-rgb), 0.12);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.translation-actions button:hover {
+  background: rgba(var(--accent-rgb), 0.22);
+}
+
+.translation-result {
+  display: grid;
+  gap: 5px;
+  min-width: 11rem;
+  max-width: 22rem;
+  text-align: left;
+}
+
+.translation-result strong {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.translation-kind {
+  color: var(--accent-dark);
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.translation-loading,
+.translation-error {
+  display: block;
+  max-width: 18rem;
+}
+
+.translation-error {
+  color: var(--danger, #b42318);
 }
 
 .panel {

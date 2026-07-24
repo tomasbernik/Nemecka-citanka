@@ -184,6 +184,34 @@ Ak chceš stabilnejší anonymný hash IP, nastav pre funkciu aj secret:
 supabase secrets set IP_HASH_SALT="nahodny-dlhy-retazec"
 ```
 
+## Preklad slov a viet cez DeepL
+
+Kliknutie na slovo v článku ponúka preklad slova alebo celej vety. Existujúce
+preklady z `inlineVocabulary` sa zobrazia bez externého API. Ostatné preklady
+spracuje Supabase Edge Function `translate-text` a výsledok uloží do
+`app_text_translations`, aby sa rovnaký text neprekladal opakovane.
+
+1. V Supabase SQL editore spusti `supabase/add-text-translations.sql`.
+2. Vytvor si DeepL API Free účet a skopíruj API kľúč.
+3. Ulož kľúč ako Supabase secret:
+
+```bash
+supabase secrets set DEEPL_API_KEY="tvoj-deepl-api-kluc"
+```
+
+4. Nasaď Edge Function:
+
+```bash
+supabase functions deploy translate-text
+```
+
+Funkcia automaticky použije `https://api-free.deepl.com` pre Free kľúč končiaci
+na `:fx`. Adresu možno podľa potreby nastaviť explicitne:
+
+```bash
+supabase secrets set DEEPL_API_URL="https://api-free.deepl.com"
+```
+
 5. Nahraj novú verziu appky na hosting.
 6. Pri prvom spustení vytvor profily. Druhý mobil si ich potom načíta z databázy a stačí sa prihlásiť menom a PINom.
 

@@ -155,12 +155,49 @@ function renderArticleText(article) {
     $("articleText").innerHTML = article.text
       .map(paragraph => `<p>${(paragraph.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [paragraph]).map(sentence => renderSentence(sentence.trim())).join(" ")}</p>`)
       .join("");
+    wrapReaderWords();
     return;
   }
 
   $("articleText").innerHTML = article.text
     .map(paragraph => `<p>${(paragraph.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [paragraph]).map(sentence => renderSentence(sentence.trim())).join(" ")}</p>`)
     .join("");
+  wrapReaderWords();
+}
+
+function wrapReaderWords() {
+  document.querySelectorAll("#articleText .reading-sentence").forEach(sentence => {
+    const walker = document.createTreeWalker(sentence, NodeFilter.SHOW_TEXT);
+    const textNodes = [];
+
+    while (walker.nextNode()) {
+      if (!walker.currentNode.parentElement?.closest(".inline-word")) {
+        textNodes.push(walker.currentNode);
+      }
+    }
+
+    textNodes.forEach(textNode => {
+      const text = textNode.textContent || "";
+      const matches = [...text.matchAll(/[\p{L}\p{N}]+(?:[-'][\p{L}\p{N}]+)*/gu)];
+      if (!matches.length) return;
+
+      const fragment = document.createDocumentFragment();
+      let cursor = 0;
+      matches.forEach(match => {
+        const index = match.index || 0;
+        if (index > cursor) fragment.append(document.createTextNode(text.slice(cursor, index)));
+
+        const word = document.createElement("span");
+        word.className = "reader-word";
+        word.dataset.word = match[0];
+        word.textContent = match[0];
+        fragment.append(word);
+        cursor = index + match[0].length;
+      });
+      if (cursor < text.length) fragment.append(document.createTextNode(text.slice(cursor)));
+      textNode.replaceWith(fragment);
+    });
+  });
 }
 
 function getArticleAnswers(articleId) {
@@ -487,13 +524,16 @@ function getInlineTranslationTooltip() {
 }
 
 function hideInlineTranslation() {
-  document.querySelectorAll(".inline-word.active").forEach(activeButton => {
+  document.querySelectorAll(".translation-anchor").forEach(activeButton => {
+    activeButton.classList.remove("translation-anchor");
     activeButton.classList.remove("active");
     activeButton.setAttribute("aria-expanded", "false");
     activeButton.removeAttribute("aria-describedby");
   });
 
-  getInlineTranslationTooltip().classList.add("hidden");
+  const tooltip = getInlineTranslationTooltip();
+  tooltip.classList.add("hidden");
+  tooltip.removeAttribute("aria-busy");
 }
 
 function positionInlineTranslationTooltip(button, tooltip) {
@@ -530,36 +570,105 @@ function positionInlineTranslationTooltip(button, tooltip) {
 }
 
 function repositionActiveInlineTranslation() {
-  const activeButton = document.querySelector(".inline-word.active");
+  const activeButton = document.querySelector(".translation-anchor");
   const tooltip = document.getElementById("inlineTranslationTooltip");
   if (!activeButton || !tooltip || tooltip.classList.contains("hidden")) return;
 
   positionInlineTranslationTooltip(activeButton, tooltip);
 }
 
-function showInlineTranslation(button) {
-  const word = button.dataset.word;
-  const translation = button.dataset.translation;
-  const wasOpen = button.classList.contains("active");
+function getTranslationErrorMessage(error) {
+  const key = String(error?.message || error || "");
+  if (key === "translation_offline") return t("translationOffline");
+  if (key === "deepl_not_configured") return t("translationNotConfigured");
+  if (key === "deepl_limit_reached") return t("translationLimitReached");
+  return t("translationFailed");
+}
 
-  addDiscoveredVocabulary(word, translation);
+function renderTranslationResult(tooltip, label, sourceText, translation) {
+  tooltip.innerHTML = `
+    <div class="translation-result">
+      <span class="translation-kind">${escapeHtml(label)}</span>
+      <strong>${escapeHtml(sourceText)}</strong>
+      <span>${escapeHtml(translation)}</span>
+    </div>
+  `;
+  tooltip.removeAttribute("aria-busy");
+  repositionActiveInlineTranslation();
+}
 
-  hideInlineTranslation();
+async function translateReaderSelection(sourceType) {
+  const tooltip = getInlineTranslationTooltip();
+  const selection = tooltip.translationSelection;
+  if (!selection || !state.currentArticle) return;
 
-  if (wasOpen) {
+  const sourceText = sourceType === "word" ? selection.word : selection.sentence;
+  const localTranslation = sourceType === "word" ? selection.localTranslation : "";
+  const label = sourceType === "word" ? t("translateWord") : t("translateSentence");
+
+  if (localTranslation) {
+    addDiscoveredVocabulary(selection.word, localTranslation);
+    renderTranslationResult(tooltip, label, sourceText, localTranslation);
     completeOnboarding("firstWordHintDone");
     return;
   }
 
+  tooltip.setAttribute("aria-busy", "true");
+  tooltip.innerHTML = `<span class="translation-loading">${escapeHtml(t("translating"))}</span>`;
+  repositionActiveInlineTranslation();
+
+  try {
+    const result = await translateArticleText({
+      articleId: state.currentArticle.id,
+      sourceType,
+      sourceText,
+      sourceContext: sourceType === "word" ? selection.sentence : "",
+      targetLanguage: getNativeLanguage()
+    });
+    if (sourceType === "word") addDiscoveredVocabulary(selection.word, result.translation);
+    renderTranslationResult(tooltip, label, sourceText, result.translation);
+    completeOnboarding("firstWordHintDone");
+  } catch (error) {
+    tooltip.innerHTML = `<span class="translation-error">${escapeHtml(getTranslationErrorMessage(error))}</span>`;
+    tooltip.removeAttribute("aria-busy");
+    repositionActiveInlineTranslation();
+  }
+}
+
+function showTranslationChoices(anchor) {
+  const sentenceElement = anchor.closest(".reading-sentence");
+  if (!sentenceElement) return;
+
+  const wordElement = anchor.closest(".inline-word, .reader-word");
+  const word = wordElement?.dataset.word || "";
+  const sentence = sentenceElement.textContent.trim();
+  const localTranslation = wordElement?.classList.contains("inline-word")
+    ? wordElement.dataset.translation || ""
+    : "";
+  const wasOpen = anchor.classList.contains("translation-anchor");
+
+  hideInlineTranslation();
+  if (wasOpen) return;
+
   const tooltip = getInlineTranslationTooltip();
-  tooltip.textContent = translation;
+  tooltip.translationSelection = { word, sentence, localTranslation };
+  tooltip.innerHTML = `
+    <div class="translation-actions">
+      ${word ? `<button type="button" data-translate-type="word">${escapeHtml(t("translateWord"))}</button>` : ""}
+      <button type="button" data-translate-type="sentence">${escapeHtml(t("translateSentence"))}</button>
+    </div>
+  `;
   tooltip.classList.remove("hidden");
 
-  button.classList.add("active");
-  button.setAttribute("aria-expanded", "true");
-  button.setAttribute("aria-describedby", tooltip.id);
-  positionInlineTranslationTooltip(button, tooltip);
-  completeOnboarding("firstWordHintDone");
+  anchor.classList.add("translation-anchor");
+  if (anchor.classList.contains("inline-word")) anchor.classList.add("active");
+  anchor.setAttribute("aria-expanded", "true");
+  anchor.setAttribute("aria-describedby", tooltip.id);
+  positionInlineTranslationTooltip(anchor, tooltip);
+
+  tooltip.querySelectorAll("[data-translate-type]").forEach(button => {
+    button.onclick = () => translateReaderSelection(button.dataset.translateType);
+  });
 }
 
 window.addEventListener("scroll", repositionActiveInlineTranslation, { passive: true });

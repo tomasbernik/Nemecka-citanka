@@ -1420,6 +1420,99 @@ Object.entries({
 
 Object.entries({
   sk: {
+    translateWord: "Preložiť slovo",
+    translateSentence: "Preložiť celú vetu",
+    translating: "Prekladám…",
+    translationOffline: "Preklad potrebuje internetové pripojenie.",
+    translationNotConfigured: "DeepL ešte nie je nastavený.",
+    translationLimitReached: "Mesačný limit prekladov bol vyčerpaný.",
+    translationFailed: "Preklad sa nepodaril. Skús to znova."
+  },
+  de: {
+    translateWord: "Wort übersetzen",
+    translateSentence: "Ganzen Satz übersetzen",
+    translating: "Wird übersetzt…",
+    translationOffline: "Die Übersetzung benötigt eine Internetverbindung.",
+    translationNotConfigured: "DeepL ist noch nicht eingerichtet.",
+    translationLimitReached: "Das monatliche Übersetzungslimit ist erreicht.",
+    translationFailed: "Die Übersetzung ist fehlgeschlagen. Versuche es erneut."
+  },
+  ru: {
+    translateWord: "Перевести слово",
+    translateSentence: "Перевести всё предложение",
+    translating: "Перевожу…",
+    translationOffline: "Для перевода требуется интернет.",
+    translationNotConfigured: "DeepL ещё не настроен.",
+    translationLimitReached: "Месячный лимит переводов исчерпан.",
+    translationFailed: "Не удалось выполнить перевод. Попробуйте ещё раз."
+  },
+  pl: {
+    translateWord: "Przetłumacz słowo",
+    translateSentence: "Przetłumacz całe zdanie",
+    translating: "Tłumaczenie…",
+    translationOffline: "Tłumaczenie wymaga połączenia z internetem.",
+    translationNotConfigured: "DeepL nie jest jeszcze skonfigurowany.",
+    translationLimitReached: "Miesięczny limit tłumaczeń został wyczerpany.",
+    translationFailed: "Nie udało się przetłumaczyć. Spróbuj ponownie."
+  },
+  hu: {
+    translateWord: "Szó lefordítása",
+    translateSentence: "Teljes mondat lefordítása",
+    translating: "Fordítás…",
+    translationOffline: "A fordításhoz internetkapcsolat szükséges.",
+    translationNotConfigured: "A DeepL még nincs beállítva.",
+    translationLimitReached: "Elfogyott a havi fordítási keret.",
+    translationFailed: "A fordítás nem sikerült. Próbáld újra."
+  },
+  en: {
+    translateWord: "Translate word",
+    translateSentence: "Translate full sentence",
+    translating: "Translating…",
+    translationOffline: "Translation requires an internet connection.",
+    translationNotConfigured: "DeepL has not been configured yet.",
+    translationLimitReached: "The monthly translation limit has been reached.",
+    translationFailed: "Translation failed. Please try again."
+  },
+  ro: {
+    translateWord: "Tradu cuvântul",
+    translateSentence: "Tradu propoziția completă",
+    translating: "Se traduce…",
+    translationOffline: "Traducerea necesită o conexiune la internet.",
+    translationNotConfigured: "DeepL nu este încă configurat.",
+    translationLimitReached: "Limita lunară de traduceri a fost atinsă.",
+    translationFailed: "Traducerea a eșuat. Încearcă din nou."
+  },
+  it: {
+    translateWord: "Traduci la parola",
+    translateSentence: "Traduci l'intera frase",
+    translating: "Traduzione…",
+    translationOffline: "La traduzione richiede una connessione Internet.",
+    translationNotConfigured: "DeepL non è ancora configurato.",
+    translationLimitReached: "Il limite mensile di traduzioni è stato raggiunto.",
+    translationFailed: "Traduzione non riuscita. Riprova."
+  },
+  fr: {
+    translateWord: "Traduire le mot",
+    translateSentence: "Traduire la phrase entière",
+    translating: "Traduction…",
+    translationOffline: "La traduction nécessite une connexion Internet.",
+    translationNotConfigured: "DeepL n'est pas encore configuré.",
+    translationLimitReached: "La limite mensuelle de traductions est atteinte.",
+    translationFailed: "La traduction a échoué. Réessaie."
+  },
+  tr: {
+    translateWord: "Kelimeyi çevir",
+    translateSentence: "Tüm cümleyi çevir",
+    translating: "Çevriliyor…",
+    translationOffline: "Çeviri için internet bağlantısı gerekir.",
+    translationNotConfigured: "DeepL henüz yapılandırılmadı.",
+    translationLimitReached: "Aylık çeviri sınırına ulaşıldı.",
+    translationFailed: "Çeviri başarısız oldu. Tekrar dene."
+  }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
+  sk: {
     articleLanguage: "Jazyk článkov",
     articleVariant: "Verzia článku",
     topics: "Témy",
