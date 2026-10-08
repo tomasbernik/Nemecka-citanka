@@ -6,7 +6,7 @@ const APP_FILES = [
   "./",
   "./index.html",
   "./theme.js?v=117",
-  "./style.css?v=117",
+  "./style.css?v=118",
   "./constants.js?v=117",
   "./translations/ui.js?v=117",
   "./translations/auth.js?v=117",
