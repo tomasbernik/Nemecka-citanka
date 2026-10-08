@@ -17,7 +17,10 @@ function saveAuthSession(session) {
 
 function getAuthRedirectUrl() {
   if (SUPABASE_CONFIG.authRedirectUrl) {
-    return SUPABASE_CONFIG.authRedirectUrl;
+    const configuredUrl = new URL(SUPABASE_CONFIG.authRedirectUrl, location.href);
+    if (configuredUrl.origin === location.origin) {
+      return configuredUrl.href;
+    }
   }
 
   return `${location.origin}${location.pathname}`;
@@ -159,7 +162,8 @@ async function initAuthFromRedirect() {
   const hashSession = readAuthSessionFromHash();
   if (hashSession) {
     saveAuthSession(hashSession);
-    history.replaceState(null, "", getAuthRedirectUrl());
+    const cleanUrl = `${location.pathname}${location.search}`;
+    history.replaceState(null, "", cleanUrl);
   } else {
     saveAuthSession(getStoredAuthSession());
   }
