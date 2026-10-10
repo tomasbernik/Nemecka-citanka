@@ -253,13 +253,13 @@ function getDevicePlatformName() {
   if (/Windows/i.test(ua)) return "Windows";
   if (/Mac OS X/i.test(ua)) return "Mac";
   if (/Linux/i.test(ua)) return "Linux";
-  return "Zariadenie";
+  return t("genericDevice");
 }
 
 function getAutomaticDeviceName() {
   const deviceId = getDeviceId();
   const shortId = deviceId.split("-").pop()?.slice(0, 6) || deviceId.slice(-6);
-  const profileName = state.currentProfile?.name || "Neprihlásené";
+  const profileName = state.currentProfile?.name || t("notSignedIn");
   return `${profileName} • ${getDevicePlatformName()} • ${getBrowserName()} • ${shortId}`;
 }
 
@@ -560,6 +560,11 @@ function updateStaticTexts() {
   setText("teacherArticlesTabBtn", "articleEditor");
   setText("teacherStudentsTabBtn", "studentOverview");
   setText("teacherProfilesTabBtn", "profileSetup");
+  setText("adminOverviewTabBtn", "adminOverviewTab");
+  setText("adminOverviewEyebrow", "administration");
+  setText("adminOverviewTitle", "adminOverviewTitle");
+  setText("articleModerationEyebrow", "approval");
+  setText("articleModerationTitle", "articlesAwaitingApproval");
   setText("profileManagerEyebrow", "profileManager");
   setText("profileManagerTitle", "newProfileTitle");
   setLabelText("newProfileNameInput", "name");
@@ -583,9 +588,6 @@ function updateStaticTexts() {
   setLabelText("articleCategoryInput", "newCategory");
   setLabelText("articleCategory2Select", "category");
   setLabelText("articleCategory2Input", "newCategory");
-  setLabelText("articleVisibilitySelect", "visibility");
-  setOptionText("articleVisibilitySelect", "private", "privateArticle");
-  setOptionText("articleVisibilitySelect", "public", "publicAfterApproval");
   setLabelText("articleApprovalStatusSelect", "approvalStatus");
   setOptionText("articleApprovalStatusSelect", "draft", "draft");
   setOptionText("articleApprovalStatusSelect", "pending", "pending");
@@ -909,7 +911,7 @@ async function showTestNotification() {
 
   const registration = await navigator.serviceWorker?.ready;
   if (!registration?.showNotification) {
-    new Notification("Čítanka", {
+    new Notification(t("appTitle"), {
       body: t("notificationBody"),
       icon: "icons/icon-v2-192.png"
     });
@@ -917,7 +919,7 @@ async function showTestNotification() {
     return;
   }
 
-  await registration.showNotification("Čítanka", {
+  await registration.showNotification(t("appTitle"), {
     body: t("pushBody"),
     icon: "icons/icon-v2-192.png",
     badge: "icons/icon-v2-192.png",
@@ -951,6 +953,12 @@ onClick("teacherStudentsTabBtn", async () => {
   setTeacherPanel("students");
 });
 onClick("teacherProfilesTabBtn", () => setTeacherPanel("profiles"));
+onClick("adminOverviewTabBtn", async () => {
+  setTeacherPanel("admin");
+  renderAdminOverview();
+});
+onEvent("articleModerationList", "click", handleArticleModerationClick);
+onEvent("adminOverview", "click", handleAdminOverviewClick);
 onClick("refreshBtn", loadArticles);
 onClick("loginBtn", login);
 onClick("googleLoginBtn", signInWithGoogle);
@@ -992,15 +1000,6 @@ onClick("assignArticleBtn", assignSelectedArticleToStudents);
 onChange("articleEditorSelect", () => {
   const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
   fillArticleEditor(article || null);
-});
-onChange("articleVisibilitySelect", (event) => {
-  if (event.target.value === "public" && $("articleApprovalStatusSelect").value === "draft") {
-    $("articleApprovalStatusSelect").value = PUBLIC_ARTICLE_APPROVAL_STATUS;
-  }
-  if (event.target.value === "private") {
-    $("articleApprovalStatusSelect").value = DEFAULT_ARTICLE_APPROVAL_STATUS;
-  }
-  updateArticleApprovalControl();
 });
 onEvent("articleTitleInput", "input", () => {
   if (!$("articleEditorSelect").value) {

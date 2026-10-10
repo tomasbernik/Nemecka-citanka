@@ -673,3 +673,10 @@ function showTranslationChoices(anchor) {
 
 window.addEventListener("scroll", repositionActiveInlineTranslation, { passive: true });
 window.addEventListener("resize", repositionActiveInlineTranslation);
+
+document.addEventListener("click", event => {
+  const tooltip = document.getElementById("inlineTranslationTooltip");
+  if (!tooltip || tooltip.classList.contains("hidden")) return;
+  if (tooltip.contains(event.target) || event.target.closest?.(".translation-anchor")) return;
+  hideInlineTranslation();
+});

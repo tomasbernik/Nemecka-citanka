@@ -88,12 +88,12 @@ function renderClickedReview() {
   panel.classList.add("hidden");
   panel.classList.add("clicked-review-compact");
   $("clickedReviewMeta").textContent = clickedVocabulary.length
-    ? `${formatText("clickedReviewCount", { count: clickedVocabulary.length })} Precvič si ich, keď budeš mať chvíľu.`
+    ? formatText("reviewPracticeHint", { count: clickedVocabulary.length })
     : t("clickedReviewEmpty");
   $("clickedReviewPrompt").textContent = "";
   $("clickedReviewOptions").innerHTML = "";
   $("clickedReviewFeedback").textContent = "";
-  $("newClickedReviewBtn").textContent = "Precvičiť";
+  $("newClickedReviewBtn").textContent = t("practiceNow");
   $("newClickedReviewBtn").classList.toggle("hidden", !clickedVocabulary.length);
   state.clickedReviewGame = null;
 }

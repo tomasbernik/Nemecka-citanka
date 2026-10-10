@@ -30,24 +30,34 @@ function setTeacherPanel(panel) {
   const canShowOverview = Boolean(state.currentProfile);
   const canEditArticles = Boolean(state.currentProfile);
   const isTeacher = state.currentProfile?.role === "teacher";
-  const activePanel = canEditArticles || panel !== "articles" ? panel : "students";
+  const canShowAdmin = isPublisherAccount();
+  const activePanel = panel === "admin" && !canShowAdmin
+    ? "articles"
+    : canEditArticles || panel !== "articles" ? panel : "students";
   const showStudents = canShowOverview && activePanel === "students";
   const showProfiles = canCreateProfiles() && activePanel === "profiles";
+  const showAdmin = canShowAdmin && activePanel === "admin";
+  const showArticles = canEditArticles && !showStudents && !showProfiles && !showAdmin;
   $("teacherStudentsTabBtn").textContent = isTeacher ? t("studentOverview") : t("myProgress");
   document.querySelector("#teacherOverviewCard h2").textContent = isTeacher ? t("studentOverview") : t("myProgress");
-  $("articleEditorCard").classList.toggle("hidden", !canEditArticles || showStudents || showProfiles);
+  $("articleEditorCard").classList.toggle("hidden", !showArticles);
   $("teacherOverviewCard").classList.toggle("hidden", !showStudents);
   $("profileManagerCard").classList.toggle("hidden", !showProfiles);
+  $("adminOverviewCard").classList.toggle("hidden", !showAdmin);
   $("teacherArticlesTabBtn").classList.toggle("hidden", !canEditArticles);
   $("teacherStudentsTabBtn").classList.toggle("hidden", !canShowOverview);
   $("teacherProfilesTabBtn").classList.toggle("hidden", !canCreateProfiles());
-  $("teacherArticlesTabBtn").classList.toggle("active", canEditArticles && !showStudents && !showProfiles);
+  $("adminOverviewTabBtn").classList.toggle("hidden", !canShowAdmin);
+  $("teacherArticlesTabBtn").classList.toggle("active", showArticles);
   $("teacherStudentsTabBtn").classList.toggle("active", showStudents);
   $("teacherProfilesTabBtn").classList.toggle("active", showProfiles);
-  $("teacherArticlesTabBtn").classList.toggle("quiet", showStudents || showProfiles || !canEditArticles);
+  $("adminOverviewTabBtn").classList.toggle("active", showAdmin);
+  $("teacherArticlesTabBtn").classList.toggle("quiet", !showArticles);
   $("teacherStudentsTabBtn").classList.toggle("quiet", !showStudents);
   $("teacherProfilesTabBtn").classList.toggle("quiet", !showProfiles);
+  $("adminOverviewTabBtn").classList.toggle("quiet", !showAdmin);
   if (showProfiles) renderProfileManagerControls();
+  if (showArticles) renderArticleModerationQueue();
   renderGamification();
   renderMobileBottomNav(getActiveViewId());
   renderOnboarding();
@@ -66,6 +76,147 @@ async function showTeacherView(panel = state.currentProfile?.role === "teacher" 
   }
   renderGamification();
   renderOnboarding();
+}
+
+
+
+function getArticleOwnerLabel(article) {
+  return state.profiles.find(profile => profile.id === article.ownerProfileId)?.name
+    || article.ownerProfileId
+    || "-";
+}
+
+function renderArticleModerationQueue() {
+  const panel = $("articleModerationPanel");
+  const root = $("articleModerationList");
+  if (!panel || !root) return;
+
+  const articles = getModeratableArticles()
+    .filter(article => ["draft", "pending"].includes(article.approvalStatus))
+    .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+
+  panel.classList.toggle("hidden", state.currentProfile?.role !== "teacher" && !isPublisherAccount());
+  root.innerHTML = articles.length
+    ? articles.map(article => `
+        <article class="management-row">
+          <div>
+            <strong>${escapeHtml(article.title)}</strong>
+            <p class="muted">${escapeHtml(t("articleAuthor"))}: ${escapeHtml(getArticleOwnerLabel(article))} &bull; ${escapeHtml(t(article.approvalStatus))}</p>
+          </div>
+          <div class="management-actions">
+            <button class="secondary-btn compact" type="button" data-approval="approved" data-article-id="${escapeHtml(article.id)}">${escapeHtml(t("approveArticle"))}</button>
+            <button class="text-btn" type="button" data-approval="rejected" data-article-id="${escapeHtml(article.id)}">${escapeHtml(t("rejectArticle"))}</button>
+          </div>
+        </article>
+      `).join("")
+    : `<p class="muted">${escapeHtml(t("noArticlesAwaitingApproval"))}</p>`;
+}
+
+async function handleArticleModerationClick(event) {
+  const button = event.target.closest("[data-approval][data-article-id]");
+  if (!button) return;
+  button.disabled = true;
+  try {
+    await setArticleApprovalStatus(button.dataset.articleId, button.dataset.approval);
+    $("articleModerationStatus").textContent = t("articleStatusUpdated");
+    renderArticleModerationQueue();
+    if (isPublisherAccount()) renderAdminOverview();
+  } catch (error) {
+    $("articleModerationStatus").textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function buildAdminArticleSection(title, articles) {
+  return `
+    <section class="management-section">
+      <h3>${escapeHtml(title)} <span class="management-count">${articles.length}</span></h3>
+      <div class="management-list">
+        ${articles.length ? articles.map(article => {
+          const canPublish = article.approvalStatus === "approved";
+          const publicationAction = canPublish
+            ? `<button class="secondary-btn compact" type="button" data-published="${article.published ? "false" : "true"}" data-article-id="${escapeHtml(article.id)}">${escapeHtml(t(article.published ? "unpublishArticle" : "publishArticle"))}</button>`
+            : "";
+          return `
+            <article class="management-row">
+              <div>
+                <strong>${escapeHtml(article.title)}</strong>
+                <p class="muted">${escapeHtml(t("articleAuthor"))}: ${escapeHtml(getArticleOwnerLabel(article))} &bull; ${escapeHtml(t(article.approvalStatus))}</p>
+              </div>
+              <div class="management-actions">${publicationAction}</div>
+            </article>
+          `;
+        }).join("") : `<p class="muted">0</p>`}
+      </div>
+    </section>
+  `;
+}
+
+function buildTeacherHierarchy() {
+  const teachers = state.profiles
+    .filter(profile => profile.role === "teacher")
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const teacherGroups = new Set(teachers.map(profile => profile.teacherGroupId || profile.id));
+  const students = state.profiles.filter(profile => profile.role === "student");
+  const cards = teachers.map(teacher => {
+    const groupId = teacher.teacherGroupId || teacher.id;
+    const groupStudents = students.filter(student => student.teacherGroupId === groupId);
+    return `
+      <article class="management-profile-card">
+        <strong>${escapeHtml(teacher.name)}</strong>
+        <span class="muted">${escapeHtml(t("teacherRole"))} &bull; ${escapeHtml(groupId)}</span>
+        <ul>${groupStudents.length
+          ? groupStudents.map(student => `<li>${escapeHtml(student.name)}</li>`).join("")
+          : `<li class="muted">${escapeHtml(t("noStudentsInGroup"))}</li>`}
+        </ul>
+      </article>
+    `;
+  });
+  const unassigned = students.filter(student => !teacherGroups.has(student.teacherGroupId));
+  if (unassigned.length) {
+    cards.push(`
+      <article class="management-profile-card warning">
+        <strong>${escapeHtml(t("unassignedStudents"))}</strong>
+        <ul>${unassigned.map(student => `<li>${escapeHtml(student.name)} <span class="muted">(${escapeHtml(student.teacherGroupId || "-")})</span></li>`).join("")}</ul>
+      </article>
+    `);
+  }
+  return `<section class="management-section"><h3>${escapeHtml(t("teachersAndStudents"))}</h3><div class="management-profile-grid">${cards.join("")}</div></section>`;
+}
+
+function renderAdminOverview() {
+  const root = $("adminOverview");
+  if (!root || !isPublisherAccount()) return;
+  const articles = [...state.articles].sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
+  const pending = articles.filter(article => ["draft", "pending"].includes(article.approvalStatus));
+  const awaitingPublication = articles.filter(article => article.approvalStatus === "approved" && !article.published);
+  const published = articles.filter(article => article.published);
+  const rejected = articles.filter(article => article.approvalStatus === "rejected");
+  const privateArticles = articles.filter(article => article.visibility === "private");
+  root.innerHTML = [
+    buildAdminArticleSection(t("articleNew"), pending),
+    buildAdminArticleSection(t("approvedAwaitingPublication"), awaitingPublication),
+    buildAdminArticleSection(t("publishedArticles"), published),
+    buildAdminArticleSection(t("rejectedArticles"), rejected),
+    buildAdminArticleSection(t("privateLegacyArticles"), privateArticles),
+    buildTeacherHierarchy()
+  ].join("");
+}
+
+async function handleAdminOverviewClick(event) {
+  const button = event.target.closest("[data-published][data-article-id]");
+  if (!button || !isPublisherAccount()) return;
+  button.disabled = true;
+  try {
+    await setArticlePublished(button.dataset.articleId, button.dataset.published === "true");
+    renderAdminOverview();
+    renderArticles();
+  } catch (error) {
+    window.alert(error.message);
+  } finally {
+    button.disabled = false;
+  }
 }
 
 function formatPracticeType(type) {
@@ -199,41 +350,41 @@ async function renderTeacherOverview() {
   const currentGroupId = state.currentProfile?.teacherGroupId || state.currentProfile?.id || "";
   const isAdmin = isAdminProfile();
   const roleLabel = profile => profile.role === "teacher" ? t("teacherRole") : t("studentRole");
-  const profileTitle = profile => `${profile.name} - ${roleLabel(profile)} - skupina: ${profile.teacherGroupId || profile.id}`;
-  const formatAnswer = answer => answer === true ? "Pravda" : answer === false ? "Nepravda" : String(answer);
+  const profileTitle = profile => `${profile.name} - ${roleLabel(profile)} - ${t("groupLabel")}: ${profile.teacherGroupId || profile.id}`;
+  const formatAnswer = answer => answer === true ? t("trueLabel") : answer === false ? t("falseLabel") : String(answer);
   const inactiveAfterDays = 14;
   const now = Date.now();
   const labels = {
-    classSummary: "Súhrn triedy",
-    assignmentSummary: "Prehľad zadaní",
-    students: "Žiaci",
-    activeStudents: "aktívni",
-    inactiveStudents: "dlhodobo neaktívni",
-    assignedDone: "hotové zadania",
-    assignedOpen: "ešte neurobené",
-    noLastActivity: "bez aktivity",
-    noAssignments: "bez zadaní",
-    doneAssignments: "Hotové zadania",
-    unfinishedAssignments: "Ešte neurobené zadania",
-    otherActivity: "Ďalšia aktivita mimo zadaní",
-    details: "Detail",
-    assigned: "zadané",
-    done: "hotové",
-    open: "otvorené",
-    inactive: "dlhodobo neaktívny",
-    active: "aktívny",
-    noOpenAssignments: "Nemá žiadne nesplnené zadania.",
-    noDoneAssignments: "Zatiaľ nemá hotové zadania.",
-    noOtherActivity: "Zatiaľ nie je ďalšia aktivita mimo zadaní.",
-    noStudents: "V tvojej skupine zatiaľ nie sú žiadni žiaci.",
-    lastActivity: "posledná aktivita",
-    tasks: "úlohy",
-    answers: "odpovede"
+    classSummary: t("classSummary"),
+    assignmentSummary: t("assignmentSummary"),
+    students: t("studentsLabel"),
+    activeStudents: t("activeStudents"),
+    inactiveStudents: t("inactiveStudents"),
+    assignedDone: t("completedAssignments"),
+    assignedOpen: t("unfinishedAssignmentsCount"),
+    noLastActivity: t("noActivity"),
+    noAssignments: t("noAssignmentsLabel"),
+    doneAssignments: t("doneAssignmentsHeading"),
+    unfinishedAssignments: t("unfinishedAssignmentsHeading"),
+    otherActivity: t("otherActivity"),
+    details: t("detail"),
+    assigned: t("assignedLower"),
+    done: t("doneLower"),
+    open: t("openedLower"),
+    inactive: t("inactiveLabel"),
+    active: t("activeLabel"),
+    noOpenAssignments: t("studentNoOpenAssignments"),
+    noDoneAssignments: t("noDoneAssignments"),
+    noOtherActivity: t("noOtherActivity"),
+    noStudents: t("noStudentsInGroup"),
+    lastActivity: t("lastActivityLabel"),
+    tasks: t("tasks"),
+    answers: t("answersLabel")
   };
   const buildPracticeList = entries => entries.slice(0, 4).map(entry => `
     <li>
       <strong>${escapeHtml(formatPracticeType(entry.type))}</strong>
-      ${typeof entry.correct === "boolean" ? ` &bull; ${entry.correct ? "správne" : "nesprávne"}` : ""}
+      ${typeof entry.correct === "boolean" ? ` &bull; ${entry.correct ? t("correctLower") : t("incorrectLower")}` : ""}
       <span class="muted"> &bull; ${escapeHtml(formatDateTime(entry.at))}</span>
     </li>
   `).join("");
@@ -258,7 +409,7 @@ async function renderTeacherOverview() {
     const status = item.assignmentStatus;
     const answerCards = item.answers.map(([index, answer]) => {
       const question = item.article.questions?.[Number(index)];
-      const statement = question?.statement || question || `Otázka ${Number(index) + 1}`;
+      const statement = question?.statement || question || formatText("questionNumber", { number: Number(index) + 1 });
       return `
         <div class="dashboard-answer">
           <p><strong>${escapeHtml(statement)}</strong></p>
@@ -467,7 +618,7 @@ async function renderTeacherOverview() {
 
     if (otherProfiles.length) {
       const otherSummaries = await Promise.all(otherProfiles.map(profile => buildProfileSummary(profile, profileTitle(profile))));
-      sections.push(buildDashboard("Ostatné profily mimo tvojej skupiny", otherSummaries));
+      sections.push(buildDashboard(t("otherProfilesTitle"), otherSummaries));
     }
   }
 

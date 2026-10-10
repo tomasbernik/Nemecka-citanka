@@ -20,6 +20,37 @@ function getPromptVocabularyExample() {
 }
 
 const PROMPT_TEXT = {
+  de: {
+    article: ({ level, category, topic, requiredWords }) => [
+      `Schreibe einen deutschen Artikel für das Niveau ${level}.`,
+      category ? `Kategorie/Thema: ${category}.` : "",
+      topic ? `Konkrete Aufgabe: ${topic}` : "",
+      requiredWords.length
+        ? `Verwende diese deutschen Wörter oder Phrasen natürlich im Text: ${requiredWords.join(", ")}.`
+        : "",
+      "Gib nur den fertigen deutschen Inhalt zurück. Schreibe kein JSON, keine Vokabelliste, keine Fragen und keine Erklärungen."
+    ],
+    translation: (missing) => [
+      `Übersetze diese deutschen Wörter und Phrasen in folgende Sprachen: ${getPromptVocabularyLanguageList("en")}.`,
+      "Gib nur ein gültiges JSON-Array zurück. Füge keine Erklärungen und keinen Markdown-```json-Block hinzu.",
+      `Jeder Eintrag muss genau diese Schlüssel enthalten: ${getPromptVocabularyKeys()}.`,
+      "Format eines Eintrags:",
+      getPromptVocabularyExample(),
+      "",
+      missing.join("\n")
+    ],
+    questions: ({ title, text }) => [
+      "Erstelle Richtig/Falsch-Aussagen zu diesem deutschen Artikel.",
+      "Gib 6 bis 8 Zeilen in diesem Format zurück:",
+      "deutscher Satz = true",
+      "deutscher Satz = false",
+      "Verwende sowohl richtige als auch falsche Aussagen. Schreibe nichts anderes.",
+      "Die Antworten dürfen keinem regelmäßigen true/false/true/false- oder false/true/false/true-Muster folgen. Zwei richtige oder zwei falsche Aussagen dürfen aufeinanderfolgen.",
+      title ? `Titel: ${title}` : "",
+      "",
+      text
+    ]
+  },
   en: {
     article: ({ level, category, topic, requiredWords }) => [
       `Write a German story or article for level ${level}.`,

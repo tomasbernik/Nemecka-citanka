@@ -1,27 +1,27 @@
 
-const CACHE_NAME = "citanka-v119";
+const CACHE_NAME = "citanka-v124";
 const IMAGE_CACHE_NAME = "citanka-article-images-v114";
 const IMAGE_CACHE_LIMIT = 25;
 const APP_FILES = [
   "./",
   "./index.html",
   "./theme.js?v=117",
-  "./style.css?v=118",
-  "./constants.js?v=117",
-  "./translations/ui.js?v=117",
+  "./style.css?v=120",
+  "./constants.js?v=124",
+  "./translations/ui.js?v=124",
   "./translations/auth.js?v=117",
   "./translations/new-languages.js?v=117",
-  "./translations/prompts.js?v=117",
+  "./translations/prompts.js?v=120",
   "./i18n.js?v=117",
-  "./auth.js?v=119",
+  "./auth.js?v=124",
   "./api.js?v=117",
   "./profiles.js?v=117",
-  "./articles.js?v=117",
-  "./reader.js?v=117",
-  "./games.js?v=117",
-  "./editor.js?v=117",
-  "./app.js?v=117",
-  "./home.js?v=117",
+  "./articles.js?v=124",
+  "./reader.js?v=121",
+  "./games.js?v=124",
+  "./editor.js?v=124",
+  "./app.js?v=124",
+  "./home.js?v=124",
   "./config.js?v=117",
   "./articles.json",
   "./manifest.json",
@@ -118,14 +118,14 @@ self.addEventListener("notificationclick", event => {
 
 self.addEventListener("push", event => {
   const data = event.data?.json?.() || {
-    title: "Čítanka",
-    body: "Dnes stačí pár minút nemčiny.",
+    title: "Lesebuch",
+    body: "Heute reichen ein paar Minuten Deutsch.",
     url: "./index.html"
   };
 
   event.waitUntil(
-    self.registration.showNotification(data.title || "Čítanka", {
-      body: data.body || "Dnes stačí pár minút nemčiny.",
+    self.registration.showNotification(data.title || "Lesebuch", {
+      body: data.body || "Heute reichen ein paar Minuten Deutsch.",
       icon: "icons/icon-v2-192.png",
       badge: "icons/icon-v2-192.png",
       data: { url: data.url || "./index.html" }

@@ -205,7 +205,7 @@ async function imageFileToJpegBlob(file) {
   try {
     await new Promise((resolve, reject) => {
       image.onload = resolve;
-      image.onerror = () => reject(new Error("Prehliadač nevie načítať vybraný obrázok."));
+      image.onerror = () => reject(new Error(t("imageLoadFailed")));
       image.src = imageUrl;
     });
 
@@ -224,7 +224,7 @@ async function drawImageAsJpegBlob(image, sourceWidth, sourceHeight) {
   canvas.height = height;
 
   const context = canvas.getContext("2d");
-  if (!context) throw new Error("Prehliadač nevie pripraviť obrázok na upload.");
+  if (!context) throw new Error(t("imagePrepareFailed"));
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, width, height);
   context.drawImage(image, 0, 0, width, height);
@@ -232,7 +232,7 @@ async function drawImageAsJpegBlob(image, sourceWidth, sourceHeight) {
   return await new Promise((resolve, reject) => {
     canvas.toBlob(blob => {
       if (blob) resolve(blob);
-      else reject(new Error("Prehliadač nevie previesť obrázok na JPG."));
+      else reject(new Error(t("imageConvertFailed")));
     }, "image/jpeg", ARTICLE_IMAGE_JPEG_QUALITY);
   });
 }
@@ -306,7 +306,7 @@ async function copyTextToClipboard(text, successMessage = t("copied")) {
 
   try {
     if (!navigator.clipboard?.writeText) {
-      throw new Error("Clipboard API nie je dostupné.");
+      throw new Error(t("clipboardUnavailable"));
     }
 
     await navigator.clipboard.writeText(text);
@@ -709,6 +709,7 @@ function getPromptText() {
 }
 
 function getArticleJsonPromptInstructions(level) {
+  const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
   const vocabularyExample = `{\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",${PROMPT_TRANSLATION_LANGUAGE_CODES
     .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
@@ -716,6 +717,31 @@ function getArticleJsonPromptInstructions(level) {
   const inlineVocabularyExample = `{\"de\":\"presný súvislý úsek skopírovaný z textu článku\",\"base\":\"základný tvar\",${PROMPT_TRANSLATION_LANGUAGE_CODES
     .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
     .join(",")}}`;
+
+  if (isGerman) {
+    const vocabulary = `{"de":"Wort oder Phrase aus dem Text","base":"Grundform",${PROMPT_TRANSLATION_LANGUAGE_CODES.map(code => `"${code}":"Übersetzung auf ${NATIVE_LANGUAGES[code]?.label || code}"`).join(",")}}`;
+    const inlineVocabulary = `{"de":"exakter Ausschnitt aus dem Artikeltext","base":"Grundform",${PROMPT_TRANSLATION_LANGUAGE_CODES.map(code => `"${code}":"Übersetzung auf ${NATIVE_LANGUAGES[code]?.label || code}"`).join(",")}}`;
+    return [
+      "", "JSON-Schema:", "{",
+      "  \"title\": \"deutscher Artikeltitel\",",
+      `  \"level\": \"${level}\",`,
+      "  \"category\": \"Kategorie oder Thema\",",
+      `  \"categoryLabels\": {\"Kategorie oder Thema\":{\"${PROMPT_TRANSLATION_LANGUAGE_CODES.join("\":\"Übersetzung\", \"")}\":\"Übersetzung\"}},`,
+      "  \"summary\": \"kurze deutsche Artikelbeschreibung\",",
+      "  \"text\": [\"Absatz 1\", \"Absatz 2\", \"Absatz 3\", \"Absatz 4\"],",
+      "  \"vocabulary\": [", `    ${vocabulary}`, "  ],",
+      "  \"inlineVocabulary\": [", `    ${inlineVocabulary}`, "  ],",
+      "  \"questions\": [", "    {\"statement\":\"deutsche Richtig/Falsch-Aussage\",\"answer\":true}", "  ]", "}", "",
+      "Verwende den unten eingefügten Text exakt. Formuliere ihn nicht um, kürze ihn nicht und ändere seine Länge nicht.",
+      "Teile den Text absatzweise in das Feld \"text\" auf.",
+      `Füge genau 5 deutsche Wörter oder Phrasen zu \"vocabulary\" hinzu, die zum Niveau ${level} passen, natürlich im Text vorkommen und als neuer Wortschatz nützlich sind.`,
+      "Füge 8 bis 12 Einträge zu \"inlineVocabulary\" hinzu. Der Wert \"de\" muss ein exakter zusammenhängender Ausschnitt aus dem Artikeltext mit derselben Form und Wortfolge sein.",
+      "Füge 6 bis 8 deutsche Richtig/Falsch-Aussagen mit einer natürlichen Mischung aus richtigen und falschen Antworten zu \"questions\" hinzu.",
+      `Füge für jede Kategorie oder jedes Thema Übersetzungen in diesen Sprachen zu \"categoryLabels\" hinzu: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+      `Alle Einträge in vocabulary und inlineVocabulary müssen diese Schlüssel enthalten: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+      "Verwende für \"base\" die Wörterbuchform: bei Substantiven mit bestimmtem Artikel im Nominativ Singular, bei Verben den Infinitiv und bei Adjektiven die Grundform."
+    ];
+  }
 
   if (isEnglish) {
     const englishVocabularyExample = `{\"de\":\"word or phrase from the text\",\"base\":\"dictionary form\",${PROMPT_TRANSLATION_LANGUAGE_CODES
@@ -805,7 +831,21 @@ function buildArticlePrompt() {
   const category = getArticleEditorCategory();
   const requiredWords = getArticleRequiredWords();
   const range = getSelectedArticleLengthRange();
+  const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
+
+  if (isGerman) {
+    return [
+      `Schreibe eine deutsche Geschichte oder einen deutschen Artikel auf dem Niveau ${level}.`,
+      category ? `Kategorie/Thema: ${category}.` : "",
+      topic ? `Konkrete Aufgabe: ${topic}` : "",
+      requiredWords.length ? `Verwende diese deutschen Wörter oder Phrasen natürlich: ${requiredWords.join(", ")}.` : "",
+      `Länge: ${range.min} bis ${range.max} Wörter.`,
+      "Der Inhalt muss mindestens einen natürlichen Dialog auf Deutsch enthalten, zum Beispiel 2 bis 4 Gesprächszeilen.",
+      "Die Handlung darf praktisch, interessant oder leicht humorvoll sein.",
+      "Gib nur den fertigen deutschen Inhalt zurück. Schreibe kein JSON, keine Vokabelliste, keine Fragen und keine Erklärungen."
+    ].filter(Boolean).join("\n");
+  }
 
   if (isEnglish) {
     return [
@@ -842,9 +882,23 @@ function buildArticleJsonPrompt() {
   const category = getArticleEditorCategory();
   const title = $("articleTitleInput").value.trim();
   const summary = $("articleSummaryInput").value.trim();
+  const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
 
   addRequiredWordsToVocabulary();
+
+  if (isGerman) {
+    return [
+      "Wandle diesen fertigen deutschen Text in JSON für die Lese-App um.",
+      "Wichtig: Verwende den eingefügten Text exakt. Formuliere ihn nicht um, kürze oder erweitere ihn nicht.",
+      title ? `Verwende diesen Titel, wenn er passt: ${title}` : "Erstelle einen kurzen deutschen Titel.",
+      summary ? `Verwende diese Kurzbeschreibung, wenn sie passt: ${summary}` : "Erstelle eine kurze deutsche Beschreibung.",
+      category ? `Kategorie: ${category}.` : "",
+      ...getArticleJsonPromptInstructions(level), "",
+      text ? "Fertiger deutscher Text:" : "Der fertige deutsche Text ist deine letzte Antwort in diesem Chat. Verwende exakt diese Antwort.",
+      text
+    ].filter(Boolean).join("\n");
+  }
 
   if (isEnglish) {
     return [
@@ -973,7 +1027,7 @@ async function renderArticleAssignmentPanel(article = state.articles.find(item =
 
   const students = getTeacherStudents();
   if (!students.length) {
-    list.innerHTML = '<p class="muted">V skupine ešte nie sú žiaci.</p>';
+    list.innerHTML = `<p class="muted">${escapeHtml(t("noStudentsForAssignment"))}</p>`;
     return;
   }
 
@@ -1029,7 +1083,7 @@ async function assignSelectedArticleToStudents() {
         : existing;
       await saveProfileDataForProfile(student, { ...data, assignments });
     }));
-    $("articleAssignmentStatus").textContent = "Zadanie je uložené.";
+    $("articleAssignmentStatus").textContent = t("assignmentSaved");
     renderArticleAssignmentPanel(article);
     await renderTeacherOverview();
   } catch (error) {
@@ -1270,7 +1324,7 @@ function fillArticleEditor(article) {
   updateArticleRequiredWordsMode();
   $("articleTitleInput").value = article?.title || "";
   $("articleIdInput").value = article?.id || "";
-  $("articleVisibilitySelect").value = article?.visibility || DEFAULT_ARTICLE_VISIBILITY;
+  $("articleVisibilitySelect").value = DEFAULT_ARTICLE_VISIBILITY;
   $("articleApprovalStatusSelect").value = article?.approvalStatus || DEFAULT_ARTICLE_APPROVAL_STATUS;
   $("articleLevelInput").value = article?.level || "B1";
   renderArticleCategoryOptionsMulti(article?.category || "");
@@ -1303,23 +1357,12 @@ function clearArticleCreationHelperInputs() {
 }
 
 function canModerateArticleApproval(article) {
-  return Boolean(
-    article
-    && isAdminProfile()
-  );
+  return canModerateArticle(article);
 }
 
 function updateArticleApprovalControl(article = state.articles.find(item => item.id === $("articleEditorSelect")?.value) || null) {
   const select = $("articleApprovalStatusSelect");
   if (!select) return;
-
-  const isPublic = $("articleVisibilitySelect").value === "public";
-  select.closest("label")?.classList.toggle("hidden", !isPublic);
-  if (!isPublic) {
-    select.value = DEFAULT_ARTICLE_APPROVAL_STATUS;
-    select.disabled = true;
-    return;
-  }
 
   const canModerate = canModerateArticleApproval(article);
   select.disabled = !canModerate;
@@ -1343,15 +1386,13 @@ function readArticleEditor() {
   if (idArticle && idArticle.id !== existingArticle?.id && !canEditArticle(idArticle)) {
     throw new Error(t("editNotAllowed"));
   }
-  const visibility = $("articleVisibilitySelect").value || DEFAULT_ARTICLE_VISIBILITY;
+  const visibility = DEFAULT_ARTICLE_VISIBILITY;
   const selectedApprovalStatus = $("articleApprovalStatusSelect").value || DEFAULT_ARTICLE_APPROVAL_STATUS;
-  const approvalStatus = visibility === "public"
-    ? canModerateArticleApproval(existingArticle)
-      ? selectedApprovalStatus
-      : existingArticle?.approvalStatus === "approved"
-        ? "approved"
-      : PUBLIC_ARTICLE_APPROVAL_STATUS
-    : DEFAULT_ARTICLE_APPROVAL_STATUS;
+  const approvalStatus = canModerateArticleApproval(existingArticle)
+    ? selectedApprovalStatus
+    : existingArticle?.approvalStatus === "approved"
+      ? "approved"
+      : PUBLIC_ARTICLE_APPROVAL_STATUS;
   const parsedVocabulary = parseVocabularyLines($("articleVocabularyInput").value);
   const parsedInlineVocabulary = parseVocabularyDraftLines($("articleInlineVocabularyInput").value)
     .filter(hasAnyVocabularyTranslation);
@@ -1361,6 +1402,7 @@ function readArticleEditor() {
     teacherGroupId: existingArticle?.teacherGroupId || state.currentProfile?.teacherGroupId || state.currentProfile?.id || null,
     visibility,
     approvalStatus,
+    published: existingArticle?.published === true,
     title,
     level: $("articleLevelInput").value.trim(),
     category: getArticleEditorCategory(),

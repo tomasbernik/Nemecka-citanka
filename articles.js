@@ -51,8 +51,23 @@ async function seedLocalArticlesToRemote() {
 }
 
 async function loadRemoteArticles() {
-  const rows = await supabaseRequest("app_articles?select=*&published=eq.true&order=updated_at.desc,title.asc");
-  return (rows || []).map(rowToArticle);
+  const publishedRows = await supabaseRequest("app_articles?select=*&published=eq.true&approval_status=eq.approved&order=updated_at.desc,title.asc");
+  let manageableRows = [];
+
+  if (state.authUser) {
+    try {
+      manageableRows = await supabaseRequest("rpc/app_manageable_articles", {
+        method: "POST",
+        body: "{}"
+      }) || [];
+    } catch (error) {
+      console.info("Manageable article lookup skipped:", error.message);
+    }
+  }
+
+  const rows = new Map();
+  [...(publishedRows || []), ...manageableRows].forEach(row => rows.set(row.id, row));
+  return Array.from(rows.values()).map(rowToArticle);
 }
 
 function mergeArticles(...articleGroups) {
@@ -213,20 +228,13 @@ function normalizeArticle(article) {
     categoryLabels: article.categoryLabels || article.category_labels || {},
     image: article.image || null,
     visibility: article.visibility || "public",
-    approvalStatus: article.approvalStatus || article.approval_status || "approved"
+    approvalStatus: article.approvalStatus || article.approval_status || "approved",
+    published: article.published !== false
   };
 }
 
 function canViewArticle(article, profile = state.currentProfile) {
-  if (!article?.published && article?.published !== undefined) return false;
-  if (article.visibility === "public" && article.approvalStatus === "approved") return true;
-  if (!profile) return false;
-  if (profile.role === "teacher" && (
-    article.teacherGroupId === profile.teacherGroupId
-    || article.ownerProfileId === profile.id
-    || !article.teacherGroupId
-  )) return true;
-  return article.ownerProfileId === profile.id;
+  return Boolean(article?.published && article.visibility === "public" && article.approvalStatus === "approved");
 }
 
 function isInCurrentTeacherGroup(profile) {
@@ -270,9 +278,26 @@ function isAdminProfile(profile = state.currentProfile) {
   return Boolean(profile?.id && ADMIN_PROFILE_IDS.has(profile.id));
 }
 
+function isPublisherAccount() {
+  const email = state.authUser?.email || state.authUser?.user_metadata?.email || "";
+  return email.trim().toLowerCase() === PUBLISHER_EMAIL;
+}
+
+function canModerateArticle(article, profile = state.currentProfile) {
+  if (!article || !profile || !state.authUser) return false;
+  if (isPublisherAccount()) return true;
+  if (profile.role !== "teacher") return false;
+  const teacherGroupId = profile.teacherGroupId || profile.id;
+  return article.teacherGroupId === teacherGroupId;
+}
+
+function getModeratableArticles() {
+  return state.articles.filter(article => canModerateArticle(article));
+}
+
 function canEditArticle(article, profile = state.currentProfile) {
   if (!article || !profile) return false;
-  return isAdminProfile(profile) || article.ownerProfileId === profile.id;
+  return isPublisherAccount() || article.ownerProfileId === profile.id;
 }
 
 function canDeleteArticle(article, profile = state.currentProfile) {
@@ -302,9 +327,9 @@ function omitArticleRowColumns(row, columns) {
 
 async function saveArticleRows(rows) {
   try {
-    await supabaseRequest("app_articles?on_conflict=id", {
+    return await supabaseRequest("app_articles?on_conflict=id", {
       method: "POST",
-      headers: { Prefer: "resolution=merge-duplicates" },
+      headers: { Prefer: "resolution=merge-duplicates,return=representation" },
       body: JSON.stringify(rows)
     });
   } catch (error) {
@@ -314,16 +339,17 @@ async function saveArticleRows(rows) {
       ...(error?.message?.includes("variant_group_id") ? ["variant_group_id"] : [])
     ];
     if (!missingColumns.length) throw error;
-    await supabaseRequest("app_articles?on_conflict=id", {
+    return await supabaseRequest("app_articles?on_conflict=id", {
       method: "POST",
-      headers: { Prefer: "resolution=merge-duplicates" },
+      headers: { Prefer: "resolution=merge-duplicates,return=representation" },
       body: JSON.stringify(rows.map(row => omitArticleRowColumns(row, missingColumns)))
     });
   }
 }
 
 async function insertArticleRow(row) {
-  await saveArticleRows([row]);
+  const rows = await saveArticleRows([row]);
+  return rows?.[0] || null;
 }
 
 function rowToArticle(row) {
@@ -345,7 +371,8 @@ function rowToArticle(row) {
     inlineVocabulary: row.inline_vocabulary || [],
     image: row.image || null,
     questions: row.questions || [],
-    updatedAt: row.updated_at || null
+    updatedAt: row.updated_at || null,
+    published: row.published === true
   };
 }
 
@@ -356,7 +383,7 @@ function articleToRow(article, options = {}) {
     variant_group_id: article.variantGroupId || getInferredArticleVariantGroupId(article),
     owner_profile_id: article.ownerProfileId || null,
     teacher_group_id: article.teacherGroupId || null,
-    visibility: article.visibility || "public",
+    visibility: "public",
     approval_status: article.approvalStatus || "approved",
     title: article.title,
     level: article.level,
@@ -380,12 +407,13 @@ function articleToRow(article, options = {}) {
 
 async function saveArticle(article) {
   if (!state.remoteReady) {
-    throw new Error("Editor článkov potrebuje zapnutý Supabase.");
+    throw new Error(t("editorNeedsSupabase"));
   }
 
   article = normalizeArticle(article);
 
-  await insertArticleRow(articleToRow(article));
+  const savedRow = await insertArticleRow(articleToRow(article));
+  if (savedRow) article = normalizeArticle(rowToArticle(savedRow));
 
   const index = state.articles.findIndex(item => item.id === article.id);
   if (index >= 0) {
@@ -400,6 +428,32 @@ async function saveArticle(article) {
   renderArticles();
   renderArticleCategoryOptionsMulti(article.category);
   renderArticleEditorList(article.id);
+}
+
+async function setArticleApprovalStatus(articleId, approvalStatus) {
+  const rows = await supabaseRequest("rpc/app_set_article_approval", {
+    method: "POST",
+    body: JSON.stringify({ target_article_id: articleId, target_status: approvalStatus })
+  });
+  const updated = Array.isArray(rows) ? rows[0] : rows;
+  if (!updated) return null;
+  const article = normalizeArticle(rowToArticle(updated));
+  const index = state.articles.findIndex(item => item.id === article.id);
+  if (index >= 0) state.articles[index] = article;
+  return article;
+}
+
+async function setArticlePublished(articleId, published) {
+  const rows = await supabaseRequest("rpc/app_set_article_published", {
+    method: "POST",
+    body: JSON.stringify({ target_article_id: articleId, target_published: published })
+  });
+  const updated = Array.isArray(rows) ? rows[0] : rows;
+  if (!updated) return null;
+  const article = normalizeArticle(rowToArticle(updated));
+  const index = state.articles.findIndex(item => item.id === article.id);
+  if (index >= 0) state.articles[index] = article;
+  return article;
 }
 
 function getCategories() {

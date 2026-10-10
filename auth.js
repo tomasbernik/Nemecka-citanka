@@ -449,8 +449,8 @@ function getAuthProfileName() {
     || user?.user_metadata?.name
     || user?.user_metadata?.given_name
     || user?.email?.split("@")[0]
-    || "Učiteľ";
-  return rawName.trim() || "Učiteľ";
+    || t("teacherRole");
+  return rawName.trim() || t("teacherRole");
 }
 
 function makeRandomPin() {

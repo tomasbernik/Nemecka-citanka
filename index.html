@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=118">
+  <link rel="stylesheet" href="style.css?v=120">
 </head>
 <body>
   <div id="app">
@@ -57,6 +57,7 @@
           <h2>Zwei Profile erstellen</h2>
           <p class="muted">Neue Profile melden sich ueber Google, E-Mail oder Einladung an.</p>
 
+          <input id="articleVisibilitySelect" type="hidden" value="public">
           <label class="field-row">
             Name Profil 1
             <input id="teacherNameInput" autocomplete="given-name">
@@ -369,6 +370,7 @@
           <button id="teacherArticlesTabBtn" class="secondary-btn" type="button">Editor článkov</button>
           <button id="teacherStudentsTabBtn" class="secondary-btn quiet" type="button">Prehľad žiakov</button>
           <button id="teacherProfilesTabBtn" class="secondary-btn quiet hidden" type="button">Nové profily</button>
+          <button id="adminOverviewTabBtn" class="secondary-btn quiet hidden" type="button">Správa</button>
         </div>
 
         <section id="gamificationPanel" class="gamification-panel hidden" aria-labelledby="gamificationTitle">
@@ -401,6 +403,12 @@
           <p class="eyebrow">Učiteľský pohľad</p>
           <h2>Prehľad žiakov</h2>
           <div id="teacherOverview"></div>
+        </div>
+
+        <div id="adminOverviewCard" class="reader-card hidden">
+          <p id="adminOverviewEyebrow" class="eyebrow">Správa</p>
+          <h2 id="adminOverviewTitle">Prehľad článkov a profilov</h2>
+          <div id="adminOverview"></div>
         </div>
 
         <div id="profileManagerCard" class="reader-card hidden">
@@ -443,13 +451,12 @@
             Upraviť článok
             <select id="articleEditorSelect"></select>
           </label>
-          <label class="field-row">
-            Viditeľnosť
-            <select id="articleVisibilitySelect">
-              <option value="public">Verejný po schválení</option>
-              <option value="private">Súkromný článok</option>
-            </select>
-          </label>
+          <section id="articleModerationPanel" class="article-moderation-panel hidden">
+            <p id="articleModerationEyebrow" class="eyebrow">Schvaľovanie</p>
+            <h3 id="articleModerationTitle">Články čakajúce na schválenie</h3>
+            <div id="articleModerationList"></div>
+            <p id="articleModerationStatus" class="muted"></p>
+          </section>
           <label class="field-row">
             Stav schválenia
             <select id="articleApprovalStatusSelect">
@@ -659,20 +666,20 @@
   </div>
 
   <script src="config.js?v=117"></script>
-  <script src="constants.js?v=117"></script>
-  <script src="translations/ui.js?v=117"></script>
+  <script src="constants.js?v=124"></script>
+  <script src="translations/ui.js?v=124"></script>
   <script src="translations/auth.js?v=117"></script>
   <script src="translations/new-languages.js?v=117"></script>
-  <script src="translations/prompts.js?v=117"></script>
+  <script src="translations/prompts.js?v=120"></script>
   <script src="i18n.js?v=117"></script>
-  <script src="auth.js?v=119"></script>
+  <script src="auth.js?v=124"></script>
   <script src="api.js?v=117"></script>
   <script src="profiles.js?v=117"></script>
-  <script src="articles.js?v=117"></script>
-  <script src="reader.js?v=117"></script>
-  <script src="games.js?v=117"></script>
-  <script src="editor.js?v=117"></script>
-  <script src="home.js?v=117"></script>
-  <script src="app.js?v=117"></script>
+  <script src="articles.js?v=124"></script>
+  <script src="reader.js?v=121"></script>
+  <script src="games.js?v=124"></script>
+  <script src="editor.js?v=124"></script>
+  <script src="home.js?v=124"></script>
+  <script src="app.js?v=124"></script>
 </body>
 </html>
