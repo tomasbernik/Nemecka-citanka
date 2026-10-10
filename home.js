@@ -134,8 +134,15 @@ function buildAdminArticleSection(title, articles) {
       <h3>${escapeHtml(title)} <span class="management-count">${articles.length}</span></h3>
       <div class="management-list">
         ${articles.length ? articles.map(article => {
-          const canPublish = article.approvalStatus === "approved";
-          const publicationAction = canPublish
+          const approvalActions = ["draft", "pending"].includes(article.approvalStatus)
+            ? `
+                <button class="secondary-btn compact" type="button" data-approval="approved" data-article-id="${escapeHtml(article.id)}">${escapeHtml(t("approveArticle"))}</button>
+                <button class="text-btn" type="button" data-approval="rejected" data-article-id="${escapeHtml(article.id)}">${escapeHtml(t("rejectArticle"))}</button>
+              `
+            : article.approvalStatus === "rejected"
+              ? `<button class="secondary-btn compact" type="button" data-approval="approved" data-article-id="${escapeHtml(article.id)}">${escapeHtml(t("approveArticle"))}</button>`
+              : "";
+          const publicationAction = article.approvalStatus === "approved"
             ? `<button class="secondary-btn compact" type="button" data-published="${article.published ? "false" : "true"}" data-article-id="${escapeHtml(article.id)}">${escapeHtml(t(article.published ? "unpublishArticle" : "publishArticle"))}</button>`
             : "";
           return `
@@ -144,7 +151,7 @@ function buildAdminArticleSection(title, articles) {
                 <strong>${escapeHtml(article.title)}</strong>
                 <p class="muted">${escapeHtml(t("articleAuthor"))}: ${escapeHtml(getArticleOwnerLabel(article))} &bull; ${escapeHtml(t(article.approvalStatus))}</p>
               </div>
-              <div class="management-actions">${publicationAction}</div>
+              <div class="management-actions">${approvalActions}${publicationAction}</div>
             </article>
           `;
         }).join("") : `<p class="muted">0</p>`}
@@ -205,12 +212,19 @@ function renderAdminOverview() {
 }
 
 async function handleAdminOverviewClick(event) {
-  const button = event.target.closest("[data-published][data-article-id]");
+  const button = event.target.closest("[data-article-id]");
   if (!button || !isPublisherAccount()) return;
   button.disabled = true;
   try {
-    await setArticlePublished(button.dataset.articleId, button.dataset.published === "true");
+    if (button.dataset.approval) {
+      await setArticleApprovalStatus(button.dataset.articleId, button.dataset.approval);
+    } else if (button.dataset.published) {
+      await setArticlePublished(button.dataset.articleId, button.dataset.published === "true");
+    } else {
+      return;
+    }
     renderAdminOverview();
+    renderArticleModerationQueue();
     renderArticles();
   } catch (error) {
     window.alert(error.message);
