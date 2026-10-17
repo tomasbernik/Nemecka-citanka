@@ -819,82 +819,98 @@ grant execute on function public.app_set_article_published(text, boolean) to aut
 
 -- Allow owner edits to reset an approved article to pending without treating the automatic reset as moderation.
 
-create or replace function public.app_guard_article_workflow()
-returns trigger
-language plpgsql
-security definer
-set search_path = public, auth
-as $$
-declare
+
+CREATE OR REPLACE FUNCTION public.app_guard_article_workflow()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
   publisher boolean := public.app_is_publisher();
+  teacher_can_approve boolean;
   content_changed boolean := false;
   requested_approval_changed boolean := false;
   requested_publication_changed boolean := false;
-begin
-  if new.visibility <> 'public' then
-    raise exception 'All articles must be public';
-  end if;
+BEGIN
+  IF new.visibility <> 'public' THEN
+    RAISE EXCEPTION 'All articles must be public';
+  END IF;
 
-  if tg_op = 'INSERT' then
-    if not publisher then
+  IF tg_op = 'INSERT' THEN
+    IF NOT publisher THEN
       new.published := false;
-      if new.approval_status not in ('draft', 'pending') then
+      IF new.approval_status NOT IN ('draft', 'pending') THEN
         new.approval_status := 'pending';
-      end if;
-    end if;
-    return new;
-  end if;
+      END IF;
+    END IF;
+    RETURN new;
+  END IF;
 
-  if new.owner_profile_id is distinct from old.owner_profile_id
-    or new.teacher_group_id is distinct from old.teacher_group_id then
-    if not publisher then
-      raise exception 'Only the publisher can change article ownership';
-    end if;
-  end if;
+  teacher_can_approve :=
+    public.app_is_teacher_for_group(old.teacher_group_id);
 
-  requested_approval_changed := new.approval_status is distinct from old.approval_status;
-  requested_publication_changed := new.published is distinct from old.published;
+  IF new.owner_profile_id IS DISTINCT FROM old.owner_profile_id
+     OR new.teacher_group_id IS DISTINCT FROM old.teacher_group_id THEN
+    IF NOT publisher THEN
+      RAISE EXCEPTION 'Only the publisher can change article ownership';
+    END IF;
+  END IF;
 
-  if requested_approval_changed
-    and not publisher
-    and not public.app_is_teacher_for_group(old.teacher_group_id) then
-    raise exception 'Only the group teacher can approve this article';
-  end if;
+  requested_approval_changed :=
+    new.approval_status IS DISTINCT FROM old.approval_status;
 
-  if requested_publication_changed and not publisher then
-    raise exception 'Only the publisher can change publication';
-  end if;
+  IF requested_approval_changed
+     AND NOT publisher
+     AND NOT teacher_can_approve THEN
+    RAISE EXCEPTION 'Only the group teacher can approve this article';
+  END IF;
+
+  -- Approval automatically controls publication.
+  IF requested_approval_changed THEN
+    new.published := (new.approval_status = 'approved');
+  END IF;
+
+  requested_publication_changed :=
+    new.published IS DISTINCT FROM old.published;
+
+  IF requested_publication_changed
+     AND NOT publisher
+     AND NOT (requested_approval_changed AND teacher_can_approve) THEN
+    RAISE EXCEPTION 'Only the publisher can change publication';
+  END IF;
 
   content_changed :=
-    new.title is distinct from old.title
-    or new.language is distinct from old.language
-    or new.variant_group_id is distinct from old.variant_group_id
-    or new.level is distinct from old.level
-    or new.category is distinct from old.category
-    or new.category_labels is distinct from old.category_labels
-    or new.summary is distinct from old.summary
-    or new.text is distinct from old.text
-    or new.vocabulary is distinct from old.vocabulary
-    or new.inline_vocabulary is distinct from old.inline_vocabulary
-    or new.image is distinct from old.image
-    or new.questions is distinct from old.questions;
+    new.title IS DISTINCT FROM old.title
+    OR new.language IS DISTINCT FROM old.language
+    OR new.variant_group_id IS DISTINCT FROM old.variant_group_id
+    OR new.level IS DISTINCT FROM old.level
+    OR new.category IS DISTINCT FROM old.category
+    OR new.category_labels IS DISTINCT FROM old.category_labels
+    OR new.summary IS DISTINCT FROM old.summary
+    OR new.text IS DISTINCT FROM old.text
+    OR new.vocabulary IS DISTINCT FROM old.vocabulary
+    OR new.inline_vocabulary IS DISTINCT FROM old.inline_vocabulary
+    OR new.image IS DISTINCT FROM old.image
+    OR new.questions IS DISTINCT FROM old.questions;
 
-  if content_changed and not publisher then
+  IF content_changed AND NOT publisher THEN
     new.approval_status := 'pending';
     new.published := false;
-  end if;
+  END IF;
 
-  if new.approval_status <> 'approved' then
+  IF new.approval_status <> 'approved' THEN
     new.published := false;
-  end if;
+  END IF;
 
-  if new.published and new.approval_status <> 'approved' then
-    raise exception 'Only approved articles can be published';
-  end if;
+  IF new.published AND new.approval_status <> 'approved' THEN
+    RAISE EXCEPTION 'Only approved articles can be published';
+  END IF;
 
-  return new;
-end;
+  RETURN new;
+END;
 $$;
+
 
 
 -- Remove the currently rejected legacy article at the publisher's request.
