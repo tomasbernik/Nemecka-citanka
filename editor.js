@@ -1484,3 +1484,68 @@ async function deleteArticleFromEditor() {
     $("articleEditorStatus").textContent = error.message;
   }
 }
+
+async function generateArticleDirectlyWithAi() {
+  const button = $("generateArticleAiBtn");
+  const status = $("articleEditorStatus");
+
+  const topic = $("articlePromptInput").value.trim();
+  const level = $("articleLevelInput").value;
+  const category = getArticleEditorCategory();
+  const range = getSelectedArticleLengthRange();
+  const requiredWords = getArticleRequiredWords();
+
+  if (!topic) {
+    status.textContent = "Najprv zadaj tému alebo opis článku.";
+    $("articlePromptInput").focus();
+    return;
+  }
+
+  if ($("articleEditorSelect").value ||
+      $("articleTextInput").value.trim()) {
+    const confirmed = confirm(
+      "V editore už máš článok. Chceš ho nahradiť novým článkom od AI? Neuložené zmeny sa stratia."
+    );
+    if (!confirmed) return;
+  }
+
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = "⏳ Generujem článok...";
+  status.textContent = "Gemini vytvára nemecký článok, slovíčka a otázky.";
+
+  try {
+    const result = await generateArticleWithAi({
+      topic,
+      level,
+      category,
+      minWords: range.min,
+      maxWords: range.max,
+      requiredWords
+    });
+
+    if (!result.article) {
+      throw new Error("AI nevrátila žiadny článok.");
+    }
+
+    // Overenie pomocou existujúceho validátora editora.
+    const article = parseArticleImport(
+      JSON.stringify(result.article)
+    );
+
+    // Použijeme existujúci import článkov.
+    $("articleImportInput").value = JSON.stringify(article);
+    importArticleToEditor();
+
+    status.textContent =
+      "Článok bol vygenerovaný. Skontroluj ho a potom ulož.";
+
+  } catch (error) {
+    console.error("Gemini article generation:", error);
+    status.textContent =
+      "Generovanie zlyhalo: " + error.message;
+  } finally {
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}

@@ -175,3 +175,42 @@ async function logAppOpened(details = {}) {
     logAppEvent("app_opened", details);
   }
 }
+
+async function generateArticleWithAi({ topic, level, category, minWords, maxWords, requiredWords }) {
+  if (!isRemoteNetworkAvailable()) {
+    throw new Error("Nie je dostupné internetové pripojenie.");
+  }
+
+  const accessToken = await getFreshAuthAccessToken();
+
+  if (!accessToken) {
+    throw new Error("Na generovanie článku sa musíš prihlásiť.");
+  }
+
+  const response = await remoteFetch(
+    `${SUPABASE_CONFIG.url.replace(/\/$/, "")}/functions/v1/generate-article`,
+    {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_CONFIG.anonKey,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        topic,
+        level,
+        category,
+        lengthMin: minWords,
+        lengthMax: maxWords,
+        requiredWords
+      })    }
+  );
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(result.error || `AI generation failed: ${response.status}`);
+  }
+
+  return result;
+}

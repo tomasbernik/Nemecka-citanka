@@ -1065,6 +1065,7 @@ onClick("copyImagePromptBtn", async () => {
   await copyTextToClipboard(buildImagePrompt(), t("promptImageCopied"));
   updateArticleEditorFlow();
 });
+onClick("generateArticleAiBtn", generateArticleDirectlyWithAi);
 onClick("importArticleBtn", importArticleToEditor);
 onClick("copyTranslationPromptBtn", () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied")));
 
