@@ -238,7 +238,13 @@ function showLogin() {
     $("authRoleSelect").value = "student";
     $("authRoleSelect").disabled = pendingInvite;
   }
-  $("otpVerificationWrap")?.classList.toggle("hidden", !localStorage.getItem(AUTH_OTP_EMAIL_KEY));
+  const pendingAction = localStorage.getItem(AUTH_PENDING_ACTION_KEY);
+  $("otpVerificationWrap")?.classList.toggle(
+    "hidden",
+    !localStorage.getItem(AUTH_OTP_EMAIL_KEY) || pendingAction === "legacy-set-password"
+  );
+  $("legacyMigrationWrap")?.classList.toggle("hidden", pendingAction !== "legacy-pin-migration");
+  $("legacyPasswordWrap")?.classList.toggle("hidden", pendingAction !== "legacy-set-password");
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.add("hidden");
@@ -278,68 +284,6 @@ function showSetup() {
   renderNativeLanguageControls();
   updateStaticTexts();
   showView("setupView");
-}
-
-async function login() {
-  const name = normalizeName($("loginNameInput").value);
-  const pin = $("loginPinInput").value.trim();
-
-  if (!name || !pin) {
-    $("loginError").textContent = t("loginFill");
-    logAppEvent("login_failed", {
-      attemptedName: name,
-      reason: "missing_fields"
-    });
-    return;
-  }
-
-  let profile = state.profiles.find(item => normalizeName(item.name) === name && item.pin === pin);
-  if (!profile && state.remoteReady) {
-    try {
-      const rows = await supabaseRequest("rpc/app_legacy_pin_profile", {
-        method: "POST",
-        body: JSON.stringify({ target_name: $("loginNameInput").value.trim(), target_pin: pin })
-      });
-      if (rows?.[0]) profile = rowToProfile(rows[0]);
-    } catch (error) {
-      console.info("Legacy PIN login unavailable:", error.message);
-    }
-  }
-
-  if (!profile) {
-    $("loginError").textContent = t("loginMismatch");
-    logAppEvent("login_failed", {
-      attemptedName: name,
-      reason: "wrong_credentials"
-    });
-    return;
-  }
-
-  $("loginError").textContent = "";
-  $("loginPinInput").value = "";
-  const nativeLanguage = $("loginNativeLanguageSelect").value;
-  if (isSupportedNativeLanguage(nativeLanguage) && profile.nativeLanguage !== nativeLanguage) {
-    setStoredProfileLanguage(profile.id, nativeLanguage);
-    profile.nativeLanguage = nativeLanguage;
-    state.profiles = state.profiles.map(item => item.id === profile.id ? profile : item);
-    await saveProfiles();
-  }
-  await setCurrentProfile(profile);
-  logAppEvent("login_success", {
-    profileId: profile.id,
-    role: profile.role,
-    nativeLanguage: profile.nativeLanguage
-  });
-  logAppEvent("profile_selected", {
-    profileId: profile.id,
-    role: profile.role,
-    source: "login"
-  });
-  logAppEvent("profile_login", {
-    profileId: profile.id,
-    role: profile.role,
-    nativeLanguage: profile.nativeLanguage
-  });
 }
 
 async function registerProfileFromLogin() {
@@ -489,8 +433,6 @@ function logout() {
   state.profileData = emptyProfileData();
   state.currentArticle = null;
   localStorage.removeItem(CURRENT_PROFILE_KEY);
-  $("loginNameInput").value = "";
-  $("loginPinInput").value = "";
   showLogin();
 }
 
@@ -508,7 +450,7 @@ function renderNativeLanguageControls() {
   const profileLanguage = getNativeLanguage();
   const loginLanguage = state.currentProfile
     ? profileLanguage
-    : isSupportedNativeLanguage(state.preLoginLanguage) ? state.preLoginLanguage : DEFAULT_NATIVE_LANGUAGE;
+    : isSupportedNativeLanguage(state.preLoginLanguage) ? state.preLoginLanguage : DEFAULT_PRELOGIN_LANGUAGE;
   renderNativeLanguageSelect("teacherNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);
   renderNativeLanguageSelect("setupNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);
   renderNativeLanguageSelect("newProfileNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);

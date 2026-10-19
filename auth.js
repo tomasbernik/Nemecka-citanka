@@ -332,13 +332,125 @@ async function sendMagicLink() {
   }
 }
 
+function toggleLegacyMigration() {
+  const wrap = $("legacyMigrationWrap");
+  if (!wrap) return;
+  wrap.classList.toggle("hidden");
+}
+
+async function startLegacyPinMigration() {
+  if (!state.remoteReady) {
+    $("loginError").textContent = t("authUnavailable");
+    return;
+  }
+
+  const email = String($("magicEmailInput")?.value || "").trim().toLowerCase();
+  const name = String($("legacyMigrationNameInput")?.value || "").trim();
+  const pin = String($("legacyMigrationPinInput")?.value || "").trim();
+  if (!email.includes("@") || !name || !pin) {
+    $("loginError").textContent = t("legacyMigrationFill");
+    return;
+  }
+
+  localStorage.setItem(AUTH_PENDING_ACTION_KEY, "legacy-pin-migration");
+  localStorage.setItem(AUTH_OTP_EMAIL_KEY, email);
+  localStorage.setItem(AUTH_OTP_TYPE_KEY, "email");
+  sessionStorage.setItem(LEGACY_MIGRATION_NAME_KEY, name);
+  sessionStorage.setItem(LEGACY_MIGRATION_PIN_KEY, pin);
+  if (state.authUser?.id && await getFreshAuthAccessToken()) {
+    try {
+      await claimLegacyProfileAfterOtp();
+    } catch (error) {
+      console.error(error);
+      $("loginError").textContent = t("legacyPasswordFailed");
+    }
+    return;
+  }
+  $("loginError").textContent = t("magicLinkStarted");
+
+  try {
+    await supabaseAuthRequest(`otp?redirect_to=${encodeURIComponent(getAuthRedirectUrl())}`, {
+      method: "POST",
+      body: JSON.stringify({ email, create_user: true })
+    });
+    $("otpVerificationWrap")?.classList.remove("hidden");
+    $("otpCodeInput")?.focus();
+    $("loginError").textContent = t("legacyMigrationCodeSent");
+  } catch (error) {
+    console.error(error);
+    localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
+    localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
+    localStorage.removeItem(AUTH_OTP_TYPE_KEY);
+    sessionStorage.removeItem(LEGACY_MIGRATION_NAME_KEY);
+    sessionStorage.removeItem(LEGACY_MIGRATION_PIN_KEY);
+    $("loginError").textContent = error.message.includes("429") ? t("emailRateLimited") : t("registrationFailed");
+  }
+}
+
+async function claimLegacyProfileAfterOtp() {
+  const name = sessionStorage.getItem(LEGACY_MIGRATION_NAME_KEY) || "";
+  const pin = sessionStorage.getItem(LEGACY_MIGRATION_PIN_KEY) || "";
+  if (!name || !pin || !state.authUser?.id) throw new Error("legacy_migration_missing");
+
+  const claimedProfileId = await supabaseRequest("rpc/app_claim_legacy_student_profile", {
+    method: "POST",
+    body: JSON.stringify({ target_name: name, target_pin: pin })
+  });
+  if (!claimedProfileId || String(claimedProfileId).startsWith("legacy_profile_claim_")) {
+    throw new Error(String(claimedProfileId || "legacy_profile_claim_failed"));
+  }
+  sessionStorage.removeItem(LEGACY_MIGRATION_NAME_KEY);
+  sessionStorage.removeItem(LEGACY_MIGRATION_PIN_KEY);
+  localStorage.setItem(AUTH_PENDING_ACTION_KEY, "legacy-set-password");
+  $("otpVerificationWrap")?.classList.add("hidden");
+  $("legacyMigrationWrap")?.classList.add("hidden");
+  $("legacyPasswordWrap")?.classList.remove("hidden");
+  $("legacyNewPasswordInput")?.focus();
+  $("loginError").textContent = t("legacyMigrationSetPassword");
+}
+
+async function saveLegacyMigrationPassword() {
+  const password = String($("legacyNewPasswordInput")?.value || "");
+  if (password.length < 8) {
+    $("loginError").textContent = t("legacyPasswordFill");
+    return;
+  }
+
+  const accessToken = await getFreshAuthAccessToken();
+  if (!accessToken) {
+    $("loginError").textContent = t("authUnavailable");
+    return;
+  }
+
+  try {
+    $("loginError").textContent = t("legacyPasswordSaving");
+    await supabaseAuthRequest("user", {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ password })
+    });
+    localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
+    localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
+    localStorage.removeItem(AUTH_OTP_TYPE_KEY);
+    $("legacyNewPasswordInput").value = "";
+    await loadProfiles();
+    const profile = state.profiles.find(item => item.authUserId === state.authUser?.id);
+    if (!profile) throw new Error("legacy_profile_missing");
+    await setCurrentProfile(profile);
+    $("legacyPasswordWrap")?.classList.add("hidden");
+  } catch (error) {
+    console.error(error);
+    $("loginError").textContent = t("legacyPasswordFailed");
+  }
+}
+
 async function verifyEmailOtp() {
   const email = (localStorage.getItem(AUTH_OTP_EMAIL_KEY) || $("magicEmailInput")?.value || "")
     .trim()
     .toLowerCase();
   const token = String($("otpCodeInput")?.value || "").replace(/\s+/g, "");
   const type = localStorage.getItem(AUTH_OTP_TYPE_KEY) === "signup" ? "signup" : "email";
-  if (!email || !/^\d{6}$/.test(token)) {
+  if (!email || !/^\d{8}$/.test(token)) {
     $("loginError").textContent = t("otpCodeFill");
     return;
   }
@@ -350,10 +462,16 @@ async function verifyEmailOtp() {
       body: JSON.stringify({ email, token, type })
     });
     if (!saveAuthResponseSession(session)) throw new Error("Missing OTP session");
+    if (localStorage.getItem(AUTH_PENDING_ACTION_KEY) === "legacy-pin-migration") {
+      await claimLegacyProfileAfterOtp();
+      return;
+    }
     await finishEmailAuthentication(type);
   } catch (error) {
     console.error(error);
-    $("loginError").textContent = t("otpInvalid");
+    $("loginError").textContent = localStorage.getItem(AUTH_PENDING_ACTION_KEY) === "legacy-pin-migration"
+      ? t("legacyPasswordFailed")
+      : t("otpInvalid");
   }
 }
 
@@ -377,6 +495,8 @@ async function signOutGoogle() {
   localStorage.removeItem(AUTH_REQUESTED_ROLE_KEY);
   localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
   localStorage.removeItem(AUTH_OTP_TYPE_KEY);
+  sessionStorage.removeItem(LEGACY_MIGRATION_NAME_KEY);
+  sessionStorage.removeItem(LEGACY_MIGRATION_PIN_KEY);
   renderAuthControls(t("authSignedOut"));
 }
 
@@ -495,6 +615,11 @@ async function handlePendingAuthAction() {
 
   if (action === "link-profile") {
     await linkCurrentProfileToAuthUser();
+    return true;
+  }
+
+  if (action === "legacy-set-password") {
+    showLogin();
     return true;
   }
 
@@ -695,7 +820,9 @@ async function createAuthReaderProfile() {
     pin: makeRandomPin(),
     role: "student",
     teacherGroupId: id,
-    nativeLanguage: DEFAULT_NATIVE_LANGUAGE,
+    nativeLanguage: isSupportedNativeLanguage(state.preLoginLanguage)
+      ? state.preLoginLanguage
+      : DEFAULT_PRELOGIN_LANGUAGE,
     authUserId: state.authUser.id,
     ownerAuthUserId: state.authUser.id
   };

@@ -111,6 +111,10 @@
           <p id="authEntryNote" class="muted">Melde dich an oder erstelle in wenigen Sekunden ein kostenloses Konto.</p>
           <p id="loginError" class="form-error"></p>
           <label class="field-row">
+            Muttersprache
+            <select id="loginNativeLanguageSelect"></select>
+          </label>
+          <label class="field-row">
             Kontoart
             <select id="authRoleSelect">
               <option value="student">Schüler/in</option>
@@ -134,23 +138,30 @@
           <div id="otpVerificationWrap" class="auth-otp-wrap hidden">
             <label class="field-row">
               Bestätigungscode
-              <input id="otpCodeInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}">
+              <input id="otpCodeInput" inputmode="numeric" autocomplete="one-time-code" maxlength="8" pattern="[0-9]{8}">
             </label>
             <button id="verifyOtpBtn" class="primary-btn" type="button">Code bestätigen</button>
           </div>
-          <label class="field-row legacy-login-row">
-            Name
-            <input id="loginNameInput" autocomplete="username">
-          </label>
-          <label class="field-row">
-            PIN
-            <input id="loginPinInput" inputmode="numeric" type="password" autocomplete="current-password">
-          </label>
-          <label class="field-row">
-            Muttersprache
-            <select id="loginNativeLanguageSelect"></select>
-          </label>
-          <button id="loginBtn" class="secondary-btn quiet">Anmelden</button>
+          <button id="legacyMigrationToggleBtn" class="text-btn" type="button">Altes PIN-Profil übernehmen</button>
+          <div id="legacyMigrationWrap" class="auth-otp-wrap hidden">
+            <p id="legacyMigrationNote" class="muted">Bestätige zuerst deine E-Mail. Danach legst du ein Passwort fest.</p>
+            <label class="field-row">
+              Profilname
+              <input id="legacyMigrationNameInput" autocomplete="username">
+            </label>
+            <label class="field-row">
+              Bisherige PIN
+              <input id="legacyMigrationPinInput" inputmode="numeric" type="password" autocomplete="off">
+            </label>
+            <button id="legacyMigrationCodeBtn" class="secondary-btn" type="button">Bestätigungscode senden</button>
+          </div>
+          <div id="legacyPasswordWrap" class="auth-otp-wrap hidden">
+            <label class="field-row">
+              Neues Passwort
+              <input id="legacyNewPasswordInput" type="password" autocomplete="new-password" minlength="8">
+            </label>
+            <button id="legacySavePasswordBtn" class="primary-btn" type="button">Passwort speichern</button>
+          </div>
           <button id="browseGuestBtn" class="text-btn guest-browse-btn" type="button">Ohne Anmeldung weiterlesen</button>
           <button id="registerProfileBtn" class="secondary-btn quiet hidden" type="button">Neues Profil erstellen</button>
           <button id="setupPairBtn" class="secondary-btn quiet hidden" type="button">Zwei Profile einrichten</button>
@@ -726,21 +737,21 @@
   </div>
 
   <script src="config.js?v=117"></script>
-  <script src="constants.js?v=129"></script>
+  <script src="constants.js?v=132"></script>
   <script src="translations/ui.js?v=129"></script>
-  <script src="translations/auth.js?v=130"></script>
-  <script src="translations/new-languages.js?v=129"></script>
+  <script src="translations/auth.js?v=132"></script>
+  <script src="translations/new-languages.js?v=132"></script>
   <script src="translations/prompts.js?v=120"></script>
   <script src="i18n.js?v=117"></script>
-  <script src="auth.js?v=130"></script>
+  <script src="auth.js?v=132"></script>
   <script src="api.js?v=117"></script>
-  <script src="profiles.js?v=130"></script>
+  <script src="profiles.js?v=132"></script>
   <script src="teams.js?v=130"></script>
   <script src="articles.js?v=130"></script>
-  <script src="reader.js?v=121"></script>
+  <script src="reader.js?v=131"></script>
   <script src="games.js?v=125"></script>
   <script src="editor.js?v=130"></script>
   <script src="home.js?v=129"></script>
-  <script src="app.js?v=130"></script>
+  <script src="app.js?v=132"></script>
 </body>
 </html>

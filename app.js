@@ -1,7 +1,7 @@
 const state = {
   articles: [],
   profiles: [],
-  preLoginLanguage: DEFAULT_PRELOGIN_LANGUAGE,
+  preLoginLanguage: localStorage.getItem(PRELOGIN_LANGUAGE_KEY) || DEFAULT_PRELOGIN_LANGUAGE,
   selectedCategory: ALL_CATEGORIES,
   selectedLevel: ALL_LEVELS,
   selectedArticleLanguage: localStorage.getItem(ARTICLE_LANGUAGE_KEY) || DEFAULT_ARTICLE_LANGUAGE,
@@ -481,8 +481,6 @@ function updateStaticTexts() {
   document.querySelector("#loginView .eyebrow").textContent = t("authEntryEyebrow");
   document.querySelector("#loginView h2").textContent = t("authEntryTitle");
   setText("authEntryNote", "authEntryNote");
-  setLabelText("loginNameInput", "name");
-  setLabelText("loginPinInput", "pin");
   setLabelText("loginNativeLanguageSelect", "nativeLanguage");
   setText("loginBtn", "login");
   setText("googleLoginBtn", "googleLogin");
@@ -496,6 +494,13 @@ function updateStaticTexts() {
   setText("magicLinkBtn", "magicLinkLogin");
   setLabelText("otpCodeInput", "otpCode");
   setText("verifyOtpBtn", "verifyOtp");
+  setText("legacyMigrationToggleBtn", "legacyMigrationToggle");
+  setText("legacyMigrationNote", "legacyMigrationNote");
+  setLabelText("legacyMigrationNameInput", "legacyProfileName");
+  setLabelText("legacyMigrationPinInput", "legacyPin");
+  setText("legacyMigrationCodeBtn", "legacyMigrationCode");
+  setLabelText("legacyNewPasswordInput", "legacyNewPassword");
+  setText("legacySavePasswordBtn", "legacySavePassword");
   setText("browseGuestBtn", "continueAsGuest");
   setText("guestAuthBtn", "signInOrRegister");
   setText("registerProfileBtn", "newProfile");
@@ -979,12 +984,14 @@ onEvent("adminOverview", "click", handleAdminOverviewClick);
 onClick("refreshBtn", loadArticles);
 onClick("guestAuthBtn", showLogin);
 onClick("browseGuestBtn", showGuestHome);
-onClick("loginBtn", login);
 onClick("googleLoginBtn", signInWithGoogle);
 onClick("passwordLoginBtn", signInWithPassword);
 onClick("passwordRegisterBtn", registerWithPassword);
 onClick("magicLinkBtn", sendMagicLink);
 onClick("verifyOtpBtn", verifyEmailOtp);
+onClick("legacyMigrationToggleBtn", toggleLegacyMigration);
+onClick("legacyMigrationCodeBtn", startLegacyPinMigration);
+onClick("legacySavePasswordBtn", saveLegacyMigrationPassword);
 onEvent("otpCodeInput", "keydown", event => {
   if (event.key === "Enter") verifyEmailOtp();
 });
@@ -1101,10 +1108,6 @@ onClick("generateArticleAiBtn", generateArticleDirectlyWithAi);
 onClick("importArticleBtn", importArticleToEditor);
 onClick("copyTranslationPromptBtn", () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied")));
 
-onEvent("loginPinInput", "keydown", event => {
-  if (event.key === "Enter") login();
-});
-
 onEvent("magicEmailInput", "keydown", event => {
   if (event.key === "Enter") signInWithPassword();
 });
@@ -1114,6 +1117,7 @@ onEvent("authPasswordInput", "keydown", event => {
 
 onChange("loginNativeLanguageSelect", (event) => {
   state.preLoginLanguage = event.target.value;
+  localStorage.setItem(PRELOGIN_LANGUAGE_KEY, state.preLoginLanguage);
   updateStaticTexts();
 });
 
@@ -1289,9 +1293,12 @@ async function init() {
   await initAuthFromRedirect();
 
   const hasPendingInvite = Boolean(localStorage.getItem(AUTH_PENDING_INVITE_KEY));
+  const hasPendingAuth = Boolean(localStorage.getItem(AUTH_PENDING_ACTION_KEY));
   const savedProfileId = localStorage.getItem(CURRENT_PROFILE_KEY);
-  if (!state.authUser && !hasPendingInvite && !savedProfileId) {
-    showGuestHome();
+  if (!state.authUser) {
+    localStorage.removeItem(CURRENT_PROFILE_KEY);
+    if (hasPendingInvite || hasPendingAuth) showLogin();
+    else showGuestHome();
     logAppOpened({
       hasSavedProfile: false,
       path: location.pathname
@@ -1308,7 +1315,10 @@ async function init() {
     path: location.pathname
   });
 
-  const savedProfile = state.profiles.find(profile => profile.id === savedProfileId);
+  const savedProfile = state.profiles.find(profile =>
+    profile.id === savedProfileId
+    && (profile.authUserId === state.authUser.id || profile.ownerAuthUserId === state.authUser.id)
+  );
   if (savedProfile) {
     await setCurrentProfile(savedProfile);
     logAppEvent("profile_selected", {

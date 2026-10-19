@@ -21,7 +21,7 @@ const AUTH_TEXT = {
     magicLinkFill: "Gib bitte deine E-Mail-Adresse ein.",
     magicLinkStarted: "Anmeldelink wird gesendet...",
     authLinkSuccess: "Google-Konto wurde mit diesem Profil verbunden.",
-    authLoginNoProfile: "Dieses Konto ist noch mit keinem Profil verbunden. Melde dich mit PIN an und verbinde es in den Einstellungen.",
+    authLoginNoProfile: "Dieses Konto ist noch mit keinem Profil verbunden. Nutze die Übernahme eines alten PIN-Profils oder registriere ein neues Konto.",
     authUnavailable: "Anmeldung ist erst nach der Supabase-Konfiguration verfuegbar.",
     authSignedOut: "Google wurde getrennt.",
     registrationClosed: "Neue Profile koennen nur ein angemeldeter Besitzer oder Admin erstellen."
@@ -54,7 +54,7 @@ const AUTH_TEXT = {
     magicLinkFill: "Zadaj emailovu adresu.",
     magicLinkStarted: "Posielam prihlasovaci odkaz...",
     authLinkSuccess: "Google účet je prepojený s týmto profilom.",
-    authLoginNoProfile: "Tento ucet este nie je prepojeny so ziadnym profilom. Prihlas sa PINom a prepoj ho v nastaveniach.",
+    authLoginNoProfile: "Tento účet ešte nie je prepojený so žiadnym profilom. Použi prevzatie starého PIN profilu alebo si zaregistruj nový účet.",
     authUnavailable: "Prihlasenie bude dostupne po nastaveni Supabase Auth.",
     authSignedOut: "Google účet je odpojený.",
     registrationClosed: "Nové profily môže vytvárať iba prihlásený vlastník alebo admin."
@@ -185,10 +185,10 @@ const ACCESS_REQUEST_TEXT = {
     accountType: "Kontoart",
     magicLinkLogin: "Code senden",
     magicLinkStarted: "Anmeldecode wird gesendet...",
-    magicLinkSent: "Gib den sechsstelligen Code aus deiner E-Mail ein.",
+    magicLinkSent: "Gib den achtstelligen Code aus deiner E-Mail ein.",
     otpCode: "Bestätigungscode",
     verifyOtp: "Code bestätigen",
-    otpCodeFill: "Gib den sechsstelligen Code ein.",
+    otpCodeFill: "Gib den achtstelligen Code ein.",
     otpVerifying: "Code wird geprüft...",
     otpInvalid: "Der Code ist ungültig oder abgelaufen."
     ,requestTeacherAccess: "Lehrerzugang beantragen"
@@ -199,10 +199,10 @@ const ACCESS_REQUEST_TEXT = {
     accountType: "Typ účtu",
     magicLinkLogin: "Poslať kód",
     magicLinkStarted: "Posielam prihlasovací kód...",
-    magicLinkSent: "Zadaj šesťmiestny kód, ktorý sme poslali na tvoj e-mail.",
+    magicLinkSent: "Zadaj osemmiestny kód, ktorý sme poslali na tvoj e-mail.",
     otpCode: "Overovací kód",
     verifyOtp: "Overiť kód",
-    otpCodeFill: "Zadaj šesťmiestny kód.",
+    otpCodeFill: "Zadaj osemmiestny kód.",
     otpVerifying: "Overujem kód...",
     otpInvalid: "Kód je neplatný alebo už vypršal."
     ,requestTeacherAccess: "Požiadať o učiteľský účet"
@@ -210,13 +210,13 @@ const ACCESS_REQUEST_TEXT = {
     ,emailRateLimited: "Bolo odoslaných príliš veľa e-mailov. Skús to neskôr alebo použi Google."
   },
   ru: {
-    accountType: "Тип аккаунта", magicLinkLogin: "Отправить код", magicLinkStarted: "Отправляю код...", magicLinkSent: "Введите шестизначный код из письма.", otpCode: "Код подтверждения", verifyOtp: "Подтвердить код", otpCodeFill: "Введите шестизначный код.", otpVerifying: "Проверяю код...", otpInvalid: "Код недействителен или истёк.", requestTeacherAccess: "Запросить доступ учителя", teacherRequestSubmitted: "Запрос ожидает одобрения администратора."
+    accountType: "Тип аккаунта", magicLinkLogin: "Отправить код", magicLinkStarted: "Отправляю код...", magicLinkSent: "Введите восьмизначный код из письма.", otpCode: "Код подтверждения", verifyOtp: "Подтвердить код", otpCodeFill: "Введите восьмизначный код.", otpVerifying: "Проверяю код...", otpInvalid: "Код недействителен или истёк.", requestTeacherAccess: "Запросить доступ учителя", teacherRequestSubmitted: "Запрос ожидает одобрения администратора."
   },
   pl: {
-    accountType: "Typ konta", magicLinkLogin: "Wyślij kod", magicLinkStarted: "Wysyłanie kodu...", magicLinkSent: "Wpisz sześciocyfrowy kod z wiadomości e-mail.", otpCode: "Kod weryfikacyjny", verifyOtp: "Potwierdź kod", otpCodeFill: "Wpisz sześciocyfrowy kod.", otpVerifying: "Sprawdzanie kodu...", otpInvalid: "Kod jest nieprawidłowy lub wygasł.", requestTeacherAccess: "Poproś o dostęp nauczyciela", teacherRequestSubmitted: "Wniosek oczekuje na zatwierdzenie administratora."
+    accountType: "Typ konta", magicLinkLogin: "Wyślij kod", magicLinkStarted: "Wysyłanie kodu...", magicLinkSent: "Wpisz ośmiocyfrowy kod z wiadomości e-mail.", otpCode: "Kod weryfikacyjny", verifyOtp: "Potwierdź kod", otpCodeFill: "Wpisz ośmiocyfrowy kod.", otpVerifying: "Sprawdzanie kodu...", otpInvalid: "Kod jest nieprawidłowy lub wygasł.", requestTeacherAccess: "Poproś o dostęp nauczyciela", teacherRequestSubmitted: "Wniosek oczekuje na zatwierdzenie administratora."
   },
   hu: {
-    accountType: "Fiók típusa", magicLinkLogin: "Kód küldése", magicLinkStarted: "Kód küldése...", magicLinkSent: "Írd be az e-mailben kapott hatjegyű kódot.", otpCode: "Ellenőrző kód", verifyOtp: "Kód ellenőrzése", otpCodeFill: "Írd be a hatjegyű kódot.", otpVerifying: "Kód ellenőrzése...", otpInvalid: "A kód érvénytelen vagy lejárt.", requestTeacherAccess: "Tanári hozzáférés kérése", teacherRequestSubmitted: "A kérelem rendszergazdai jóváhagyásra vár."
+    accountType: "Fiók típusa", magicLinkLogin: "Kód küldése", magicLinkStarted: "Kód küldése...", magicLinkSent: "Írd be az e-mailben kapott nyolcjegyű kódot.", otpCode: "Ellenőrző kód", verifyOtp: "Kód ellenőrzése", otpCodeFill: "Írd be a nyolcjegyű kódot.", otpVerifying: "Kód ellenőrzése...", otpInvalid: "A kód érvénytelen vagy lejárt.", requestTeacherAccess: "Tanári hozzáférés kérése", teacherRequestSubmitted: "A kérelem rendszergazdai jóváhagyásra vár."
   }
 };
 
@@ -269,6 +269,19 @@ const TEAM_AND_PASSWORD_TEXT = {
     articleTeam: "Team / Klasse",
     chooseTeam: "Team auswählen",
     noTeam: "Kein Team"
+    ,legacyMigrationToggle: "Altes PIN-Profil übernehmen"
+    ,legacyMigrationNote: "Bestätige zuerst deine E-Mail. Danach legst du ein Passwort fest. Die PIN allein meldet dich nicht mehr an."
+    ,legacyProfileName: "Profilname"
+    ,legacyPin: "Bisherige PIN"
+    ,legacyMigrationCode: "Bestätigungscode senden"
+    ,legacyMigrationFill: "Gib E-Mail, Profilname und bisherige PIN ein."
+    ,legacyMigrationCodeSent: "Gib den achtstelligen Code aus deiner E-Mail ein."
+    ,legacyMigrationSetPassword: "E-Mail bestätigt. Lege jetzt ein Passwort mit mindestens 8 Zeichen fest."
+    ,legacyNewPassword: "Neues Passwort"
+    ,legacySavePassword: "Passwort speichern"
+    ,legacyPasswordFill: "Das Passwort muss mindestens 8 Zeichen haben."
+    ,legacyPasswordSaving: "Passwort wird gespeichert..."
+    ,legacyPasswordFailed: "Das PIN-Profil konnte nicht übernommen werden. Prüfe Name und PIN oder versuche es erneut."
   },
   sk: {
     password: "Heslo",
@@ -316,6 +329,19 @@ const TEAM_AND_PASSWORD_TEXT = {
     articleTeam: "Tím / trieda",
     chooseTeam: "Vyber tím",
     noTeam: "Bez tímu"
+    ,legacyMigrationToggle: "Prevziať starý PIN profil"
+    ,legacyMigrationNote: "Najprv over svoj email. Potom si vytvoríš heslo. Samotný PIN už neprihlasuje."
+    ,legacyProfileName: "Názov profilu"
+    ,legacyPin: "Doterajší PIN"
+    ,legacyMigrationCode: "Poslať overovací kód"
+    ,legacyMigrationFill: "Zadaj email, názov profilu a doterajší PIN."
+    ,legacyMigrationCodeSent: "Zadaj osemmiestny kód, ktorý sme poslali na tvoj email."
+    ,legacyMigrationSetPassword: "Email je overený. Teraz si vytvor heslo s aspoň 8 znakmi."
+    ,legacyNewPassword: "Nové heslo"
+    ,legacySavePassword: "Uložiť heslo"
+    ,legacyPasswordFill: "Heslo musí mať aspoň 8 znakov."
+    ,legacyPasswordSaving: "Ukladám heslo..."
+    ,legacyPasswordFailed: "PIN profil sa nepodarilo prevziať. Skontroluj názov a PIN alebo to skús znova."
   }
 };
 

@@ -667,7 +667,10 @@ function showTranslationChoices(anchor) {
   positionInlineTranslationTooltip(anchor, tooltip);
 
   tooltip.querySelectorAll("[data-translate-type]").forEach(button => {
-    button.onclick = () => translateReaderSelection(button.dataset.translateType);
+    button.onclick = event => {
+      event.stopPropagation();
+      translateReaderSelection(button.dataset.translateType);
+    };
   });
 }
 
