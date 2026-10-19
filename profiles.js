@@ -503,7 +503,6 @@ function renderCurrentProfileLabel() {
 function renderAccessControls() {
   const isGuest = !state.currentProfile;
   $("guestAuthBtn")?.classList.toggle("hidden", !isGuest);
-  $("guestRegisterBtn")?.classList.toggle("hidden", !isGuest);
   $("profileProgressBtn")?.classList.toggle("hidden", isGuest);
   renderCurrentProfileLabel();
 }

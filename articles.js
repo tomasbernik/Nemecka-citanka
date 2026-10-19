@@ -352,6 +352,29 @@ async function insertArticleRow(row) {
   return rows?.[0] || null;
 }
 
+async function updateArticleRow(row) {
+  const { id, ...changes } = row;
+  const update = async payload => supabaseRequest(`app_articles?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify(payload)
+  });
+
+  try {
+    const rows = await update(changes);
+    return rows?.[0] || null;
+  } catch (error) {
+    const missingColumns = [
+      ...(isMissingCategoryLabelsColumn(error) ? ["category_labels"] : []),
+      ...(error?.message?.includes("language") ? ["language"] : []),
+      ...(error?.message?.includes("variant_group_id") ? ["variant_group_id"] : [])
+    ];
+    if (!missingColumns.length) throw error;
+    const rows = await update(omitArticleRowColumns(changes, missingColumns));
+    return rows?.[0] || null;
+  }
+}
+
 function rowToArticle(row) {
   return {
     id: row.id,
@@ -412,7 +435,11 @@ async function saveArticle(article) {
 
   article = normalizeArticle(article);
 
-  const savedRow = await insertArticleRow(articleToRow(article));
+  const existingArticle = state.articles.find(item => item.id === article.id);
+  const row = articleToRow(article);
+  const savedRow = existingArticle
+    ? await updateArticleRow(row)
+    : await insertArticleRow(row);
   if (savedRow) article = normalizeArticle(rowToArticle(savedRow));
 
   const index = state.articles.findIndex(item => item.id === article.id);

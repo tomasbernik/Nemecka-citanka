@@ -489,7 +489,6 @@ function updateStaticTexts() {
   setText("magicLinkBtn", "magicLinkLogin");
   setText("browseGuestBtn", "continueAsGuest");
   setText("guestAuthBtn", "signInOrRegister");
-  setText("guestRegisterBtn", "signInOrRegister");
   setText("registerProfileBtn", "newProfile");
   setText("setupPairBtn", "setupPair");
 
@@ -965,7 +964,6 @@ onEvent("articleModerationList", "click", handleArticleModerationClick);
 onEvent("adminOverview", "click", handleAdminOverviewClick);
 onClick("refreshBtn", loadArticles);
 onClick("guestAuthBtn", showLogin);
-onClick("guestRegisterBtn", showLogin);
 onClick("browseGuestBtn", showGuestHome);
 onClick("loginBtn", login);
 onClick("googleLoginBtn", signInWithGoogle);
