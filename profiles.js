@@ -215,6 +215,7 @@ async function setCurrentProfile(profile) {
 
 function showLogin() {
   stopReading();
+  document.body.classList.remove("has-guest-auth");
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.add("hidden");
@@ -503,6 +504,7 @@ function renderCurrentProfileLabel() {
 function renderAccessControls() {
   const isGuest = !state.currentProfile;
   $("guestAuthBtn")?.classList.toggle("hidden", !isGuest);
+  document.body.classList.toggle("has-guest-auth", isGuest);
   $("profileProgressBtn")?.classList.toggle("hidden", isGuest);
   renderCurrentProfileLabel();
 }

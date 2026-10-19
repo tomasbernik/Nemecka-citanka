@@ -1,0 +1,5 @@
+# Temporary browser profiles and screenshots created by local mobile previews
+.codex-chrome-mobile*/
+.codex-edge-mobile*/
+.codex-mobile-*.png
+.codex-preview-server.pid

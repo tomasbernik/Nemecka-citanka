@@ -1890,6 +1890,27 @@ select {
 }
 
 @media (max-width: 700px) {
+  body.has-guest-auth #app {
+    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+  }
+
+  #guestAuthBtn:not(.hidden) {
+    position: fixed;
+    left: 12px;
+    right: 12px;
+    bottom: calc(10px + env(safe-area-inset-bottom));
+    z-index: 16;
+    width: auto;
+    max-width: 520px;
+    min-height: 56px;
+    margin: 0 auto;
+    padding: 12px 18px;
+    border-radius: 18px;
+    box-shadow: 0 16px 38px rgba(36, 26, 16, 0.2);
+    line-height: 1.2;
+    white-space: normal;
+  }
+
   .practice-tabs {
     position: sticky;
     top: 0;
