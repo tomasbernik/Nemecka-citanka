@@ -201,6 +201,99 @@ function rememberRequestedAuthRole() {
   localStorage.setItem(AUTH_REQUESTED_ROLE_KEY, getSelectedAuthRole());
 }
 
+function getEmailPasswordCredentials() {
+  return {
+    email: String($("magicEmailInput")?.value || "").trim().toLowerCase(),
+    password: String($("authPasswordInput")?.value || "")
+  };
+}
+
+function saveAuthResponseSession(response) {
+  const session = response?.session || response;
+  if (!session?.access_token) return false;
+  saveAuthSession(session);
+  state.authUser = session.user || response?.user || null;
+  return true;
+}
+
+async function finishEmailAuthentication(source) {
+  if (!state.authUser) await loadAuthUser();
+  await loadProfiles();
+  await loadArticles();
+  const handled = await handlePendingAuthAction();
+  if (!handled) throw new Error(`${source} login was not completed`);
+  localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
+  localStorage.removeItem(AUTH_OTP_TYPE_KEY);
+}
+
+async function signInWithPassword() {
+  if (!state.remoteReady) {
+    $("loginError").textContent = t("authUnavailable");
+    return;
+  }
+  const { email, password } = getEmailPasswordCredentials();
+  if (!email.includes("@") || !password) {
+    $("loginError").textContent = t("emailPasswordFill");
+    return;
+  }
+
+  $("loginError").textContent = t("passwordLoginStarted");
+  localStorage.setItem(AUTH_PENDING_ACTION_KEY, "password-login");
+  try {
+    const response = await supabaseAuthRequest("token?grant_type=password", {
+      method: "POST",
+      body: JSON.stringify({ email, password })
+    });
+    if (!saveAuthResponseSession(response)) throw new Error("Missing password session");
+    await finishEmailAuthentication("password");
+  } catch (error) {
+    localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
+    console.error(error);
+    $("loginError").textContent = t("passwordLoginInvalid");
+  }
+}
+
+async function registerWithPassword() {
+  if (!state.remoteReady) {
+    $("loginError").textContent = t("authUnavailable");
+    return;
+  }
+  const { email, password } = getEmailPasswordCredentials();
+  if (!email.includes("@") || password.length < 8) {
+    $("loginError").textContent = t("emailPasswordRegisterFill");
+    return;
+  }
+
+  rememberRequestedAuthRole();
+  localStorage.setItem(AUTH_PENDING_ACTION_KEY, "password-register");
+  localStorage.setItem(AUTH_OTP_EMAIL_KEY, email);
+  localStorage.setItem(AUTH_OTP_TYPE_KEY, "signup");
+  $("loginError").textContent = t("passwordRegistrationStarted");
+  try {
+    const response = await supabaseAuthRequest("signup", {
+      method: "POST",
+      body: JSON.stringify({
+        email,
+        password,
+        data: { full_name: email.split("@")[0] }
+      })
+    });
+    if (saveAuthResponseSession(response)) {
+      await finishEmailAuthentication("registration");
+      return;
+    }
+    $("otpVerificationWrap")?.classList.remove("hidden");
+    $("otpCodeInput")?.focus();
+    $("loginError").textContent = t("registrationCodeSent");
+  } catch (error) {
+    localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
+    localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
+    localStorage.removeItem(AUTH_OTP_TYPE_KEY);
+    console.error(error);
+    $("loginError").textContent = error.message.includes("429") ? t("emailRateLimited") : t("registrationFailed");
+  }
+}
+
 async function sendMagicLink() {
   if (!state.remoteReady) {
     $("loginError").textContent = t("authUnavailable");
@@ -217,16 +310,14 @@ async function sendMagicLink() {
   rememberRequestedAuthRole();
   localStorage.setItem(AUTH_PENDING_ACTION_KEY, "email-otp");
   localStorage.setItem(AUTH_OTP_EMAIL_KEY, email);
+  localStorage.setItem(AUTH_OTP_TYPE_KEY, "email");
 
   try {
     await supabaseAuthRequest(`otp?redirect_to=${encodeURIComponent(getAuthRedirectUrl())}`, {
       method: "POST",
       body: JSON.stringify({
         email,
-        create_user: true,
-        data: {
-          full_name: email.split("@")[0]
-        }
+          create_user: false
       })
     });
     $("otpVerificationWrap")?.classList.remove("hidden");
@@ -235,6 +326,7 @@ async function sendMagicLink() {
   } catch (error) {
     localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
     localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
+    localStorage.removeItem(AUTH_OTP_TYPE_KEY);
     console.error(error);
     $("loginError").textContent = error.message.includes("429") ? t("emailRateLimited") : t("authUnavailable");
   }
@@ -245,6 +337,7 @@ async function verifyEmailOtp() {
     .trim()
     .toLowerCase();
   const token = String($("otpCodeInput")?.value || "").replace(/\s+/g, "");
+  const type = localStorage.getItem(AUTH_OTP_TYPE_KEY) === "signup" ? "signup" : "email";
   if (!email || !/^\d{6}$/.test(token)) {
     $("loginError").textContent = t("otpCodeFill");
     return;
@@ -254,16 +347,10 @@ async function verifyEmailOtp() {
   try {
     const session = await supabaseAuthRequest("verify", {
       method: "POST",
-      body: JSON.stringify({ email, token, type: "email" })
+      body: JSON.stringify({ email, token, type })
     });
-    if (!session?.access_token) throw new Error("Missing OTP session");
-    saveAuthSession(session);
-    state.authUser = session.user || await loadAuthUser();
-    await loadProfiles();
-    await loadArticles();
-    const handled = await handlePendingAuthAction();
-    if (!handled) throw new Error("OTP login was not completed");
-    localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
+    if (!saveAuthResponseSession(session)) throw new Error("Missing OTP session");
+    await finishEmailAuthentication(type);
   } catch (error) {
     console.error(error);
     $("loginError").textContent = t("otpInvalid");
@@ -289,6 +376,7 @@ async function signOutGoogle() {
   localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
   localStorage.removeItem(AUTH_REQUESTED_ROLE_KEY);
   localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
+  localStorage.removeItem(AUTH_OTP_TYPE_KEY);
   renderAuthControls(t("authSignedOut"));
 }
 
@@ -375,10 +463,9 @@ async function handlePendingAuthAction() {
 
   localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
 
-  if (action === "login" || action === "magic-login" || action === "email-otp") {
+  if (["login", "magic-login", "email-otp", "password-login", "password-register"].includes(action)) {
     const inviteToken = localStorage.getItem(AUTH_PENDING_INVITE_KEY);
-    let profile = inviteToken ? await claimInvite(inviteToken) : null;
-    profile = profile || state.profiles.find(item => item.authUserId === state.authUser.id);
+    let profile = state.profiles.find(item => item.authUserId === state.authUser.id);
     if (!profile) profile = await createAuthReaderProfile();
     if (!profile) {
       showLogin();
@@ -386,16 +473,22 @@ async function handlePendingAuthAction() {
       return true;
     }
 
-    if (!inviteToken && localStorage.getItem(AUTH_REQUESTED_ROLE_KEY) === "teacher") {
+    if (localStorage.getItem(AUTH_REQUESTED_ROLE_KEY) === "teacher") {
       await submitTeacherRequest(profile);
     }
     localStorage.removeItem(AUTH_REQUESTED_ROLE_KEY);
 
     await setCurrentProfile(profile);
+    if (inviteToken) {
+      await joinTeamByCode(inviteToken);
+      localStorage.removeItem(AUTH_PENDING_INVITE_KEY);
+    }
     logAppEvent("profile_login", {
       profileId: profile.id,
       role: profile.role,
-      source: action === "email-otp" || action === "magic-login" ? "email_otp" : "google"
+      source: action === "email-otp" || action === "magic-login"
+        ? "email_otp"
+        : action.startsWith("password-") ? "email_password" : "google"
     });
     return true;
   }
@@ -586,7 +679,7 @@ async function createAuthReaderProfile() {
   if (!state.authUser?.id) return null;
 
   const baseName = getAuthProfileName();
-  const baseId = makeProfileId(baseName) || `reader-${state.authUser.id.slice(0, 8)}`;
+  const baseId = `${makeProfileId(baseName) || "reader"}-${state.authUser.id.slice(0, 8)}`;
   let id = baseId;
   let name = baseName;
   let counter = 2;
@@ -615,66 +708,11 @@ async function createAuthReaderProfile() {
 async function claimInvite(tokenValue) {
   const token = getInviteTokenFromValue(tokenValue);
   if (!token || !state.authUser?.id) return null;
-
-  await loadProfiles();
-  const invited = state.profiles.find(profile =>
-    profile.inviteToken === token
-    && (!profile.inviteClaimedAt || profile.authUserId === state.authUser.id)
-  );
-  if (!invited) return null;
-
-  const claimedAt = new Date().toISOString();
-  if (state.remoteReady) {
-    const previousProfiles = state.profiles.filter(profile =>
-      profile.authUserId === state.authUser.id && profile.id !== invited.id
-    );
-    for (const profile of previousProfiles) {
-      await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(profile.id)}`, {
-        method: "PATCH",
-        headers: { Prefer: "return=minimal" },
-        body: JSON.stringify({ auth_user_id: null })
-      });
-    }
-    const claimedProfileUpdate = {
-      auth_user_id: state.authUser.id,
-      owner_auth_user_id: invited.ownerAuthUserId || state.authUser.id,
-      invite_claimed_at: claimedAt
-    };
-    try {
-      await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(invited.id)}`, {
-        method: "PATCH",
-        headers: { Prefer: "return=minimal" },
-        body: JSON.stringify(claimedProfileUpdate)
-      });
-    } catch (error) {
-      if (!error.message.includes("invite_claimed_at")) throw error;
-      const { invite_claimed_at, ...claimWithoutTimestamp } = claimedProfileUpdate;
-      await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(invited.id)}`, {
-        method: "PATCH",
-        headers: { Prefer: "return=minimal" },
-        body: JSON.stringify(claimWithoutTimestamp)
-      });
-    }
-  }
-
-  state.profiles = state.profiles.map(profile => {
-    if (profile.authUserId === state.authUser.id && profile.id !== invited.id) {
-      return { ...profile, authUserId: null };
-    }
-    if (profile.id === invited.id) {
-      return {
-        ...profile,
-        authUserId: state.authUser.id,
-        ownerAuthUserId: profile.ownerAuthUserId || state.authUser.id,
-        inviteClaimedAt: claimedAt
-      };
-    }
-    return profile;
-  });
-
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
-  if (!state.remoteReady) await saveProfiles();
-  await loadProfiles();
+  let profile = state.profiles.find(item => item.authUserId === state.authUser.id);
+  if (!profile) profile = await createAuthReaderProfile();
+  if (!profile) return null;
+  await setCurrentProfile(profile);
+  await joinTeamByCode(token);
   localStorage.removeItem(AUTH_PENDING_INVITE_KEY);
-  return state.profiles.find(profile => profile.authUserId === state.authUser.id) || null;
+  return profile;
 }

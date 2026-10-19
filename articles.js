@@ -224,6 +224,7 @@ function normalizeArticle(article) {
     language: article.language || "de",
     variantGroupId: article.variantGroupId || article.variant_group_id || getInferredArticleVariantGroupId(article),
     ownerProfileId: article.ownerProfileId || article.owner_profile_id || null,
+    teamId: article.teamId || article.team_id || null,
     teacherGroupId: article.teacherGroupId || article.teacher_group_id || null,
     categoryLabels: article.categoryLabels || article.category_labels || {},
     image: article.image || null,
@@ -237,11 +238,17 @@ function canViewArticle(article, profile = state.currentProfile) {
   return Boolean(article?.published && article.visibility === "public" && article.approvalStatus === "approved");
 }
 
-function isInCurrentTeacherGroup(profile) {
+function isInCurrentTeacherGroup(profile, teamId = null) {
   if (!state.currentProfile || !profile) return false;
   if (state.currentProfile.role !== "teacher") return profile.id === state.currentProfile.id;
-  const teacherGroupId = state.currentProfile.teacherGroupId || state.currentProfile.id;
-  return profile.teacherGroupId === teacherGroupId && profile.id !== state.currentProfile.id;
+  const relevantTeamIds = teamId
+    ? new Set([teamId])
+    : new Set(getManagedTeams().map(team => team.id));
+  return state.teamMemberships.some(membership =>
+    relevantTeamIds.has(membership.teamId)
+    && membership.profileId === profile.id
+    && profile.id !== state.currentProfile.id
+  );
 }
 
 function getVisibleArticles() {
@@ -287,8 +294,9 @@ function canModerateArticle(article, profile = state.currentProfile) {
   if (!article || !profile || !state.authUser) return false;
   if (isPublisherAccount()) return true;
   if (!hasTeacherLicense(profile)) return false;
-  const teacherGroupId = profile.teacherGroupId || profile.id;
-  return article.teacherGroupId === teacherGroupId;
+  return article.teamId
+    ? getManagedTeams().some(team => team.id === article.teamId)
+    : article.teacherGroupId === (profile.teacherGroupId || profile.id);
 }
 
 function getModeratableArticles() {
@@ -382,6 +390,7 @@ function rowToArticle(row) {
     language: row.language || "de",
     variantGroupId: row.variant_group_id || getInferredArticleVariantGroupId(row),
     ownerProfileId: row.owner_profile_id || null,
+    teamId: row.team_id || null,
     teacherGroupId: row.teacher_group_id || null,
     visibility: row.visibility || "public",
     approvalStatus: row.approval_status || "approved",
@@ -406,6 +415,7 @@ function articleToRow(article, options = {}) {
     language: article.language || "de",
     variant_group_id: article.variantGroupId || getInferredArticleVariantGroupId(article),
     owner_profile_id: article.ownerProfileId || null,
+    team_id: article.teamId || null,
     teacher_group_id: article.teacherGroupId || null,
     visibility: "public",
     approval_status: article.approvalStatus || "approved",

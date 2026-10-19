@@ -2049,3 +2049,51 @@ select {
     flex-direction: column;
   }
 }
+.team-card {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color, #d7dfdf);
+  border-radius: 1rem;
+}
+
+.team-member-list {
+  display: grid;
+  gap: .5rem;
+  padding: 0;
+  list-style: none;
+}
+
+.team-member-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.invite-code-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(8, 24, 29, .72);
+}
+
+.invite-code-dialog.hidden {
+  display: none;
+}
+
+.invite-code-card {
+  width: min(36rem, 100%);
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.invite-code-value {
+  margin: 1rem 0;
+  font-size: clamp(2rem, 9vw, 4rem);
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-align: center;
+}

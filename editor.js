@@ -1017,7 +1017,7 @@ async function renderArticleAssignmentPanel(article = state.articles.find(item =
   const list = $("articleAssignmentList");
   if (!panel || !list) return;
 
-  const canAssign = Boolean(article?.id && hasTeacherLicense());
+  const canAssign = Boolean(article?.id && article?.teamId && hasTeacherLicense());
   panel.classList.toggle("hidden", !canAssign);
   $("articleAssignmentStatus").textContent = "";
   if (!canAssign) {
@@ -1025,7 +1025,7 @@ async function renderArticleAssignmentPanel(article = state.articles.find(item =
     return;
   }
 
-  const students = getTeacherStudents();
+  const students = getTeacherStudents(article.teamId);
   if (!students.length) {
     list.innerHTML = `<p class="muted">${escapeHtml(t("noStudentsForAssignment"))}</p>`;
     return;
@@ -1060,28 +1060,21 @@ async function assignSelectedArticleToStudents() {
     Array.from(document.querySelectorAll("#articleAssignmentList input[type='checkbox']:checked"))
       .map(input => input.value)
   );
-  const students = getTeacherStudents();
-  const assignedAt = new Date().toISOString();
-
+  const students = getTeacherStudents(article.teamId);
   try {
     await Promise.all(students.map(async student => {
       const data = await getProfileData(student);
-      const currentAssignment = getAssignmentForArticle(article.id, data);
-      const existing = getAssignments(data).filter(assignment => assignment.articleId !== article.id);
-      const assignments = selectedIds.has(student.id)
-        ? [
-            currentAssignment
-              ? { ...currentAssignment, articleTitle: article.title, teacherId: state.currentProfile.id }
-              : {
-              articleId: article.id,
-              articleTitle: article.title,
-              teacherId: state.currentProfile.id,
-              assignedAt
-            },
-            ...existing
-          ]
-        : existing;
-      await saveProfileDataForProfile(student, { ...data, assignments });
+      const shouldAssign = selectedIds.has(student.id);
+      if (Boolean(getAssignmentForArticle(article.id, data)) === shouldAssign) return;
+      await supabaseRequest("rpc/app_set_article_assignment", {
+        method: "POST",
+        body: JSON.stringify({
+          target_team_id: article.teamId,
+          target_profile_id: student.id,
+          target_article_id: article.id,
+          target_assigned: shouldAssign
+        })
+      });
     }));
     $("articleAssignmentStatus").textContent = t("assignmentSaved");
     renderArticleAssignmentPanel(article);
@@ -1326,6 +1319,7 @@ function fillArticleEditor(article) {
   $("articleIdInput").value = article?.id || "";
   $("articleVisibilitySelect").value = DEFAULT_ARTICLE_VISIBILITY;
   $("articleApprovalStatusSelect").value = article?.approvalStatus || DEFAULT_ARTICLE_APPROVAL_STATUS;
+  renderArticleTeamSelect(article);
   $("articleLevelInput").value = article?.level || "B1";
   renderArticleCategoryOptionsMulti(article?.category || "");
   $("articleSummaryInput").value = article?.summary || "";
@@ -1399,6 +1393,7 @@ function readArticleEditor() {
   const article = {
     id,
     ownerProfileId: existingArticle?.ownerProfileId || state.currentProfile?.id || null,
+    teamId: $("articleTeamSelect")?.value || existingArticle?.teamId || null,
     teacherGroupId: existingArticle?.teacherGroupId || state.currentProfile?.teacherGroupId || state.currentProfile?.id || null,
     visibility,
     approvalStatus,
@@ -1414,6 +1409,10 @@ function readArticleEditor() {
     inlineVocabulary: appendVocabularyTranslations(state.editorBaseInlineVocabulary || [], parsedInlineVocabulary, language),
     questions: avoidAlternatingQuestionPattern(parseQuestionLines($("articleQuestionsInput").value))
   };
+
+  if (getArticleTeamChoices(existingArticle).length > 1 && !article.teamId) {
+    throw new Error(t("chooseTeam"));
+  }
 
   if (!article.title || !article.id || !article.level || !article.category || !article.summary || !article.text.length) {
     throw new Error(t("validationFillArticle"));

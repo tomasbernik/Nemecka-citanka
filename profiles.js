@@ -9,19 +9,23 @@ async function loadProfiles() {
   try {
     let profiles;
     try {
-      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,license_tier,native_language,teacher_group_id,auth_user_id,owner_auth_user_id,invite_token,invite_claimed_at&order=role.desc,name.asc");
+      profiles = await supabaseRequest("app_profiles?select=id,name,role,license_tier,native_language,teacher_group_id,auth_user_id,owner_auth_user_id,invite_claimed_at&order=role.desc,name.asc");
     } catch (error) {
       try {
-        profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id,auth_user_id,owner_auth_user_id&order=role.desc,name.asc");
+        profiles = await supabaseRequest("app_profiles?select=id,name,role,native_language,teacher_group_id,auth_user_id,owner_auth_user_id&order=role.desc,name.asc");
       } catch {
-        profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id&order=role.desc,name.asc");
+        profiles = await supabaseRequest("app_profiles?select=id,name,role,native_language,teacher_group_id&order=role.desc,name.asc");
       }
     }
-    if (profiles?.length) {
+    if (Array.isArray(profiles) && state.authUser) {
       state.profiles = profiles.map(row => rowToProfile(row, localProfilesById.get(row.id)));
       ensureProfileGroups();
       localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
       if (shouldSyncSavedProfileLanguage(localProfilesById)) await saveProfiles();
+    } else if (profiles?.length) {
+      state.profiles = profiles.map(row => rowToProfile(row, localProfilesById.get(row.id)));
+      ensureProfileGroups();
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
     } else if (state.profiles.length) {
       await saveProfiles();
     }
@@ -33,20 +37,28 @@ async function loadProfiles() {
 async function saveProfiles() {
   localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
 
-  if (!state.remoteReady || !state.profiles.length) return;
+  if (!state.remoteReady || !state.authUser?.id || !state.profiles.length) return;
+
+  const writableProfiles = isPublisherAccount()
+    ? state.profiles
+    : state.profiles.filter(profile =>
+        profile.authUserId === state.authUser.id
+        || profile.ownerAuthUserId === state.authUser.id
+      );
+  if (!writableProfiles.length) return;
 
   try {
     try {
       await supabaseRequest("app_profiles?on_conflict=id", {
         method: "POST",
         headers: { Prefer: "resolution=merge-duplicates" },
-        body: JSON.stringify(state.profiles.map(profileToRow))
+        body: JSON.stringify(writableProfiles.map(profileToRow))
       });
     } catch (error) {
       await supabaseRequest("app_profiles?on_conflict=id", {
         method: "POST",
         headers: { Prefer: "resolution=merge-duplicates" },
-        body: JSON.stringify(state.profiles.map(({ id, name, pin, role }) => ({ id, name, pin, role })))
+        body: JSON.stringify(writableProfiles.map(({ id, name, pin, role }) => ({ id, name, pin, role })))
       });
     }
   } catch (error) {
@@ -201,6 +213,7 @@ async function setCurrentProfile(profile) {
   localStorage.setItem(CURRENT_PROFILE_KEY, profile.id);
   await loadProfileData(state.currentProfile);
   state.currentProfile.teacherRequest = await loadTeacherRequestForProfile(state.currentProfile);
+  await loadTeams();
   if (state.articles.length) await saveCachedArticles(state.articles, getNativeLanguage(state.currentProfile));
   renderNativeLanguageControls();
   renderRoleControls();
@@ -222,9 +235,7 @@ function showLogin() {
   document.body.classList.remove("has-guest-auth");
   const pendingInvite = Boolean(localStorage.getItem(AUTH_PENDING_INVITE_KEY));
   if ($("authRoleSelect")) {
-    $("authRoleSelect").value = pendingInvite
-      ? "student"
-      : localStorage.getItem(AUTH_REQUESTED_ROLE_KEY) === "teacher" ? "teacher" : "student";
+    $("authRoleSelect").value = "student";
     $("authRoleSelect").disabled = pendingInvite;
   }
   $("otpVerificationWrap")?.classList.toggle("hidden", !localStorage.getItem(AUTH_OTP_EMAIL_KEY));
@@ -282,7 +293,18 @@ async function login() {
     return;
   }
 
-  const profile = state.profiles.find(item => normalizeName(item.name) === name && item.pin === pin);
+  let profile = state.profiles.find(item => normalizeName(item.name) === name && item.pin === pin);
+  if (!profile && state.remoteReady) {
+    try {
+      const rows = await supabaseRequest("rpc/app_legacy_pin_profile", {
+        method: "POST",
+        body: JSON.stringify({ target_name: $("loginNameInput").value.trim(), target_pin: pin })
+      });
+      if (rows?.[0]) profile = rowToProfile(rows[0]);
+    } catch (error) {
+      console.info("Legacy PIN login unavailable:", error.message);
+    }
+  }
 
   if (!profile) {
     $("loginError").textContent = t("loginMismatch");

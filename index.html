@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=129">
+  <link rel="stylesheet" href="style.css?v=130">
 </head>
 <body>
   <div id="app">
@@ -122,7 +122,15 @@
             E-Mail
             <input id="magicEmailInput" type="email" autocomplete="email">
           </label>
-          <button id="magicLinkBtn" class="secondary-btn quiet" type="button">Code senden</button>
+          <label class="field-row auth-email-row">
+            Passwort
+            <input id="authPasswordInput" type="password" autocomplete="current-password" minlength="8">
+          </label>
+          <div class="editor-actions">
+            <button id="passwordLoginBtn" class="primary-btn" type="button">Mit E-Mail anmelden</button>
+            <button id="passwordRegisterBtn" class="secondary-btn" type="button">Registrieren</button>
+          </div>
+          <button id="magicLinkBtn" class="text-btn" type="button">Mit Einmalcode anmelden</button>
           <div id="otpVerificationWrap" class="auth-otp-wrap hidden">
             <label class="field-row">
               Bestätigungscode
@@ -372,6 +380,17 @@
             </label>
             <button id="joinInviteBtn" class="secondary-btn quiet" type="button">Pripojiť sa</button>
           </div>
+          <div id="teamManagementSection" class="setting-row stacked hidden">
+            <div>
+              <strong id="teamManagementTitle">Teams / Klassen</strong>
+              <p id="teamManagementStatus" class="muted setting-note"></p>
+            </div>
+            <div class="editor-actions">
+              <input id="newTeamNameInput" maxlength="80" placeholder="1.A">
+              <button id="createTeamBtn" class="secondary-btn" type="button">Team erstellen</button>
+            </div>
+            <div id="teamManagementList"></div>
+          </div>
           <div class="setting-row stacked">
             <div>
               <strong>Upozornenia</strong>
@@ -498,6 +517,10 @@
                 <option value="300-350" selected>300-350 words</option>
                 <option value="450-550">450-550 words</option>
               </select>
+            </label>
+            <label id="articleTeamRow" class="field-row hidden">
+              Team / Klasse
+              <select id="articleTeamSelect"></select>
             </label>
             <label class="field-row">
               Informácie pre generovanie promptu
@@ -684,21 +707,40 @@
     </div>
   </div>
 
+  <div id="inviteCodeDialog" class="invite-code-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="inviteCodeTitle">
+    <div class="reader-card invite-code-card">
+      <p class="eyebrow" id="inviteCodeTitle">Einladungscode</p>
+      <h2 id="inviteCodeTeamName"></h2>
+      <p id="inviteCodeValue" class="invite-code-value"></p>
+      <p id="inviteCodeValidity">Eine Stunde gültig</p>
+      <p id="inviteCodeExpiresAt" class="muted"></p>
+      <p id="inviteCodeCountdown" class="muted"></p>
+      <p id="inviteCodeStatus" class="form-error"></p>
+      <div class="editor-actions">
+        <button id="copyInviteCodeBtn" class="primary-btn" type="button">Code kopieren</button>
+        <button id="cancelInviteCodeBtn" class="secondary-btn" type="button">Code widerrufen</button>
+        <button id="replaceInviteCodeBtn" class="secondary-btn quiet" type="button">Neuen Code erstellen</button>
+        <button id="closeInviteCodeBtn" class="text-btn" type="button">Schließen</button>
+      </div>
+    </div>
+  </div>
+
   <script src="config.js?v=117"></script>
   <script src="constants.js?v=129"></script>
   <script src="translations/ui.js?v=129"></script>
-  <script src="translations/auth.js?v=129"></script>
+  <script src="translations/auth.js?v=130"></script>
   <script src="translations/new-languages.js?v=129"></script>
   <script src="translations/prompts.js?v=120"></script>
   <script src="i18n.js?v=117"></script>
-  <script src="auth.js?v=129"></script>
+  <script src="auth.js?v=130"></script>
   <script src="api.js?v=117"></script>
-  <script src="profiles.js?v=129"></script>
-  <script src="articles.js?v=129"></script>
+  <script src="profiles.js?v=130"></script>
+  <script src="teams.js?v=130"></script>
+  <script src="articles.js?v=130"></script>
   <script src="reader.js?v=121"></script>
   <script src="games.js?v=125"></script>
-  <script src="editor.js?v=129"></script>
+  <script src="editor.js?v=130"></script>
   <script src="home.js?v=129"></script>
-  <script src="app.js?v=129"></script>
+  <script src="app.js?v=130"></script>
 </body>
 </html>

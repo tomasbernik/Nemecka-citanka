@@ -336,8 +336,8 @@ function getAssignmentForArticle(articleId, data = state.profileData) {
   return getAssignments(data).find(assignment => assignment.articleId === articleId) || null;
 }
 
-function getTeacherStudents() {
-  return state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile));
+function getTeacherStudents(teamId = null) {
+  return state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile, teamId));
 }
 
 function getArticleForAssignment(assignment) {

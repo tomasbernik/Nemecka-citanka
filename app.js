@@ -10,6 +10,9 @@ const state = {
   currentProfile: null,
   authSession: null,
   authUser: null,
+  teams: [],
+  teamMemberships: [],
+  activeTeamInvite: null,
   lastInviteUrl: "",
   profileData: emptyProfileData(),
   speech: {
@@ -487,6 +490,9 @@ function updateStaticTexts() {
   setOptionText("authRoleSelect", "student", "studentRole");
   setOptionText("authRoleSelect", "teacher", "teacherRole");
   setLabelText("magicEmailInput", "magicEmail");
+  setLabelText("authPasswordInput", "password");
+  setText("passwordLoginBtn", "passwordLogin");
+  setText("passwordRegisterBtn", "passwordRegister");
   setText("magicLinkBtn", "magicLinkLogin");
   setLabelText("otpCodeInput", "otpCode");
   setText("verifyOtpBtn", "verifyOtp");
@@ -585,6 +591,15 @@ function updateStaticTexts() {
   setText("joinInviteTitle", "joinInviteTitle");
   setLabelText("joinInviteInput", "joinInviteLabel");
   setText("joinInviteBtn", "joinInvite");
+  setText("teamManagementTitle", "teamManagementTitle");
+  setPlaceholder("newTeamNameInput", "teamNamePlaceholder");
+  setText("createTeamBtn", "createTeam");
+  setText("inviteCodeTitle", "inviteCodeTitle");
+  setText("inviteCodeValidity", "inviteValidOneHour");
+  setText("copyInviteCodeBtn", "copyInviteCode");
+  setText("cancelInviteCodeBtn", "cancelInviteCode");
+  setText("replaceInviteCodeBtn", "replaceInviteCode");
+  setText("closeInviteCodeBtn", "close");
   document.querySelector("#teacherOverviewCard .eyebrow").textContent = t("teacherView");
   document.querySelector("#teacherOverviewCard h2").textContent = t("studentOverview");
   document.querySelector(".article-editor .practice-heading .eyebrow").textContent = t("teacherArticles");
@@ -596,6 +611,7 @@ function updateStaticTexts() {
   setLabelText("articleCategory2Select", "category");
   setLabelText("articleCategory2Input", "newCategory");
   setLabelText("articleApprovalStatusSelect", "approvalStatus");
+  setLabelText("articleTeamSelect", "articleTeam");
   setOptionText("articleApprovalStatusSelect", "draft", "draft");
   setOptionText("articleApprovalStatusSelect", "pending", "pending");
   setOptionText("articleApprovalStatusSelect", "approved", "approved");
@@ -745,15 +761,7 @@ async function joinInviteFromSettings() {
     return;
   }
 
-  const profile = await claimInvite(token);
-  if (!profile) {
-    status.textContent = t("inviteInvalid");
-    return;
-  }
-
-  $("joinInviteInput").value = "";
-  status.textContent = t("inviteClaimed");
-  await setCurrentProfile(profile);
+  await joinTeamByCode(token);
 }
 
 async function getProfileData(profile) {
@@ -973,6 +981,8 @@ onClick("guestAuthBtn", showLogin);
 onClick("browseGuestBtn", showGuestHome);
 onClick("loginBtn", login);
 onClick("googleLoginBtn", signInWithGoogle);
+onClick("passwordLoginBtn", signInWithPassword);
+onClick("passwordRegisterBtn", registerWithPassword);
 onClick("magicLinkBtn", sendMagicLink);
 onClick("verifyOtpBtn", verifyEmailOtp);
 onEvent("otpCodeInput", "keydown", event => {
@@ -985,6 +995,12 @@ onClick("createProfilesBtn", createProfiles);
 onClick("createSingleProfileBtn", createSingleProfile);
 onClick("shareInviteLinkBtn", shareLastInviteLink);
 onClick("joinInviteBtn", joinInviteFromSettings);
+onClick("createTeamBtn", createTeamFromSettings);
+onEvent("teamManagementList", "click", handleTeamManagementClick);
+onClick("copyInviteCodeBtn", copyActiveInviteCode);
+onClick("cancelInviteCodeBtn", cancelActiveInviteCode);
+onClick("replaceInviteCodeBtn", replaceActiveInviteCode);
+onClick("closeInviteCodeBtn", closeInviteCodeDialog);
 onClick("logoutBtn", logout);
 onClick("readAloudBtn", () => readSentence(0));
 onClick("pauseReadBtn", togglePauseReading);
@@ -1090,7 +1106,10 @@ onEvent("loginPinInput", "keydown", event => {
 });
 
 onEvent("magicEmailInput", "keydown", event => {
-  if (event.key === "Enter") sendMagicLink();
+  if (event.key === "Enter") signInWithPassword();
+});
+onEvent("authPasswordInput", "keydown", event => {
+  if (event.key === "Enter") signInWithPassword();
 });
 
 onChange("loginNativeLanguageSelect", (event) => {
