@@ -179,3 +179,45 @@ const AUTH_TEXT = {
 Object.entries(AUTH_TEXT).forEach(([language, text]) => {
   assignUiText(language, text);
 });
+
+const ACCESS_REQUEST_TEXT = {
+  de: {
+    accountType: "Kontoart",
+    magicLinkLogin: "Code senden",
+    magicLinkStarted: "Anmeldecode wird gesendet...",
+    magicLinkSent: "Gib den sechsstelligen Code aus deiner E-Mail ein.",
+    otpCode: "Bestätigungscode",
+    verifyOtp: "Code bestätigen",
+    otpCodeFill: "Gib den sechsstelligen Code ein.",
+    otpVerifying: "Code wird geprüft...",
+    otpInvalid: "Der Code ist ungültig oder abgelaufen."
+    ,requestTeacherAccess: "Lehrerzugang beantragen"
+    ,teacherRequestSubmitted: "Deine Anfrage wartet auf die Freigabe des Administrators."
+    ,emailRateLimited: "Zu viele E-Mails wurden gesendet. Versuche es später erneut oder nutze Google."
+  },
+  sk: {
+    accountType: "Typ účtu",
+    magicLinkLogin: "Poslať kód",
+    magicLinkStarted: "Posielam prihlasovací kód...",
+    magicLinkSent: "Zadaj šesťmiestny kód, ktorý sme poslali na tvoj e-mail.",
+    otpCode: "Overovací kód",
+    verifyOtp: "Overiť kód",
+    otpCodeFill: "Zadaj šesťmiestny kód.",
+    otpVerifying: "Overujem kód...",
+    otpInvalid: "Kód je neplatný alebo už vypršal."
+    ,requestTeacherAccess: "Požiadať o učiteľský účet"
+    ,teacherRequestSubmitted: "Žiadosť čaká na schválenie administrátorom."
+    ,emailRateLimited: "Bolo odoslaných príliš veľa e-mailov. Skús to neskôr alebo použi Google."
+  },
+  ru: {
+    accountType: "Тип аккаунта", magicLinkLogin: "Отправить код", magicLinkStarted: "Отправляю код...", magicLinkSent: "Введите шестизначный код из письма.", otpCode: "Код подтверждения", verifyOtp: "Подтвердить код", otpCodeFill: "Введите шестизначный код.", otpVerifying: "Проверяю код...", otpInvalid: "Код недействителен или истёк.", requestTeacherAccess: "Запросить доступ учителя", teacherRequestSubmitted: "Запрос ожидает одобрения администратора."
+  },
+  pl: {
+    accountType: "Typ konta", magicLinkLogin: "Wyślij kod", magicLinkStarted: "Wysyłanie kodu...", magicLinkSent: "Wpisz sześciocyfrowy kod z wiadomości e-mail.", otpCode: "Kod weryfikacyjny", verifyOtp: "Potwierdź kod", otpCodeFill: "Wpisz sześciocyfrowy kod.", otpVerifying: "Sprawdzanie kodu...", otpInvalid: "Kod jest nieprawidłowy lub wygasł.", requestTeacherAccess: "Poproś o dostęp nauczyciela", teacherRequestSubmitted: "Wniosek oczekuje na zatwierdzenie administratora."
+  },
+  hu: {
+    accountType: "Fiók típusa", magicLinkLogin: "Kód küldése", magicLinkStarted: "Kód küldése...", magicLinkSent: "Írd be az e-mailben kapott hatjegyű kódot.", otpCode: "Ellenőrző kód", verifyOtp: "Kód ellenőrzése", otpCodeFill: "Írd be a hatjegyű kódot.", otpVerifying: "Kód ellenőrzése...", otpInvalid: "A kód érvénytelen vagy lejárt.", requestTeacherAccess: "Tanári hozzáférés kérése", teacherRequestSubmitted: "A kérelem rendszergazdai jóváhagyásra vár."
+  }
+};
+
+Object.entries(ACCESS_REQUEST_TEXT).forEach(([language, text]) => assignUiText(language, text));

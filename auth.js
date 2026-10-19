@@ -189,7 +189,16 @@ function startGoogleAuth(action) {
 
 async function signInWithGoogle() {
   $("loginError").textContent = t("authLinkStarted");
+  rememberRequestedAuthRole();
   startGoogleAuth("login");
+}
+
+function getSelectedAuthRole() {
+  return $("authRoleSelect")?.value === "teacher" ? "teacher" : "student";
+}
+
+function rememberRequestedAuthRole() {
+  localStorage.setItem(AUTH_REQUESTED_ROLE_KEY, getSelectedAuthRole());
 }
 
 async function sendMagicLink() {
@@ -205,7 +214,9 @@ async function sendMagicLink() {
   }
 
   $("loginError").textContent = t("magicLinkStarted");
-  localStorage.setItem(AUTH_PENDING_ACTION_KEY, "magic-login");
+  rememberRequestedAuthRole();
+  localStorage.setItem(AUTH_PENDING_ACTION_KEY, "email-otp");
+  localStorage.setItem(AUTH_OTP_EMAIL_KEY, email);
 
   try {
     await supabaseAuthRequest(`otp?redirect_to=${encodeURIComponent(getAuthRedirectUrl())}`, {
@@ -218,11 +229,44 @@ async function sendMagicLink() {
         }
       })
     });
+    $("otpVerificationWrap")?.classList.remove("hidden");
+    $("otpCodeInput")?.focus();
     $("loginError").textContent = t("magicLinkSent");
   } catch (error) {
     localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
+    localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
     console.error(error);
-    $("loginError").textContent = t("authUnavailable");
+    $("loginError").textContent = error.message.includes("429") ? t("emailRateLimited") : t("authUnavailable");
+  }
+}
+
+async function verifyEmailOtp() {
+  const email = (localStorage.getItem(AUTH_OTP_EMAIL_KEY) || $("magicEmailInput")?.value || "")
+    .trim()
+    .toLowerCase();
+  const token = String($("otpCodeInput")?.value || "").replace(/\s+/g, "");
+  if (!email || !/^\d{6}$/.test(token)) {
+    $("loginError").textContent = t("otpCodeFill");
+    return;
+  }
+
+  $("loginError").textContent = t("otpVerifying");
+  try {
+    const session = await supabaseAuthRequest("verify", {
+      method: "POST",
+      body: JSON.stringify({ email, token, type: "email" })
+    });
+    if (!session?.access_token) throw new Error("Missing OTP session");
+    saveAuthSession(session);
+    state.authUser = session.user || await loadAuthUser();
+    await loadProfiles();
+    await loadArticles();
+    const handled = await handlePendingAuthAction();
+    if (!handled) throw new Error("OTP login was not completed");
+    localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
+  } catch (error) {
+    console.error(error);
+    $("loginError").textContent = t("otpInvalid");
   }
 }
 
@@ -243,6 +287,8 @@ async function signOutGoogle() {
   saveAuthSession(null);
   state.authUser = null;
   localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
+  localStorage.removeItem(AUTH_REQUESTED_ROLE_KEY);
+  localStorage.removeItem(AUTH_OTP_EMAIL_KEY);
   renderAuthControls(t("authSignedOut"));
 }
 
@@ -329,7 +375,7 @@ async function handlePendingAuthAction() {
 
   localStorage.removeItem(AUTH_PENDING_ACTION_KEY);
 
-  if (action === "login" || action === "magic-login") {
+  if (action === "login" || action === "magic-login" || action === "email-otp") {
     const inviteToken = localStorage.getItem(AUTH_PENDING_INVITE_KEY);
     let profile = inviteToken ? await claimInvite(inviteToken) : null;
     profile = profile || state.profiles.find(item => item.authUserId === state.authUser.id);
@@ -340,11 +386,16 @@ async function handlePendingAuthAction() {
       return true;
     }
 
+    if (!inviteToken && localStorage.getItem(AUTH_REQUESTED_ROLE_KEY) === "teacher") {
+      await submitTeacherRequest(profile);
+    }
+    localStorage.removeItem(AUTH_REQUESTED_ROLE_KEY);
+
     await setCurrentProfile(profile);
     logAppEvent("profile_login", {
       profileId: profile.id,
       role: profile.role,
-      source: action === "magic-login" ? "magic_link" : "google"
+      source: action === "email-otp" || action === "magic-login" ? "email_otp" : "google"
     });
     return true;
   }
@@ -355,6 +406,47 @@ async function handlePendingAuthAction() {
   }
 
   return false;
+}
+
+async function submitTeacherRequest(profile) {
+  if (!profile?.id || !state.authUser?.id || profile.role === "teacher") return null;
+  const email = state.authUser.email || state.authUser.user_metadata?.email || "";
+  const rows = await supabaseRequest("rpc/app_submit_teacher_request", {
+    method: "POST",
+    body: JSON.stringify({
+      request_profile_id: profile.id,
+      request_email: email
+    })
+  });
+  return Array.isArray(rows) ? rows[0] : rows;
+}
+
+async function requestTeacherAccess() {
+  const button = $("requestTeacherAccessBtn");
+  if (!state.currentProfile || !state.authUser?.id || state.currentProfile.role === "teacher") return;
+  if (button) button.disabled = true;
+  try {
+    const request = await submitTeacherRequest(state.currentProfile);
+    state.currentProfile.teacherRequest = request;
+    renderCurrentProfileLabel();
+    renderAuthControls(t("teacherRequestSubmitted"));
+  } catch (error) {
+    console.error(error);
+    renderAuthControls(error.message);
+  } finally {
+    if (button) button.disabled = false;
+  }
+}
+
+async function loadTeacherRequestForProfile(profile) {
+  if (!profile?.id || !state.authUser?.id || !state.remoteReady) return null;
+  try {
+    const rows = await supabaseRequest(`app_teacher_requests?profile_id=eq.${encodeURIComponent(profile.id)}&select=status,license_tier,requested_at&limit=1`);
+    return Array.isArray(rows) ? rows[0] || null : null;
+  } catch (error) {
+    console.info("Teacher request status unavailable:", error.message);
+    return null;
+  }
 }
 
 async function handlePendingInvite() {
@@ -392,10 +484,37 @@ function renderAuthControls(message = "") {
 
   $("linkGoogleAccountBtn")?.classList.toggle("hidden", linked && Boolean(email));
   $("signOutGoogleBtn")?.classList.toggle("hidden", !email);
+  const canRequestTeacher = linked
+    && state.currentProfile?.role !== "teacher"
+    && state.currentProfile?.teacherRequest?.status !== "pending";
+  $("requestTeacherAccessBtn")?.classList.toggle("hidden", !canRequestTeacher);
 }
 
 function canCreateProfiles() {
-  return Boolean(state.currentProfile);
+  return isPublisherAccount() || hasTeacherLicense();
+}
+
+function isProfileOwnedByCurrentAuth(profile = state.currentProfile) {
+  const authUserId = state.authUser?.id;
+  return Boolean(
+    authUserId
+    && profile?.id
+    && (
+      profile.authUserId === authUserId
+      || profile.ownerAuthUserId === authUserId
+    )
+  );
+}
+
+function hasTeacherLicense(profile = state.currentProfile) {
+  return Boolean(
+    isPublisherAccount()
+    || (
+      isProfileOwnedByCurrentAuth(profile)
+      && profile?.role === "teacher"
+      && ["pilot", "paid"].includes(profile.licenseTier)
+    )
+  );
 }
 
 function isCurrentGoogleAdmin() {
@@ -415,11 +534,11 @@ function isCurrentGoogleAdmin() {
 }
 
 function canCreateTeacherProfiles() {
-  return Boolean(state.currentProfile);
+  return isPublisherAccount();
 }
 
 function canCreateStudentProfiles() {
-  return Boolean(state.currentProfile);
+  return isPublisherAccount() || hasTeacherLicense();
 }
 
 function renderProfileCreationControls() {

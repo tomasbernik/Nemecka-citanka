@@ -28,8 +28,8 @@ function showClickedReviewFromNav(event) {
 
 function setTeacherPanel(panel) {
   const canShowOverview = Boolean(state.currentProfile);
-  const canEditArticles = Boolean(state.currentProfile);
-  const isTeacher = state.currentProfile?.role === "teacher";
+  const canEditArticles = isPublisherAccount() || isProfileOwnedByCurrentAuth();
+  const isTeacher = hasTeacherLicense();
   const canShowAdmin = isPublisherAccount();
   const activePanel = panel === "admin" && !canShowAdmin
     ? "articles"
@@ -63,10 +63,10 @@ function setTeacherPanel(panel) {
   renderOnboarding();
 }
 
-async function showTeacherView(panel = state.currentProfile?.role === "teacher" ? "articles" : "students") {
+async function showTeacherView(panel = "articles") {
   if (!state.currentProfile) return;
   renderArticleEditorList();
-  if (panel === "students" || state.currentProfile.role !== "teacher") {
+  if (panel === "students") {
     setTeacherPanel("students");
     showView("teacherView");
     await renderTeacherOverview();
@@ -95,7 +95,7 @@ function renderArticleModerationQueue() {
     .filter(article => ["draft", "pending"].includes(article.approvalStatus))
     .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
 
-  panel.classList.toggle("hidden", state.currentProfile?.role !== "teacher" && !isPublisherAccount());
+  panel.classList.toggle("hidden", !hasTeacherLicense());
   root.innerHTML = articles.length
     ? articles.map(article => `
         <article class="management-row">
@@ -192,9 +192,54 @@ function buildTeacherHierarchy() {
   return `<section class="management-section"><h3>${escapeHtml(t("teachersAndStudents"))}</h3><div class="management-profile-grid">${cards.join("")}</div></section>`;
 }
 
-function renderAdminOverview() {
+async function loadTeacherRequests() {
+  if (!isPublisherAccount()) return [];
+  try {
+    return await supabaseRequest("app_teacher_requests?select=profile_id,email,status,requested_at,reviewed_at,license_tier&order=requested_at.desc");
+  } catch (error) {
+    console.info("Teacher requests unavailable:", error.message);
+    return [];
+  }
+}
+
+function buildTeacherRequestSection(requests) {
+  const pending = requests.filter(request => request.status === "pending");
+  $("adminOverviewTabBtn").textContent = pending.length
+    ? `${t("adminOverviewTab")} (${pending.length})`
+    : t("adminOverviewTab");
+
+  return `
+    <section class="management-section">
+      <h3>${escapeHtml(t("teacherRequests"))} <span class="management-count">${pending.length}</span></h3>
+      <div class="management-list">
+        ${requests.length ? requests.map(request => {
+          const profile = state.profiles.find(item => item.id === request.profile_id);
+          const actions = request.status === "pending"
+            ? `
+                <button class="secondary-btn compact" type="button" data-teacher-profile-id="${escapeHtml(request.profile_id)}" data-license-tier="pilot">${escapeHtml(t("grantPilot"))}</button>
+                <button class="secondary-btn compact" type="button" data-teacher-profile-id="${escapeHtml(request.profile_id)}" data-license-tier="paid">${escapeHtml(t("grantPaid"))}</button>
+                <button class="text-btn" type="button" data-teacher-profile-id="${escapeHtml(request.profile_id)}" data-request-decision="rejected">${escapeHtml(t("rejectRequest"))}</button>
+              `
+            : `<span class="muted">${escapeHtml(t(request.status === "approved" ? "requestApproved" : "requestRejected"))}${request.license_tier !== "none" ? ` &bull; ${escapeHtml(t(request.license_tier === "pilot" ? "pilotLicense" : "paidLicense"))}` : ""}</span>`;
+          return `
+            <article class="management-row">
+              <div>
+                <strong>${escapeHtml(profile?.name || request.email)}</strong>
+                <p class="muted">${escapeHtml(request.email)} &bull; ${escapeHtml(formatDateTime(request.requested_at))}</p>
+              </div>
+              <div class="management-actions">${actions}</div>
+            </article>
+          `;
+        }).join("") : `<p class="muted">${escapeHtml(t("noTeacherRequests"))}</p>`}
+      </div>
+    </section>
+  `;
+}
+
+async function renderAdminOverview() {
   const root = $("adminOverview");
   if (!root || !isPublisherAccount()) return;
+  const teacherRequests = await loadTeacherRequests();
   const articles = [...state.articles].sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
   const pending = articles.filter(article => ["draft", "pending"].includes(article.approvalStatus));
   const awaitingPublication = articles.filter(article => article.approvalStatus === "approved" && !article.published);
@@ -202,6 +247,7 @@ function renderAdminOverview() {
   const rejected = articles.filter(article => article.approvalStatus === "rejected");
   const privateArticles = articles.filter(article => article.visibility === "private");
   root.innerHTML = [
+    buildTeacherRequestSection(teacherRequests),
     buildAdminArticleSection(t("articleNew"), pending),
     buildAdminArticleSection(t("approvedAwaitingPublication"), awaitingPublication),
     buildAdminArticleSection(t("publishedArticles"), published),
@@ -212,18 +258,29 @@ function renderAdminOverview() {
 }
 
 async function handleAdminOverviewClick(event) {
-  const button = event.target.closest("[data-article-id]");
+  const button = event.target.closest("[data-article-id], [data-teacher-profile-id]");
   if (!button || !isPublisherAccount()) return;
   button.disabled = true;
   try {
-    if (button.dataset.approval) {
+    if (button.dataset.teacherProfileId) {
+      const approved = Boolean(button.dataset.licenseTier);
+      await supabaseRequest("rpc/app_review_teacher_request", {
+        method: "POST",
+        body: JSON.stringify({
+          target_profile_id: button.dataset.teacherProfileId,
+          target_decision: approved ? "approved" : "rejected",
+          target_license_tier: button.dataset.licenseTier || "pilot"
+        })
+      });
+      await loadProfiles();
+    } else if (button.dataset.approval) {
       await setArticleApprovalStatus(button.dataset.articleId, button.dataset.approval);
     } else if (button.dataset.published) {
       await setArticlePublished(button.dataset.articleId, button.dataset.published === "true");
     } else {
       return;
     }
-    renderAdminOverview();
+    await renderAdminOverview();
     renderArticleModerationQueue();
     renderArticles();
   } catch (error) {
@@ -611,7 +668,7 @@ async function renderTeacherOverview() {
 
   const sections = [];
 
-  if (state.currentProfile?.role === "teacher") {
+  if (hasTeacherLicense()) {
     const students = state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile));
     const studentSummaries = await Promise.all(students.map(student => buildProfileSummary(student, student.name)));
     sections.push(buildDashboard(t("studentOverview"), studentSummaries));

@@ -286,7 +286,7 @@ function isPublisherAccount() {
 function canModerateArticle(article, profile = state.currentProfile) {
   if (!article || !profile || !state.authUser) return false;
   if (isPublisherAccount()) return true;
-  if (profile.role !== "teacher") return false;
+  if (!hasTeacherLicense(profile)) return false;
   const teacherGroupId = profile.teacherGroupId || profile.id;
   return article.teacherGroupId === teacherGroupId;
 }
@@ -297,7 +297,8 @@ function getModeratableArticles() {
 
 function canEditArticle(article, profile = state.currentProfile) {
   if (!article || !profile) return false;
-  return isPublisherAccount() || article.ownerProfileId === profile.id;
+  return isPublisherAccount()
+    || (isProfileOwnedByCurrentAuth(profile) && article.ownerProfileId === profile.id);
 }
 
 function canDeleteArticle(article, profile = state.currentProfile) {

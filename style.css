@@ -593,6 +593,18 @@ h3 { font-size: 1.1rem; }
   margin-top: 14px;
 }
 
+.auth-otp-wrap {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: rgba(var(--accent-rgb), 0.08);
+}
+
+.auth-otp-wrap .primary-btn {
+  margin-top: 10px;
+}
+
 .legacy-login-row {
   margin-top: 22px;
   padding-top: 18px;

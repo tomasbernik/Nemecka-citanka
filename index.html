@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=128">
+  <link rel="stylesheet" href="style.css?v=129">
 </head>
 <body>
   <div id="app">
@@ -110,12 +110,26 @@
           <h2>Wer liest?</h2>
           <p id="authEntryNote" class="muted">Melde dich an oder erstelle in wenigen Sekunden ein kostenloses Konto.</p>
           <p id="loginError" class="form-error"></p>
+          <label class="field-row">
+            Kontoart
+            <select id="authRoleSelect">
+              <option value="student">Schüler/in</option>
+              <option value="teacher">Lehrer/in</option>
+            </select>
+          </label>
           <button id="googleLoginBtn" class="primary-btn" type="button">Mit Google anmelden</button>
           <label class="field-row auth-email-row">
             E-Mail
             <input id="magicEmailInput" type="email" autocomplete="email">
           </label>
-          <button id="magicLinkBtn" class="secondary-btn quiet" type="button">Anmeldelink senden</button>
+          <button id="magicLinkBtn" class="secondary-btn quiet" type="button">Code senden</button>
+          <div id="otpVerificationWrap" class="auth-otp-wrap hidden">
+            <label class="field-row">
+              Bestätigungscode
+              <input id="otpCodeInput" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}">
+            </label>
+            <button id="verifyOtpBtn" class="primary-btn" type="button">Code bestätigen</button>
+          </div>
           <label class="field-row legacy-login-row">
             Name
             <input id="loginNameInput" autocomplete="username">
@@ -342,6 +356,7 @@
               <p id="authAccountStatus" class="muted setting-note"></p>
             </div>
             <div class="editor-actions">
+              <button id="requestTeacherAccessBtn" class="secondary-btn quiet hidden" type="button">Lehrerzugang beantragen</button>
               <button id="linkGoogleAccountBtn" class="secondary-btn" type="button">Prepojiť Google účet</button>
               <button id="signOutGoogleBtn" class="secondary-btn quiet" type="button">Odpojiť Google</button>
             </div>
@@ -670,20 +685,20 @@
   </div>
 
   <script src="config.js?v=117"></script>
-  <script src="constants.js?v=125"></script>
-  <script src="translations/ui.js?v=125"></script>
-  <script src="translations/auth.js?v=126"></script>
-  <script src="translations/new-languages.js?v=126"></script>
+  <script src="constants.js?v=129"></script>
+  <script src="translations/ui.js?v=129"></script>
+  <script src="translations/auth.js?v=129"></script>
+  <script src="translations/new-languages.js?v=129"></script>
   <script src="translations/prompts.js?v=120"></script>
   <script src="i18n.js?v=117"></script>
-  <script src="auth.js?v=126"></script>
+  <script src="auth.js?v=129"></script>
   <script src="api.js?v=117"></script>
-  <script src="profiles.js?v=128"></script>
-  <script src="articles.js?v=126"></script>
+  <script src="profiles.js?v=129"></script>
+  <script src="articles.js?v=129"></script>
   <script src="reader.js?v=121"></script>
   <script src="games.js?v=125"></script>
-  <script src="editor.js?v=125"></script>
-  <script src="home.js?v=125"></script>
-  <script src="app.js?v=127"></script>
+  <script src="editor.js?v=129"></script>
+  <script src="home.js?v=129"></script>
+  <script src="app.js?v=129"></script>
 </body>
 </html>

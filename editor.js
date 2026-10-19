@@ -1017,7 +1017,7 @@ async function renderArticleAssignmentPanel(article = state.articles.find(item =
   const list = $("articleAssignmentList");
   if (!panel || !list) return;
 
-  const canAssign = Boolean(article?.id && state.currentProfile?.role === "teacher");
+  const canAssign = Boolean(article?.id && hasTeacherLicense());
   panel.classList.toggle("hidden", !canAssign);
   $("articleAssignmentStatus").textContent = "";
   if (!canAssign) {

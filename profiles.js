@@ -9,7 +9,7 @@ async function loadProfiles() {
   try {
     let profiles;
     try {
-      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id,auth_user_id,owner_auth_user_id,invite_token,invite_claimed_at&order=role.desc,name.asc");
+      profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,license_tier,native_language,teacher_group_id,auth_user_id,owner_auth_user_id,invite_token,invite_claimed_at&order=role.desc,name.asc");
     } catch (error) {
       try {
         profiles = await supabaseRequest("app_profiles?select=id,name,pin,role,native_language,teacher_group_id,auth_user_id,owner_auth_user_id&order=role.desc,name.asc");
@@ -75,6 +75,7 @@ function normalizeProfile(profile) {
     ownerAuthUserId: profile?.ownerAuthUserId || profile?.owner_auth_user_id || profile?.authUserId || profile?.auth_user_id || null,
     inviteToken: profile?.inviteToken || profile?.invite_token || null,
     inviteClaimedAt: profile?.inviteClaimedAt || profile?.invite_claimed_at || null,
+    licenseTier: profile?.licenseTier || profile?.license_tier || "none",
     nativeLanguage: isSupportedNativeLanguage(profile?.nativeLanguage)
       ? profile.nativeLanguage
       : DEFAULT_NATIVE_LANGUAGE
@@ -138,6 +139,7 @@ function rowToProfile(row, fallbackProfile = null) {
     name: row.name,
     pin: row.pin,
     role: row.role,
+    licenseTier: row.license_tier || "none",
     nativeLanguage: resolveProfileNativeLanguage(row, fallbackProfile),
     teacherGroupId: row.teacher_group_id,
     authUserId: row.auth_user_id,
@@ -153,6 +155,7 @@ function profileToRow(profile) {
     name: profile.name,
     pin: profile.pin,
     role: profile.role,
+    license_tier: profile.licenseTier || "none",
     teacher_group_id: profile.teacherGroupId || profile.id,
     native_language: getNativeLanguage(profile),
     auth_user_id: profile.authUserId || null,
@@ -197,6 +200,7 @@ async function setCurrentProfile(profile) {
   state.currentProfile = normalizeProfile(profile);
   localStorage.setItem(CURRENT_PROFILE_KEY, profile.id);
   await loadProfileData(state.currentProfile);
+  state.currentProfile.teacherRequest = await loadTeacherRequestForProfile(state.currentProfile);
   if (state.articles.length) await saveCachedArticles(state.articles, getNativeLanguage(state.currentProfile));
   renderNativeLanguageControls();
   renderRoleControls();
@@ -216,6 +220,14 @@ async function setCurrentProfile(profile) {
 function showLogin() {
   stopReading();
   document.body.classList.remove("has-guest-auth");
+  const pendingInvite = Boolean(localStorage.getItem(AUTH_PENDING_INVITE_KEY));
+  if ($("authRoleSelect")) {
+    $("authRoleSelect").value = pendingInvite
+      ? "student"
+      : localStorage.getItem(AUTH_REQUESTED_ROLE_KEY) === "teacher" ? "teacher" : "student";
+    $("authRoleSelect").disabled = pendingInvite;
+  }
+  $("otpVerificationWrap")?.classList.toggle("hidden", !localStorage.getItem(AUTH_OTP_EMAIL_KEY));
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.add("hidden");
@@ -358,8 +370,8 @@ async function createProfiles() {
   const groupId = teacherRole === "teacher" ? firstProfileId : secondProfileId;
   const ownerAuthUserId = getCurrentAuthUserId() || state.currentProfile?.ownerAuthUserId || state.currentProfile?.authUserId || null;
   const newProfiles = [
-    { id: firstProfileId, name: teacherName, pin: teacherPin, role: teacherRole, teacherGroupId: groupId, nativeLanguage: teacherNativeLanguage, ownerAuthUserId },
-    { id: secondProfileId, name: studentName, pin: studentPin, role: studentRole, teacherGroupId: groupId, nativeLanguage: studentNativeLanguage, ownerAuthUserId }
+    { id: firstProfileId, name: teacherName, pin: teacherPin, role: teacherRole, licenseTier: teacherRole === "teacher" && isPublisherAccount() ? "pilot" : "none", teacherGroupId: groupId, nativeLanguage: teacherNativeLanguage, ownerAuthUserId },
+    { id: secondProfileId, name: studentName, pin: studentPin, role: studentRole, licenseTier: studentRole === "teacher" && isPublisherAccount() ? "pilot" : "none", teacherGroupId: groupId, nativeLanguage: studentNativeLanguage, ownerAuthUserId }
   ];
   state.profiles = [...state.profiles, ...newProfiles];
   await saveProfiles();
@@ -420,6 +432,7 @@ async function createSingleProfile() {
     name,
     pin,
     role,
+    licenseTier: role === "teacher" && isPublisherAccount() ? "pilot" : "none",
     teacherGroupId,
     nativeLanguage,
     ownerAuthUserId,
@@ -498,7 +511,12 @@ function renderCurrentProfileLabel() {
   const connectionLabel = state.remoteReady
     ? isRemoteNetworkAvailable() ? t("online") : t("offline")
     : t("local");
-  $("currentProfileLabel").textContent = `${profile.name} • ${profile.role === "teacher" ? t("teacher") : t("student")} • ${connectionLabel}`;
+  const accessLabel = profile.role === "teacher"
+    ? `${t("teacher")} • ${t(profile.licenseTier === "paid" ? "paidLicense" : "pilotLicense")}`
+    : profile.teacherRequest?.status === "pending"
+      ? `${t("student")} • ${t("teacherRequestPending")}`
+      : t("student");
+  $("currentProfileLabel").textContent = `${profile.name} • ${accessLabel} • ${connectionLabel}`;
 }
 
 function renderAccessControls() {

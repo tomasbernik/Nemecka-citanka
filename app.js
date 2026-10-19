@@ -345,17 +345,15 @@ function renderMobileBottomNav(activeViewId = "") {
   document.body.classList.toggle("has-mobile-nav", isVisible);
   if (!isVisible) return;
 
-  const isTeacher = state.currentProfile?.role === "teacher";
   const editorButton = $("mobileNavProgressBtn");
   const overviewButton = $("mobileNavOverviewBtn");
-  const editorActive = isTeacher
-    && activeViewId === "teacherView"
+  const editorActive = activeViewId === "teacherView"
     && !$("articleEditorCard")?.classList.contains("hidden");
   const overviewActive = activeViewId === "teacherView"
     && !$("teacherOverviewCard")?.classList.contains("hidden");
-  editorButton?.classList.toggle("hidden", !isTeacher);
+  editorButton?.classList.remove("hidden");
   overviewButton?.classList.toggle("hidden", false);
-  nav.style.gridTemplateColumns = `repeat(${isTeacher ? 4 : 3}, minmax(0, 1fr))`;
+  nav.style.gridTemplateColumns = "repeat(4, minmax(0, 1fr))";
   setMobileNavButton("mobileNavHomeBtn", t("articles"), activeViewId === "homeView" || activeViewId === "articleView");
   setMobileNavButton("mobileNavReviewBtn", t("clickedReviewEyebrow"), false);
   setMobileNavButton("mobileNavProgressBtn", t("articleEditor"), editorActive);
@@ -485,8 +483,13 @@ function updateStaticTexts() {
   setLabelText("loginNativeLanguageSelect", "nativeLanguage");
   setText("loginBtn", "login");
   setText("googleLoginBtn", "googleLogin");
+  setLabelText("authRoleSelect", "accountType");
+  setOptionText("authRoleSelect", "student", "studentRole");
+  setOptionText("authRoleSelect", "teacher", "teacherRole");
   setLabelText("magicEmailInput", "magicEmail");
   setText("magicLinkBtn", "magicLinkLogin");
+  setLabelText("otpCodeInput", "otpCode");
+  setText("verifyOtpBtn", "verifyOtp");
   setText("browseGuestBtn", "continueAsGuest");
   setText("guestAuthBtn", "signInOrRegister");
   setText("registerProfileBtn", "newProfile");
@@ -547,6 +550,7 @@ function updateStaticTexts() {
   setText("authAccountTitle", "accountTitle");
   setText("linkGoogleAccountBtn", "linkGoogle");
   setText("signOutGoogleBtn", "signOutGoogle");
+  setText("requestTeacherAccessBtn", "requestTeacherAccess");
   renderAuthControls();
   document.querySelector("#notificationStatus").previousElementSibling.textContent = t("notifications");
   setText("notificationStatus", "notificationNote");
@@ -664,8 +668,10 @@ function showSettings() {
 }
 
 function showArticleEditorView() {
-  if (state.currentProfile?.role !== "teacher") {
-    showOverviewView();
+  if (!state.currentProfile) return;
+  if (!isPublisherAccount() && !isProfileOwnedByCurrentAuth()) {
+    showLogin();
+    $("loginError").textContent = t("authSignInFirst");
     return;
   }
   showTeacherView("articles");
@@ -968,6 +974,10 @@ onClick("browseGuestBtn", showGuestHome);
 onClick("loginBtn", login);
 onClick("googleLoginBtn", signInWithGoogle);
 onClick("magicLinkBtn", sendMagicLink);
+onClick("verifyOtpBtn", verifyEmailOtp);
+onEvent("otpCodeInput", "keydown", event => {
+  if (event.key === "Enter") verifyEmailOtp();
+});
 onClick("registerProfileBtn", registerProfileFromLogin);
 onClick("setupPairBtn", showSetup);
 onClick("setupBackBtn", () => state.currentProfile ? showHome() : showLogin());
@@ -994,6 +1004,7 @@ onClick("installAppBtn", installAppFromPrompt);
 onClick("testNotificationBtn", showTestNotification);
 onClick("linkGoogleAccountBtn", () => linkCurrentProfileToAuthUser());
 onClick("signOutGoogleBtn", signOutGoogle);
+onClick("requestTeacherAccessBtn", requestTeacherAccess);
 onClick("newArticleBtn", () => {
   $("articleEditorSelect").value = "";
   clearArticleCreationHelperInputs();

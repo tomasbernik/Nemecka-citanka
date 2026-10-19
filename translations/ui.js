@@ -1815,6 +1815,16 @@ Object.assign(UI_TEXT.de, {
   articleStatusUpdated: "Der Artikelstatus wurde gespeichert.",
   publicationUpdated: "Die Veröffentlichung wurde gespeichert.",
   signInForModeration: "Zum Freigeben ist ein verbundenes Konto erforderlich."
+  ,teacherRequests: "Anfragen für Lehrkräfte"
+  ,noTeacherRequests: "Keine Anfragen vorhanden."
+  ,grantPilot: "Pilot kostenlos"
+  ,grantPaid: "Kostenpflichtige Lizenz"
+  ,rejectRequest: "Ablehnen"
+  ,requestApproved: "Genehmigt"
+  ,requestRejected: "Abgelehnt"
+  ,pilotLicense: "Pilotlizenz"
+  ,paidLicense: "Kostenpflichtige Lizenz"
+  ,teacherRequestPending: "Lehrkraft-Anfrage wartet"
 });
 Object.assign(UI_TEXT.sk, {
   adminOverviewTab: "Správa",
@@ -1838,4 +1848,14 @@ Object.assign(UI_TEXT.sk, {
   articleStatusUpdated: "Stav článku bol uložený.",
   publicationUpdated: "Publikovanie bolo uložené.",
   signInForModeration: "Na schvaľovanie treba prepojený účet."
+  ,teacherRequests: "Žiadosti o učiteľský účet"
+  ,noTeacherRequests: "Žiadna žiadosť."
+  ,grantPilot: "Pilot zdarma"
+  ,grantPaid: "Platená licencia"
+  ,rejectRequest: "Zamietnuť"
+  ,requestApproved: "Schválená"
+  ,requestRejected: "Zamietnutá"
+  ,pilotLicense: "Pilotná licencia"
+  ,paidLicense: "Platená licencia"
+  ,teacherRequestPending: "žiadosť učiteľa čaká"
 });

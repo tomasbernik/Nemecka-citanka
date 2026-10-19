@@ -1344,6 +1344,14 @@ Object.entries(NEW_LANGUAGE_UI_TEXT).forEach(([language, text]) => {
 });
 
 Object.entries({
+  ro: { accountType: "Tip de cont", magicLinkLogin: "Trimite codul", magicLinkStarted: "Trimit codul...", magicLinkSent: "Introdu codul de șase cifre din e-mail.", otpCode: "Cod de verificare", verifyOtp: "Verifică codul", otpCodeFill: "Introdu codul de șase cifre.", otpVerifying: "Verific codul...", otpInvalid: "Codul este invalid sau a expirat.", requestTeacherAccess: "Solicită acces de profesor", teacherRequestSubmitted: "Cererea așteaptă aprobarea administratorului." },
+  it: { accountType: "Tipo di account", magicLinkLogin: "Invia codice", magicLinkStarted: "Invio del codice...", magicLinkSent: "Inserisci il codice a sei cifre ricevuto via email.", otpCode: "Codice di verifica", verifyOtp: "Verifica codice", otpCodeFill: "Inserisci il codice a sei cifre.", otpVerifying: "Verifica del codice...", otpInvalid: "Il codice non è valido o è scaduto.", requestTeacherAccess: "Richiedi accesso insegnante", teacherRequestSubmitted: "La richiesta è in attesa dell'approvazione dell'amministratore." },
+  en: { accountType: "Account type", magicLinkLogin: "Send code", magicLinkStarted: "Sending sign-in code...", magicLinkSent: "Enter the six-digit code sent to your email.", otpCode: "Verification code", verifyOtp: "Verify code", otpCodeFill: "Enter the six-digit code.", otpVerifying: "Verifying code...", otpInvalid: "The code is invalid or has expired.", requestTeacherAccess: "Request teacher access", teacherRequestSubmitted: "The request is waiting for administrator approval." },
+  fr: { accountType: "Type de compte", magicLinkLogin: "Envoyer le code", magicLinkStarted: "Envoi du code...", magicLinkSent: "Saisissez le code à six chiffres reçu par e-mail.", otpCode: "Code de vérification", verifyOtp: "Vérifier le code", otpCodeFill: "Saisissez le code à six chiffres.", otpVerifying: "Vérification du code...", otpInvalid: "Le code est invalide ou a expiré.", requestTeacherAccess: "Demander un accès enseignant", teacherRequestSubmitted: "La demande attend l'approbation de l'administrateur." },
+  tr: { accountType: "Hesap türü", magicLinkLogin: "Kod gönder", magicLinkStarted: "Kod gönderiliyor...", magicLinkSent: "E-postanıza gönderilen altı haneli kodu girin.", otpCode: "Doğrulama kodu", verifyOtp: "Kodu doğrula", otpCodeFill: "Altı haneli kodu girin.", otpVerifying: "Kod doğrulanıyor...", otpInvalid: "Kod geçersiz veya süresi dolmuş.", requestTeacherAccess: "Öğretmen erişimi iste", teacherRequestSubmitted: "İstek yönetici onayı bekliyor." }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
   ro: {
     topics: "Subiecte",
     allTopics: "Toate subiectele",
