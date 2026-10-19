@@ -580,6 +580,15 @@ h3 { font-size: 1.1rem; }
   margin-top: 10px;
 }
 
+.guest-browse-btn {
+  display: block;
+  margin: 16px auto 0;
+}
+
+.top-actions > .secondary-btn.compact {
+  white-space: nowrap;
+}
+
 .auth-email-row {
   margin-top: 14px;
 }

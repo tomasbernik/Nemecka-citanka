@@ -477,8 +477,9 @@ function updateStaticTexts() {
   setText("createProfilesBtn", "saveProfiles");
   setText("setupBackBtn", "backToLogin");
 
-  document.querySelector("#loginView .eyebrow").textContent = t("loginEyebrow");
-  document.querySelector("#loginView h2").textContent = t("loginTitle");
+  document.querySelector("#loginView .eyebrow").textContent = t("authEntryEyebrow");
+  document.querySelector("#loginView h2").textContent = t("authEntryTitle");
+  setText("authEntryNote", "authEntryNote");
   setLabelText("loginNameInput", "name");
   setLabelText("loginPinInput", "pin");
   setLabelText("loginNativeLanguageSelect", "nativeLanguage");
@@ -486,6 +487,9 @@ function updateStaticTexts() {
   setText("googleLoginBtn", "googleLogin");
   setLabelText("magicEmailInput", "magicEmail");
   setText("magicLinkBtn", "magicLinkLogin");
+  setText("browseGuestBtn", "continueAsGuest");
+  setText("guestAuthBtn", "signInOrRegister");
+  setText("guestRegisterBtn", "signInOrRegister");
   setText("registerProfileBtn", "newProfile");
   setText("setupPairBtn", "setupPair");
 
@@ -960,6 +964,9 @@ onClick("adminOverviewTabBtn", async () => {
 onEvent("articleModerationList", "click", handleArticleModerationClick);
 onEvent("adminOverview", "click", handleAdminOverviewClick);
 onClick("refreshBtn", loadArticles);
+onClick("guestAuthBtn", showLogin);
+onClick("guestRegisterBtn", showLogin);
+onClick("browseGuestBtn", showGuestHome);
 onClick("loginBtn", login);
 onClick("googleLoginBtn", signInWithGoogle);
 onClick("magicLinkBtn", sendMagicLink);
@@ -1207,10 +1214,6 @@ onChange("settingsNativeLanguageSelect", (e) => {
   updateCurrentProfileNativeLanguage(e.target.value);
 });
 
-onChange("settingsRoleSelect", (e) => {
-  updateCurrentProfileRole(e.target.value);
-});
-
 window.addEventListener("pagehide", forceStopSpeech);
 window.addEventListener("beforeunload", forceStopSpeech);
 document.addEventListener("visibilitychange", () => {
@@ -1256,6 +1259,19 @@ if ("serviceWorker" in navigator) {
 async function init() {
   loadSettings();
   await initAuthFromRedirect();
+
+  const hasPendingInvite = Boolean(localStorage.getItem(AUTH_PENDING_INVITE_KEY));
+  const savedProfileId = localStorage.getItem(CURRENT_PROFILE_KEY);
+  if (!state.authUser && !hasPendingInvite && !savedProfileId) {
+    showGuestHome();
+    logAppOpened({
+      hasSavedProfile: false,
+      path: location.pathname
+    });
+    await loadArticles();
+    return;
+  }
+
   await loadProfiles();
   await loadArticles();
   if (await handlePendingInvite()) return;
@@ -1264,7 +1280,6 @@ async function init() {
     path: location.pathname
   });
 
-  const savedProfileId = localStorage.getItem(CURRENT_PROFILE_KEY);
   const savedProfile = state.profiles.find(profile => profile.id === savedProfileId);
   if (savedProfile) {
     await setCurrentProfile(savedProfile);
@@ -1277,7 +1292,7 @@ async function init() {
   } else if (await handlePendingAuthAction()) {
     return;
   } else {
-    showLogin();
+    showGuestHome();
   }
 }
 

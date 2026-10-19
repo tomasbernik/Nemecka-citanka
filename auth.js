@@ -333,9 +333,7 @@ async function handlePendingAuthAction() {
     const inviteToken = localStorage.getItem(AUTH_PENDING_INVITE_KEY);
     let profile = inviteToken ? await claimInvite(inviteToken) : null;
     profile = profile || state.profiles.find(item => item.authUserId === state.authUser.id);
-    if (!profile && !state.profiles.length) {
-      profile = await createFirstGoogleTeacherProfile();
-    }
+    if (!profile) profile = await createAuthReaderProfile();
     if (!profile) {
       showLogin();
       $("loginError").textContent = t("authLoginNoProfile");
@@ -465,33 +463,11 @@ function makeInviteToken() {
   return Array.from(bytes, byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
-async function createFirstGoogleTeacherProfile() {
-  if (!state.authUser?.id || state.profiles.length) return null;
-
-  const name = getAuthProfileName();
-  const id = makeProfileId(name) || `teacher-${state.authUser.id.slice(0, 8)}`;
-  const profile = {
-    id,
-    name,
-    pin: makeRandomPin(),
-    role: "teacher",
-    teacherGroupId: id,
-    nativeLanguage: DEFAULT_NATIVE_LANGUAGE,
-    authUserId: state.authUser.id,
-    ownerAuthUserId: state.authUser.id
-  };
-
-  state.profiles = [profile];
-  await saveProfiles();
-  await loadProfiles();
-  return state.profiles.find(item => item.authUserId === state.authUser.id) || profile;
-}
-
-async function createAuthTeacherProfile() {
+async function createAuthReaderProfile() {
   if (!state.authUser?.id) return null;
 
   const baseName = getAuthProfileName();
-  const baseId = makeProfileId(baseName) || `teacher-${state.authUser.id.slice(0, 8)}`;
+  const baseId = makeProfileId(baseName) || `reader-${state.authUser.id.slice(0, 8)}`;
   let id = baseId;
   let name = baseName;
   let counter = 2;
@@ -505,7 +481,7 @@ async function createAuthTeacherProfile() {
     id,
     name,
     pin: makeRandomPin(),
-    role: "teacher",
+    role: "student",
     teacherGroupId: id,
     nativeLanguage: DEFAULT_NATIVE_LANGUAGE,
     authUserId: state.authUser.id,

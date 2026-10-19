@@ -1,5 +1,11 @@
 const AUTH_TEXT = {
   de: {
+    authEntryEyebrow: "Kostenlos starten",
+    authEntryTitle: "Anmelden oder registrieren",
+    authEntryNote: "Melde dich an oder erstelle in wenigen Sekunden ein kostenloses Konto.",
+    signInOrRegister: "Anmelden / Registrieren",
+    continueAsGuest: "Ohne Anmeldung weiterlesen",
+    guestBrowsingLabel: "Du liest als Gast. Dein Fortschritt wird nicht gespeichert.",
     googleLogin: "Mit Google anmelden",
     magicEmail: "E-Mail",
     magicLinkLogin: "Anmeldelink senden",
@@ -27,6 +33,12 @@ const AUTH_TEXT = {
     ,myProgress: "Mein Fortschritt"
   },
   sk: {
+    authEntryEyebrow: "Začni zdarma",
+    authEntryTitle: "Prihlásenie alebo registrácia",
+    authEntryNote: "Prihlás sa alebo si za pár sekúnd vytvor bezplatný účet.",
+    signInOrRegister: "Prihlásiť / registrovať",
+    continueAsGuest: "Pokračovať bez prihlásenia",
+    guestBrowsingLabel: "Prezeráš ako hosť. Tvoj postup sa neukladá.",
     googleLogin: "Prihlásiť cez Google",
     magicEmail: "Email",
     magicLinkLogin: "Poslat prihlasovaci odkaz",
@@ -64,6 +76,12 @@ const AUTH_TEXT = {
     ,inviteClaimed: "Pozvánka je prijatá. Profil je pripojený."
   },
   ru: {
+    authEntryEyebrow: "Начать бесплатно",
+    authEntryTitle: "Вход или регистрация",
+    authEntryNote: "Войдите или создайте бесплатный аккаунт за несколько секунд.",
+    signInOrRegister: "Войти / зарегистрироваться",
+    continueAsGuest: "Продолжить без входа",
+    guestBrowsingLabel: "Вы читаете как гость. Прогресс не сохраняется.",
     googleLogin: "Войти через Google",
     magicEmail: "E-mail",
     magicLinkLogin: "Отправить ссылку для входа",
@@ -91,6 +109,12 @@ const AUTH_TEXT = {
     ,myProgress: "Мой прогресс"
   },
   pl: {
+    authEntryEyebrow: "Zacznij bezpłatnie",
+    authEntryTitle: "Logowanie lub rejestracja",
+    authEntryNote: "Zaloguj się lub utwórz bezpłatne konto w kilka sekund.",
+    signInOrRegister: "Zaloguj / zarejestruj",
+    continueAsGuest: "Kontynuuj bez logowania",
+    guestBrowsingLabel: "Czytasz jako gość. Postęp nie zostanie zapisany.",
     googleLogin: "Zaloguj przez Google",
     magicEmail: "E-mail",
     magicLinkLogin: "Wyslij link logowania",
@@ -118,6 +142,12 @@ const AUTH_TEXT = {
     ,myProgress: "Mój postęp"
   },
   hu: {
+    authEntryEyebrow: "Kezdés ingyen",
+    authEntryTitle: "Bejelentkezés vagy regisztráció",
+    authEntryNote: "Jelentkezz be, vagy hozz létre ingyenes fiókot néhány másodperc alatt.",
+    signInOrRegister: "Belépés / regisztráció",
+    continueAsGuest: "Folytatás bejelentkezés nélkül",
+    guestBrowsingLabel: "Vendégként olvasol. A haladás nem kerül mentésre.",
     googleLogin: "Bejelentkezes Google-lal",
     magicEmail: "E-mail",
     magicLinkLogin: "Bejelentkezo link kuldese",

@@ -208,6 +208,7 @@ async function setCurrentProfile(profile) {
   $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.remove("hidden");
   $("logoutBtn").classList.remove("hidden");
+  renderAccessControls();
   showHome();
   if (!hasUnseenAssignments()) showStartupQuiz();
 }
@@ -218,10 +219,26 @@ function showLogin() {
   $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.add("hidden");
   $("logoutBtn").classList.add("hidden");
+  $("guestAuthBtn")?.classList.add("hidden");
   renderNativeLanguageControls();
   updateStaticTexts();
   renderProfileCreationControls();
   showView("loginView");
+}
+
+function showGuestHome() {
+  stopReading();
+  state.currentProfile = null;
+  state.currentArticle = null;
+  state.profileData = emptyProfileData();
+  $("settingsBtn").classList.add("hidden");
+  $("teacherBtn").classList.add("hidden");
+  $("shareAppBtn").classList.remove("hidden");
+  $("logoutBtn").classList.add("hidden");
+  renderNativeLanguageControls();
+  updateStaticTexts();
+  renderAccessControls();
+  showHome();
 }
 
 function showSetup() {
@@ -464,19 +481,31 @@ function renderNativeLanguageControls() {
 }
 
 function renderRoleControls() {
-  if ($("settingsRoleSelect") && state.currentProfile) {
-    $("settingsRoleSelect").value = state.currentProfile.role;
-  }
+  const select = $("settingsRoleSelect");
+  if (!select) return;
+  if (state.currentProfile) select.value = state.currentProfile.role;
+  select.closest("label")?.classList.add("hidden");
 }
 
 function renderCurrentProfileLabel() {
   const profile = state.currentProfile;
-  if (!profile) return;
+  if (!profile) {
+    $("currentProfileLabel").textContent = t("guestBrowsingLabel");
+    return;
+  }
 
   const connectionLabel = state.remoteReady
     ? isRemoteNetworkAvailable() ? t("online") : t("offline")
     : t("local");
   $("currentProfileLabel").textContent = `${profile.name} • ${profile.role === "teacher" ? t("teacher") : t("student")} • ${connectionLabel}`;
+}
+
+function renderAccessControls() {
+  const isGuest = !state.currentProfile;
+  $("guestAuthBtn")?.classList.toggle("hidden", !isGuest);
+  $("guestRegisterBtn")?.classList.toggle("hidden", !isGuest);
+  $("profileProgressBtn")?.classList.toggle("hidden", isGuest);
+  renderCurrentProfileLabel();
 }
 
 async function updateCurrentProfileNativeLanguage(language) {
