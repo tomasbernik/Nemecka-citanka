@@ -201,12 +201,17 @@ function updateReadingControls() {
   const isActive = Boolean(state.speech.isReading);
   const isPaused = isActive && Boolean(state.speech.isPaused);
   const panel = $("listenPanel");
+  const readButton = $("readAloudBtn");
   const pauseButton = $("pauseReadBtn");
+  const stopButton = $("stopReadBtn");
 
   panel?.classList.toggle("is-floating", isActive);
   panel?.classList.toggle("is-paused", isPaused);
   $("articleView")?.classList.toggle("has-floating-listen-panel", isActive);
 
+  readButton?.classList.toggle("hidden", isActive);
+  pauseButton?.classList.toggle("hidden", !isActive);
+  stopButton?.classList.toggle("hidden", !isActive);
   if (pauseButton) pauseButton.textContent = isPaused ? "▶" : "⏸";
   setButtonLabel("pauseReadBtn", isPaused ? "continueReading" : "pause");
 }

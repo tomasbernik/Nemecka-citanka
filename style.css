@@ -619,6 +619,10 @@ h3 { font-size: 1.1rem; }
   gap: 8px;
 }
 
+.listen-actions .audio-btn.hidden {
+  display: none;
+}
+
 .audio-btn {
   display: grid;
   place-items: center;
