@@ -22,7 +22,6 @@ async function loadArticles() {
     state.articles = mergeArticles(localArticles, cachedArticles).map(normalizeArticle);
   }
 
-  renderArticleLanguageFilters();
   renderCategories();
   renderLevelFilters();
   renderArticles();
@@ -460,7 +459,6 @@ async function saveArticle(article) {
     state.articles = [article, ...state.articles];
   }
   await saveCachedArticles(state.articles);
-  renderArticleLanguageFilters();
   renderCategories();
   renderLevelFilters();
   renderArticles();
@@ -525,54 +523,27 @@ function getArticleCategories() {
   return getCategories().filter(category => category !== ALL_CATEGORIES && category !== UNREAD_CATEGORY);
 }
 
-function getAvailableArticleLanguages() {
-  const used = new Set(getVisibleArticles().map(getArticleLanguage));
-  used.add(getSelectedArticleLanguage());
-  used.add(DEFAULT_ARTICLE_LANGUAGE);
-  return Object.keys(ARTICLE_LANGUAGES).filter(language => used.has(language));
+function renderArticleLanguageControls() {
+  const select = $("settingsArticleLanguageSelect");
+  if (!select) return;
+
+  select.innerHTML = Object.entries(ARTICLE_LANGUAGES)
+    .map(([code, language]) => `<option value="${escapeHtml(code)}">${escapeHtml(language.label)}</option>`)
+    .join("");
+  select.value = getSelectedArticleLanguage();
 }
 
-function renderArticleLanguageFilters() {
-  const root = $("articleLanguageFilters");
-  if (!root) return;
-
-  const languages = getAvailableArticleLanguages();
-  const selectedLanguage = getSelectedArticleLanguage();
-  const counts = getVisibleArticles().reduce((totals, article) => {
-    const language = getArticleLanguage(article);
-    totals[language] = (totals[language] || 0) + 1;
-    return totals;
-  }, {});
-
-  root.innerHTML = `
-    <div class="segmented-filter" role="group" aria-label="${escapeHtml(t("articleLanguage"))}">
-      <span class="segmented-filter-label">${escapeHtml(t("articleLanguage"))}</span>
-      ${languages.map(language => {
-        const isActive = language === selectedLanguage;
-        return `
-          <button class="segmented-filter-btn ${isActive ? "active" : ""}" type="button" data-article-language="${escapeHtml(language)}" aria-pressed="${isActive}">
-            <span>${escapeHtml(getArticleLanguageLabel(language))}</span>
-            <span class="segmented-filter-count">${counts[language] || 0}</span>
-          </button>
-        `;
-      }).join("")}
-    </div>
-  `;
-
-  root.querySelectorAll("[data-article-language]").forEach(button => {
-    button.onclick = () => {
-      const language = button.dataset.articleLanguage;
-      if (!ARTICLE_LANGUAGES[language] || language === state.selectedArticleLanguage) return;
-      state.selectedArticleLanguage = language;
-      localStorage.setItem(ARTICLE_LANGUAGE_KEY, language);
-      state.selectedCategory = ALL_CATEGORIES;
-      state.selectedLevel = ALL_LEVELS;
-      renderArticleLanguageFilters();
-      renderCategories();
-      renderLevelFilters();
-      renderArticles();
-    };
-  });
+function setSelectedArticleLanguage(language) {
+  if (!ARTICLE_LANGUAGES[language] || language === getSelectedArticleLanguage()) return;
+  state.selectedArticleLanguage = language;
+  localStorage.setItem(ARTICLE_LANGUAGE_KEY, language);
+  state.selectedCategory = ALL_CATEGORIES;
+  state.selectedLevel = ALL_LEVELS;
+  renderArticleLanguageControls();
+  updateTeachingLanguageBrand();
+  renderCategories();
+  renderLevelFilters();
+  renderArticles();
 }
 
 function renderCategories() {

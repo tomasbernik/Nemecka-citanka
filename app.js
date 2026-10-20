@@ -13,7 +13,6 @@ const state = {
   teams: [],
   teamMemberships: [],
   activeTeamInvite: null,
-  lastInviteUrl: "",
   profileData: emptyProfileData(),
   speech: {
     sentenceIndex: 0,
@@ -317,7 +316,7 @@ function showView(viewId) {
     hideInlineTranslation();
   }
 
-  ["setupView", "loginView", "homeView", "articleView", "settingsView", "teacherView"].forEach(id => {
+  ["loginView", "homeView", "articleView", "settingsView", "teacherView"].forEach(id => {
     $(id).classList.toggle("hidden", id !== viewId);
   });
   renderMobileBottomNav(viewId);
@@ -364,7 +363,7 @@ function renderMobileBottomNav(activeViewId = "") {
 }
 
 function getActiveViewId() {
-  return ["setupView", "loginView", "homeView", "articleView", "settingsView", "teacherView"]
+  return ["loginView", "homeView", "articleView", "settingsView", "teacherView"]
     .find(id => !$(id)?.classList.contains("hidden")) || "";
 }
 
@@ -451,7 +450,7 @@ function updateStaticTexts() {
   const appTitle = t("appTitle");
   document.querySelector(".topbar h1").textContent = appTitle;
   document.querySelector(".topbar")?.classList.toggle("long-title", Array.from(appTitle).length > 9);
-  document.querySelector(".topbar .eyebrow").textContent = t("languageLabel");
+  updateTeachingLanguageBrand();
   $("teacherBtn").setAttribute("aria-label", t("articleEditor"));
   $("teacherBtn").setAttribute("title", t("articleEditor"));
   setText("profileProgressBtn", "overview");
@@ -460,29 +459,10 @@ function updateStaticTexts() {
   $("settingsBtn").setAttribute("aria-label", t("settings"));
   $("settingsBtn").setAttribute("title", t("settings"));
 
-  document.querySelector("#setupView .eyebrow").textContent = t("setupEyebrow");
-  document.querySelector("#setupView h2").textContent = t("setupTitle");
-  document.querySelector("#setupView .muted").textContent = t("setupNote");
-  setLabelText("teacherNameInput", "profile1Name");
-  setLabelText("teacherPinInput", "profile1Pin");
-  setLabelText("teacherRoleSelect", "profile1Role");
-  setLabelText("teacherNativeLanguageSelect", "profile1Language");
-  setLabelText("studentNameInput", "profile2Name");
-  setLabelText("studentPinInput", "profile2Pin");
-  setLabelText("studentRoleSelect", "profile2Role");
-  setLabelText("setupNativeLanguageSelect", "profile2Language");
-  setOptionText("teacherRoleSelect", "teacher", "teacherRole");
-  setOptionText("teacherRoleSelect", "student", "studentRole");
-  setOptionText("studentRoleSelect", "teacher", "teacherRole");
-  setOptionText("studentRoleSelect", "student", "studentRole");
-  setText("createProfilesBtn", "saveProfiles");
-  setText("setupBackBtn", "backToLogin");
-
   document.querySelector("#loginView .eyebrow").textContent = t("authEntryEyebrow");
   document.querySelector("#loginView h2").textContent = t("authEntryTitle");
   setText("authEntryNote", "authEntryNote");
   setLabelText("loginNativeLanguageSelect", "nativeLanguage");
-  setText("loginBtn", "login");
   setText("googleLoginBtn", "googleLogin");
   setLabelText("authRoleSelect", "accountType");
   setOptionText("authRoleSelect", "student", "studentRole");
@@ -494,17 +474,8 @@ function updateStaticTexts() {
   setText("magicLinkBtn", "magicLinkLogin");
   setLabelText("otpCodeInput", "otpCode");
   setText("verifyOtpBtn", "verifyOtp");
-  setText("legacyMigrationToggleBtn", "legacyMigrationToggle");
-  setText("legacyMigrationNote", "legacyMigrationNote");
-  setLabelText("legacyMigrationNameInput", "legacyProfileName");
-  setLabelText("legacyMigrationPinInput", "legacyPin");
-  setText("legacyMigrationCodeBtn", "legacyMigrationCode");
-  setLabelText("legacyNewPasswordInput", "legacyNewPassword");
-  setText("legacySavePasswordBtn", "legacySavePassword");
   setText("browseGuestBtn", "continueAsGuest");
   setText("guestAuthBtn", "signInOrRegister");
-  setText("registerProfileBtn", "newProfile");
-  setText("setupPairBtn", "setupPair");
 
   $("logoutBtn")?.setAttribute("aria-label", t("logout"));
   $("logoutBtn")?.setAttribute("title", t("logout"));
@@ -554,6 +525,7 @@ function updateStaticTexts() {
   setOptionText("fontSizeSelect", "large", "large");
   setOptionText("fontSizeSelect", "xlarge", "xlarge");
   setLabelText("settingsNativeLanguageSelect", "nativeLanguage");
+  setLabelText("settingsArticleLanguageSelect", "teachingLanguage");
   setLabelText("settingsRoleSelect", "profileRole");
   setOptionText("settingsRoleSelect", "teacher", "teacherRole");
   setOptionText("settingsRoleSelect", "student", "studentRole");
@@ -577,22 +549,11 @@ function updateStaticTexts() {
   setText("dismissTeacherOnboardingBtn", "understand");
   setText("teacherArticlesTabBtn", "articleEditor");
   setText("teacherStudentsTabBtn", "studentOverview");
-  setText("teacherProfilesTabBtn", "profileSetup");
   setText("adminOverviewTabBtn", "adminOverviewTab");
   setText("adminOverviewEyebrow", "administration");
   setText("adminOverviewTitle", "adminOverviewTitle");
   setText("articleModerationEyebrow", "approval");
   setText("articleModerationTitle", "articlesAwaitingApproval");
-  setText("profileManagerEyebrow", "profileManager");
-  setText("profileManagerTitle", "newProfileTitle");
-  setLabelText("newProfileNameInput", "name");
-  setLabelText("newProfilePinInput", "pin");
-  setLabelText("newProfileRoleSelect", "profileRole");
-  setOptionText("newProfileRoleSelect", "teacher", "teacherRole");
-  setOptionText("newProfileRoleSelect", "student", "studentRole");
-  setLabelText("newProfileNativeLanguageSelect", "nativeLanguage");
-  setText("createSingleProfileBtn", "createProfile");
-  setText("shareInviteLinkBtn", "shareInviteLink");
   setText("joinInviteTitle", "joinInviteTitle");
   setLabelText("joinInviteInput", "joinInviteLabel");
   setText("joinInviteBtn", "joinInvite");
@@ -657,7 +618,6 @@ function updateStaticTexts() {
   setText("nextStartupQuizBtn", "next");
 
   renderCurrentProfileLabel();
-  renderProfileCreationControls();
   renderCategories();
   renderLevelFilters();
   renderArticles();
@@ -665,6 +625,14 @@ function updateStaticTexts() {
   renderGamification();
   renderMobileBottomNav(getActiveViewId());
   renderArticlePracticeTabs();
+}
+
+function updateTeachingLanguageBrand() {
+  const eyebrow = document.querySelector(".topbar .eyebrow");
+  if (!eyebrow) return;
+  eyebrow.textContent = t(
+    getSelectedArticleLanguage() === "en" ? "teachingLanguageEnglish" : "teachingLanguageGerman"
+  );
 }
 
 function escapeHtml(value) {
@@ -725,30 +693,6 @@ async function shareApp() {
   } catch (error) {
     if (error?.name === "AbortError") return;
     alert(t("shareFailed"));
-  }
-}
-
-async function shareLastInviteLink() {
-  const url = state.lastInviteUrl;
-  if (!url) return;
-
-  const shareData = {
-    title: t("appTitle"),
-    text: t("inviteShareText"),
-    url
-  };
-
-  try {
-    if (navigator.share) {
-      await navigator.share(shareData);
-    } else if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url);
-      $("newProfileStatus").textContent = t("inviteCopied");
-    }
-  } catch (error) {
-    if (error?.name !== "AbortError") {
-      $("newProfileStatus").textContent = url;
-    }
   }
 }
 
@@ -885,6 +829,7 @@ function loadSettings() {
   const dark = localStorage.getItem("darkMode") === "true";
 
   renderNativeLanguageControls();
+  renderArticleLanguageControls();
   renderRoleControls();
   $("fontSizeSelect").value = fontSize;
   $("darkModeToggle").checked = dark;
@@ -974,13 +919,14 @@ onClick("teacherStudentsTabBtn", async () => {
   await renderTeacherOverview();
   setTeacherPanel("students");
 });
-onClick("teacherProfilesTabBtn", () => setTeacherPanel("profiles"));
 onClick("adminOverviewTabBtn", async () => {
   setTeacherPanel("admin");
   renderAdminOverview();
 });
 onEvent("articleModerationList", "click", handleArticleModerationClick);
 onEvent("adminOverview", "click", handleAdminOverviewClick);
+onEvent("teacherOverview", "click", handleTeacherOverviewClick);
+onEvent("teacherOverview", "change", handleTeacherOverviewChange);
 onClick("refreshBtn", loadArticles);
 onClick("guestAuthBtn", showLogin);
 onClick("browseGuestBtn", showGuestHome);
@@ -989,18 +935,9 @@ onClick("passwordLoginBtn", signInWithPassword);
 onClick("passwordRegisterBtn", registerWithPassword);
 onClick("magicLinkBtn", sendMagicLink);
 onClick("verifyOtpBtn", verifyEmailOtp);
-onClick("legacyMigrationToggleBtn", toggleLegacyMigration);
-onClick("legacyMigrationCodeBtn", startLegacyPinMigration);
-onClick("legacySavePasswordBtn", saveLegacyMigrationPassword);
 onEvent("otpCodeInput", "keydown", event => {
   if (event.key === "Enter") verifyEmailOtp();
 });
-onClick("registerProfileBtn", registerProfileFromLogin);
-onClick("setupPairBtn", showSetup);
-onClick("setupBackBtn", () => state.currentProfile ? showHome() : showLogin());
-onClick("createProfilesBtn", createProfiles);
-onClick("createSingleProfileBtn", createSingleProfile);
-onClick("shareInviteLinkBtn", shareLastInviteLink);
 onClick("joinInviteBtn", joinInviteFromSettings);
 onClick("createTeamBtn", createTeamFromSettings);
 onEvent("teamManagementList", "click", handleTeamManagementClick);
@@ -1244,6 +1181,10 @@ onChange("darkModeToggle", (e) => {
 
 onChange("settingsNativeLanguageSelect", (e) => {
   updateCurrentProfileNativeLanguage(e.target.value);
+});
+
+onChange("settingsArticleLanguageSelect", (e) => {
+  setSelectedArticleLanguage(e.target.value);
 });
 
 window.addEventListener("pagehide", forceStopSpeech);

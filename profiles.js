@@ -219,7 +219,6 @@ async function setCurrentProfile(profile) {
   renderRoleControls();
   renderCurrentProfileLabel();
   renderAuthControls();
-  renderProfileCreationControls();
   updateStaticTexts();
   $("settingsBtn").classList.remove("hidden");
   $("teacherBtn").classList.add("hidden");
@@ -238,13 +237,10 @@ function showLogin() {
     $("authRoleSelect").value = "student";
     $("authRoleSelect").disabled = pendingInvite;
   }
-  const pendingAction = localStorage.getItem(AUTH_PENDING_ACTION_KEY);
   $("otpVerificationWrap")?.classList.toggle(
     "hidden",
-    !localStorage.getItem(AUTH_OTP_EMAIL_KEY) || pendingAction === "legacy-set-password"
+    !localStorage.getItem(AUTH_OTP_EMAIL_KEY)
   );
-  $("legacyMigrationWrap")?.classList.toggle("hidden", pendingAction !== "legacy-pin-migration");
-  $("legacyPasswordWrap")?.classList.toggle("hidden", pendingAction !== "legacy-set-password");
   $("settingsBtn").classList.add("hidden");
   $("teacherBtn").classList.add("hidden");
   $("shareAppBtn").classList.add("hidden");
@@ -252,7 +248,6 @@ function showLogin() {
   $("guestAuthBtn")?.classList.add("hidden");
   renderNativeLanguageControls();
   updateStaticTexts();
-  renderProfileCreationControls();
   showView("loginView");
 }
 
@@ -269,162 +264,6 @@ function showGuestHome() {
   updateStaticTexts();
   renderAccessControls();
   showHome();
-}
-
-function showSetup() {
-  if (state.profiles.length && !canCreateProfiles()) {
-    showLogin();
-    return;
-  }
-  stopReading();
-  $("settingsBtn").classList.toggle("hidden", !state.currentProfile);
-  $("teacherBtn").classList.add("hidden");
-  $("shareAppBtn").classList.toggle("hidden", !state.currentProfile);
-  $("logoutBtn").classList.toggle("hidden", !state.currentProfile);
-  renderNativeLanguageControls();
-  updateStaticTexts();
-  showView("setupView");
-}
-
-async function registerProfileFromLogin() {
-  $("loginError").textContent = t("registrationClosed");
-}
-
-async function createProfiles() {
-  if (state.profiles.length && !canCreateProfiles()) {
-    $("setupError").textContent = t("authSignInFirst");
-    return;
-  }
-
-  const teacherName = $("teacherNameInput").value.trim();
-  const teacherPin = makeRandomPin();
-  const teacherRole = $("teacherRoleSelect").value;
-  const teacherNativeLanguage = $("teacherNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
-  const studentName = $("studentNameInput").value.trim();
-  const studentPin = makeRandomPin();
-  const studentRole = $("studentRoleSelect").value;
-  const studentNativeLanguage = $("setupNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
-
-  if (!teacherName || !studentName) {
-    $("setupError").textContent = t("setupFill");
-    return;
-  }
-
-  if (normalizeName(teacherName) === normalizeName(studentName)) {
-    $("setupError").textContent = t("setupDifferentNames");
-    return;
-  }
-
-  if (teacherRole === studentRole) {
-    $("setupError").textContent = t("setupDifferentRoles");
-    return;
-  }
-
-  if (state.profiles.length && (teacherRole === "teacher" || studentRole === "teacher") && !canCreateTeacherProfiles()) {
-    $("setupError").textContent = t("teacherCreationRestricted");
-    return;
-  }
-
-  const existingNames = new Set(state.profiles.map(profile => normalizeName(profile.name)));
-  if (existingNames.has(normalizeName(teacherName)) || existingNames.has(normalizeName(studentName))) {
-    $("setupError").textContent = t("setupNameExists");
-    return;
-  }
-
-  const firstProfileId = makeProfileId(teacherName);
-  const secondProfileId = makeProfileId(studentName);
-  const groupId = teacherRole === "teacher" ? firstProfileId : secondProfileId;
-  const ownerAuthUserId = getCurrentAuthUserId() || state.currentProfile?.ownerAuthUserId || state.currentProfile?.authUserId || null;
-  const newProfiles = [
-    { id: firstProfileId, name: teacherName, pin: teacherPin, role: teacherRole, licenseTier: teacherRole === "teacher" && isPublisherAccount() ? "pilot" : "none", teacherGroupId: groupId, nativeLanguage: teacherNativeLanguage, ownerAuthUserId },
-    { id: secondProfileId, name: studentName, pin: studentPin, role: studentRole, licenseTier: studentRole === "teacher" && isPublisherAccount() ? "pilot" : "none", teacherGroupId: groupId, nativeLanguage: studentNativeLanguage, ownerAuthUserId }
-  ];
-  state.profiles = [...state.profiles, ...newProfiles];
-  await saveProfiles();
-  $("setupError").textContent = "";
-  if (state.currentProfile) {
-    await loadProfiles();
-    renderNativeLanguageControls();
-    renderProfileCreationControls();
-    await showTeacherView();
-  } else {
-    await setCurrentProfile(newProfiles.find(profile => profile.role === "teacher") || newProfiles[0]);
-  }
-  newProfiles.forEach(profile => {
-    logAppEvent("profile_created", {
-      profileId: profile.id,
-      role: profile.role,
-      nativeLanguage: profile.nativeLanguage,
-      source: "pair_setup"
-    });
-  });
-}
-
-async function createSingleProfile() {
-  if (!canCreateProfiles()) {
-    $("newProfileStatus").textContent = t("authSignInFirst");
-    return;
-  }
-
-  const name = $("newProfileNameInput").value.trim();
-  const pin = makeRandomPin();
-  const nativeLanguage = $("newProfileNativeLanguageSelect").value || DEFAULT_NATIVE_LANGUAGE;
-  const role = $("newProfileRoleSelect").value;
-
-  if (!name) {
-    $("newProfileStatus").textContent = t("loginFill");
-    return;
-  }
-
-  if (role === "teacher" && !canCreateTeacherProfiles()) {
-    $("newProfileStatus").textContent = t("teacherCreationRestricted");
-    return;
-  }
-
-  if (state.profiles.some(item => normalizeName(item.name) === normalizeName(name))) {
-    $("newProfileStatus").textContent = t("profileExists");
-    return;
-  }
-
-  const id = makeProfileId(name);
-  const ownerAuthUserId = getCurrentAuthUserId()
-    || state.currentProfile?.ownerAuthUserId
-    || state.currentProfile?.authUserId
-    || null;
-  const teacherGroupId = state.currentProfile?.teacherGroupId || state.currentProfile?.id || id;
-  const inviteToken = makeInviteToken();
-  const profile = {
-    id,
-    name,
-    pin,
-    role,
-    licenseTier: role === "teacher" && isPublisherAccount() ? "pilot" : "none",
-    teacherGroupId,
-    nativeLanguage,
-    ownerAuthUserId,
-    inviteToken
-  };
-
-  try {
-    await insertProfile(profile);
-    await loadProfiles();
-    $("newProfileNameInput").value = "";
-    $("newProfilePinInput").value = "";
-    $("newProfileRoleSelect").value = "student";
-    const inviteUrl = getInviteUrl(inviteToken);
-    state.lastInviteUrl = inviteUrl;
-    $("shareInviteLinkBtn")?.classList.remove("hidden");
-    $("newProfileStatus").textContent = formatText("inviteCreated", { url: inviteUrl });
-    renderProfileManagerControls();
-    logAppEvent("profile_created", {
-      profileId: profile.id,
-      role: profile.role,
-      nativeLanguage: profile.nativeLanguage,
-      source: "profile_manager"
-    });
-  } catch (error) {
-    $("newProfileStatus").textContent = error.message;
-  }
 }
 
 function logout() {
@@ -451,9 +290,6 @@ function renderNativeLanguageControls() {
   const loginLanguage = state.currentProfile
     ? profileLanguage
     : isSupportedNativeLanguage(state.preLoginLanguage) ? state.preLoginLanguage : DEFAULT_PRELOGIN_LANGUAGE;
-  renderNativeLanguageSelect("teacherNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);
-  renderNativeLanguageSelect("setupNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);
-  renderNativeLanguageSelect("newProfileNativeLanguageSelect", DEFAULT_NATIVE_LANGUAGE);
   renderNativeLanguageSelect("loginNativeLanguageSelect", loginLanguage);
   renderNativeLanguageSelect("settingsNativeLanguageSelect", profileLanguage);
 }

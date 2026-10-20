@@ -391,7 +391,6 @@ function markCurrentArticleRead(source = "manual") {
     source
   });
   updateMarkReadButtons(source === "auto" ? t("markedRead") : t("readDone"));
-  renderArticleLanguageFilters();
   renderCategories();
   renderLevelFilters();
   renderArticles();

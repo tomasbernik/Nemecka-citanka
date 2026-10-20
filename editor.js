@@ -708,9 +708,38 @@ function getPromptText() {
   return PROMPT_TEXT[getUiLanguage()] || PROMPT_TEXT[DEFAULT_NATIVE_LANGUAGE];
 }
 
+function getTeachingLanguagePromptInfo() {
+  return getSelectedArticleLanguage() === "en"
+    ? {
+        english: "English",
+        germanTitle: "englischer Artikeltitel",
+        germanDescription: "kurze englische Artikelbeschreibung",
+        germanStatement: "englische Richtig/Falsch-Aussage",
+        germanAccusative: "englischen",
+        germanPlural: "englische",
+        slovak: "anglický",
+        slovakPlural: "anglické",
+        slovakStatement: "anglická veta typu pravda/nepravda",
+        englishIndefinite: "an"
+      }
+    : {
+        english: "German",
+        germanTitle: "deutscher Artikeltitel",
+        germanDescription: "kurze deutsche Artikelbeschreibung",
+        germanStatement: "deutsche Richtig/Falsch-Aussage",
+        germanAccusative: "deutschen",
+        germanPlural: "deutsche",
+        slovak: "nemecký",
+        slovakPlural: "nemecké",
+        slovakStatement: "nemecká veta typu pravda/nepravda",
+        englishIndefinite: "a"
+      };
+}
+
 function getArticleJsonPromptInstructions(level) {
   const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
+  const teachingLanguage = getTeachingLanguagePromptInfo();
   const vocabularyExample = `{\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",${PROMPT_TRANSLATION_LANGUAGE_CODES
     .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
     .join(",")}}`;
@@ -723,20 +752,20 @@ function getArticleJsonPromptInstructions(level) {
     const inlineVocabulary = `{"de":"exakter Ausschnitt aus dem Artikeltext","base":"Grundform",${PROMPT_TRANSLATION_LANGUAGE_CODES.map(code => `"${code}":"Übersetzung auf ${NATIVE_LANGUAGES[code]?.label || code}"`).join(",")}}`;
     return [
       "", "JSON-Schema:", "{",
-      "  \"title\": \"deutscher Artikeltitel\",",
+      `  \"title\": \"${teachingLanguage.germanTitle}\",`,
       `  \"level\": \"${level}\",`,
       "  \"category\": \"Kategorie oder Thema\",",
       `  \"categoryLabels\": {\"Kategorie oder Thema\":{\"${PROMPT_TRANSLATION_LANGUAGE_CODES.join("\":\"Übersetzung\", \"")}\":\"Übersetzung\"}},`,
-      "  \"summary\": \"kurze deutsche Artikelbeschreibung\",",
+      `  \"summary\": \"${teachingLanguage.germanDescription}\",`,
       "  \"text\": [\"Absatz 1\", \"Absatz 2\", \"Absatz 3\", \"Absatz 4\"],",
       "  \"vocabulary\": [", `    ${vocabulary}`, "  ],",
       "  \"inlineVocabulary\": [", `    ${inlineVocabulary}`, "  ],",
-      "  \"questions\": [", "    {\"statement\":\"deutsche Richtig/Falsch-Aussage\",\"answer\":true}", "  ]", "}", "",
-      "Verwende den unten eingefügten Text exakt. Formuliere ihn nicht um, kürze ihn nicht und ändere seine Länge nicht.",
+      "  \"questions\": [", `    {\"statement\":\"${teachingLanguage.germanStatement}\",\"answer\":true}`, "  ]", "}", "",
+      `Verwende den unten eingefügten ${teachingLanguage.germanAccusative} Text exakt. Formuliere ihn nicht um, kürze ihn nicht und ändere seine Länge nicht.`,
       "Teile den Text absatzweise in das Feld \"text\" auf.",
-      `Füge genau 5 deutsche Wörter oder Phrasen zu \"vocabulary\" hinzu, die zum Niveau ${level} passen, natürlich im Text vorkommen und als neuer Wortschatz nützlich sind.`,
+      `Füge genau 5 ${teachingLanguage.germanPlural} Wörter oder Phrasen zu \"vocabulary\" hinzu, die zum Niveau ${level} passen, natürlich im Text vorkommen und als neuer Wortschatz nützlich sind.`,
       "Füge 8 bis 12 Einträge zu \"inlineVocabulary\" hinzu. Der Wert \"de\" muss ein exakter zusammenhängender Ausschnitt aus dem Artikeltext mit derselben Form und Wortfolge sein.",
-      "Füge 6 bis 8 deutsche Richtig/Falsch-Aussagen mit einer natürlichen Mischung aus richtigen und falschen Antworten zu \"questions\" hinzu.",
+      `Füge 6 bis 8 ${teachingLanguage.germanPlural} Richtig/Falsch-Aussagen mit einer natürlichen Mischung aus richtigen und falschen Antworten zu \"questions\" hinzu.`,
       `Füge für jede Kategorie oder jedes Thema Übersetzungen in diesen Sprachen zu \"categoryLabels\" hinzu: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
       `Alle Einträge in vocabulary und inlineVocabulary müssen diese Schlüssel enthalten: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
       "Verwende für \"base\" die Wörterbuchform: bei Substantiven mit bestimmtem Artikel im Nominativ Singular, bei Verben den Infinitiv und bei Adjektiven die Grundform."
@@ -755,11 +784,11 @@ function getArticleJsonPromptInstructions(level) {
       "",
       "JSON schema:",
       "{",
-      "  \"title\": \"German article title\",",
+      `  \"title\": \"${teachingLanguage.english} article title\",`,
       `  \"level\": \"${level}\",`,
       "  \"category\": \"category or topic\",",
       `  \"categoryLabels\": {\"category or topic name\":{\"${PROMPT_TRANSLATION_LANGUAGE_CODES.join("\":\"translation\", \"")}\":\"translation\"}},`,
-      "  \"summary\": \"short German article description\",",
+      `  \"summary\": \"short ${teachingLanguage.english} article description\",`,
       "  \"text\": [\"paragraph 1\", \"paragraph 2\", \"paragraph 3\", \"paragraph 4\"],",
       "  \"vocabulary\": [",
       `    ${englishVocabularyExample}`,
@@ -768,15 +797,15 @@ function getArticleJsonPromptInstructions(level) {
       `    ${englishInlineVocabularyExample}`,
       "  ],",
       "  \"questions\": [",
-      "    {\"statement\":\"German true/false sentence\",\"answer\":true}",
+      `    {\"statement\":\"${teachingLanguage.english} true/false sentence\",\"answer\":true}`,
       "  ]",
       "}",
       "",
       "Use the pasted text below exactly as it is. Do not rewrite it, shorten it, or change the length.",
       "Split the text into the \"text\" array by paragraphs.",
-      `Add exactly 5 German words or phrases to \"vocabulary\" that fit level ${level} and are typically not already lower-level words. They must appear naturally in the text and should be useful new vocabulary for this level.`,
+      `Add exactly 5 ${teachingLanguage.english} words or phrases to \"vocabulary\" that fit level ${level} and are typically not already lower-level words. They must appear naturally in the text and should be useful new vocabulary for this level.`,
       "Add 8 to 12 items to \"inlineVocabulary\": they may be individual words, short phrases, fixed expressions, or interesting expressions that may be unfamiliar to the student. The \"de\" value must be an exact continuous passage copied from the article text in the same form, word order, case, and tense. Do not use dictionary forms or infinitive paraphrases unless they appear exactly like that in the text. Repeat items from \"vocabulary\", but in the form in which they appear in the text.",
-      "Add 6 to 8 German true/false statements to \"questions\" with a mix of true and false answers. The answers must not follow a regular true/false/true/false or false/true/false/true pattern; the order should feel natural and may include two identical answers in a row.",
+      `Add 6 to 8 ${teachingLanguage.english} true/false statements to \"questions\" with a mix of true and false answers. The answers must not follow a regular true/false/true/false or false/true/false/true pattern; the order should feel natural and may include two identical answers in a row.`,
       `Add translations for every category or topic to \"categoryLabels\" for these languages: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}. The object key must exactly match the value in \"category\"; if multiple categories are separated by |, add each one separately.`,
       `All vocabulary and inlineVocabulary items must have these keys: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
       "For \"base\", use the dictionary form: for a noun, include the definite article and nominative singular, for example \"der Mann\"; for a verb, use the infinitive, for example \"gehen\"; for an adjective, use the base form, for example \"freundlich\". If \"de\" is already the base form or is a whole phrase, \"base\" may be the same as \"de\"."
@@ -787,11 +816,11 @@ function getArticleJsonPromptInstructions(level) {
     "",
     "JSON schéma:",
     "{",
-    "  \"title\": \"nemecký názov článku\",",
+    `  \"title\": \"${teachingLanguage.slovak} názov článku\",`,
     `  \"level\": \"${level}\",`,
     "  \"category\": \"kategória alebo téma\",",
     `  \"categoryLabels\": {\"názov kategórie alebo témy\":{\"${PROMPT_TRANSLATION_LANGUAGE_CODES.join("\":\"preklad\", \"")}\":\"preklad\"}},`,
-    "  \"summary\": \"krátky nemecký popis článku\",",
+    `  \"summary\": \"krátky ${teachingLanguage.slovak} popis článku\",`,
     "  \"text\": [\"odsek 1\", \"odsek 2\", \"odsek 3\", \"odsek 4\"],",
     "  \"vocabulary\": [",
     `    ${vocabularyExample}`,
@@ -800,15 +829,15 @@ function getArticleJsonPromptInstructions(level) {
     `    ${inlineVocabularyExample}`,
     "  ],",
     "  \"questions\": [",
-    "    {\"statement\":\"nemecká pravda/nepravda veta\",\"answer\":true}",
+    `    {\"statement\":\"${teachingLanguage.slovakStatement}\",\"answer\":true}`,
     "  ]",
     "}",
     "",
     "Použi nižšie vložený text presne tak, ako je. Neprepisuj ho, neskracuj ho a nemen dĺžku textu.",
     "Text rozdeľ do poľa \"text\" podľa odsekov.",
-    `Do "vocabulary" pridaj presne 5 nemeckých slov alebo fráz, ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
+    `Do "vocabulary" pridaj presne 5 slov alebo fráz vo vyučovanom jazyku (${getArticleLanguageLabel(getSelectedArticleLanguage())}), ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
     "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
-    "Do \"questions\" pridaj 6 až 8 pravda/nepravda viet po nemecky s mixom true a false. Odpovede nesmú byť v pravidelnom poradí true/false/true/false ani false/true/false/true; poradie musí pôsobiť prirodzene a môže mať aj dve rovnaké odpovede za sebou.",
+    `Do \"questions\" pridaj 6 až 8 pravda/nepravda viet vo vyučovanom jazyku (${getArticleLanguageLabel(getSelectedArticleLanguage())}) s mixom true a false. Odpovede nesmú byť v pravidelnom poradí true/false/true/false ani false/true/false/true; poradie musí pôsobiť prirodzene a môže mať aj dve rovnaké odpovede za sebou.`,
     `Do \"categoryLabels\" pridaj pre každú kategóriu alebo tému preklady do týchto jazykov: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}. Kľúč objektu musí presne zodpovedať hodnote v poli \"category\"; ak je viac kategórií oddelených znakom |, pridaj každú zvlášť.`,
     `Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
     "Do \"base\" daj základný slovníkový tvar: pri podstatnom mene s určitým členom a v nominatíve jednotného čísla, napríklad \"der Mann\"; pri slovese infinitív, napríklad \"gehen\"; pri prídavnom mene základný tvar, napríklad \"freundlich\". Ak je \"de\" už základný tvar alebo ide o celú frázu, môže byť \"base\" rovnaké ako \"de\"."
@@ -833,46 +862,47 @@ function buildArticlePrompt() {
   const range = getSelectedArticleLengthRange();
   const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
+  const teachingLanguage = getTeachingLanguagePromptInfo();
 
   if (isGerman) {
     return [
-      `Schreibe eine deutsche Geschichte oder einen deutschen Artikel auf dem Niveau ${level}.`,
+      `Schreibe eine ${teachingLanguage.germanPlural} Geschichte oder einen ${teachingLanguage.germanAccusative} Artikel auf dem Niveau ${level}.`,
       category ? `Kategorie/Thema: ${category}.` : "",
       topic ? `Konkrete Aufgabe: ${topic}` : "",
-      requiredWords.length ? `Verwende diese deutschen Wörter oder Phrasen natürlich: ${requiredWords.join(", ")}.` : "",
+      requiredWords.length ? `Verwende diese ${teachingLanguage.germanPlural} Wörter oder Phrasen natürlich: ${requiredWords.join(", ")}.` : "",
       `Länge: ${range.min} bis ${range.max} Wörter.`,
-      "Der Inhalt muss mindestens einen natürlichen Dialog auf Deutsch enthalten, zum Beispiel 2 bis 4 Gesprächszeilen.",
+      `Der Inhalt muss mindestens einen natürlichen Dialog auf ${getArticleLanguageLabel(getSelectedArticleLanguage())} enthalten, zum Beispiel 2 bis 4 Gesprächszeilen.`,
       "Die Handlung darf praktisch, interessant oder leicht humorvoll sein.",
-      "Gib nur den fertigen deutschen Inhalt zurück. Schreibe kein JSON, keine Vokabelliste, keine Fragen und keine Erklärungen."
+      `Gib nur den fertigen ${teachingLanguage.germanAccusative} Inhalt zurück. Schreibe kein JSON, keine Vokabelliste, keine Fragen und keine Erklärungen.`
     ].filter(Boolean).join("\n");
   }
 
   if (isEnglish) {
     return [
-      `Write a German story or article at level ${level}.`,
+      `Write ${teachingLanguage.englishIndefinite} ${teachingLanguage.english} story or article at level ${level}.`,
       category ? `Category/topic: ${category}.` : "",
       topic ? `Specific brief: ${topic}` : "",
       requiredWords.length
-        ? `Use these German words or phrases naturally: ${requiredWords.join(", ")}.`
+        ? `Use these ${teachingLanguage.english} words or phrases naturally: ${requiredWords.join(", ")}.`
         : "",
       `Length: ${range.min} to ${range.max} words.`,
-      "The content must include at least one natural dialogue in German, for example 2 to 4 lines between characters.",
+      `The content must include at least one natural dialogue in ${teachingLanguage.english}, for example 2 to 4 lines between characters.`,
       "The story can be practical, interesting, or gently funny.",
-      "Return only the finished German content. Do not write JSON, vocabulary, questions, or explanations."
+      `Return only the finished ${teachingLanguage.english} content. Do not write JSON, vocabulary, questions, or explanations.`
     ].filter(Boolean).join("\n");
   }
 
   return [
-    `Napíš nemecký príbeh alebo článok na úrovni ${level}.`,
+    `Napíš ${teachingLanguage.slovak} príbeh alebo článok na úrovni ${level}.`,
     category ? `Kategória/téma: ${category}.` : "",
     topic ? `Konkrétne zadanie: ${topic}` : "",
     requiredWords.length
-      ? `Tieto nemecké slová alebo frázy použi prirodzene: ${requiredWords.join(", ")}.`
+      ? `Tieto slová alebo frázy vo vyučovanom jazyku použi prirodzene: ${requiredWords.join(", ")}.`
       : "",
     `Dĺžka: ${range.label} slov.`,
-    "Obsah musí mať aspoň jeden prirodzený dialóg v nemčine, napríklad 2 až 4 repliky medzi postavami.",
+    `Obsah musí mať aspoň jeden prirodzený dialóg v jazyku ${getArticleLanguageLabel(getSelectedArticleLanguage())}, napríklad 2 až 4 repliky medzi postavami.`,
     "Dej môže byť praktický, zaujímavý alebo mierne veselý.",
-    "Vráť iba hotový nemecký obsah. Nepíš JSON, slovíčka, otázky ani vysvetlenie."
+    `Vráť iba hotový obsah v jazyku ${getArticleLanguageLabel(getSelectedArticleLanguage())}. Nepíš JSON, slovíčka, otázky ani vysvetlenie.`
   ].filter(Boolean).join("\n");
 }
 
@@ -884,49 +914,50 @@ function buildArticleJsonPrompt() {
   const summary = $("articleSummaryInput").value.trim();
   const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
+  const teachingLanguage = getTeachingLanguagePromptInfo();
 
   addRequiredWordsToVocabulary();
 
   if (isGerman) {
     return [
-      "Wandle diesen fertigen deutschen Text in JSON für die Lese-App um.",
+      `Wandle diesen fertigen ${teachingLanguage.germanAccusative} Text in JSON für die Lese-App um.`,
       "Wichtig: Verwende den eingefügten Text exakt. Formuliere ihn nicht um, kürze oder erweitere ihn nicht.",
-      title ? `Verwende diesen Titel, wenn er passt: ${title}` : "Erstelle einen kurzen deutschen Titel.",
-      summary ? `Verwende diese Kurzbeschreibung, wenn sie passt: ${summary}` : "Erstelle eine kurze deutsche Beschreibung.",
+      title ? `Verwende diesen Titel, wenn er passt: ${title}` : `Erstelle einen kurzen ${teachingLanguage.germanAccusative} Titel.`,
+      summary ? `Verwende diese Kurzbeschreibung, wenn sie passt: ${summary}` : `Erstelle eine kurze ${teachingLanguage.germanPlural} Beschreibung.`,
       category ? `Kategorie: ${category}.` : "",
       ...getArticleJsonPromptInstructions(level), "",
-      text ? "Fertiger deutscher Text:" : "Der fertige deutsche Text ist deine letzte Antwort in diesem Chat. Verwende exakt diese Antwort.",
+      text ? `Fertiger ${teachingLanguage.germanTitle.replace("Artikeltitel", "Text")}:` : `Der fertige ${teachingLanguage.germanTitle.replace("Artikeltitel", "Text")} ist deine letzte Antwort in diesem Chat. Verwende exakt diese Antwort.`,
       text
     ].filter(Boolean).join("\n");
   }
 
   if (isEnglish) {
     return [
-      "Convert this finished German text into JSON for the reading app.",
+      `Convert this finished ${teachingLanguage.english} text into JSON for the reading app.`,
       "Important: use the pasted text exactly. Do not rewrite it, shorten it, expand it, or change the wording.",
-      title ? `Use this title if it fits: ${title}` : "Create a short German title.",
-      summary ? `Use this short description if it fits: ${summary}` : "Create a short German description.",
+      title ? `Use this title if it fits: ${title}` : `Create a short ${teachingLanguage.english} title.`,
+      summary ? `Use this short description if it fits: ${summary}` : `Create a short ${teachingLanguage.english} description.`,
       category ? `Category: ${category}.` : "",
       ...getArticleJsonPromptInstructions(level),
       "",
       text
-        ? "Finished German text:"
-        : "The finished German text is your last answer in this chat. Use exactly that last German answer.",
+        ? `Finished ${teachingLanguage.english} text:`
+        : `The finished ${teachingLanguage.english} text is your last answer in this chat. Use exactly that last answer.`,
       text
     ].filter(Boolean).join("\n");
   }
 
   return [
-    "Premeň tento hotový nemecký text na JSON pre čítankovú appku.",
+    `Premeň tento hotový ${teachingLanguage.slovak} text na JSON pre čítankovú appku.`,
     "Dôležité: vložený text použi presne. Neprepisuj ho, neskracuj ho, nerozširuj ho a nemeň formulácie.",
-    title ? `Ak sa hodí, použi tento názov: ${title}` : "Vytvor krátky nemecký názov.",
-    summary ? `Ak sa hodí, použi tento krátky popis: ${summary}` : "Vytvor krátky nemecký popis.",
+    title ? `Ak sa hodí, použi tento názov: ${title}` : `Vytvor krátky ${teachingLanguage.slovak} názov.`,
+    summary ? `Ak sa hodí, použi tento krátky popis: ${summary}` : `Vytvor krátky ${teachingLanguage.slovak} popis.`,
     category ? `Kategória: ${category}.` : "",
     ...getArticleJsonPromptInstructions(level),
     "",
     text
-      ? "Hotový nemecký text:"
-      : "Hotový nemecký text je tvoja posledná odpoveď v tomto chate. Použi práve túto poslednú nemeckú odpoveď.",
+      ? `Hotový text v jazyku ${getArticleLanguageLabel(getSelectedArticleLanguage())}:`
+      : `Hotový text v jazyku ${getArticleLanguageLabel(getSelectedArticleLanguage())} je tvoja posledná odpoveď v tomto chate. Použi práve túto poslednú odpoveď.`,
     text
   ].filter(Boolean).join("\n");
 }
@@ -995,11 +1026,12 @@ function buildImagePrompt() {
     ...parseVocabularyDraftLines($("articleVocabularyInput").value),
     ...parseVocabularyDraftLines($("articleInlineVocabularyInput").value)
   ].map(item => item.de).filter(Boolean).slice(0, 12);
+  const teachingLanguage = getTeachingLanguagePromptInfo();
 
   return [
-    "Create a cheerful modern educational illustration for a German reading app.",
+    `Create a cheerful modern educational illustration for ${teachingLanguage.englishIndefinite} ${teachingLanguage.english} reading app.`,
     title ? `Article title: ${title}` : "",
-    `German level: ${level}.`,
+    `${teachingLanguage.english} level: ${level}.`,
     category ? `Category: ${category}.` : "",
     summary ? `Article summary: ${summary}` : topic ? `Topic: ${topic}` : "",
     text ? `Article text context: ${text.slice(0, 900)}` : "",
@@ -1317,7 +1349,6 @@ function fillArticleEditor(article) {
   updateArticleRequiredWordsMode();
   $("articleTitleInput").value = article?.title || "";
   $("articleIdInput").value = article?.id || "";
-  $("articleVisibilitySelect").value = DEFAULT_ARTICLE_VISIBILITY;
   $("articleApprovalStatusSelect").value = article?.approvalStatus || DEFAULT_ARTICLE_APPROVAL_STATUS;
   renderArticleTeamSelect(article);
   $("articleLevelInput").value = article?.level || "B1";
@@ -1392,6 +1423,7 @@ function readArticleEditor() {
     .filter(hasAnyVocabularyTranslation);
   const article = {
     id,
+    language: existingArticle ? getArticleLanguage(existingArticle) : getSelectedArticleLanguage(),
     ownerProfileId: existingArticle?.ownerProfileId || state.currentProfile?.id || null,
     teamId: $("articleTeamSelect")?.value || existingArticle?.teamId || null,
     teacherGroupId: existingArticle?.teacherGroupId || state.currentProfile?.teacherGroupId || state.currentProfile?.id || null,

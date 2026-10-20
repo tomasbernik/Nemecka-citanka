@@ -6,7 +6,6 @@ function showHome() {
   showView("homeView");
   renderHomeAssignments();
   renderClickedReview();
-  renderArticleLanguageFilters();
   renderCategories();
   renderLevelFilters();
   renderArticles();
@@ -35,28 +34,22 @@ function setTeacherPanel(panel) {
     ? "articles"
     : canEditArticles || panel !== "articles" ? panel : "students";
   const showStudents = canShowOverview && activePanel === "students";
-  const showProfiles = canCreateProfiles() && activePanel === "profiles";
   const showAdmin = canShowAdmin && activePanel === "admin";
-  const showArticles = canEditArticles && !showStudents && !showProfiles && !showAdmin;
+  const showArticles = canEditArticles && !showStudents && !showAdmin;
   $("teacherStudentsTabBtn").textContent = isTeacher ? t("studentOverview") : t("myProgress");
   document.querySelector("#teacherOverviewCard h2").textContent = isTeacher ? t("studentOverview") : t("myProgress");
   $("articleEditorCard").classList.toggle("hidden", !showArticles);
   $("teacherOverviewCard").classList.toggle("hidden", !showStudents);
-  $("profileManagerCard").classList.toggle("hidden", !showProfiles);
   $("adminOverviewCard").classList.toggle("hidden", !showAdmin);
   $("teacherArticlesTabBtn").classList.toggle("hidden", !canEditArticles);
   $("teacherStudentsTabBtn").classList.toggle("hidden", !canShowOverview);
-  $("teacherProfilesTabBtn").classList.toggle("hidden", !canCreateProfiles());
   $("adminOverviewTabBtn").classList.toggle("hidden", !canShowAdmin);
   $("teacherArticlesTabBtn").classList.toggle("active", showArticles);
   $("teacherStudentsTabBtn").classList.toggle("active", showStudents);
-  $("teacherProfilesTabBtn").classList.toggle("active", showProfiles);
   $("adminOverviewTabBtn").classList.toggle("active", showAdmin);
   $("teacherArticlesTabBtn").classList.toggle("quiet", !showArticles);
   $("teacherStudentsTabBtn").classList.toggle("quiet", !showStudents);
-  $("teacherProfilesTabBtn").classList.toggle("quiet", !showProfiles);
   $("adminOverviewTabBtn").classList.toggle("quiet", !showAdmin);
-  if (showProfiles) renderProfileManagerControls();
   if (showArticles) renderArticleModerationQueue();
   renderGamification();
   renderMobileBottomNav(getActiveViewId());
@@ -405,7 +398,7 @@ async function renderTeacherOverviewLegacy() {
       sections.push(`
         <section class="overview-section">
           <h3>Ostatné profily mimo tvojej skupiny</h3>
-          <p class="muted">Admin pohľad na učiteľov a žiakov, ktorí nie sú v tvojej učiteľskej skupine.</p>
+          <p class="muted">Admin pohľad na učiteľov a študentov, ktorí nie sú v tvojej učiteľskej skupine.</p>
         </section>
       `);
       sections.push(...await Promise.all(otherProfiles.map(profile => buildSection(profile, profileTitle(profile)))));
@@ -415,11 +408,113 @@ async function renderTeacherOverviewLegacy() {
   root.innerHTML = sections.join("") || `<p class="muted">${escapeHtml(t("noStudentsInGroup"))}</p>`;
 }
 
+let teacherOverviewMode = "students";
+
+function setTeacherOverviewStatus(message = "", isError = false) {
+  const status = $("teacherOverviewStatus");
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("form-error", isError);
+}
+
+async function setStudentTeam(profileId, teamId) {
+  const managedTeamIds = new Set(getManagedTeams().map(team => team.id));
+  const currentTeamIds = state.teamMemberships
+    .filter(membership => membership.profileId === profileId && managedTeamIds.has(membership.teamId))
+    .map(membership => membership.teamId);
+  if (teamId && !currentTeamIds.includes(teamId)) {
+    await supabaseRequest("rpc/app_set_team_member", {
+      method: "POST",
+      body: JSON.stringify({ target_team_id: teamId, target_profile_id: profileId, target_member: true })
+    });
+  }
+
+  for (const currentTeamId of currentTeamIds.filter(id => id !== teamId)) {
+    await supabaseRequest("rpc/app_set_team_member", {
+      method: "POST",
+      body: JSON.stringify({ target_team_id: currentTeamId, target_profile_id: profileId, target_member: false })
+    });
+  }
+}
+
+async function handleTeacherOverviewChange(event) {
+  const select = event.target.closest("[data-student-team]");
+  if (!select) return;
+  select.disabled = true;
+  setTeacherOverviewStatus(t("savingChanges"));
+  try {
+    await setStudentTeam(select.dataset.studentTeam, select.value);
+    await loadProfiles();
+    await loadTeams();
+    await renderTeacherOverview();
+    setTeacherOverviewStatus(t("studentClassUpdated"));
+  } catch (error) {
+    select.disabled = false;
+    setTeacherOverviewStatus(error.message, true);
+  }
+}
+
+async function handleTeacherOverviewClick(event) {
+  const modeButton = event.target.closest("[data-overview-mode]");
+  if (modeButton) {
+    teacherOverviewMode = modeButton.dataset.overviewMode === "classes" ? "classes" : "students";
+    await renderTeacherOverview();
+    return;
+  }
+
+  const actionButton = event.target.closest("[data-student-action]");
+  if (!actionButton) return;
+  const profileId = actionButton.dataset.profileId;
+  const profile = state.profiles.find(item => item.id === profileId);
+  if (!profile) return;
+
+  if (actionButton.dataset.studentAction === "remove") {
+    if (!window.confirm(formatText("removeStudentConfirm", { name: profile.name }))) return;
+    actionButton.disabled = true;
+    try {
+      await setStudentTeam(profileId, "");
+      await loadProfiles();
+      await loadTeams();
+      await renderTeacherOverview();
+      setTeacherOverviewStatus(t("studentRemoved"));
+    } catch (error) {
+      actionButton.disabled = false;
+      setTeacherOverviewStatus(error.message, true);
+    }
+    return;
+  }
+
+  if (actionButton.dataset.studentAction === "delete-account" && isPublisherAccount()) {
+    const confirmation = window.prompt(formatText("deleteStudentAccountConfirm", { name: profile.name })) || "";
+    if (confirmation.trim() !== profile.name) {
+      if (confirmation) setTeacherOverviewStatus(t("deleteStudentAccountNameMismatch"), true);
+      return;
+    }
+    actionButton.disabled = true;
+    try {
+      await supabaseRequest("rpc/app_admin_delete_student_account", {
+        method: "POST",
+        body: JSON.stringify({ target_profile_id: profileId })
+      });
+      await loadProfiles();
+      await loadTeams();
+      await renderTeacherOverview();
+      setTeacherOverviewStatus(t("studentAccountDeleted"));
+    } catch (error) {
+      actionButton.disabled = false;
+      setTeacherOverviewStatus(error.message, true);
+    }
+  }
+}
+
 async function renderTeacherOverview() {
   const root = $("teacherOverview");
   const visibleArticles = state.articles.filter(article => canViewArticle(article, state.currentProfile));
   const currentGroupId = state.currentProfile?.teacherGroupId || state.currentProfile?.id || "";
   const isAdmin = isAdminProfile();
+  const canDeleteStudentAccounts = isPublisherAccount();
+  const managedTeams = hasTeacherLicense() ? getManagedTeams() : [];
+  if (!managedTeams.length) teacherOverviewMode = "students";
   const roleLabel = profile => profile.role === "teacher" ? t("teacherRole") : t("studentRole");
   const profileTitle = profile => `${profile.name} - ${roleLabel(profile)} - ${t("groupLabel")}: ${profile.teacherGroupId || profile.id}`;
   const formatAnswer = answer => answer === true ? t("trueLabel") : answer === false ? t("falseLabel") : String(answer);
@@ -589,6 +684,25 @@ async function renderTeacherOverview() {
       ? `<span class="dashboard-pill status-inactive">${escapeHtml(labels.inactive)}</span>`
       : `<span class="dashboard-pill status-active">${escapeHtml(labels.active)}</span>`;
     const openClass = summary.openAssignments.length ? "has-open" : "all-done";
+    const studentManagedTeamIds = new Set(state.teamMemberships
+      .filter(membership => membership.profileId === summary.profile.id)
+      .map(membership => membership.teamId));
+    const selectedTeamId = managedTeams.find(team => studentManagedTeamIds.has(team.id))?.id || "";
+    const studentManagement = hasTeacherLicense() && summary.profile.role === "student" ? `
+      <section class="dashboard-student-management">
+        <label class="field-row compact">
+          ${escapeHtml(t("studentClass"))}
+          <select data-student-team="${escapeHtml(summary.profile.id)}">
+            <option value="">${escapeHtml(t("noClass"))}</option>
+            ${managedTeams.map(team => `<option value="${escapeHtml(team.id)}" ${team.id === selectedTeamId ? "selected" : ""}>${escapeHtml(team.name)}</option>`).join("")}
+          </select>
+        </label>
+        <div class="editor-actions">
+          <button class="secondary-btn quiet compact" type="button" data-student-action="remove" data-profile-id="${escapeHtml(summary.profile.id)}">${escapeHtml(t("removeFromMyStudents"))}</button>
+          ${canDeleteStudentAccounts ? `<button class="text-btn danger-text" type="button" data-student-action="delete-account" data-profile-id="${escapeHtml(summary.profile.id)}">${escapeHtml(t("deleteStudentAccount"))}</button>` : ""}
+        </div>
+      </section>
+    ` : "";
 
     return `
       <details class="dashboard-student ${openClass} ${summary.inactive ? "is-inactive" : ""}">
@@ -629,6 +743,7 @@ async function renderTeacherOverview() {
               ? summary.otherActiveArticles.map(buildArticleDetail).join("")
               : `<p class="muted">${escapeHtml(labels.noOtherActivity)}</p>`}
           </section>
+          ${studentManagement}
         </div>
       </details>
     `;
@@ -671,13 +786,26 @@ async function renderTeacherOverview() {
   if (hasTeacherLicense()) {
     const students = state.profiles.filter(profile => profile.role === "student" && isInCurrentTeacherGroup(profile));
     const studentSummaries = await Promise.all(students.map(student => buildProfileSummary(student, student.name)));
-    sections.push(buildDashboard(t("studentOverview"), studentSummaries));
+    const summariesById = new Map(studentSummaries.map(summary => [summary.profile.id, summary]));
+    if (teacherOverviewMode === "classes" && managedTeams.length) {
+      managedTeams.forEach(team => {
+        const classSummaries = getTeamMembers(team.id)
+          .filter(profile => profile.role === "student")
+          .map(profile => summariesById.get(profile.id))
+          .filter(Boolean);
+        sections.push(buildDashboard(team.name, classSummaries));
+      });
+    } else if (teacherOverviewMode === "classes") {
+      sections.push(`<section class="overview-section dashboard-card"><p class="muted">${escapeHtml(t("noClasses"))}</p></section>`);
+    } else {
+      sections.push(buildDashboard(t("studentOverview"), studentSummaries));
+    }
   } else {
     const ownSummary = await buildProfileSummary(state.currentProfile, t("myProgress"));
     sections.push(buildDashboard(t("myProgress"), [ownSummary], false, labels.assignmentSummary));
   }
 
-  if (isAdmin) {
+  if (isAdmin && teacherOverviewMode === "students") {
     const otherProfiles = state.profiles
       .filter(profile => profile.id !== state.currentProfile.id)
       .filter(profile => (profile.teacherGroupId || profile.id) !== currentGroupId)
@@ -693,7 +821,14 @@ async function renderTeacherOverview() {
     }
   }
 
-  root.innerHTML = sections.join("") || `<p class="muted">${escapeHtml(t("noStudentsInGroup"))}</p>`;
+  const overviewSwitch = hasTeacherLicense() ? `
+    <div class="overview-mode-switch" role="group" aria-label="${escapeHtml(t("overviewMode"))}">
+      <button class="secondary-btn ${teacherOverviewMode === "students" ? "active" : "quiet"}" type="button" data-overview-mode="students">${escapeHtml(t("studentsTab"))}</button>
+      ${managedTeams.length ? `<button class="secondary-btn ${teacherOverviewMode === "classes" ? "active" : "quiet"}" type="button" data-overview-mode="classes">${escapeHtml(t("classesTab"))}</button>` : ""}
+    </div>
+    <p id="teacherOverviewStatus" class="muted overview-status" aria-live="polite"></p>
+  ` : "";
+  root.innerHTML = overviewSwitch + (sections.join("") || `<p class="muted">${escapeHtml(t("noStudentsInGroup"))}</p>`);
 }
 
 function buildStartupQuizQuestions() {

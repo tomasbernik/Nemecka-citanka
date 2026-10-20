@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=130">
+  <link rel="stylesheet" href="style.css?v=131">
 </head>
 <body>
   <div id="app">
@@ -52,58 +52,6 @@
     </header>
 
     <main>
-      <section id="setupView" class="hidden">
-        <div class="reader-card">
-          <p class="eyebrow">Einrichtung</p>
-          <h2>Zwei Profile erstellen</h2>
-          <p class="muted">Neue Profile melden sich ueber Google, E-Mail oder Einladung an.</p>
-
-          <input id="articleVisibilitySelect" type="hidden" value="public">
-          <label class="field-row">
-            Name Profil 1
-            <input id="teacherNameInput" autocomplete="given-name">
-          </label>
-          <label class="field-row hidden">
-            PIN Profil 1
-            <input id="teacherPinInput" inputmode="numeric" type="password" autocomplete="new-password">
-          </label>
-          <label class="field-row">
-            Rolle Profil 1
-            <select id="teacherRoleSelect">
-              <option value="teacher">Lehrer/in</option>
-              <option value="student">Schüler/in</option>
-            </select>
-          </label>
-          <label class="field-row">
-            Muttersprache Profil 1
-            <select id="teacherNativeLanguageSelect"></select>
-          </label>
-          <label class="field-row">
-            Name Profil 2
-            <input id="studentNameInput" autocomplete="given-name">
-          </label>
-          <label class="field-row hidden">
-            PIN Profil 2
-            <input id="studentPinInput" inputmode="numeric" type="password" autocomplete="new-password">
-          </label>
-          <label class="field-row">
-            Rolle Profil 2
-            <select id="studentRoleSelect">
-              <option value="student">Schüler/in</option>
-              <option value="teacher">Lehrer/in</option>
-            </select>
-          </label>
-          <label class="field-row">
-            Muttersprache Profil 2
-            <select id="setupNativeLanguageSelect"></select>
-          </label>
-
-          <p id="setupError" class="form-error"></p>
-          <button id="createProfilesBtn" class="primary-btn">Profile speichern</button>
-          <button id="setupBackBtn" class="secondary-btn quiet" type="button">Zur Anmeldung</button>
-        </div>
-      </section>
-
       <section id="loginView" class="hidden">
         <div class="reader-card">
           <p class="eyebrow">Anmeldung</p>
@@ -117,7 +65,7 @@
           <label class="field-row">
             Kontoart
             <select id="authRoleSelect">
-              <option value="student">Schüler/in</option>
+              <option value="student">Student/in</option>
               <option value="teacher">Lehrer/in</option>
             </select>
           </label>
@@ -142,29 +90,7 @@
             </label>
             <button id="verifyOtpBtn" class="primary-btn" type="button">Code bestätigen</button>
           </div>
-          <button id="legacyMigrationToggleBtn" class="text-btn" type="button">Altes PIN-Profil übernehmen</button>
-          <div id="legacyMigrationWrap" class="auth-otp-wrap hidden">
-            <p id="legacyMigrationNote" class="muted">Bestätige zuerst deine E-Mail. Danach legst du ein Passwort fest.</p>
-            <label class="field-row">
-              Profilname
-              <input id="legacyMigrationNameInput" autocomplete="username">
-            </label>
-            <label class="field-row">
-              Bisherige PIN
-              <input id="legacyMigrationPinInput" inputmode="numeric" type="password" autocomplete="off">
-            </label>
-            <button id="legacyMigrationCodeBtn" class="secondary-btn" type="button">Bestätigungscode senden</button>
-          </div>
-          <div id="legacyPasswordWrap" class="auth-otp-wrap hidden">
-            <label class="field-row">
-              Neues Passwort
-              <input id="legacyNewPasswordInput" type="password" autocomplete="new-password" minlength="8">
-            </label>
-            <button id="legacySavePasswordBtn" class="primary-btn" type="button">Passwort speichern</button>
-          </div>
           <button id="browseGuestBtn" class="text-btn guest-browse-btn" type="button">Ohne Anmeldung weiterlesen</button>
-          <button id="registerProfileBtn" class="secondary-btn quiet hidden" type="button">Neues Profil erstellen</button>
-          <button id="setupPairBtn" class="secondary-btn quiet hidden" type="button">Zwei Profile einrichten</button>
         </div>
       </section>
 
@@ -199,7 +125,6 @@
         </div>
 
         <div class="filter-bar">
-          <div class="filters article-language-filters" id="articleLanguageFilters"></div>
           <div class="filters" id="levelFilters"></div>
           <div class="filters" id="categoryFilters"></div>
         </div>
@@ -359,10 +284,14 @@
             <select id="settingsNativeLanguageSelect"></select>
           </label>
           <label class="setting-row">
+            Vyučovaný jazyk
+            <select id="settingsArticleLanguageSelect"></select>
+          </label>
+          <label class="setting-row">
             Rola profilu
             <select id="settingsRoleSelect">
               <option value="teacher">Učiteľ</option>
-              <option value="student">Žiak</option>
+              <option value="student">Študent</option>
             </select>
           </label>
           <label class="setting-row">
@@ -416,8 +345,7 @@
         <button id="teacherBackBtn" class="back-btn">← Späť</button>
         <div class="teacher-tabs" role="group" aria-label="Učiteľský pohľad">
           <button id="teacherArticlesTabBtn" class="secondary-btn" type="button">Editor článkov</button>
-          <button id="teacherStudentsTabBtn" class="secondary-btn quiet" type="button">Prehľad žiakov</button>
-          <button id="teacherProfilesTabBtn" class="secondary-btn quiet hidden" type="button">Nové profily</button>
+          <button id="teacherStudentsTabBtn" class="secondary-btn quiet" type="button">Prehľad študentov</button>
           <button id="adminOverviewTabBtn" class="secondary-btn quiet hidden" type="button">Správa</button>
         </div>
 
@@ -441,15 +369,15 @@
         <section id="teacherOnboarding" class="onboarding-panel hidden">
           <div>
             <p class="eyebrow">Rýchly štart</p>
-            <h3>Prvé zadanie pre žiaka</h3>
-            <p class="muted">Pridaj alebo vyber článok, zaškrtni žiakov a sleduj stav: Nové, Otvorené, Rozpracované, Hotové.</p>
+            <h3>Prvé zadanie pre študenta</h3>
+            <p class="muted">Pridaj alebo vyber článok, zaškrtni študentov a sleduj stav: Nové, Otvorené, Rozpracované, Hotové.</p>
           </div>
           <button id="dismissTeacherOnboardingBtn" class="text-btn" type="button">Rozumiem</button>
         </section>
 
         <div id="teacherOverviewCard" class="reader-card hidden">
           <p class="eyebrow">Učiteľský pohľad</p>
-          <h2>Prehľad žiakov</h2>
+          <h2>Prehľad študentov</h2>
           <div id="teacherOverview"></div>
         </div>
 
@@ -457,33 +385,6 @@
           <p id="adminOverviewEyebrow" class="eyebrow">Správa</p>
           <h2 id="adminOverviewTitle">Prehľad článkov a profilov</h2>
           <div id="adminOverview"></div>
-        </div>
-
-        <div id="profileManagerCard" class="reader-card hidden">
-          <p class="eyebrow" id="profileManagerEyebrow">Profily</p>
-          <h2 id="profileManagerTitle">Nový profil</h2>
-          <label class="field-row">
-            Meno
-            <input id="newProfileNameInput" autocomplete="given-name">
-          </label>
-          <label class="field-row hidden">
-            PIN
-            <input id="newProfilePinInput" inputmode="numeric" type="password" autocomplete="new-password">
-          </label>
-          <label class="field-row">
-            Rola
-            <select id="newProfileRoleSelect">
-              <option value="student">Žiak</option>
-              <option value="teacher">Učiteľ</option>
-            </select>
-          </label>
-          <label class="field-row">
-            Materinský jazyk
-            <select id="newProfileNativeLanguageSelect"></select>
-          </label>
-          <p id="newProfileStatus" class="form-error"></p>
-          <button id="createSingleProfileBtn" class="primary-btn" type="button">Vytvoriť profil</button>
-          <button id="shareInviteLinkBtn" class="secondary-btn quiet hidden" type="button">Zdieľať pozývací link</button>
         </div>
 
         <div id="articleEditorCard" class="reader-card article-editor">
@@ -643,7 +544,7 @@
           </div>
           <section id="articleAssignmentPanel" class="assignment-panel hidden">
             <p class="eyebrow">Zadanie</p>
-            <h3>Zadať článok žiakom</h3>
+            <h3>Zadať článok študentom</h3>
             <div id="articleAssignmentList" class="assignment-list"></div>
             <button id="assignArticleBtn" class="secondary-btn" type="button">Uložiť zadanie</button>
             <p id="articleAssignmentStatus" class="muted"></p>
@@ -737,21 +638,21 @@
   </div>
 
   <script src="config.js?v=117"></script>
-  <script src="constants.js?v=132"></script>
-  <script src="translations/ui.js?v=129"></script>
+  <script src="constants.js?v=133"></script>
+  <script src="translations/ui.js?v=131"></script>
   <script src="translations/auth.js?v=132"></script>
   <script src="translations/new-languages.js?v=132"></script>
   <script src="translations/prompts.js?v=120"></script>
   <script src="i18n.js?v=117"></script>
-  <script src="auth.js?v=132"></script>
+  <script src="auth.js?v=133"></script>
   <script src="api.js?v=117"></script>
-  <script src="profiles.js?v=132"></script>
+  <script src="profiles.js?v=133"></script>
   <script src="teams.js?v=130"></script>
-  <script src="articles.js?v=130"></script>
-  <script src="reader.js?v=131"></script>
+  <script src="articles.js?v=131"></script>
+  <script src="reader.js?v=132"></script>
   <script src="games.js?v=125"></script>
-  <script src="editor.js?v=130"></script>
-  <script src="home.js?v=129"></script>
-  <script src="app.js?v=132"></script>
+  <script src="editor.js?v=133"></script>
+  <script src="home.js?v=134"></script>
+  <script src="app.js?v=134"></script>
 </body>
 </html>

@@ -333,10 +333,6 @@ h3 { font-size: 1.1rem; }
   align-items: end;
 }
 
-.article-language-filters {
-  min-width: 260px;
-}
-
 .segmented-filter {
   display: inline-flex;
   align-items: center;
@@ -1362,6 +1358,29 @@ h3 { font-size: 1.1rem; }
   gap: 12px;
 }
 
+.overview-mode-switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.overview-mode-switch .secondary-btn {
+  width: auto;
+  margin: 0;
+}
+
+.overview-mode-switch .secondary-btn.active {
+  border-color: var(--accent-dark);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.overview-status {
+  min-height: 1.4em;
+  margin: 0;
+}
+
 .dashboard-header {
   display: flex;
   align-items: flex-start;
@@ -1565,6 +1584,28 @@ h3 { font-size: 1.1rem; }
   background: var(--card);
 }
 
+.dashboard-student-management {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 12px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.dashboard-student-management .field-row {
+  min-width: min(100%, 260px);
+  margin: 0;
+}
+
+.dashboard-student-management .editor-actions {
+  justify-content: flex-end;
+}
+
+.danger-text {
+  color: #a12d24;
+}
+
 .dashboard-detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1686,6 +1727,16 @@ h3 { font-size: 1.1rem; }
 
   .dashboard-header {
     display: grid;
+  }
+
+  .dashboard-student-management {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-student-management .editor-actions {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .dashboard-score {
