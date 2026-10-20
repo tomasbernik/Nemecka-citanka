@@ -214,7 +214,11 @@ async function setCurrentProfile(profile) {
   await loadProfileData(state.currentProfile);
   state.currentProfile.teacherRequest = await loadTeacherRequestForProfile(state.currentProfile);
   await loadTeams();
-  if (state.articles.length) await saveCachedArticles(state.articles, getNativeLanguage(state.currentProfile));
+  if (state.articles.length) {
+    saveCachedArticles(state.articles, getNativeLanguage(state.currentProfile)).catch(error => {
+      console.info("Article cache save skipped:", error.message);
+    });
+  }
   renderNativeLanguageControls();
   renderRoleControls();
   renderProfileNameSettings();

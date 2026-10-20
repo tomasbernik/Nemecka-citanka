@@ -1305,4 +1305,17 @@ async function init() {
   }
 }
 
-init();
+init().catch(error => {
+  console.error("App initialization failed:", error);
+  try {
+    if (state.currentProfile) {
+      renderAccessControls();
+      showHome();
+    } else {
+      showGuestHome();
+    }
+  } catch (recoveryError) {
+    console.error("App initialization recovery failed:", recoveryError);
+    showView("homeView");
+  }
+});

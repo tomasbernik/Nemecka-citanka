@@ -7,7 +7,9 @@ async function loadArticles() {
       const remoteArticles = await loadRemoteArticles();
       if (remoteArticles.length) {
         state.articles = remoteArticles.map(normalizeArticle);
-        await saveCachedArticles(state.articles, cacheLanguage);
+        saveCachedArticles(state.articles, cacheLanguage).catch(error => {
+          console.info("Article cache save skipped:", error.message);
+        });
       } else {
         state.articles = cachedArticles.map(normalizeArticle);
         await seedLocalArticlesToRemote();
@@ -112,13 +114,24 @@ function openArticleCacheDb() {
   if (!("indexedDB" in window)) return Promise.resolve(null);
 
   return new Promise(resolve => {
+    let settled = false;
     const request = indexedDB.open(ARTICLE_CACHE_DB_NAME, 1);
+    const timeoutId = window.setTimeout(() => finish(null), 2000);
+    const finish = db => {
+      if (settled) {
+        db?.close();
+        return;
+      }
+      settled = true;
+      window.clearTimeout(timeoutId);
+      resolve(db);
+    };
     request.onupgradeneeded = () => {
       request.result.createObjectStore(ARTICLE_CACHE_STORE_NAME, { keyPath: "key" });
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => resolve(null);
-    request.onblocked = () => resolve(null);
+    request.onsuccess = () => finish(request.result);
+    request.onerror = () => finish(null);
+    request.onblocked = () => finish(null);
   });
 }
 
@@ -136,11 +149,20 @@ async function loadCachedArticles(language = getArticleCacheLanguage()) {
   if (!db) return fallback();
 
   return new Promise(resolve => {
+    let settled = false;
     const transaction = db.transaction(ARTICLE_CACHE_STORE_NAME, "readonly");
     const request = transaction.objectStore(ARTICLE_CACHE_STORE_NAME).get(getArticleCacheKey(language));
-    request.onsuccess = () => resolve(request.result?.articles || fallback());
-    request.onerror = () => resolve(fallback());
-    transaction.oncomplete = () => db.close();
+    const timeoutId = window.setTimeout(() => finish(fallback()), 2000);
+    const finish = articles => {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      db.close();
+      resolve(articles);
+    };
+    request.onsuccess = () => finish(request.result?.articles || fallback());
+    request.onerror = () => finish(fallback());
+    transaction.onabort = () => finish(fallback());
   });
 }
 
@@ -200,8 +222,17 @@ async function saveCachedArticles(articles, language = getArticleCacheLanguage()
   if (!db) return;
 
   return new Promise(resolve => {
+    let settled = false;
     const transaction = db.transaction(ARTICLE_CACHE_STORE_NAME, "readwrite");
     const store = transaction.objectStore(ARTICLE_CACHE_STORE_NAME);
+    const timeoutId = window.setTimeout(finish, 2000);
+    function finish() {
+      if (settled) return;
+      settled = true;
+      window.clearTimeout(timeoutId);
+      db.close();
+      resolve();
+    }
     store.delete(ARTICLE_CACHE_KEY);
     VOCABULARY_LANGUAGE_CODES
       .filter(code => code !== language)
@@ -212,14 +243,9 @@ async function saveCachedArticles(articles, language = getArticleCacheLanguage()
       language,
       articles: normalizedArticles
     });
-    transaction.oncomplete = () => {
-      db.close();
-      resolve();
-    };
-    transaction.onerror = () => {
-      db.close();
-      resolve();
-    };
+    transaction.oncomplete = finish;
+    transaction.onerror = finish;
+    transaction.onabort = finish;
   });
 }
 
