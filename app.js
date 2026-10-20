@@ -17,6 +17,7 @@ const state = {
   speech: {
     sentenceIndex: 0,
     isReading: false,
+    isPaused: false,
     utterance: null,
     mode: "text",
     runId: 0

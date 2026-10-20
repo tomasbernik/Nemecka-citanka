@@ -197,6 +197,20 @@ function setSpeechStatus(message = "") {
   $("speechStatus").textContent = message;
 }
 
+function updateReadingControls() {
+  const isActive = Boolean(state.speech.isReading);
+  const isPaused = isActive && Boolean(state.speech.isPaused);
+  const panel = $("listenPanel");
+  const pauseButton = $("pauseReadBtn");
+
+  panel?.classList.toggle("is-floating", isActive);
+  panel?.classList.toggle("is-paused", isPaused);
+  $("articleView")?.classList.toggle("has-floating-listen-panel", isActive);
+
+  if (pauseButton) pauseButton.textContent = isPaused ? "▶" : "⏸";
+  setButtonLabel("pauseReadBtn", isPaused ? "continueReading" : "pause");
+}
+
 function clearReadingHighlight() {
   document.querySelectorAll(".reading-sentence.active").forEach(sentence => {
     sentence.classList.remove("active");
@@ -251,6 +265,7 @@ function stopReading() {
   state.speech = {
     sentenceIndex: 0,
     isReading: false,
+    isPaused: false,
     utterance: null,
     mode: "text",
     runId: state.speech.runId + 1
@@ -258,18 +273,19 @@ function stopReading() {
   clearReadingHighlight();
   setSpeechStatus("");
   setButtonLabel("readAloudBtn", "readText");
-  setButtonLabel("pauseReadBtn", "pause");
+  updateReadingControls();
 }
 
 function finishReading(message = t("finishedReading")) {
   state.speech.isReading = false;
+  state.speech.isPaused = false;
   state.speech.utterance = null;
   state.speech.sentenceIndex = 0;
   state.speech.runId += 1;
   clearReadingHighlight();
   setSpeechStatus(message);
   setButtonLabel("readAloudBtn", "readText");
-  setButtonLabel("pauseReadBtn", "pause");
+  updateReadingControls();
 }
 
 async function readSentence(index = 0) {
@@ -278,7 +294,9 @@ async function readSentence(index = 0) {
     return;
   }
 
+  const requestedRunId = state.speech.runId;
   await loadSpeechVoices();
+  if (state.speech.runId !== requestedRunId || state.speech.isPaused) return;
 
   const sentences = getArticleSentences(state.currentArticle);
   if (!sentences.length || index >= sentences.length) {
@@ -295,8 +313,10 @@ async function readSentence(index = 0) {
   const runId = state.speech.runId + 1;
   state.speech.sentenceIndex = index;
   state.speech.isReading = true;
+  state.speech.isPaused = false;
   state.speech.mode = "text";
   state.speech.runId = runId;
+  updateReadingControls();
   highlightSentence(index);
 
   const utterance = new SpeechSynthesisUtterance(sentences[index]);
@@ -304,7 +324,7 @@ async function readSentence(index = 0) {
   utterance.rate = 1;
   utterance.voice = getArticleVoice();
   utterance.onend = () => {
-    if (state.speech.isReading && state.speech.utterance === utterance && state.speech.runId === runId) {
+    if (state.speech.isReading && !state.speech.isPaused && state.speech.utterance === utterance && state.speech.runId === runId) {
       readSentence(index + 1);
     }
   };
@@ -314,6 +334,10 @@ async function readSentence(index = 0) {
     if (event.error === "interrupted" || event.error === "canceled") return;
 
     state.speech.isReading = false;
+    state.speech.isPaused = false;
+    state.speech.utterance = null;
+    clearReadingHighlight();
+    updateReadingControls();
     setSpeechStatus(t("readingFailed"));
   };
 
@@ -330,8 +354,10 @@ function forceStopSpeech() {
   }
 
   state.speech.isReading = false;
+  state.speech.isPaused = false;
   state.speech.utterance = null;
   state.speech.runId += 1;
+  updateReadingControls();
 
   if ("speechSynthesis" in window) {
     window.speechSynthesis.cancel();
@@ -341,15 +367,24 @@ function forceStopSpeech() {
 function togglePauseReading() {
   if (!("speechSynthesis" in window) || !state.speech.isReading) return;
 
-  if (window.speechSynthesis.paused) {
-    window.speechSynthesis.resume();
-    setButtonLabel("pauseReadBtn", "pause");
+  if (state.speech.isPaused) {
+    state.speech.isPaused = false;
+    updateReadingControls();
     setSpeechStatus(t("continuingReading"));
-  } else {
-    window.speechSynthesis.pause();
-    setButtonLabel("pauseReadBtn", "continueReading");
-    setSpeechStatus(t("readingPaused"));
+    readSentence(state.speech.sentenceIndex);
+    return;
   }
+
+  state.speech.isPaused = true;
+  state.speech.runId += 1;
+  if (state.speech.utterance) {
+    state.speech.utterance.onend = null;
+    state.speech.utterance.onerror = null;
+  }
+  state.speech.utterance = null;
+  window.speechSynthesis.cancel();
+  updateReadingControls();
+  setSpeechStatus(t("readingPaused"));
 }
 
 function markCurrentArticleRead(source = "manual") {
