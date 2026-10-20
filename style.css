@@ -883,13 +883,12 @@ h3 { font-size: 1.1rem; }
 
 .article-text-editor #articleTextInput {
   position: relative;
-  z-index: 2;
   min-height: 340px;
   margin: 0;
   border: 0;
   border-radius: 0;
-  background: transparent;
-  color: transparent;
+  background: var(--bg);
+  color: var(--text);
   caret-color: var(--text);
   resize: vertical;
   scrollbar-gutter: stable;

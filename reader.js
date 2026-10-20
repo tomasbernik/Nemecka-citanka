@@ -125,39 +125,12 @@ function renderArticleImage(article) {
 }
 
 function renderArticleText(article) {
-  const inlineVocabulary = getInlineVocabulary(article);
-  const lookup = new Map(inlineVocabulary.map(v => [v.de.toLocaleLowerCase("de"), v]));
-  const words = inlineVocabulary
-    .map(v => v.de)
-    .filter(Boolean)
-    .sort((a, b) => b.length - a.length);
   let sentenceIndex = 0;
 
   const renderSentence = (sentence) => {
     const index = sentenceIndex++;
-
-    if (!words.length) {
-      return `<span class="reading-sentence" data-sentence-index="${index}">${escapeHtml(sentence)}</span>`;
-    }
-
-    const pattern = new RegExp(`(^|[^\\p{L}\\p{N}_])(${words.map(escapeRegExp).join("|")})(?=$|[^\\p{L}\\p{N}_])`, "giu");
-    const html = escapeHtml(sentence).replace(pattern, (match, prefix, word) => {
-      const vocab = lookup.get(word.toLocaleLowerCase("de"));
-      if (!vocab) return match;
-
-      return `${prefix}<span class="inline-word" role="button" tabindex="0" data-word="${escapeHtml(vocab.de)}" data-translation="${escapeHtml(getVocabularyTranslation(vocab))}" aria-expanded="false">${word}</span>`;
-    });
-
-    return `<span class="reading-sentence" data-sentence-index="${index}">${html}</span>`;
+    return `<span class="reading-sentence" data-sentence-index="${index}">${escapeHtml(sentence)}</span>`;
   };
-
-  if (!words.length) {
-    $("articleText").innerHTML = article.text
-      .map(paragraph => `<p>${(paragraph.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [paragraph]).map(sentence => renderSentence(sentence.trim())).join(" ")}</p>`)
-      .join("");
-    wrapReaderWords();
-    return;
-  }
 
   $("articleText").innerHTML = article.text
     .map(paragraph => `<p>${(paragraph.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [paragraph]).map(sentence => renderSentence(sentence.trim())).join(" ")}</p>`)

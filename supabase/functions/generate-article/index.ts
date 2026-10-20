@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
 
   let payload: Record<string, unknown>;
   try { payload = await req.json(); } catch { return respond({ error: "invalid_json" }, 400); }
-  const topic = asText(payload.topic, 500);
+  const topic = asText(payload.topic, 6_000);
   const level = asText(payload.level, 10);
   const category = asText(payload.category, 120);
   const words = Array.isArray(payload.requiredWords)
@@ -92,14 +92,6 @@ VOCABULARY:
 - The "de" field should reflect the word or phrase used in the story.
 - Prefer vocabulary that is genuinely useful for language learners.
 
-INLINE VOCABULARY:
-- Generate 8 to 12 inline vocabulary entries.
-- Every "de" value must be an EXACT continuous substring of the article text.
-- Preserve capitalization, spelling, word order and grammatical form.
-- Never invent expressions that are absent from the text.
-- Include the same translation fields as the main vocabulary.
-- Use dictionary forms in the "base" field.
-
 COMPREHENSION QUESTIONS:
 - Generate 6 to 8 German true/false statements about the story.
 - Each statement must be clear and understandable for level ${level}.
@@ -119,7 +111,6 @@ Required fields:
 - summary: short German description
 - text: array of German paragraphs
 - vocabulary: array of exactly 5 objects
-- inlineVocabulary: array of 8-12 objects
 - questions: array of 6-8 objects with statement and answer
 
 QUALITY CHECK BEFORE RETURNING:
@@ -177,24 +168,6 @@ generationConfig: {
           ]
         }
       },
-      inlineVocabulary: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            de: { type: "string" },
-            base: { type: "string" },
-            sk: { type: "string" },
-            pl: { type: "string" },
-            hu: { type: "string" },
-            ru: { type: "string" },
-            en: { type: "string" }
-          },
-          required: [
-            "de", "base", "sk", "pl", "hu", "ru", "en"
-          ]
-        }
-      },
       questions: {
         type: "array",
         items: {
@@ -214,7 +187,6 @@ generationConfig: {
       "summary",
       "text",
       "vocabulary",
-      "inlineVocabulary",
       "questions"
     ]
   },

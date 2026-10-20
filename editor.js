@@ -743,13 +743,9 @@ function getArticleJsonPromptInstructions(level) {
   const vocabularyExample = `{\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",${PROMPT_TRANSLATION_LANGUAGE_CODES
     .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
     .join(",")}}`;
-  const inlineVocabularyExample = `{\"de\":\"presný súvislý úsek skopírovaný z textu článku\",\"base\":\"základný tvar\",${PROMPT_TRANSLATION_LANGUAGE_CODES
-    .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
-    .join(",")}}`;
 
   if (isGerman) {
     const vocabulary = `{"de":"Wort oder Phrase aus dem Text","base":"Grundform",${PROMPT_TRANSLATION_LANGUAGE_CODES.map(code => `"${code}":"Übersetzung auf ${NATIVE_LANGUAGES[code]?.label || code}"`).join(",")}}`;
-    const inlineVocabulary = `{"de":"exakter Ausschnitt aus dem Artikeltext","base":"Grundform",${PROMPT_TRANSLATION_LANGUAGE_CODES.map(code => `"${code}":"Übersetzung auf ${NATIVE_LANGUAGES[code]?.label || code}"`).join(",")}}`;
     return [
       "", "JSON-Schema:", "{",
       `  \"title\": \"${teachingLanguage.germanTitle}\",`,
@@ -759,24 +755,19 @@ function getArticleJsonPromptInstructions(level) {
       `  \"summary\": \"${teachingLanguage.germanDescription}\",`,
       "  \"text\": [\"Absatz 1\", \"Absatz 2\", \"Absatz 3\", \"Absatz 4\"],",
       "  \"vocabulary\": [", `    ${vocabulary}`, "  ],",
-      "  \"inlineVocabulary\": [", `    ${inlineVocabulary}`, "  ],",
       "  \"questions\": [", `    {\"statement\":\"${teachingLanguage.germanStatement}\",\"answer\":true}`, "  ]", "}", "",
       `Verwende den unten eingefügten ${teachingLanguage.germanAccusative} Text exakt. Formuliere ihn nicht um, kürze ihn nicht und ändere seine Länge nicht.`,
       "Teile den Text absatzweise in das Feld \"text\" auf.",
       `Füge genau 5 ${teachingLanguage.germanPlural} Wörter oder Phrasen zu \"vocabulary\" hinzu, die zum Niveau ${level} passen, natürlich im Text vorkommen und als neuer Wortschatz nützlich sind.`,
-      "Füge 8 bis 12 Einträge zu \"inlineVocabulary\" hinzu. Der Wert \"de\" muss ein exakter zusammenhängender Ausschnitt aus dem Artikeltext mit derselben Form und Wortfolge sein.",
       `Füge 6 bis 8 ${teachingLanguage.germanPlural} Richtig/Falsch-Aussagen mit einer natürlichen Mischung aus richtigen und falschen Antworten zu \"questions\" hinzu.`,
       `Füge für jede Kategorie oder jedes Thema Übersetzungen in diesen Sprachen zu \"categoryLabels\" hinzu: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
-      `Alle Einträge in vocabulary und inlineVocabulary müssen diese Schlüssel enthalten: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+      `Alle Einträge in vocabulary müssen diese Schlüssel enthalten: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
       "Verwende für \"base\" die Wörterbuchform: bei Substantiven mit bestimmtem Artikel im Nominativ Singular, bei Verben den Infinitiv und bei Adjektiven die Grundform."
     ];
   }
 
   if (isEnglish) {
     const englishVocabularyExample = `{\"de\":\"word or phrase from the text\",\"base\":\"dictionary form\",${PROMPT_TRANSLATION_LANGUAGE_CODES
-      .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.label || code} translation\"`)
-      .join(",")}}`;
-    const englishInlineVocabularyExample = `{\"de\":\"exact continuous passage copied from the article text\",\"base\":\"dictionary form\",${PROMPT_TRANSLATION_LANGUAGE_CODES
       .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.label || code} translation\"`)
       .join(",")}}`;
 
@@ -793,9 +784,6 @@ function getArticleJsonPromptInstructions(level) {
       "  \"vocabulary\": [",
       `    ${englishVocabularyExample}`,
       "  ],",
-      "  \"inlineVocabulary\": [",
-      `    ${englishInlineVocabularyExample}`,
-      "  ],",
       "  \"questions\": [",
       `    {\"statement\":\"${teachingLanguage.english} true/false sentence\",\"answer\":true}`,
       "  ]",
@@ -804,10 +792,9 @@ function getArticleJsonPromptInstructions(level) {
       "Use the pasted text below exactly as it is. Do not rewrite it, shorten it, or change the length.",
       "Split the text into the \"text\" array by paragraphs.",
       `Add exactly 5 ${teachingLanguage.english} words or phrases to \"vocabulary\" that fit level ${level} and are typically not already lower-level words. They must appear naturally in the text and should be useful new vocabulary for this level.`,
-      "Add 8 to 12 items to \"inlineVocabulary\": they may be individual words, short phrases, fixed expressions, or interesting expressions that may be unfamiliar to the student. The \"de\" value must be an exact continuous passage copied from the article text in the same form, word order, case, and tense. Do not use dictionary forms or infinitive paraphrases unless they appear exactly like that in the text. Repeat items from \"vocabulary\", but in the form in which they appear in the text.",
       `Add 6 to 8 ${teachingLanguage.english} true/false statements to \"questions\" with a mix of true and false answers. The answers must not follow a regular true/false/true/false or false/true/false/true pattern; the order should feel natural and may include two identical answers in a row.`,
       `Add translations for every category or topic to \"categoryLabels\" for these languages: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}. The object key must exactly match the value in \"category\"; if multiple categories are separated by |, add each one separately.`,
-      `All vocabulary and inlineVocabulary items must have these keys: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+      `All vocabulary items must have these keys: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
       "For \"base\", use the dictionary form: for a noun, include the definite article and nominative singular, for example \"der Mann\"; for a verb, use the infinitive, for example \"gehen\"; for an adjective, use the base form, for example \"freundlich\". If \"de\" is already the base form or is a whole phrase, \"base\" may be the same as \"de\"."
     ];
   }
@@ -825,9 +812,6 @@ function getArticleJsonPromptInstructions(level) {
     "  \"vocabulary\": [",
     `    ${vocabularyExample}`,
     "  ],",
-    "  \"inlineVocabulary\": [",
-    `    ${inlineVocabularyExample}`,
-    "  ],",
     "  \"questions\": [",
     `    {\"statement\":\"${teachingLanguage.slovakStatement}\",\"answer\":true}`,
     "  ]",
@@ -836,10 +820,9 @@ function getArticleJsonPromptInstructions(level) {
     "Použi nižšie vložený text presne tak, ako je. Neprepisuj ho, neskracuj ho a nemen dĺžku textu.",
     "Text rozdeľ do poľa \"text\" podľa odsekov.",
     `Do "vocabulary" pridaj presne 5 slov alebo fráz vo vyučovanom jazyku (${getArticleLanguageLabel(getSelectedArticleLanguage())}), ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
-    "Do \"inlineVocabulary\" pridaj 8 až 12 položiek: môžu to byť jednotlivé slová, krátke frázy, ustálené spojenia alebo zaujímavé výrazy, ktoré môžu byť pre študenta neznáme. Hodnota \"de\" musí byť presný súvislý úsek skopírovaný z textu článku v rovnakom tvare, poradí slov a páde/čase. Nepoužívaj slovníkové tvary ani infinitívne parafrázy, ak sa presne tak v texte nenachádzajú. Opakuj položky z \"vocabulary\" ale v tvare, ako su spomenute v texte.",
     `Do \"questions\" pridaj 6 až 8 pravda/nepravda viet vo vyučovanom jazyku (${getArticleLanguageLabel(getSelectedArticleLanguage())}) s mixom true a false. Odpovede nesmú byť v pravidelnom poradí true/false/true/false ani false/true/false/true; poradie musí pôsobiť prirodzene a môže mať aj dve rovnaké odpovede za sebou.`,
     `Do \"categoryLabels\" pridaj pre každú kategóriu alebo tému preklady do týchto jazykov: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}. Kľúč objektu musí presne zodpovedať hodnote v poli \"category\"; ak je viac kategórií oddelených znakom |, pridaj každú zvlášť.`,
-    `Všetky položky vocabulary aj inlineVocabulary musia mať kľúče de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+    `Všetky položky vocabulary musia mať kľúče de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
     "Do \"base\" daj základný slovníkový tvar: pri podstatnom mene s určitým členom a v nominatíve jednotného čísla, napríklad \"der Mann\"; pri slovese infinitív, napríklad \"gehen\"; pri prídavnom mene základný tvar, napríklad \"freundlich\". Ak je \"de\" už základný tvar alebo ide o celú frázu, môže byť \"base\" rovnaké ako \"de\"."
   ];
 }
