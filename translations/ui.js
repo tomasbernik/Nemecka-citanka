@@ -1091,7 +1091,8 @@ assignUiText("de", {
   clickedReviewTitle: "Angeklickte Wörter",
   clickedReviewEmpty: "Klicke Wörter im Artikel an, dann kannst du sie hier wiederholen.",
   clickedReviewCount: "{count} angeklickte Wörter und Phrasen gesammelt.",
-  clickedReviewQuestion: "Was bedeutet dieses deutsche Wort?"
+  clickedReviewQuestion: "Was bedeutet dieses deutsche Wort?",
+  nextClickedWord: "Nächstes Wort →"
 });
 
 assignUiText("sk", {
@@ -1099,7 +1100,8 @@ assignUiText("sk", {
   clickedReviewTitle: "Kliknuté slovíčka",
   clickedReviewEmpty: "Klikni slovíčka v článku a tu si ich potom zopakuješ.",
   clickedReviewCount: "Nazbierané slovíčka a frázy: {count}.",
-  clickedReviewQuestion: "Čo znamená toto nemecké slovíčko?"
+  clickedReviewQuestion: "Čo znamená toto nemecké slovíčko?",
+  nextClickedWord: "Ďalšie slovíčko →"
 });
 
 assignUiText("sk", {
@@ -1167,7 +1169,8 @@ assignUiText("ru", {
   clickedReviewTitle: "Нажатые слова",
   clickedReviewEmpty: "Нажимайте слова в статье, и здесь можно будет их повторять.",
   clickedReviewCount: "Собрано слов и фраз: {count}.",
-  clickedReviewQuestion: "Что означает это немецкое слово?"
+  clickedReviewQuestion: "Что означает это немецкое слово?",
+  nextClickedWord: "Следующее слово →"
 });
 
 assignUiText("pl", {
@@ -1175,7 +1178,8 @@ assignUiText("pl", {
   clickedReviewTitle: "Kliknięte słówka",
   clickedReviewEmpty: "Klikaj słówka w artykule, a potem powtarzaj je tutaj.",
   clickedReviewCount: "Zebrane słówka i frazy: {count}.",
-  clickedReviewQuestion: "Co oznacza to niemieckie słówko?"
+  clickedReviewQuestion: "Co oznacza to niemieckie słówko?",
+  nextClickedWord: "Następne słówko →"
 });
 
 assignUiText("hu", {
@@ -1183,7 +1187,8 @@ assignUiText("hu", {
   clickedReviewTitle: "Kattintott szavak",
   clickedReviewEmpty: "Koppints szavakra a cikkben, es itt gyakorolhatod oket.",
   clickedReviewCount: "Osszegyujtott szavak es kifejezesek: {count}.",
-  clickedReviewQuestion: "Mit jelent ez a nemet szo?"
+  clickedReviewQuestion: "Mit jelent ez a nemet szo?",
+  nextClickedWord: "Következő szó →"
 });
 
 assignUiText("ru", {
@@ -1947,6 +1952,8 @@ Object.assign(UI_TEXT.sk, {
 Object.assign(UI_TEXT.de, {
   articleOrganization: "Artikel organisieren",
   articleDisplayOrder: "Reihenfolge auf der Startseite",
+  changeArticleOrder: "Artikelreihenfolge ändern",
+  hideArticleOrder: "Artikelreihenfolge ausblenden",
   articleDisplayOrderHelp: "Verschiebe einzelne Artikel und Serien nach oben oder unten. Mit ⇈ verschiebst du sie ganz nach oben.",
   createArticleSeries: "Serie aus Kapiteln erstellen",
   createArticleSeriesHelp: "Wähle mindestens zwei bestehende Artikel in derselben Sprache aus.",
@@ -1972,6 +1979,8 @@ Object.assign(UI_TEXT.de, {
 Object.assign(UI_TEXT.sk, {
   articleOrganization: "Usporiadanie článkov",
   articleDisplayOrder: "Poradie na hlavnej stránke",
+  changeArticleOrder: "Zmeniť poradie článkov",
+  hideArticleOrder: "Skryť poradie článkov",
   articleDisplayOrderHelp: "Samostatné články aj príbehy môžeš presúvať vyššie alebo nižšie. Tlačidlom ⇈ ich presunieš úplne nahor.",
   createArticleSeries: "Vytvoriť príbeh z kapitol",
   createArticleSeriesHelp: "Vyber aspoň dva existujúce články v rovnakom jazyku. Zobrazia sa ako jeden klikateľný príbeh.",
@@ -1997,6 +2006,8 @@ Object.assign(UI_TEXT.sk, {
 Object.assign(UI_TEXT.en, {
   articleOrganization: "Organize articles",
   articleDisplayOrder: "Home page order",
+  changeArticleOrder: "Change article order",
+  hideArticleOrder: "Hide article order",
   articleDisplayOrderHelp: "Move individual articles and series up or down. Use ⇈ to move one all the way to the top.",
   createArticleSeries: "Create a chapter series",
   createArticleSeriesHelp: "Select at least two existing articles in the same language.",

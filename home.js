@@ -163,32 +163,41 @@ function buildArticleOrganizationSection() {
 
   return `
     <section class="management-section article-organization">
-      <div>
-        <p class="eyebrow">${escapeHtml(t("articleOrganization"))}</p>
-        <h3>${escapeHtml(t("articleDisplayOrder"))}</h3>
-        <p class="muted">${escapeHtml(t("articleDisplayOrderHelp"))}</p>
+      <div class="article-order-heading">
+        <div>
+          <p class="eyebrow">${escapeHtml(t("articleOrganization"))}</p>
+          <h3>${escapeHtml(t("articleDisplayOrder"))}</h3>
+        </div>
+        <button class="secondary-btn compact" type="button" data-toggle-article-order aria-expanded="${state.articleOrderEditorExpanded}">
+          ${escapeHtml(t(state.articleOrderEditorExpanded ? "hideArticleOrder" : "changeArticleOrder"))}
+        </button>
       </div>
-      <div class="management-list sortable-article-list">
-        ${entries.map((entry, index) => `
-          <article class="management-row">
-            <div class="management-order-label">
-              <span class="management-order-number">${index + 1}</span>
-              <div>
-                <div class="management-entry-title">
-                  <strong>${escapeHtml(entry.type === "series" ? entry.title : entry.article.title)}</strong>
-                  ${entry.type === "series" ? `<span class="story-type-badge">${escapeHtml(t("completeStory"))}</span>` : ""}
+      ${state.articleOrderEditorExpanded ? `
+        <div class="article-order-editor">
+          <p class="muted">${escapeHtml(t("articleDisplayOrderHelp"))}</p>
+          <div class="management-list sortable-article-list">
+            ${entries.map((entry, index) => `
+              <article class="management-row">
+                <div class="management-order-label">
+                  <span class="management-order-number">${index + 1}</span>
+                  <div>
+                    <div class="management-entry-title">
+                      <strong>${escapeHtml(entry.type === "series" ? entry.title : entry.article.title)}</strong>
+                      ${entry.type === "series" ? `<span class="story-type-badge">${escapeHtml(t("completeStory"))}</span>` : ""}
+                    </div>
+                    <p class="muted">${escapeHtml(entry.type === "series" ? formatText("chapterCount", { count: entry.articles.length }) : getArticleLanguageLabel(getArticleLanguage(entry.article)))}</p>
+                  </div>
                 </div>
-                <p class="muted">${escapeHtml(entry.type === "series" ? formatText("chapterCount", { count: entry.articles.length }) : getArticleLanguageLabel(getArticleLanguage(entry.article)))}</p>
-              </div>
-            </div>
-            <div class="management-actions">
-              <button class="secondary-btn compact move-to-start-btn" type="button" data-order-move="top" data-entry-id="${escapeHtml(entry.id)}" ${index === 0 ? "disabled" : ""} title="${escapeHtml(t("moveToTop"))}" aria-label="${escapeHtml(t("moveToTop"))}">⇈</button>
-              <button class="secondary-btn compact" type="button" data-order-move="-1" data-entry-id="${escapeHtml(entry.id)}" ${index === 0 ? "disabled" : ""} aria-label="${escapeHtml(t("moveUp"))}">↑</button>
-              <button class="secondary-btn compact" type="button" data-order-move="1" data-entry-id="${escapeHtml(entry.id)}" ${index === entries.length - 1 ? "disabled" : ""} aria-label="${escapeHtml(t("moveDown"))}">↓</button>
-            </div>
-          </article>
-        `).join("")}
-      </div>
+                <div class="management-actions">
+                  <button class="secondary-btn compact move-to-start-btn" type="button" data-order-move="top" data-entry-id="${escapeHtml(entry.id)}" ${index === 0 ? "disabled" : ""} title="${escapeHtml(t("moveToTop"))}" aria-label="${escapeHtml(t("moveToTop"))}">⇈</button>
+                  <button class="secondary-btn compact" type="button" data-order-move="-1" data-entry-id="${escapeHtml(entry.id)}" ${index === 0 ? "disabled" : ""} aria-label="${escapeHtml(t("moveUp"))}">↑</button>
+                  <button class="secondary-btn compact" type="button" data-order-move="1" data-entry-id="${escapeHtml(entry.id)}" ${index === entries.length - 1 ? "disabled" : ""} aria-label="${escapeHtml(t("moveDown"))}">↓</button>
+                </div>
+              </article>
+            `).join("")}
+          </div>
+        </div>
+      ` : ""}
 
       <div class="series-creator">
         <h3>${escapeHtml(t("createArticleSeries"))}</h3>
@@ -338,11 +347,13 @@ async function renderAdminOverview() {
 }
 
 async function handleAdminOverviewClick(event) {
-  const button = event.target.closest("[data-article-id], [data-teacher-profile-id], [data-order-move], [data-create-series], [data-dissolve-series]");
+  const button = event.target.closest("[data-article-id], [data-teacher-profile-id], [data-order-move], [data-create-series], [data-dissolve-series], [data-toggle-article-order]");
   if (!button || !isPublisherAccount()) return;
   button.disabled = true;
   try {
-    if (button.dataset.orderMove) {
+    if (button.hasAttribute("data-toggle-article-order")) {
+      state.articleOrderEditorExpanded = !state.articleOrderEditorExpanded;
+    } else if (button.dataset.orderMove) {
       const entries = getArticleDisplayEntries(state.articles.filter(article => canViewArticle(article)));
       const index = entries.findIndex(entry => entry.id === button.dataset.entryId);
       const targetIndex = button.dataset.orderMove === "top" ? 0 : index + Number(button.dataset.orderMove);

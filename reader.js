@@ -30,10 +30,9 @@ function getSavedVocabulary(article) {
 
 function getVisibleVocabulary(article) {
   const initialVocabulary = article.vocabulary || [];
-  const savedVocabulary = getSavedVocabulary(article);
   const seen = new Set();
 
-  return [...initialVocabulary, ...savedVocabulary].filter(item => {
+  return initialVocabulary.filter(item => {
     const key = normalizeVocabularyKey(item.de);
     if (seen.has(key)) return false;
     seen.add(key);
@@ -103,10 +102,12 @@ function renderArticleImage(article) {
   ];
   const alt = image.alt || article.title || "";
   wrap.innerHTML = `
-    <picture>
-      ${image.mobile ? `<source media="(max-width: 700px)" srcset="${escapeHtml(image.mobile)}">` : ""}
-      <img src="${escapeHtml(desktop)}" alt="${escapeHtml(alt)}" loading="lazy" data-fallback-sources="${escapeHtml(fallbackSources.join("|"))}">
-    </picture>
+    <button class="article-image-button" type="button" aria-label="${escapeHtml(`${t("articleImage")}: ${alt}`)}">
+      <picture>
+        ${image.mobile ? `<source media="(max-width: 700px)" srcset="${escapeHtml(image.mobile)}">` : ""}
+        <img src="${escapeHtml(desktop)}" alt="${escapeHtml(alt)}" loading="lazy" data-fallback-sources="${escapeHtml(fallbackSources.join("|"))}">
+      </picture>
+    </button>
   `;
   wrap.classList.remove("hidden");
 
@@ -122,6 +123,31 @@ function renderArticleImage(article) {
       wrap.innerHTML = "";
     }
   };
+  wrap.querySelector(".article-image-button")?.addEventListener("click", () => {
+    openArticleImageDialog(img.currentSrc || img.src, alt);
+  });
+}
+
+function openArticleImageDialog(source, alt = "") {
+  const dialog = $("articleImageDialog");
+  const image = $("articleImageFull");
+  if (!dialog || !image || !source) return;
+  image.src = source;
+  image.alt = alt;
+  dialog.classList.remove("hidden");
+  document.body.classList.add("image-dialog-open");
+  $("closeArticleImageBtn")?.focus();
+}
+
+function closeArticleImageDialog() {
+  const dialog = $("articleImageDialog");
+  const image = $("articleImageFull");
+  dialog?.classList.add("hidden");
+  document.body.classList.remove("image-dialog-open");
+  if (image) {
+    image.removeAttribute("src");
+    image.alt = "";
+  }
 }
 
 function renderArticleText(article) {
@@ -539,14 +565,16 @@ function addDiscoveredVocabulary(word, translation) {
   if (!article) return;
 
   const wordKey = normalizeVocabularyKey(word);
-  const exists = getVisibleVocabulary(article).some(v => normalizeVocabularyKey(v.de) === wordKey);
+  const exists = [
+    ...(article.vocabulary || []),
+    ...getSavedVocabulary(article)
+  ].some(v => normalizeVocabularyKey(v.de) === wordKey);
   if (!exists) {
     state.profileData.discoveredVocabulary[article.id] = [
       ...getSavedVocabulary(article),
       makeDiscoveredVocabularyItem(article, word, translation)
     ];
     saveProfileData();
-    renderVocabulary();
     renderGamification();
   }
 }

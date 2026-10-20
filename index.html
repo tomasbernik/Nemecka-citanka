@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=140">
+  <link rel="stylesheet" href="style.css?v=141">
 </head>
 <body>
   <div id="app">
@@ -139,14 +139,6 @@
           <h2 id="articleTitle"></h2>
           <div id="articleVariantSwitch" class="article-variant-switch hidden"></div>
           <div id="articleChapterSwitch" class="article-chapter-switch hidden"></div>
-          <div id="listenPanel" class="listen-panel" aria-label="Čítanie článku nahlas">
-            <div class="listen-actions">
-              <button id="readAloudBtn" class="audio-btn" type="button" aria-label="Prehrať" title="Prehrať">▶</button>
-              <button id="pauseReadBtn" class="audio-btn hidden" type="button" aria-label="Pauza" title="Pauza">⏸</button>
-              <button id="stopReadBtn" class="audio-btn hidden" type="button" aria-label="Stop" title="Stop">■</button>
-            </div>
-            <p id="speechStatus" class="muted listen-status"></p>
-          </div>
           <div id="articleImageWrap" class="article-image-wrap hidden"></div>
 
           <div id="articleTeacherActions" class="article-teacher-actions hidden">
@@ -178,6 +170,17 @@
               <div>
                 <p id="vocabPanelEyebrow" class="eyebrow">Prehľad</p>
                 <h3 id="vocabPanelTitle">Slovíčka a frázy</h3>
+              </div>
+              <div id="listenPanel" class="listen-panel" aria-label="Čítanie článku nahlas">
+                <div class="listen-actions">
+                  <button id="readAloudBtn" class="audio-btn" type="button" aria-label="Prehrať" title="Prehrať">
+                    <span aria-hidden="true">▶</span>
+                    <span id="readAloudLabel" class="read-aloud-label">Prečítať text</span>
+                  </button>
+                  <button id="pauseReadBtn" class="audio-btn hidden" type="button" aria-label="Pauza" title="Pauza">⏸</button>
+                  <button id="stopReadBtn" class="audio-btn hidden" type="button" aria-label="Stop" title="Stop">■</button>
+                </div>
+                <p id="speechStatus" class="muted listen-status"></p>
               </div>
             </div>
             <ul id="vocabList"></ul>
@@ -592,6 +595,11 @@
       </button>
     </nav>
 
+    <div id="articleImageDialog" class="article-image-dialog hidden" role="dialog" aria-modal="true" aria-label="Obrázok k článku">
+      <button id="closeArticleImageBtn" class="article-image-dialog-close" type="button" aria-label="Zavrieť" title="Zavrieť">×</button>
+      <img id="articleImageFull" alt="">
+    </div>
+
     <div id="clickedReviewDialog" class="quiz-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="clickedReviewTitle">
       <section id="clickedReviewPanel" class="clicked-review review-dialog-card" aria-labelledby="clickedReviewTitle">
         <div class="practice-heading">
@@ -600,7 +608,6 @@
             <h3 id="clickedReviewTitle">Kliknuté slovíčka</h3>
           </div>
           <div class="review-dialog-actions">
-            <button id="newClickedReviewBtn" class="text-btn" type="button">Precvičiť</button>
             <button id="closeClickedReviewBtn" class="text-btn" type="button" aria-label="Zavrieť">Zavrieť</button>
           </div>
         </div>
@@ -608,6 +615,9 @@
         <p id="clickedReviewPrompt" class="quiz-prompt compact"></p>
         <div id="clickedReviewOptions" class="quiz-options"></div>
         <p id="clickedReviewFeedback" class="practice-feedback"></p>
+        <div class="review-dialog-footer">
+          <button id="newClickedReviewBtn" class="primary-btn compact hidden" type="button">Ďalšie slovíčko →</button>
+        </div>
       </section>
     </div>
 
@@ -658,7 +668,7 @@
 
   <script src="config.js?v=117"></script>
   <script src="constants.js?v=133"></script>
-  <script src="translations/ui.js?v=136"></script>
+  <script src="translations/ui.js?v=137"></script>
   <script src="translations/auth.js?v=135"></script>
   <script src="translations/new-languages.js?v=135"></script>
   <script src="translations/prompts.js?v=120"></script>
@@ -668,10 +678,10 @@
   <script src="profiles.js?v=135"></script>
   <script src="teams.js?v=132"></script>
   <script src="articles.js?v=135"></script>
-  <script src="reader.js?v=136"></script>
-  <script src="games.js?v=125"></script>
+  <script src="reader.js?v=137"></script>
+  <script src="games.js?v=126"></script>
   <script src="editor.js?v=137"></script>
-  <script src="home.js?v=136"></script>
-  <script src="app.js?v=142"></script>
+  <script src="home.js?v=137"></script>
+  <script src="app.js?v=143"></script>
 </body>
 </html>

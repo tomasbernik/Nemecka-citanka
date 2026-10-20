@@ -54,6 +54,7 @@ const state = {
   editorCategoryLabels: {},
   editorSavedSnapshot: "",
   editorExpanded: true,
+  articleOrderEditorExpanded: false,
   showAllCategories: false,
   deferredInstallPrompt: null,
   installPromptShown: false,
@@ -496,8 +497,10 @@ function updateStaticTexts() {
 
   setText("backBtn", "back");
   setButtonLabel("readAloudBtn", "readText");
+  setText("readAloudLabel", "readText");
   setButtonLabel("pauseReadBtn", "pause");
   setButtonLabel("stopReadBtn", "stop");
+  setButtonLabel("closeArticleImageBtn", "close");
   setText("markReadBtn", "markRead");
   setText("markReadBottomBtn", "markRead");
 
@@ -1110,10 +1113,18 @@ onEvent("clickedReviewDialog", "click", event => {
   }
 });
 
+onClick("closeArticleImageBtn", closeArticleImageDialog);
+onEvent("articleImageDialog", "click", event => {
+  if (event.target.id === "articleImageDialog") closeArticleImageDialog();
+});
+
 document.addEventListener("keydown", event => {
-  if (event.key === "Escape" && !$("clickedReviewDialog")?.classList.contains("hidden")) {
-    closeClickedReviewDialog();
+  if (event.key !== "Escape") return;
+  if (!$("articleImageDialog")?.classList.contains("hidden")) {
+    closeArticleImageDialog();
+    return;
   }
+  if (!$("clickedReviewDialog")?.classList.contains("hidden")) closeClickedReviewDialog();
 });
 
 onEvent("homeView", "click", async event => {

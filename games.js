@@ -75,8 +75,8 @@ function startClickedReviewGame() {
     .map(option => `<button class="quiz-option" type="button" data-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`)
     .join("");
   $("clickedReviewFeedback").textContent = "";
-  $("newClickedReviewBtn").textContent = t("next");
-  $("newClickedReviewBtn").classList.toggle("hidden", options.length < 2);
+  $("newClickedReviewBtn").textContent = t("nextClickedWord");
+  $("newClickedReviewBtn").classList.add("hidden");
 }
 
 function renderClickedReview() {
@@ -120,6 +120,7 @@ function answerClickedReview(answer) {
   });
 
   $("clickedReviewFeedback").textContent = isCorrect ? t("correct") : `${t("correctIs")} ${game.correctTranslation}`;
+  $("newClickedReviewBtn").classList.remove("hidden");
   logPractice("clicked-vocabulary-review", {
     correct: isCorrect,
     prompt: game.correct.de,
