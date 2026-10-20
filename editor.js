@@ -1049,7 +1049,7 @@ async function renderArticleAssignmentPanel(article = state.articles.find(item =
   const list = $("articleAssignmentList");
   if (!panel || !list) return;
 
-  const canAssign = Boolean(article?.id && article?.teamId && hasTeacherLicense());
+  const canAssign = Boolean(article?.id && hasTeacherLicense());
   panel.classList.toggle("hidden", !canAssign);
   $("articleAssignmentStatus").textContent = "";
   if (!canAssign) {
@@ -1057,54 +1057,110 @@ async function renderArticleAssignmentPanel(article = state.articles.find(item =
     return;
   }
 
-  const students = getTeacherStudents(article.teamId);
-  if (!students.length) {
-    list.innerHTML = `<p class="muted">${escapeHtml(t("noStudentsForAssignment"))}</p>`;
+  const teams = getManagedTeams();
+  if (!teams.length) {
+    list.innerHTML = `<p class="muted">${escapeHtml(t("noClassesForAssignment"))}</p>`;
     return;
   }
 
-  const rows = await Promise.all(students.map(async student => {
-    const data = await getProfileData(student);
-    const assignment = getAssignmentForArticle(article.id, data);
-    const assigned = Boolean(assignment);
-    const status = getArticleAssignmentStatusInfo(article, data);
+  const sections = await Promise.all(teams.map(async team => {
+    const students = getTeacherStudents(team.id);
+    const teacherName = getTeamTeacherName(team) || t("unknownTeacher");
+    const teamLabel = isPublisherAccount()
+      ? formatText("classTeacherSummary", { name: team.name, teacher: teacherName })
+      : team.name;
+    if (!students.length) {
+      return `
+        <section class="assignment-class" data-assignment-team="${escapeHtml(team.id)}">
+          <label class="assignment-class-heading">
+            <input type="checkbox" data-assignment-team-toggle disabled>
+            <strong>${escapeHtml(teamLabel)}</strong>
+          </label>
+          <p class="muted">${escapeHtml(t("noStudentsForAssignment"))}</p>
+        </section>
+      `;
+    }
+
+    const rows = await Promise.all(students.map(async student => {
+      const data = await getProfileData(student);
+      const assigned = Boolean(getAssignmentForArticle(article.id, data));
+      const status = getArticleAssignmentStatusInfo(article, data);
+      return `
+        <label class="assignment-row assignment-row-${escapeHtml(status.key)}">
+          <input type="checkbox" value="${escapeHtml(student.id)}" data-assignment-student data-team-id="${escapeHtml(team.id)}" ${assigned ? "checked" : ""}>
+          <span>
+            <strong>${escapeHtml(student.name)}</strong>
+            <small>
+              <span class="dashboard-pill status-${escapeHtml(status.key)}">${escapeHtml(status.label)}</span>
+              ${status.detail ? ` ${escapeHtml(status.detail)}` : ""}
+            </small>
+          </span>
+        </label>
+      `;
+    }));
     return `
-      <label class="assignment-row assignment-row-${escapeHtml(status.key)}">
-        <input type="checkbox" value="${escapeHtml(student.id)}" ${assigned ? "checked" : ""}>
-        <span>
-          <strong>${escapeHtml(student.name)}</strong>
-          <small>
-            <span class="dashboard-pill status-${escapeHtml(status.key)}">${escapeHtml(status.label)}</span>
-            ${status.detail ? ` ${escapeHtml(status.detail)}` : ""}
-          </small>
-        </span>
-      </label>
+      <section class="assignment-class" data-assignment-team="${escapeHtml(team.id)}">
+        <label class="assignment-class-heading">
+          <input type="checkbox" data-assignment-team-toggle>
+          <strong>${escapeHtml(formatText("assignWholeClass", { class: teamLabel }))}</strong>
+        </label>
+        <div class="assignment-class-students">${rows.join("")}</div>
+      </section>
     `;
   }));
-  list.innerHTML = rows.join("");
+  list.innerHTML = sections.join("");
+  list.querySelectorAll("[data-assignment-team]").forEach(updateAssignmentClassToggle);
+}
+
+function updateAssignmentClassToggle(section) {
+  const toggle = section?.querySelector("[data-assignment-team-toggle]");
+  const students = Array.from(section?.querySelectorAll("[data-assignment-student]") || []);
+  if (!toggle || !students.length) return;
+  const checkedCount = students.filter(input => input.checked).length;
+  toggle.checked = checkedCount === students.length;
+  toggle.indeterminate = checkedCount > 0 && checkedCount < students.length;
+}
+
+function handleArticleAssignmentChange(event) {
+  const section = event.target.closest("[data-assignment-team]");
+  if (!section) return;
+  if (event.target.matches("[data-assignment-team-toggle]")) {
+    section.querySelectorAll("[data-assignment-student]").forEach(input => {
+      input.checked = event.target.checked;
+    });
+  }
+  updateAssignmentClassToggle(section);
 }
 
 async function assignSelectedArticleToStudents() {
   const article = state.articles.find(item => item.id === $("articleEditorSelect")?.value);
   if (!article) return;
 
-  const selectedIds = new Set(
-    Array.from(document.querySelectorAll("#articleAssignmentList input[type='checkbox']:checked"))
-      .map(input => input.value)
-  );
-  const students = getTeacherStudents(article.teamId);
+  const studentChoices = new Map();
+  document.querySelectorAll("#articleAssignmentList [data-assignment-student]").forEach(input => {
+    const current = studentChoices.get(input.value) || {
+      student: state.profiles.find(profile => profile.id === input.value),
+      teamId: input.dataset.teamId,
+      assigned: false
+    };
+    current.assigned = current.assigned || input.checked;
+    if (input.checked) current.teamId = input.dataset.teamId;
+    studentChoices.set(input.value, current);
+  });
+
   try {
-    await Promise.all(students.map(async student => {
+    await Promise.all(Array.from(studentChoices.values()).map(async choice => {
+      const { student, teamId, assigned } = choice;
+      if (!student || !teamId) return;
       const data = await getProfileData(student);
-      const shouldAssign = selectedIds.has(student.id);
-      if (Boolean(getAssignmentForArticle(article.id, data)) === shouldAssign) return;
+      if (Boolean(getAssignmentForArticle(article.id, data)) === assigned) return;
       await supabaseRequest("rpc/app_set_article_assignment", {
         method: "POST",
         body: JSON.stringify({
-          target_team_id: article.teamId,
+          target_team_id: teamId,
           target_profile_id: student.id,
           target_article_id: article.id,
-          target_assigned: shouldAssign
+          target_assigned: assigned
         })
       });
     }));
@@ -1350,7 +1406,6 @@ function fillArticleEditor(article) {
   $("articleTitleInput").value = article?.title || "";
   $("articleIdInput").value = article?.id || "";
   $("articleApprovalStatusSelect").value = article?.approvalStatus || DEFAULT_ARTICLE_APPROVAL_STATUS;
-  renderArticleTeamSelect(article);
   $("articleLevelInput").value = article?.level || "B1";
   renderArticleCategoryOptionsMulti(article?.category || "");
   $("articleSummaryInput").value = article?.summary || "";
@@ -1425,7 +1480,7 @@ function readArticleEditor() {
     id,
     language: existingArticle ? getArticleLanguage(existingArticle) : getSelectedArticleLanguage(),
     ownerProfileId: existingArticle?.ownerProfileId || state.currentProfile?.id || null,
-    teamId: $("articleTeamSelect")?.value || existingArticle?.teamId || null,
+    teamId: null,
     teacherGroupId: existingArticle?.teacherGroupId || state.currentProfile?.teacherGroupId || state.currentProfile?.id || null,
     visibility,
     approvalStatus,
@@ -1441,10 +1496,6 @@ function readArticleEditor() {
     inlineVocabulary: appendVocabularyTranslations(state.editorBaseInlineVocabulary || [], parsedInlineVocabulary, language),
     questions: avoidAlternatingQuestionPattern(parseQuestionLines($("articleQuestionsInput").value))
   };
-
-  if (getArticleTeamChoices(existingArticle).length > 1 && !article.teamId) {
-    throw new Error(t("chooseTeam"));
-  }
 
   if (!article.title || !article.id || !article.level || !article.category || !article.summary || !article.text.length) {
     throw new Error(t("validationFillArticle"));

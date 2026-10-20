@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=131">
+  <link rel="stylesheet" href="style.css?v=132">
 </head>
 <body>
   <div id="app">
@@ -440,10 +440,6 @@
                 <option value="450-550">450-550 words</option>
               </select>
             </label>
-            <label id="articleTeamRow" class="field-row hidden">
-              Team / Klasse
-              <select id="articleTeamSelect"></select>
-            </label>
             <label class="field-row">
               Informácie pre generovanie promptu
               <textarea id="articlePromptInput" class="editor-textarea compact" placeholder="For example, an article about packing for a holiday; use simple sentences..."></textarea>
@@ -554,7 +550,8 @@
           </div>
           <section id="articleAssignmentPanel" class="assignment-panel hidden">
             <p class="eyebrow">Zadanie</p>
-            <h3>Zadať článok študentom</h3>
+            <h3 id="articleAssignmentTitle">Zadať článok triedam alebo žiakom</h3>
+            <p id="articleAssignmentHelp" class="muted">Vyber jednu alebo viac tried, prípadne iba konkrétnych žiakov.</p>
             <div id="articleAssignmentList" class="assignment-list"></div>
             <button id="assignArticleBtn" class="secondary-btn" type="button">Uložiť zadanie</button>
             <p id="articleAssignmentStatus" class="muted"></p>
@@ -650,19 +647,19 @@
   <script src="config.js?v=117"></script>
   <script src="constants.js?v=133"></script>
   <script src="translations/ui.js?v=131"></script>
-  <script src="translations/auth.js?v=134"></script>
-  <script src="translations/new-languages.js?v=134"></script>
+  <script src="translations/auth.js?v=135"></script>
+  <script src="translations/new-languages.js?v=135"></script>
   <script src="translations/prompts.js?v=120"></script>
   <script src="i18n.js?v=117"></script>
   <script src="auth.js?v=133"></script>
   <script src="api.js?v=117"></script>
   <script src="profiles.js?v=134"></script>
-  <script src="teams.js?v=131"></script>
-  <script src="articles.js?v=131"></script>
+  <script src="teams.js?v=132"></script>
+  <script src="articles.js?v=132"></script>
   <script src="reader.js?v=132"></script>
   <script src="games.js?v=125"></script>
-  <script src="editor.js?v=133"></script>
+  <script src="editor.js?v=134"></script>
   <script src="home.js?v=134"></script>
-  <script src="app.js?v=135"></script>
+  <script src="app.js?v=136"></script>
 </body>
 </html>

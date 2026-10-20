@@ -239,6 +239,14 @@ function canViewArticle(article, profile = state.currentProfile) {
 
 function isInCurrentTeacherGroup(profile, teamId = null) {
   if (!state.currentProfile || !profile) return false;
+  if (isPublisherAccount()) {
+    const relevantTeamIds = teamId
+      ? new Set([teamId])
+      : new Set(getManagedTeams().map(team => team.id));
+    return state.teamMemberships.some(membership =>
+      relevantTeamIds.has(membership.teamId) && membership.profileId === profile.id
+    );
+  }
   if (state.currentProfile.role !== "teacher") return profile.id === state.currentProfile.id;
   const relevantTeamIds = teamId
     ? new Set([teamId])
@@ -293,9 +301,7 @@ function canModerateArticle(article, profile = state.currentProfile) {
   if (!article || !profile || !state.authUser) return false;
   if (isPublisherAccount()) return true;
   if (!hasTeacherLicense(profile)) return false;
-  return article.teamId
-    ? getManagedTeams().some(team => team.id === article.teamId)
-    : article.teacherGroupId === (profile.teacherGroupId || profile.id);
+  return article.ownerProfileId === profile.id;
 }
 
 function getModeratableArticles() {

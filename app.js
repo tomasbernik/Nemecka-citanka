@@ -579,7 +579,9 @@ function updateStaticTexts() {
   setLabelText("articleCategory2Select", "category");
   setLabelText("articleCategory2Input", "newCategory");
   setLabelText("articleApprovalStatusSelect", "approvalStatus");
-  setLabelText("articleTeamSelect", "articleTeam");
+  setText("articleAssignmentTitle", "articleAssignmentTitle");
+  setText("articleAssignmentHelp", "articleAssignmentHelp");
+  setText("assignArticleBtn", "saveAssignment");
   setOptionText("articleApprovalStatusSelect", "draft", "draft");
   setOptionText("articleApprovalStatusSelect", "pending", "pending");
   setOptionText("articleApprovalStatusSelect", "approved", "approved");
@@ -979,6 +981,7 @@ onClick("newArticleBtn", () => {
 onClick("saveArticleBtn", saveArticleFromEditor);
 onClick("deleteArticleBtn", deleteArticleFromEditor);
 onClick("assignArticleBtn", assignSelectedArticleToStudents);
+onEvent("articleAssignmentList", "change", handleArticleAssignmentChange);
 onChange("articleEditorSelect", () => {
   const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
   fillArticleEditor(article || null);

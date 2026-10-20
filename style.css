@@ -1665,8 +1665,34 @@ h3 { font-size: 1.1rem; }
 
 .assignment-list {
   display: grid;
-  gap: 8px;
+  gap: 12px;
   margin: 12px 0;
+}
+
+.assignment-class {
+  display: grid;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: var(--card);
+}
+
+.assignment-class-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.assignment-class-heading input {
+  width: 19px;
+  height: 19px;
+}
+
+.assignment-class-students {
+  display: grid;
+  gap: 8px;
+  padding-left: 10px;
 }
 
 .assignment-row {

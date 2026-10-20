@@ -273,31 +273,3 @@ async function joinTeamByCode(rawCode) {
   }
 }
 
-function getArticleTeamChoices(article = null) {
-  const teams = hasTeacherLicense() ? getManagedTeams() : getCurrentProfileTeams();
-  if (article?.teamId && !teams.some(team => team.id === article.teamId)) {
-    const existing = state.teams.find(team => team.id === article.teamId);
-    if (existing) return [existing, ...teams];
-  }
-  return teams;
-}
-
-function renderArticleTeamSelect(article = null) {
-  const row = $("articleTeamRow");
-  const select = $("articleTeamSelect");
-  if (!row || !select) return;
-  const teams = getArticleTeamChoices(article);
-  row.classList.toggle("hidden", !state.authUser?.id);
-  const needsChoice = teams.length > 1 && !article?.teamId;
-  select.innerHTML = [
-    `<option value="">${escapeHtml(teams.length ? t("chooseTeam") : t("noTeam"))}</option>`,
-    ...teams.map(team => {
-      const label = isPublisherAccount()
-        ? formatText("classTeacherSummary", { name: team.name, teacher: getTeamTeacherName(team) || t("unknownTeacher") })
-        : team.name;
-      return `<option value="${escapeHtml(team.id)}">${escapeHtml(label)}</option>`;
-    })
-  ].join("");
-  select.value = article?.teamId || (teams.length === 1 ? teams[0].id : "");
-  select.required = needsChoice;
-}

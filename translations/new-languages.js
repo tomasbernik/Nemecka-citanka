@@ -1351,6 +1351,65 @@ Object.entries({
   tr: { accountType: "Hesap türü", magicLinkLogin: "Kod gönder", magicLinkStarted: "Kod gönderiliyor...", magicLinkSent: "E-postanıza gönderilen sekiz haneli kodu girin.", otpCode: "Doğrulama kodu", verifyOtp: "Kodu doğrula", otpCodeFill: "Sekiz haneli kodu girin.", otpVerifying: "Kod doğrulanıyor...", otpInvalid: "Kod geçersiz veya süresi dolmuş.", requestTeacherAccess: "Öğretmen erişimi iste", teacherRequestSubmitted: "İstek yönetici onayı bekliyor." }
 }).forEach(([language, text]) => assignUiText(language, text));
 
+Object.entries({
+  ru: {
+    articleAssignmentTitle: "Назначить статью классам или ученикам",
+    articleAssignmentHelp: "Выберите один или несколько классов либо только отдельных учеников.",
+    saveAssignment: "Сохранить задание",
+    assignWholeClass: "Выбрать весь класс: {class}",
+    noClassesForAssignment: "Сначала создайте класс."
+  },
+  pl: {
+    articleAssignmentTitle: "Przypisz artykuł klasom lub uczniom",
+    articleAssignmentHelp: "Wybierz jedną lub kilka klas albo tylko konkretnych uczniów.",
+    saveAssignment: "Zapisz zadanie",
+    assignWholeClass: "Wybierz całą klasę: {class}",
+    noClassesForAssignment: "Najpierw utwórz klasę."
+  },
+  hu: {
+    articleAssignmentTitle: "Cikk kiosztása osztályoknak vagy tanulóknak",
+    articleAssignmentHelp: "Válassz ki egy vagy több osztályt, vagy csak bizonyos tanulókat.",
+    saveAssignment: "Feladat mentése",
+    assignWholeClass: "Teljes osztály kiválasztása: {class}",
+    noClassesForAssignment: "Először hozz létre egy osztályt."
+  },
+  ro: {
+    articleAssignmentTitle: "Atribuie articolul claselor sau elevilor",
+    articleAssignmentHelp: "Selectează una sau mai multe clase ori doar anumiți elevi.",
+    saveAssignment: "Salvează tema",
+    assignWholeClass: "Selectează întreaga clasă: {class}",
+    noClassesForAssignment: "Creează mai întâi o clasă."
+  },
+  it: {
+    articleAssignmentTitle: "Assegna l'articolo a classi o studenti",
+    articleAssignmentHelp: "Seleziona una o più classi oppure solo studenti specifici.",
+    saveAssignment: "Salva assegnazione",
+    assignWholeClass: "Seleziona l'intera classe: {class}",
+    noClassesForAssignment: "Crea prima una classe."
+  },
+  en: {
+    articleAssignmentTitle: "Assign article to classes or students",
+    articleAssignmentHelp: "Select one or more classes, or only specific students.",
+    saveAssignment: "Save assignment",
+    assignWholeClass: "Select entire class: {class}",
+    noClassesForAssignment: "Create a class first."
+  },
+  fr: {
+    articleAssignmentTitle: "Attribuer l'article à des classes ou à des élèves",
+    articleAssignmentHelp: "Sélectionnez une ou plusieurs classes ou seulement certains élèves.",
+    saveAssignment: "Enregistrer le devoir",
+    assignWholeClass: "Sélectionner toute la classe : {class}",
+    noClassesForAssignment: "Créez d'abord une classe."
+  },
+  tr: {
+    articleAssignmentTitle: "Makaleyi sınıflara veya öğrencilere ata",
+    articleAssignmentHelp: "Bir veya daha fazla sınıfı ya da yalnızca belirli öğrencileri seçin.",
+    saveAssignment: "Ödevi kaydet",
+    assignWholeClass: "Tüm sınıfı seç: {class}",
+    noClassesForAssignment: "Önce bir sınıf oluşturun."
+  }
+}).forEach(([language, text]) => assignUiText(language, text));
+
 // Keep the user-facing concept consistent across every native language: the
 // internal "team" model represents a school class in the interface.
 Object.entries({

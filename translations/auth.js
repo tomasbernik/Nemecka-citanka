@@ -368,3 +368,20 @@ const TEAM_AND_PASSWORD_TEXT = {
 };
 
 Object.entries(TEAM_AND_PASSWORD_TEXT).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
+  de: {
+    articleAssignmentTitle: "Artikel Klassen oder einzelnen Schülern zuweisen",
+    articleAssignmentHelp: "Wähle eine oder mehrere Klassen oder nur bestimmte Schüler aus.",
+    saveAssignment: "Aufgabe speichern",
+    assignWholeClass: "Gesamte Klasse auswählen: {class}",
+    noClassesForAssignment: "Erstelle zuerst eine Klasse."
+  },
+  sk: {
+    articleAssignmentTitle: "Zadať článok triedam alebo žiakom",
+    articleAssignmentHelp: "Vyber jednu alebo viac tried, prípadne iba konkrétnych žiakov.",
+    saveAssignment: "Uložiť zadanie",
+    assignWholeClass: "Vybrať celú triedu: {class}",
+    noClassesForAssignment: "Najprv vytvor triedu."
+  }
+}).forEach(([language, text]) => assignUiText(language, text));
