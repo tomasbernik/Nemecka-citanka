@@ -50,7 +50,13 @@ async function seedLocalArticlesToRemote() {
 }
 
 async function loadRemoteArticles() {
-  const publishedRows = await supabaseRequest("app_articles?select=*&published=eq.true&approval_status=eq.approved&order=updated_at.desc,title.asc");
+  let publishedRows;
+  try {
+    publishedRows = await supabaseRequest("app_articles?select=*&published=eq.true&approval_status=eq.approved&order=display_order.asc.nullslast,updated_at.desc,title.asc");
+  } catch (error) {
+    if (!error?.message?.includes("display_order")) throw error;
+    publishedRows = await supabaseRequest("app_articles?select=*&published=eq.true&approval_status=eq.approved&order=updated_at.desc,title.asc");
+  }
   let manageableRows = [];
 
   if (state.authUser) {
@@ -218,6 +224,8 @@ async function saveCachedArticles(articles, language = getArticleCacheLanguage()
 }
 
 function normalizeArticle(article) {
+  const displayOrder = article.displayOrder ?? article.display_order;
+  const chapterOrder = article.chapterOrder ?? article.chapter_order;
   return {
     ...article,
     language: article.language || "de",
@@ -229,6 +237,14 @@ function normalizeArticle(article) {
     image: article.image || null,
     visibility: article.visibility || "public",
     approvalStatus: article.approvalStatus || article.approval_status || "approved",
+    displayOrder: displayOrder !== null && displayOrder !== undefined && Number.isFinite(Number(displayOrder))
+      ? Number(displayOrder)
+      : null,
+    seriesId: article.seriesId || article.series_id || null,
+    seriesTitle: article.seriesTitle || article.series_title || null,
+    chapterOrder: chapterOrder !== null && chapterOrder !== undefined && Number.isFinite(Number(chapterOrder))
+      ? Number(chapterOrder)
+      : null,
     published: article.published !== false
   };
 }
@@ -286,6 +302,52 @@ function getSelectedArticleLanguage() {
 function getHomeArticles() {
   const language = getSelectedArticleLanguage();
   return getVisibleArticles().filter(article => getArticleLanguage(article) === language);
+}
+
+function compareArticleDisplayOrder(a, b) {
+  const aOrder = Number.isFinite(a?.displayOrder) ? a.displayOrder : Number.MAX_SAFE_INTEGER;
+  const bOrder = Number.isFinite(b?.displayOrder) ? b.displayOrder : Number.MAX_SAFE_INTEGER;
+  return aOrder - bOrder
+    || String(b?.updatedAt || "").localeCompare(String(a?.updatedAt || ""))
+    || String(a?.title || "").localeCompare(String(b?.title || ""), "sk");
+}
+
+function compareChapterOrder(a, b) {
+  const aOrder = Number.isFinite(a?.chapterOrder) ? a.chapterOrder : Number.MAX_SAFE_INTEGER;
+  const bOrder = Number.isFinite(b?.chapterOrder) ? b.chapterOrder : Number.MAX_SAFE_INTEGER;
+  return aOrder - bOrder || compareArticleDisplayOrder(a, b);
+}
+
+function getSeriesArticles(seriesId, articles = getHomeArticles()) {
+  if (!seriesId) return [];
+  return articles.filter(article => article.seriesId === seriesId).sort(compareChapterOrder);
+}
+
+function getArticleDisplayEntries(articles = getHomeArticles()) {
+  const entries = [];
+  const seenSeries = new Set();
+  [...articles].sort(compareArticleDisplayOrder).forEach(article => {
+    if (!article.seriesId) {
+      entries.push({ type: "article", id: article.id, article, articles: [article] });
+      return;
+    }
+    if (seenSeries.has(article.seriesId)) return;
+    seenSeries.add(article.seriesId);
+    const chapters = getSeriesArticles(article.seriesId, articles);
+    const firstChapter = chapters[0] || article;
+    entries.push({
+      type: "series",
+      id: article.seriesId,
+      title: firstChapter.seriesTitle || firstChapter.title,
+      article: firstChapter,
+      articles: chapters,
+      displayOrder: Math.min(...chapters.map(chapter => Number.isFinite(chapter.displayOrder) ? chapter.displayOrder : Number.MAX_SAFE_INTEGER))
+    });
+  });
+  return entries.sort((a, b) => compareArticleDisplayOrder(
+    { ...a.article, displayOrder: a.displayOrder ?? a.article.displayOrder },
+    { ...b.article, displayOrder: b.displayOrder ?? b.article.displayOrder }
+  ));
 }
 
 function isAdminProfile(profile = state.currentProfile) {
@@ -350,7 +412,8 @@ async function saveArticleRows(rows) {
     const missingColumns = [
       ...(isMissingCategoryLabelsColumn(error) ? ["category_labels"] : []),
       ...(error?.message?.includes("language") ? ["language"] : []),
-      ...(error?.message?.includes("variant_group_id") ? ["variant_group_id"] : [])
+      ...(error?.message?.includes("variant_group_id") ? ["variant_group_id"] : []),
+      ...(["display_order", "series_id", "series_title", "chapter_order"].filter(column => error?.message?.includes(column)))
     ];
     if (!missingColumns.length) throw error;
     return await supabaseRequest("app_articles?on_conflict=id", {
@@ -381,7 +444,8 @@ async function updateArticleRow(row) {
     const missingColumns = [
       ...(isMissingCategoryLabelsColumn(error) ? ["category_labels"] : []),
       ...(error?.message?.includes("language") ? ["language"] : []),
-      ...(error?.message?.includes("variant_group_id") ? ["variant_group_id"] : [])
+      ...(error?.message?.includes("variant_group_id") ? ["variant_group_id"] : []),
+      ...(["display_order", "series_id", "series_title", "chapter_order"].filter(column => error?.message?.includes(column)))
     ];
     if (!missingColumns.length) throw error;
     const rows = await update(omitArticleRowColumns(changes, missingColumns));
@@ -409,6 +473,10 @@ function rowToArticle(row) {
     inlineVocabulary: row.inline_vocabulary || [],
     image: row.image || null,
     questions: row.questions || [],
+    displayOrder: row.display_order ?? null,
+    seriesId: row.series_id || null,
+    seriesTitle: row.series_title || null,
+    chapterOrder: row.chapter_order ?? null,
     updatedAt: row.updated_at || null,
     published: row.published === true
   };
@@ -434,6 +502,10 @@ function articleToRow(article, options = {}) {
     inline_vocabulary: getInlineVocabulary(article),
     image: article.image || null,
     questions: article.questions || [],
+    display_order: article.displayOrder ?? null,
+    series_id: article.seriesId || null,
+    series_title: article.seriesTitle || null,
+    chapter_order: article.chapterOrder ?? null,
     published: article.published !== false
   };
 
@@ -442,6 +514,90 @@ function articleToRow(article, options = {}) {
   }
 
   return row;
+}
+
+async function updateArticleOrganization(articleId, changes) {
+  if (!isPublisherAccount()) throw new Error(t("adminOnlyAction"));
+  const has = key => Object.prototype.hasOwnProperty.call(changes, key);
+  const payload = {
+    ...(has("displayOrder") ? { display_order: changes.displayOrder } : {}),
+    ...(has("seriesId") ? { series_id: changes.seriesId } : {}),
+    ...(has("seriesTitle") ? { series_title: changes.seriesTitle } : {}),
+    ...(has("chapterOrder") ? { chapter_order: changes.chapterOrder } : {})
+  };
+  const rows = await supabaseRequest(`app_articles?id=eq.${encodeURIComponent(articleId)}`, {
+    method: "PATCH",
+    headers: { Prefer: "return=representation" },
+    body: JSON.stringify(payload)
+  });
+  const updated = rows?.[0];
+  if (!updated) return null;
+  const article = normalizeArticle(rowToArticle(updated));
+  const index = state.articles.findIndex(item => item.id === article.id);
+  if (index >= 0) state.articles[index] = article;
+  return article;
+}
+
+async function saveArticleDisplayEntries(entries) {
+  await Promise.all(entries.flatMap((entry, displayOrder) =>
+    entry.articles.map(article => updateArticleOrganization(article.id, { displayOrder }))
+  ));
+  await saveCachedArticles(state.articles);
+  renderArticles();
+}
+
+async function createArticleSeries(title, articleIds) {
+  const cleanTitle = String(title || "").trim();
+  const uniqueIds = [...new Set(articleIds)].filter(Boolean);
+  if (!cleanTitle || uniqueIds.length < 2) throw new Error(t("seriesNeedsTwoArticles"));
+  const seriesId = `${makeArticleId(cleanTitle) || "series"}-${Date.now().toString(36)}`;
+  const selected = uniqueIds
+    .map(id => state.articles.find(article => article.id === id))
+    .filter(Boolean)
+    .sort(compareArticleDisplayOrder);
+  if (selected.length < 2) throw new Error(t("seriesNeedsTwoArticles"));
+  if (new Set(selected.map(getArticleLanguage)).size > 1) throw new Error(t("seriesNeedsSameLanguage"));
+  const displayOrder = Math.min(...selected.map(article => Number.isFinite(article.displayOrder) ? article.displayOrder : Number.MAX_SAFE_INTEGER));
+  await Promise.all(selected.map((article, chapterOrder) => updateArticleOrganization(article.id, {
+    seriesId,
+    seriesTitle: cleanTitle,
+    chapterOrder,
+    displayOrder: Number.isFinite(displayOrder) ? displayOrder : 0
+  })));
+  await saveCachedArticles(state.articles);
+  renderArticles();
+  return seriesId;
+}
+
+async function dissolveArticleSeries(seriesId) {
+  const chapters = state.articles.filter(article => article.seriesId === seriesId).sort(compareChapterOrder);
+  await Promise.all(chapters.map((article, offset) => updateArticleOrganization(article.id, {
+    seriesId: null,
+    seriesTitle: null,
+    chapterOrder: null,
+    displayOrder: (Number.isFinite(article.displayOrder) ? article.displayOrder : 0) + offset
+  })));
+  await saveCachedArticles(state.articles);
+  renderArticles();
+}
+
+async function removeArticleFromSeries(articleId) {
+  const article = state.articles.find(item => item.id === articleId);
+  if (!article?.seriesId) return;
+  const seriesId = article.seriesId;
+  await updateArticleOrganization(articleId, { seriesId: null, seriesTitle: null, chapterOrder: null });
+  const remaining = state.articles.filter(item => item.seriesId === seriesId).sort(compareChapterOrder);
+  if (remaining.length < 2) {
+    await Promise.all(remaining.map(item => updateArticleOrganization(item.id, {
+      seriesId: null,
+      seriesTitle: null,
+      chapterOrder: null
+    })));
+  } else {
+    await Promise.all(remaining.map((item, chapterOrder) => updateArticleOrganization(item.id, { chapterOrder })));
+  }
+  await saveCachedArticles(state.articles);
+  renderArticles();
 }
 
 async function saveArticle(article) {
@@ -614,7 +770,7 @@ function getArticleApprovalBadge(article) {
 
 function renderArticles() {
   const root = $("articleList");
-  const articles = getHomeArticles().filter(article => {
+  const entries = getArticleDisplayEntries().filter(entry => entry.articles.some(article => {
     const levelMatches = state.selectedLevel === ALL_LEVELS
       || normalizeArticleLevel(article.level) === state.selectedLevel;
     if (!levelMatches) return false;
@@ -623,17 +779,18 @@ function renderArticles() {
       return !state.profileData.readIds.includes(article.id);
     }
     return getArticleCategoriesForFilter(article).includes(state.selectedCategory);
-  });
-
+  }));
   root.innerHTML = "";
 
-  if (!articles.length) {
+  if (!entries.length) {
     root.innerHTML = `<p class="muted">${escapeHtml(t("noArticles"))}</p>`;
     return;
   }
 
-  articles.forEach((article, index) => {
-    const isRead = state.profileData.readIds.includes(article.id);
+  entries.forEach((entry, index) => {
+    const article = entry.article;
+    const isSeries = entry.type === "series";
+    const isRead = entry.articles.every(item => state.profileData.readIds.includes(item.id));
     const showStartBadge = index === 0 && state.currentProfile?.role !== "teacher" && !isOnboardingDone("studentIntroDone");
     const image = article.image || {};
     const imageSrc = image.desktop || `images/articles/${article.id}.jpg`;
@@ -643,13 +800,14 @@ function renderArticles() {
     btn.innerHTML = `
       <img class="article-card-thumb" src="${escapeHtml(imageSrc)}" alt="${escapeHtml(imageAlt)}" loading="lazy">
       <div class="article-card-body">
-        <h4>${escapeHtml(article.title)}</h4>
+        <h4>${escapeHtml(isSeries ? entry.title : article.title)}</h4>
         <p>${escapeHtml(article.summary)}</p>
         <div class="badges">
           <span class="badge">${escapeHtml(article.level)}</span>
+          ${isSeries ? `<span class="badge series-badge">${escapeHtml(formatText("chapterCount", { count: entry.articles.length }))}</span>` : ""}
           ${showStartBadge ? `<span class="badge start-badge">${escapeHtml(t("startHere"))}</span>` : ""}
           ${getArticleCategoriesForFilter(article).map(category => `<span class="badge">${escapeHtml(getCategoryLabel(category))}</span>`).join("")}
-          ${isArticleAssignedToProfile(article.id) ? `<span class="badge">${escapeHtml(t("assignedBadge"))}</span>` : ""}
+          ${entry.articles.some(item => isArticleAssignedToProfile(item.id)) ? `<span class="badge">${escapeHtml(t("assignedBadge"))}</span>` : ""}
           ${article.visibility === "private" ? `<span class="badge">${escapeHtml(t("private"))}</span>` : ""}
           ${getArticleApprovalBadge(article)}
           ${isRead ? `<span class="badge">✓ ${escapeHtml(t("read"))}</span>` : ""}

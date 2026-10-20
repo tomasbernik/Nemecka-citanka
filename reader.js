@@ -425,6 +425,32 @@ function renderArticleVariantSwitch(article) {
   });
 }
 
+function renderArticleChapterSwitch(article) {
+  const root = $("articleChapterSwitch");
+  if (!root) return;
+  const chapters = getSeriesArticles(article?.seriesId);
+  if (chapters.length < 2) {
+    root.classList.add("hidden");
+    root.innerHTML = "";
+    return;
+  }
+
+  root.classList.remove("hidden");
+  root.innerHTML = `
+    <p class="eyebrow">${escapeHtml(article.seriesTitle || t("articleSeries"))}</p>
+    <div class="chapter-switch-list" role="navigation" aria-label="${escapeHtml(t("chapters"))}">
+      ${chapters.map((chapter, index) => `
+        <button class="chapter-switch-btn ${chapter.id === article.id ? "active" : ""}" type="button" data-chapter-id="${escapeHtml(chapter.id)}" aria-current="${chapter.id === article.id ? "page" : "false"}">
+          <span>${index + 1}</span>${escapeHtml(chapter.title)}
+        </button>
+      `).join("")}
+    </div>
+  `;
+  root.querySelectorAll("[data-chapter-id]").forEach(button => {
+    button.onclick = () => openArticle(button.dataset.chapterId);
+  });
+}
+
 async function openArticle(id) {
   const article = state.articles.find(a => a.id === id);
   if (!article || !canViewArticle(article)) return;
@@ -448,6 +474,7 @@ async function openArticle(id) {
   $("articleMeta").textContent = `${article.level} • ${formatArticleCategories(article)}`;
   $("articleTitle").textContent = article.title;
   renderArticleVariantSwitch(article);
+  renderArticleChapterSwitch(article);
   cleanupDiscoveredVocabulary(article);
   renderArticleImage(article);
   renderCurrentArticleTeacherActions(article);

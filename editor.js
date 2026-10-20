@@ -1346,9 +1346,28 @@ function hasTranslatedVocabulary() {
   }
 }
 
+function getArticleEditorSnapshot() {
+  const imageFile = state.articleImageFile;
+  return JSON.stringify({
+    approvalStatus: $("articleApprovalStatusSelect")?.value || "",
+    title: $("articleTitleInput")?.value || "",
+    id: $("articleIdInput")?.value || "",
+    level: $("articleLevelInput")?.value || "",
+    category: getArticleEditorCategory(),
+    categoryLabels: state.editorCategoryLabels || {},
+    summary: $("articleSummaryInput")?.value || "",
+    text: $("articleTextInput")?.value || "",
+    vocabulary: $("articleVocabularyInput")?.value || "",
+    inlineVocabulary: $("articleInlineVocabularyInput")?.value || "",
+    questions: $("articleQuestionsInput")?.value || "",
+    imageFile: imageFile ? [imageFile.name, imageFile.size, imageFile.lastModified] : null
+  });
+}
+
 function updateArticleEditorFlow() {
   const isEditing = Boolean($("articleEditorSelect")?.value);
   const selectedArticle = state.articles.find(item => item.id === $("articleEditorSelect")?.value) || null;
+  const isExpanded = !isEditing || state.editorExpanded;
   const hasGeneratedPrompt = Boolean($("generatedPromptOutput")?.value.trim());
   const hasContent = Boolean(
     $("articleTitleInput").value.trim()
@@ -1361,15 +1380,23 @@ function updateArticleEditorFlow() {
   const hasText = Boolean($("articleTextInput").value.trim());
   const hasQuestions = Boolean($("articleQuestionsInput").value.trim());
   const hasVocabulary = hasTranslatedVocabulary();
+  const isReadyToSave = hasQuestions && hasVocabulary;
+  const hasUnsavedChanges = getArticleEditorSnapshot() !== state.editorSavedSnapshot;
+  const hasExistingImage = Boolean(selectedArticle?.image?.desktop);
   const showInlineVocabularyEditor = $("articleInlineVocabularyInput").dataset.manual === "true"
     || Boolean($("articleInlineVocabularyInput").value.trim());
+  const showContentStep = isExpanded && (isEditing || hasGeneratedPrompt || hasContent);
 
-  $("articleContentStep").classList.toggle("hidden", !(isEditing || hasGeneratedPrompt || hasContent));
+  document.querySelector(".editor-helper")?.classList.toggle("hidden", !isExpanded);
+  $("articleContentStep").classList.toggle("hidden", !showContentStep);
+  $("articleImageStep").classList.toggle("hidden", !(showContentStep || (isEditing && !hasExistingImage)));
   $("articleQuestionsStep").classList.add("hidden");
-  $("articleVocabularyStep").classList.toggle("hidden", !showInlineVocabularyEditor);
+  $("articleVocabularyStep").classList.toggle("hidden", !isExpanded || !showInlineVocabularyEditor);
   $("inlineTranslationActions").classList.toggle("hidden", !showInlineVocabularyEditor);
   $("articleInlineVocabularyWrap").classList.toggle("hidden", !showInlineVocabularyEditor);
-  $("saveArticleBtn").classList.toggle("hidden", !(hasQuestions && hasVocabulary));
+  $("saveArticleBtn").classList.toggle("hidden", !isExpanded || !isReadyToSave);
+  $("articleEditorFloatingActions").classList.toggle("hidden", !isReadyToSave || !hasUnsavedChanges);
+  $("editArticleDetailsBtn").classList.toggle("hidden", !isEditing || isExpanded);
   $("deleteArticleBtn").classList.toggle("hidden", !(selectedArticle && canDeleteArticle(selectedArticle)));
   renderArticleInlineHighlightPreview();
 }
@@ -1398,12 +1425,16 @@ function fillArticleEditor(article) {
   $("articleQuestionsInput").value = formatQuestionLines(article?.questions || []);
   $("generatedPromptOutput").value = "";
   $("generatedPromptWrap").classList.add("hidden");
+  state.editorExpanded = !article || !$("articleEditorSelect")?.value;
   $("articleEditorStatus").textContent = state.remoteReady
     ? ""
     : t("editorNeedsSupabase");
   updateArticleApprovalControl(article);
   updateArticleImageStatus(article);
   renderArticleAssignmentPanel(article);
+  state.editorSavedSnapshot = $("articleEditorSelect")?.value
+    ? getArticleEditorSnapshot()
+    : "";
   updateArticleEditorFlow();
 }
 
@@ -1466,6 +1497,10 @@ function readArticleEditor() {
     visibility,
     approvalStatus,
     published: existingArticle?.published === true,
+    displayOrder: existingArticle?.displayOrder ?? null,
+    seriesId: existingArticle?.seriesId || null,
+    seriesTitle: existingArticle?.seriesTitle || null,
+    chapterOrder: existingArticle?.chapterOrder ?? null,
     title,
     level: $("articleLevelInput").value.trim(),
     category: getArticleEditorCategory(),
@@ -1526,8 +1561,8 @@ async function saveArticleFromEditor() {
     $("articleInlineVocabularyInput").dataset.manual = "";
     state.articleImageFile = null;
     $("articleImageInput").value = "";
-    updateArticleImageStatus(article);
-    updateArticleEditorFlow();
+    const savedArticle = state.articles.find(item => item.id === article.id) || article;
+    fillArticleEditor(savedArticle);
     $("articleEditorStatus").textContent = t("articleSaved");
   } catch (error) {
     $("articleEditorStatus").textContent = error.message.includes("Supabase Storage")

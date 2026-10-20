@@ -159,6 +159,7 @@ const UI_TEXT = {
     inlineVocabInputLabel: "Inline-Wörter: exakte Textstelle aus dem Artikel = Übersetzung",
     questionsInputLabel: "Richtig/falsch, eine Zeile: deutscher Satz = true/false",
     saveArticle: "Artikel speichern",
+    editArticleDetails: "Artikel überarbeiten",
     startupWarmup: "Kurzes Aufwärmen",
     startupTitle: "Ein Wort zum Aufwärmen",
     startupQ1: "Was bedeutet dieses deutsche Wort?",
@@ -327,6 +328,7 @@ const UI_TEXT = {
     inlineVocabInputLabel: "Inline slovíčka: presný úsek z článku = preklad",
     questionsInputLabel: "Pravda/nepravda, jeden riadok: nemecká veta = true/false",
     saveArticle: "Uložiť článok",
+    editArticleDetails: "Prerobiť článok",
     startupWarmup: "Krátke rozcvičenie",
     startupTitle: "Jedno slovíčko na zahriatie",
     startupQ1: "Čo znamená toto nemecké slovíčko?",
@@ -495,6 +497,7 @@ const UI_TEXT = {
     inlineVocabInputLabel: "Inline слова: точный фрагмент из статьи = перевод",
     questionsInputLabel: "Правда/неправда, одна строка: немецкое предложение = true/false",
     saveArticle: "Сохранить статью",
+    editArticleDetails: "Изменить статью",
     startupWarmup: "Короткая разминка",
     startupTitle: "Одно слово для разогрева",
     startupQ1: "Что означает это немецкое слово?",
@@ -663,6 +666,7 @@ const UI_TEXT = {
     inlineVocabInputLabel: "Inline słówka: dokładny fragment z artykułu = tłumaczenie",
     questionsInputLabel: "Prawda/nieprawda, jeden wiersz: niemieckie zdanie = true/false",
     saveArticle: "Zapisz artykuł",
+    editArticleDetails: "Przerób artykuł",
     startupWarmup: "Krótka rozgrzewka",
     startupTitle: "Jedno słówko na rozgrzewkę",
     startupQ1: "Co oznacza to niemieckie słówko?",
@@ -831,6 +835,7 @@ const UI_TEXT = {
     inlineVocabInputLabel: "Inline szavak: pontos szövegrész a cikkből = fordítás",
     questionsInputLabel: "Igaz/hamis, egy sor: német mondat = true/false",
     saveArticle: "Cikk mentése",
+    editArticleDetails: "Cikk átdolgozása",
     startupWarmup: "Rövid bemelegítés",
     startupTitle: "Egy szó bemelegítésnek",
     startupQ1: "Mit jelent ez a német szó?",
@@ -1384,6 +1389,7 @@ Object.entries({
   ro: {
     yes: "Da",
     no: "Nu",
+    editArticleDetails: "Reeditează articolul",
     articleTaskPlaceholder: "De ex. un articol despre bagajul pentru vacanță; folosește propoziții simple...",
     articleLengthShort: "220-260 de cuvinte",
     articleLengthMedium: "300-350 de cuvinte",
@@ -1392,6 +1398,7 @@ Object.entries({
   it: {
     yes: "Sì",
     no: "No",
+    editArticleDetails: "Rielabora l’articolo",
     articleTaskPlaceholder: "Ad es. un articolo su come fare la valigia per le vacanze; usa frasi semplici...",
     articleLengthShort: "220-260 parole",
     articleLengthMedium: "300-350 parole",
@@ -1400,6 +1407,7 @@ Object.entries({
   en: {
     yes: "Yes",
     no: "No",
+    editArticleDetails: "Edit article",
     articleTaskPlaceholder: "For example, an article about packing for a holiday; use simple sentences...",
     articleLengthShort: "220-260 words",
     articleLengthMedium: "300-350 words",
@@ -1408,6 +1416,7 @@ Object.entries({
   fr: {
     yes: "Oui",
     no: "Non",
+    editArticleDetails: "Modifier l’article",
     articleTaskPlaceholder: "Par ex. un article sur la préparation des bagages pour les vacances; utilise des phrases simples...",
     articleLengthShort: "220-260 mots",
     articleLengthMedium: "300-350 mots",
@@ -1416,6 +1425,7 @@ Object.entries({
   tr: {
     yes: "Evet",
     no: "Hayır",
+    editArticleDetails: "Makaleyi düzenle",
     articleTaskPlaceholder: "Örn. tatil için valiz hazırlama hakkında bir yazı; basit cümleler kullan...",
     articleLengthShort: "220-260 kelime",
     articleLengthMedium: "300-350 kelime",
@@ -1922,6 +1932,75 @@ Object.assign(UI_TEXT.sk, {
   ,pilotLicense: "Pilotná licencia"
   ,paidLicense: "Platená licencia"
   ,teacherRequestPending: "žiadosť učiteľa čaká"
+});
+
+Object.assign(UI_TEXT.de, {
+  articleOrganization: "Artikel organisieren",
+  articleDisplayOrder: "Reihenfolge auf der Startseite",
+  articleDisplayOrderHelp: "Verschiebe einzelne Artikel und Serien nach oben oder unten.",
+  createArticleSeries: "Serie aus Kapiteln erstellen",
+  createArticleSeriesHelp: "Wähle mindestens zwei bestehende Artikel in derselben Sprache aus.",
+  seriesTitle: "Titel der Serie",
+  seriesTitlePlaceholder: "Zum Beispiel: Annas Abenteuer",
+  createSeries: "Serie erstellen",
+  existingSeries: "Bestehende Serien",
+  dissolveSeries: "Serie auflösen",
+  removeFromSeries: "Entfernen",
+  noUngroupedArticles: "Es gibt keine freien Artikel.",
+  moveUp: "Nach oben",
+  moveDown: "Nach unten",
+  articleSeries: "Artikelserie",
+  chapters: "Kapitel",
+  chapterCount: "{count} Kapitel",
+  seriesNeedsTwoArticles: "Gib einen Titel ein und wähle mindestens zwei Artikel aus.",
+  seriesNeedsSameLanguage: "Alle Kapitel einer Serie müssen dieselbe Sprache haben.",
+  adminOnlyAction: "Diese Aktion ist nur für den Administrator verfügbar."
+});
+
+Object.assign(UI_TEXT.sk, {
+  articleOrganization: "Usporiadanie článkov",
+  articleDisplayOrder: "Poradie na hlavnej stránke",
+  articleDisplayOrderHelp: "Samostatné články aj príbehy môžeš presúvať vyššie alebo nižšie.",
+  createArticleSeries: "Vytvoriť príbeh z kapitol",
+  createArticleSeriesHelp: "Vyber aspoň dva existujúce články v rovnakom jazyku. Zobrazia sa ako jeden klikateľný príbeh.",
+  seriesTitle: "Názov príbehu",
+  seriesTitlePlaceholder: "Napríklad: Annine dobrodružstvá",
+  createSeries: "Vytvoriť príbeh",
+  existingSeries: "Existujúce príbehy",
+  dissolveSeries: "Rozdeliť príbeh",
+  removeFromSeries: "Vybrať z príbehu",
+  noUngroupedArticles: "Nie sú dostupné žiadne samostatné články.",
+  moveUp: "Posunúť vyššie",
+  moveDown: "Posunúť nižšie",
+  articleSeries: "Príbeh",
+  chapters: "Kapitoly",
+  chapterCount: "Počet kapitol: {count}",
+  seriesNeedsTwoArticles: "Zadaj názov a vyber aspoň dva články.",
+  seriesNeedsSameLanguage: "Všetky kapitoly jedného príbehu musia byť v rovnakom jazyku.",
+  adminOnlyAction: "Táto akcia je dostupná iba administrátorovi."
+});
+
+Object.assign(UI_TEXT.en, {
+  articleOrganization: "Organize articles",
+  articleDisplayOrder: "Home page order",
+  articleDisplayOrderHelp: "Move individual articles and series up or down.",
+  createArticleSeries: "Create a chapter series",
+  createArticleSeriesHelp: "Select at least two existing articles in the same language.",
+  seriesTitle: "Series title",
+  seriesTitlePlaceholder: "For example: Anna's adventures",
+  createSeries: "Create series",
+  existingSeries: "Existing series",
+  dissolveSeries: "Dissolve series",
+  removeFromSeries: "Remove",
+  noUngroupedArticles: "There are no ungrouped articles available.",
+  moveUp: "Move up",
+  moveDown: "Move down",
+  articleSeries: "Article series",
+  chapters: "Chapters",
+  chapterCount: "{count} chapters",
+  seriesNeedsTwoArticles: "Enter a title and select at least two articles.",
+  seriesNeedsSameLanguage: "All chapters in a series must use the same language.",
+  adminOnlyAction: "This action is available only to the administrator."
 });
 
 Object.entries({

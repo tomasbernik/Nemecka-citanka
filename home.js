@@ -153,6 +153,87 @@ function buildAdminArticleSection(title, articles) {
   `;
 }
 
+function buildArticleOrganizationSection() {
+  const publicArticles = state.articles.filter(article => canViewArticle(article));
+  const entries = getArticleDisplayEntries(publicArticles);
+  const availableArticles = publicArticles
+    .filter(article => !article.seriesId)
+    .sort(compareArticleDisplayOrder);
+  const seriesEntries = entries.filter(entry => entry.type === "series");
+
+  return `
+    <section class="management-section article-organization">
+      <div>
+        <p class="eyebrow">${escapeHtml(t("articleOrganization"))}</p>
+        <h3>${escapeHtml(t("articleDisplayOrder"))}</h3>
+        <p class="muted">${escapeHtml(t("articleDisplayOrderHelp"))}</p>
+      </div>
+      <div class="management-list sortable-article-list">
+        ${entries.map((entry, index) => `
+          <article class="management-row">
+            <div class="management-order-label">
+              <span class="management-order-number">${index + 1}</span>
+              <div>
+                <strong>${escapeHtml(entry.type === "series" ? entry.title : entry.article.title)}</strong>
+                <p class="muted">${escapeHtml(entry.type === "series" ? formatText("chapterCount", { count: entry.articles.length }) : getArticleLanguageLabel(getArticleLanguage(entry.article)))}</p>
+              </div>
+            </div>
+            <div class="management-actions">
+              <button class="secondary-btn compact" type="button" data-order-move="-1" data-entry-id="${escapeHtml(entry.id)}" ${index === 0 ? "disabled" : ""} aria-label="${escapeHtml(t("moveUp"))}">↑</button>
+              <button class="secondary-btn compact" type="button" data-order-move="1" data-entry-id="${escapeHtml(entry.id)}" ${index === entries.length - 1 ? "disabled" : ""} aria-label="${escapeHtml(t("moveDown"))}">↓</button>
+            </div>
+          </article>
+        `).join("")}
+      </div>
+
+      <div class="series-creator">
+        <h3>${escapeHtml(t("createArticleSeries"))}</h3>
+        <p class="muted">${escapeHtml(t("createArticleSeriesHelp"))}</p>
+        <label class="field-row">
+          ${escapeHtml(t("seriesTitle"))}
+          <input id="articleSeriesTitleInput" maxlength="120" placeholder="${escapeHtml(t("seriesTitlePlaceholder"))}">
+        </label>
+        <div class="series-article-picker">
+          ${availableArticles.length ? availableArticles.map(article => `
+            <label class="series-article-option">
+              <input type="checkbox" name="article-series-member" value="${escapeHtml(article.id)}">
+              <span><strong>${escapeHtml(article.title)}</strong><small>${escapeHtml(getArticleLanguageLabel(getArticleLanguage(article)))}</small></span>
+            </label>
+          `).join("") : `<p class="muted">${escapeHtml(t("noUngroupedArticles"))}</p>`}
+        </div>
+        <button class="primary-btn compact" type="button" data-create-series ${availableArticles.length < 2 ? "disabled" : ""}>${escapeHtml(t("createSeries"))}</button>
+      </div>
+
+      ${seriesEntries.length ? `
+        <div class="series-management-list">
+          <h3>${escapeHtml(t("existingSeries"))}</h3>
+          ${seriesEntries.map(entry => `
+            <article class="series-management-card">
+              <div class="management-row-heading">
+                <strong>${escapeHtml(entry.title)}</strong>
+                <button class="text-btn" type="button" data-dissolve-series="${escapeHtml(entry.id)}">${escapeHtml(t("dissolveSeries"))}</button>
+              </div>
+              <ol class="chapter-management-list">
+                ${entry.articles.map((article, index) => `
+                  <li>
+                    <span>${escapeHtml(article.title)}</span>
+                    <div class="management-actions">
+                      <button class="secondary-btn compact" type="button" data-chapter-move="-1" data-article-id="${escapeHtml(article.id)}" ${index === 0 ? "disabled" : ""} aria-label="${escapeHtml(t("moveUp"))}">↑</button>
+                      <button class="secondary-btn compact" type="button" data-chapter-move="1" data-article-id="${escapeHtml(article.id)}" ${index === entry.articles.length - 1 ? "disabled" : ""} aria-label="${escapeHtml(t("moveDown"))}">↓</button>
+                      <button class="text-btn" type="button" data-remove-from-series data-article-id="${escapeHtml(article.id)}">${escapeHtml(t("removeFromSeries"))}</button>
+                    </div>
+                  </li>
+                `).join("")}
+              </ol>
+            </article>
+          `).join("")}
+        </div>
+      ` : ""}
+      <p id="articleOrganizationStatus" class="muted"></p>
+    </section>
+  `;
+}
+
 function buildTeacherHierarchy() {
   const teachers = state.profiles
     .filter(profile => profile.role === "teacher")
@@ -241,6 +322,7 @@ async function renderAdminOverview() {
   const privateArticles = articles.filter(article => article.visibility === "private");
   root.innerHTML = [
     buildTeacherRequestSection(teacherRequests),
+    buildArticleOrganizationSection(),
     buildAdminArticleSection(t("articleNew"), pending),
     buildAdminArticleSection(t("approvedAwaitingPublication"), awaitingPublication),
     buildAdminArticleSection(t("publishedArticles"), published),
@@ -251,11 +333,37 @@ async function renderAdminOverview() {
 }
 
 async function handleAdminOverviewClick(event) {
-  const button = event.target.closest("[data-article-id], [data-teacher-profile-id]");
+  const button = event.target.closest("[data-article-id], [data-teacher-profile-id], [data-order-move], [data-create-series], [data-dissolve-series]");
   if (!button || !isPublisherAccount()) return;
   button.disabled = true;
   try {
-    if (button.dataset.teacherProfileId) {
+    if (button.dataset.orderMove) {
+      const entries = getArticleDisplayEntries(state.articles.filter(article => canViewArticle(article)));
+      const index = entries.findIndex(entry => entry.id === button.dataset.entryId);
+      const targetIndex = index + Number(button.dataset.orderMove);
+      if (index >= 0 && targetIndex >= 0 && targetIndex < entries.length) {
+        [entries[index], entries[targetIndex]] = [entries[targetIndex], entries[index]];
+        await saveArticleDisplayEntries(entries);
+      }
+    } else if (button.dataset.chapterMove) {
+      const article = state.articles.find(item => item.id === button.dataset.articleId);
+      const chapters = state.articles.filter(item => item.seriesId === article?.seriesId).sort(compareChapterOrder);
+      const index = chapters.findIndex(item => item.id === article?.id);
+      const targetIndex = index + Number(button.dataset.chapterMove);
+      if (index >= 0 && targetIndex >= 0 && targetIndex < chapters.length) {
+        [chapters[index], chapters[targetIndex]] = [chapters[targetIndex], chapters[index]];
+        await Promise.all(chapters.map((chapter, chapterOrder) => updateArticleOrganization(chapter.id, { chapterOrder })));
+        await saveCachedArticles(state.articles);
+      }
+    } else if (button.hasAttribute("data-create-series")) {
+      const title = $("articleSeriesTitleInput")?.value || "";
+      const articleIds = [...document.querySelectorAll('input[name="article-series-member"]:checked')].map(input => input.value);
+      await createArticleSeries(title, articleIds);
+    } else if (button.dataset.dissolveSeries) {
+      await dissolveArticleSeries(button.dataset.dissolveSeries);
+    } else if (button.hasAttribute("data-remove-from-series")) {
+      await removeArticleFromSeries(button.dataset.articleId);
+    } else if (button.dataset.teacherProfileId) {
       const approved = Boolean(button.dataset.licenseTier);
       await supabaseRequest("rpc/app_review_teacher_request", {
         method: "POST",

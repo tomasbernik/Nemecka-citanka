@@ -87,6 +87,10 @@ create table if not exists public.app_articles (
   inline_vocabulary jsonb not null default '[]'::jsonb,
   image jsonb,
   questions jsonb not null default '[]'::jsonb,
+  display_order integer,
+  series_id text,
+  series_title text,
+  chapter_order integer,
   published boolean not null default true,
   updated_at timestamptz not null default now()
 );
@@ -264,6 +268,24 @@ add column if not exists image jsonb;
 
 alter table public.app_articles
 add column if not exists category_labels jsonb not null default '{}'::jsonb;
+
+alter table public.app_articles
+add column if not exists display_order integer;
+
+alter table public.app_articles
+add column if not exists series_id text;
+
+alter table public.app_articles
+add column if not exists series_title text;
+
+alter table public.app_articles
+add column if not exists chapter_order integer;
+
+create index if not exists app_articles_display_order_idx
+on public.app_articles (display_order, updated_at desc);
+
+create index if not exists app_articles_series_id_idx
+on public.app_articles (series_id, chapter_order);
 
 update public.app_articles
 set language = case
@@ -588,6 +610,40 @@ revoke all on function public.app_is_teacher_for_group(text) from public;
 grant execute on function public.app_is_publisher() to anon, authenticated;
 grant execute on function public.app_is_article_owner(text) to authenticated;
 grant execute on function public.app_is_teacher_for_group(text) to authenticated;
+
+create or replace function public.app_guard_article_organization()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, auth
+as $$
+begin
+  if not public.app_is_publisher() and (
+    (tg_op = 'INSERT' and (
+      new.display_order is not null
+      or new.series_id is not null
+      or new.series_title is not null
+      or new.chapter_order is not null
+    ))
+    or (tg_op = 'UPDATE' and (
+      new.display_order is distinct from old.display_order
+      or new.series_id is distinct from old.series_id
+      or new.series_title is distinct from old.series_title
+      or new.chapter_order is distinct from old.chapter_order
+    ))
+  ) then
+    raise exception 'Only the publisher can organize articles';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.app_guard_article_organization() from public;
+
+drop trigger if exists app_guard_article_organization_trigger on public.app_articles;
+create trigger app_guard_article_organization_trigger
+before insert or update on public.app_articles
+for each row execute function public.app_guard_article_organization();
 
 update public.app_articles
 set visibility = 'public'

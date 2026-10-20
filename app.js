@@ -52,6 +52,8 @@ const state = {
   editorInlineSelection: null,
   editorTapSelectionAnchor: null,
   editorCategoryLabels: {},
+  editorSavedSnapshot: "",
+  editorExpanded: true,
   showAllCategories: false,
   deferredInstallPrompt: null,
   installPromptShown: false,
@@ -618,6 +620,8 @@ function updateStaticTexts() {
   setLabelText("articleInlineVocabularyInput", "inlineVocabInputLabel");
   setLabelText("articleQuestionsInput", "questionsInputLabel");
   setText("saveArticleBtn", "saveArticle");
+  setText("floatingSaveArticleBtn", "saveArticle");
+  setText("editArticleDetailsBtn", "editArticleDetails");
   setText("deleteArticleBtn", "deleteArticle");
 
   document.querySelector("#startupQuiz .eyebrow").textContent = t("startupWarmup");
@@ -983,6 +987,12 @@ onClick("newArticleBtn", () => {
   fillArticleEditor(null);
 });
 onClick("saveArticleBtn", saveArticleFromEditor);
+onClick("floatingSaveArticleBtn", saveArticleFromEditor);
+onClick("editArticleDetailsBtn", () => {
+  state.editorExpanded = true;
+  updateArticleEditorFlow();
+  $("articleContentStep")?.scrollIntoView({ behavior: "smooth", block: "start" });
+});
 onClick("deleteArticleBtn", deleteArticleFromEditor);
 onClick("assignArticleBtn", assignSelectedArticleToStudents);
 onEvent("articleAssignmentList", "change", handleArticleAssignmentChange);
@@ -1036,7 +1046,11 @@ onEvent("articleTextInput", "blur", () => setTimeout(() => {
 onChange("articleImageInput", (event) => {
   state.articleImageFile = event.target.files?.[0] || null;
   updateArticleImageStatus();
+  updateArticleEditorFlow();
 });
+onChange("articleApprovalStatusSelect", updateArticleEditorFlow);
+onEvent("articleLevelInput", "input", updateArticleEditorFlow);
+onEvent("articleIdInput", "input", updateArticleEditorFlow);
 onEvent("articleQuestionsInput", "input", updateArticleEditorFlow);
 onEvent("articleVocabularyInput", "input", updateArticleEditorFlow);
 onEvent("articleInlineVocabularyInput", "input", updateArticleEditorFlow);

@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=133">
+  <link rel="stylesheet" href="style.css?v=135">
 </head>
 <body>
   <div id="app">
@@ -139,6 +139,7 @@
           <p id="articleMeta" class="eyebrow"></p>
           <h2 id="articleTitle"></h2>
           <div id="articleVariantSwitch" class="article-variant-switch hidden"></div>
+          <div id="articleChapterSwitch" class="article-chapter-switch hidden"></div>
           <div class="listen-panel" aria-label="Čítanie článku nahlas">
             <div class="listen-actions">
               <button id="readAloudBtn" class="audio-btn" type="button" aria-label="Prehrať" title="Prehrať">▶</button>
@@ -418,6 +419,10 @@
             <button id="newArticleBtn" class="text-btn" type="button">Nový článok</button>
           </div>
 
+          <div id="articleEditorFloatingActions" class="article-editor-floating-actions hidden">
+            <button id="floatingSaveArticleBtn" class="primary-btn compact-btn" type="button">Uložiť článok</button>
+          </div>
+
           <label class="field-row">
             Upraviť článok
             <select id="articleEditorSelect"></select>
@@ -523,6 +528,9 @@
                 <textarea id="articleTextInput" class="editor-textarea tall" spellcheck="false"></textarea>
               </div>
             </label>
+          </div>
+
+          <div id="articleImageStep" class="editor-step hidden">
             <label class="field-row">
               Obrázok k článku
               <input id="articleImageInput" type="file" accept="image/*">
@@ -557,6 +565,7 @@
           <p id="articleEditorStatus" class="form-error"></p>
           <div class="editor-actions">
             <button id="saveArticleBtn" class="primary-btn hidden" type="button">Uložiť článok</button>
+            <button id="editArticleDetailsBtn" class="secondary-btn hidden" type="button">Prerobiť článok</button>
             <button id="deleteArticleBtn" class="secondary-btn danger hidden" type="button">Vymazať článok</button>
           </div>
           <section id="articleAssignmentPanel" class="assignment-panel hidden">
@@ -657,7 +666,7 @@
 
   <script src="config.js?v=117"></script>
   <script src="constants.js?v=133"></script>
-  <script src="translations/ui.js?v=132"></script>
+  <script src="translations/ui.js?v=134"></script>
   <script src="translations/auth.js?v=135"></script>
   <script src="translations/new-languages.js?v=135"></script>
   <script src="translations/prompts.js?v=120"></script>
@@ -666,11 +675,11 @@
   <script src="api.js?v=117"></script>
   <script src="profiles.js?v=134"></script>
   <script src="teams.js?v=132"></script>
-  <script src="articles.js?v=132"></script>
-  <script src="reader.js?v=133"></script>
+  <script src="articles.js?v=133"></script>
+  <script src="reader.js?v=134"></script>
   <script src="games.js?v=125"></script>
-  <script src="editor.js?v=135"></script>
-  <script src="home.js?v=134"></script>
-  <script src="app.js?v=137"></script>
+  <script src="editor.js?v=137"></script>
+  <script src="home.js?v=135"></script>
+  <script src="app.js?v=138"></script>
 </body>
 </html>
