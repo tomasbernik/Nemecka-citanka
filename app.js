@@ -529,6 +529,8 @@ function updateStaticTexts() {
   setLabelText("settingsRoleSelect", "profileRole");
   setOptionText("settingsRoleSelect", "teacher", "teacherRole");
   setOptionText("settingsRoleSelect", "student", "studentRole");
+  setText("displayNameTitle", "displayNameTitle");
+  setText("saveDisplayNameBtn", "saveDisplayName");
   setLabelText("darkModeToggle", "darkMode");
   setText("authAccountTitle", "accountTitle");
   setText("linkGoogleAccountBtn", "linkGoogle");
@@ -557,7 +559,7 @@ function updateStaticTexts() {
   setText("joinInviteTitle", "joinInviteTitle");
   setLabelText("joinInviteInput", "joinInviteLabel");
   setText("joinInviteBtn", "joinInvite");
-  setText("teamManagementTitle", "teamManagementTitle");
+  setText("teamManagementTitle", isPublisherAccount() ? "allClassesTitle" : "teamManagementTitle");
   setPlaceholder("newTeamNameInput", "teamNamePlaceholder");
   setText("createTeamBtn", "createTeam");
   setText("inviteCodeTitle", "inviteCodeTitle");
@@ -940,6 +942,10 @@ onEvent("otpCodeInput", "keydown", event => {
 });
 onClick("joinInviteBtn", joinInviteFromSettings);
 onClick("createTeamBtn", createTeamFromSettings);
+onClick("saveDisplayNameBtn", updateCurrentProfileDisplayName);
+onEvent("displayNameInput", "keydown", event => {
+  if (event.key === "Enter") updateCurrentProfileDisplayName();
+});
 onEvent("teamManagementList", "click", handleTeamManagementClick);
 onClick("copyInviteCodeBtn", copyActiveInviteCode);
 onClick("cancelInviteCodeBtn", cancelActiveInviteCode);

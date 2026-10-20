@@ -294,6 +294,16 @@
               <option value="student">Študent</option>
             </select>
           </label>
+          <div id="displayNameSection" class="setting-row stacked hidden">
+            <div>
+              <strong id="displayNameTitle">Zobrazované meno</strong>
+              <p id="displayNameStatus" class="muted setting-note"></p>
+            </div>
+            <div class="editor-actions">
+              <input id="displayNameInput" maxlength="80" autocomplete="name" aria-labelledby="displayNameTitle">
+              <button id="saveDisplayNameBtn" class="secondary-btn" type="button">Uložiť meno</button>
+            </div>
+          </div>
           <label class="setting-row">
             Tmavý režim
             <input id="darkModeToggle" type="checkbox">
@@ -309,9 +319,9 @@
               <button id="signOutGoogleBtn" class="secondary-btn quiet" type="button">Odpojiť Google</button>
             </div>
           </div>
-          <div class="setting-row stacked">
+          <div id="joinInviteSection" class="setting-row stacked hidden">
             <div>
-              <strong id="joinInviteTitle">Pripojiť sa k učiteľovi</strong>
+              <strong id="joinInviteTitle">Pripojiť sa k triede</strong>
               <p id="joinInviteStatus" class="muted setting-note"></p>
             </div>
             <label class="field-row">
@@ -322,12 +332,12 @@
           </div>
           <div id="teamManagementSection" class="setting-row stacked hidden">
             <div>
-              <strong id="teamManagementTitle">Teams / Klassen</strong>
+              <strong id="teamManagementTitle">Moje triedy</strong>
               <p id="teamManagementStatus" class="muted setting-note"></p>
             </div>
             <div class="editor-actions">
               <input id="newTeamNameInput" maxlength="80" placeholder="1.A">
-              <button id="createTeamBtn" class="secondary-btn" type="button">Team erstellen</button>
+              <button id="createTeamBtn" class="secondary-btn" type="button">Vytvoriť triedu</button>
             </div>
             <div id="teamManagementList"></div>
           </div>
@@ -640,19 +650,19 @@
   <script src="config.js?v=117"></script>
   <script src="constants.js?v=133"></script>
   <script src="translations/ui.js?v=131"></script>
-  <script src="translations/auth.js?v=132"></script>
-  <script src="translations/new-languages.js?v=132"></script>
+  <script src="translations/auth.js?v=134"></script>
+  <script src="translations/new-languages.js?v=134"></script>
   <script src="translations/prompts.js?v=120"></script>
   <script src="i18n.js?v=117"></script>
   <script src="auth.js?v=133"></script>
   <script src="api.js?v=117"></script>
-  <script src="profiles.js?v=133"></script>
-  <script src="teams.js?v=130"></script>
+  <script src="profiles.js?v=134"></script>
+  <script src="teams.js?v=131"></script>
   <script src="articles.js?v=131"></script>
   <script src="reader.js?v=132"></script>
   <script src="games.js?v=125"></script>
   <script src="editor.js?v=133"></script>
   <script src="home.js?v=134"></script>
-  <script src="app.js?v=134"></script>
+  <script src="app.js?v=135"></script>
 </body>
 </html>

@@ -217,6 +217,7 @@ async function setCurrentProfile(profile) {
   if (state.articles.length) await saveCachedArticles(state.articles, getNativeLanguage(state.currentProfile));
   renderNativeLanguageControls();
   renderRoleControls();
+  renderProfileNameSettings();
   renderCurrentProfileLabel();
   renderAuthControls();
   updateStaticTexts();
@@ -299,6 +300,68 @@ function renderRoleControls() {
   if (!select) return;
   if (state.currentProfile) select.value = state.currentProfile.role;
   select.closest("label")?.classList.add("hidden");
+}
+
+function renderProfileNameSettings() {
+  const section = $("displayNameSection");
+  const input = $("displayNameInput");
+  if (!section || !input) return;
+  const canEdit = Boolean(state.currentProfile?.id && state.authUser?.id);
+  section.classList.toggle("hidden", !canEdit);
+  input.value = canEdit ? state.currentProfile.name : "";
+  if ($("displayNameStatus")) $("displayNameStatus").textContent = "";
+}
+
+async function updateCurrentProfileDisplayName() {
+  const profile = state.currentProfile;
+  const input = $("displayNameInput");
+  const status = $("displayNameStatus");
+  if (!profile?.id || !state.authUser?.id || !input || !status) return;
+
+  const name = String(input.value || "").trim();
+  if (!name) {
+    status.textContent = t("displayNameRequired");
+    return;
+  }
+  if (name.length > 80) {
+    status.textContent = t("displayNameTooLong");
+    return;
+  }
+  const duplicate = state.profiles.some(item =>
+    item.id !== profile.id && normalizeName(item.name) === normalizeName(name)
+  );
+  if (duplicate) {
+    status.textContent = t("displayNameExists");
+    return;
+  }
+  if (name === profile.name) {
+    status.textContent = t("displayNameSaved");
+    return;
+  }
+  if (!state.remoteReady || !isRemoteNetworkAvailable()) {
+    status.textContent = t("displayNameSaveFailed");
+    return;
+  }
+
+  try {
+    await supabaseRequest(`app_profiles?id=eq.${encodeURIComponent(profile.id)}`, {
+      method: "PATCH",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({ name })
+    });
+    state.currentProfile = { ...profile, name };
+    state.profiles = state.profiles.map(item => item.id === profile.id ? { ...item, name } : item);
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(state.profiles));
+    input.value = name;
+    status.textContent = t("displayNameSaved");
+    renderCurrentProfileLabel();
+    renderTeamManagement();
+    renderArticles();
+  } catch (error) {
+    status.textContent = /duplicate|unique|409/i.test(error.message)
+      ? t("displayNameExists")
+      : t("displayNameSaveFailed");
+  }
 }
 
 function renderCurrentProfileLabel() {

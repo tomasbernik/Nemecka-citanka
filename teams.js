@@ -64,9 +64,12 @@ function getTeamTeacherName(team) {
 }
 
 function renderTeamManagement() {
+  const joinSection = $("joinInviteSection");
   const section = $("teamManagementSection");
   const list = $("teamManagementList");
   if (!section || !list) return;
+  const canJoin = state.currentProfile?.role === "student";
+  joinSection?.classList.toggle("hidden", !canJoin);
   const canManage = hasTeacherLicense();
   section.classList.toggle("hidden", !canManage);
   if (!canManage) {
@@ -76,15 +79,17 @@ function renderTeamManagement() {
 
   const teams = getManagedTeams();
   list.innerHTML = teams.length ? teams.map(team => {
-    const members = getTeamMembers(team.id);
+    const teacherName = getTeamTeacherName(team) || t("unknownTeacher");
+    const members = getTeamMembers(team.id).filter(member => member.id !== team.ownerProfileId);
     const memberRows = members.map(member => `
       <li>
         <span>${escapeHtml(member.name)}</span>
-        ${member.id === team.ownerProfileId ? "" : `<button class="text-btn" type="button" data-team-action="remove-member" data-team-id="${escapeHtml(team.id)}" data-profile-id="${escapeHtml(member.id)}">${escapeHtml(t("removeTeamMember"))}</button>`}
+        <button class="text-btn" type="button" data-team-action="remove-member" data-team-id="${escapeHtml(team.id)}" data-profile-id="${escapeHtml(member.id)}">${escapeHtml(t("removeTeamMember"))}</button>
       </li>
     `).join("");
     return `
       <section class="team-card" data-team-id="${escapeHtml(team.id)}">
+        <p><strong>${escapeHtml(formatText("classTeacherSummary", { name: team.name, teacher: teacherName }))}</strong></p>
         <div class="editor-actions">
           <input data-team-name value="${escapeHtml(team.name)}" maxlength="80">
           <button class="secondary-btn quiet" type="button" data-team-action="rename">${escapeHtml(t("renameTeam"))}</button>
@@ -102,6 +107,7 @@ async function createTeamFromSettings() {
   const input = $("newTeamNameInput");
   const status = $("teamManagementStatus");
   const name = String(input?.value || "").trim();
+  if (!hasTeacherLicense()) return;
   if (!name) {
     status.textContent = t("teamNameRequired");
     return;
@@ -123,6 +129,7 @@ async function createTeamFromSettings() {
 async function handleTeamManagementClick(event) {
   const button = event.target.closest("[data-team-action]");
   if (!button) return;
+  if (!hasTeacherLicense()) return;
   const action = button.dataset.teamAction;
   const teamId = button.dataset.teamId || button.closest("[data-team-id]")?.dataset.teamId;
   const status = $("teamManagementStatus");
@@ -238,6 +245,10 @@ async function joinTeamByCode(rawCode) {
     status.textContent = t("authSignInFirst");
     return;
   }
+  if (state.currentProfile?.role !== "student") {
+    status.textContent = t("studentOnlyJoinClass");
+    return;
+  }
   try {
     const rows = await supabaseRequest("rpc/app_join_team", {
       method: "POST",
@@ -280,7 +291,12 @@ function renderArticleTeamSelect(article = null) {
   const needsChoice = teams.length > 1 && !article?.teamId;
   select.innerHTML = [
     `<option value="">${escapeHtml(teams.length ? t("chooseTeam") : t("noTeam"))}</option>`,
-    ...teams.map(team => `<option value="${escapeHtml(team.id)}">${escapeHtml(team.name)}</option>`)
+    ...teams.map(team => {
+      const label = isPublisherAccount()
+        ? formatText("classTeacherSummary", { name: team.name, teacher: getTeamTeacherName(team) || t("unknownTeacher") })
+        : team.name;
+      return `<option value="${escapeHtml(team.id)}">${escapeHtml(label)}</option>`;
+    })
   ].join("");
   select.value = article?.teamId || (teams.length === 1 ? teams[0].id : "");
   select.required = needsChoice;
