@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "citanka-v138";
+const CACHE_NAME = "citanka-v139";
 const IMAGE_CACHE_NAME = "citanka-article-images-v114";
 const IMAGE_CACHE_LIMIT = 25;
 const APP_FILES = [

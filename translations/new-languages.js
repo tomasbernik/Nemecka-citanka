@@ -815,7 +815,7 @@ const NEW_LANGUAGE_UI_TEXT = {
     studentOnboardingText: "Choose an article, click an unfamiliar word, then review it later in repetition.",
     teacherOnboardingTitle: "First assignment for a student",
     teacherOnboardingText: "Add or choose an article, select students and track the status: New, Opened, In progress, Done.",
-    wordOnboardingText: "Tap highlighted words in the text. They will be saved for review.",
+    wordOnboardingText: "Tap an unfamiliar word in the text to translate it, or translate the whole sentence. The translated expression will be saved with your words for review.",
     understand: "Got it",
     hide: "Hide",
     myAssignments: "My assignments",

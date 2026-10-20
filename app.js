@@ -437,10 +437,9 @@ function renderOnboarding() {
     const showWordHint = Boolean(
       state.currentArticle
       && !isOnboardingDone("firstWordHintDone")
-      && $("articleText")?.querySelector(".inline-word")
+      && $("articleText")?.querySelector(".reading-sentence")
     );
     wordHint.classList.toggle("hidden", !showWordHint);
-    $("articleText")?.querySelector(".inline-word")?.classList.toggle("onboarding-focus", showWordHint);
   }
 }
 

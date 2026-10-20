@@ -624,7 +624,7 @@ async function translateReaderSelection(sourceType) {
       sourceContext: sourceType === "word" ? selection.sentence : "",
       targetLanguage: getNativeLanguage()
     });
-    if (sourceType === "word") addDiscoveredVocabulary(selection.word, result.translation);
+    addDiscoveredVocabulary(sourceText, result.translation);
     renderTranslationResult(tooltip, label, sourceText, result.translation);
     completeOnboarding("firstWordHintDone");
   } catch (error) {

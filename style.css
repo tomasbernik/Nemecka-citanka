@@ -1073,11 +1073,6 @@ h3 { font-size: 1.1rem; }
   margin-bottom: 4px;
 }
 
-.inline-word.onboarding-focus {
-  background: rgba(var(--accent-rgb), 0.2);
-  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.16);
-}
-
 .word-chip.selected {
   background: var(--accent);
   color: var(--accent-text);
