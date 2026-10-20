@@ -24,7 +24,6 @@ async function loadArticles() {
     state.articles = mergeArticles(localArticles, cachedArticles).map(normalizeArticle);
   }
 
-  renderCategories();
   renderLevelFilters();
   renderArticles();
 }
@@ -647,7 +646,6 @@ async function saveArticle(article) {
     state.articles = [article, ...state.articles];
   }
   await saveCachedArticles(state.articles);
-  renderCategories();
   renderLevelFilters();
   renderArticles();
   renderArticleCategoryOptionsMulti(article.category);
@@ -725,62 +723,44 @@ function setSelectedArticleLanguage(language) {
   if (!ARTICLE_LANGUAGES[language] || language === getSelectedArticleLanguage()) return;
   state.selectedArticleLanguage = language;
   localStorage.setItem(ARTICLE_LANGUAGE_KEY, language);
-  state.selectedCategory = ALL_CATEGORIES;
-  state.selectedLevel = ALL_LEVELS;
+  state.selectedLevels = [];
   renderArticleLanguageControls();
   updateTeachingLanguageBrand();
-  renderCategories();
   renderLevelFilters();
   renderArticles();
-}
-
-function renderCategories() {
-  const root = $("categoryFilters");
-  const categories = getCategories();
-  if (!root) return;
-
-  root.classList.add("filter-select-wrap");
-  root.innerHTML = `
-    <label class="filter-select-label">
-      <span>${escapeHtml(t("topics"))}</span>
-      <select id="categoryFilterSelect" class="filter-select"></select>
-    </label>
-  `;
-
-  const select = $("categoryFilterSelect");
-  select.innerHTML = categories
-    .map(category => `<option value="${escapeHtml(category)}">${escapeHtml(category === ALL_CATEGORIES ? t("allTopics") : getCategoryLabel(category))}</option>`)
-    .join("");
-  select.value = categories.includes(state.selectedCategory) ? state.selectedCategory : ALL_CATEGORIES;
-  if (select.value !== state.selectedCategory) state.selectedCategory = select.value;
-  select.onchange = () => {
-    state.selectedCategory = select.value;
-    renderCategories();
-    renderArticles();
-  };
 }
 
 function renderLevelFilters() {
   const root = $("levelFilters");
   if (!root) return;
-  const levels = getArticleLevels();
+  const levels = getArticleLevels().filter(level => level !== ALL_LEVELS);
+  state.selectedLevels = state.selectedLevels.filter(level => levels.includes(level));
+  const allSelected = state.selectedLevels.length === 0;
 
-  root.classList.add("filter-select-wrap");
+  root.className = "filters level-multi-filter";
   root.innerHTML = `
-    <label class="filter-select-label">
-      <span>${escapeHtml(t("level"))}</span>
-      <select id="levelFilterSelect" class="filter-select"></select>
-    </label>
+    <span class="level-filter-label">${escapeHtml(t("level"))}</span>
+    <div class="level-filter-options" role="group" aria-label="${escapeHtml(t("level"))}">
+      <button class="level-filter-option ${allSelected ? "active" : ""}" type="button" data-level-filter="${ALL_LEVELS}" aria-pressed="${allSelected}">${escapeHtml(t("allLevels"))}</button>
+      ${levels.map(level => {
+        const selected = state.selectedLevels.includes(level);
+        return `<button class="level-filter-option ${selected ? "active" : ""}" type="button" data-level-filter="${escapeHtml(level)}" aria-pressed="${selected}">${escapeHtml(level)}</button>`;
+      }).join("")}
+    </div>
   `;
 
-  const select = $("levelFilterSelect");
-  select.innerHTML = levels
-    .map(level => `<option value="${escapeHtml(level)}">${escapeHtml(level === ALL_LEVELS ? t("allLevels") : level)}</option>`)
-    .join("");
-  select.value = levels.includes(state.selectedLevel) ? state.selectedLevel : ALL_LEVELS;
-  if (select.value !== state.selectedLevel) state.selectedLevel = select.value;
-  select.onchange = () => {
-    state.selectedLevel = select.value;
+  root.onclick = event => {
+    const button = event.target.closest("[data-level-filter]");
+    if (!button) return;
+    const level = button.dataset.levelFilter;
+    if (level === ALL_LEVELS) {
+      state.selectedLevels = [];
+    } else {
+      const selected = new Set(state.selectedLevels);
+      if (selected.has(level)) selected.delete(level);
+      else selected.add(level);
+      state.selectedLevels = levels.filter(item => selected.has(item));
+    }
     renderLevelFilters();
     renderArticles();
   };
@@ -797,14 +777,8 @@ function getArticleApprovalBadge(article) {
 function renderArticles() {
   const root = $("articleList");
   const entries = getArticleDisplayEntries().filter(entry => entry.articles.some(article => {
-    const levelMatches = state.selectedLevel === ALL_LEVELS
-      || normalizeArticleLevel(article.level) === state.selectedLevel;
-    if (!levelMatches) return false;
-    if (state.selectedCategory === ALL_CATEGORIES) return true;
-    if (state.selectedCategory === UNREAD_CATEGORY) {
-      return !state.profileData.readIds.includes(article.id);
-    }
-    return getArticleCategoriesForFilter(article).includes(state.selectedCategory);
+    return state.selectedLevels.length === 0
+      || state.selectedLevels.includes(normalizeArticleLevel(article.level));
   }));
   root.innerHTML = "";
 

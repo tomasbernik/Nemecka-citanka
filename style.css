@@ -211,38 +211,48 @@ h3 { font-size: 1.1rem; }
   min-width: 0;
 }
 
-.filter-select-wrap {
-  flex: 1 1 180px;
-}
-
-.filter-select-label {
+.level-multi-filter {
   display: grid;
-  gap: 5px;
+  flex: 1 1 100%;
+  gap: 7px;
 }
 
-.filter-select-label span {
+.level-filter-label {
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 850;
 }
 
-.filter-select {
-  width: 100%;
-  min-height: 44px;
-  padding: 10px 42px 10px 14px;
+.level-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.level-filter-option {
+  min-height: 42px;
+  padding: 9px 15px;
   border: 1px solid rgba(var(--accent-rgb), 0.28);
   border-radius: 999px;
-  background:
-    linear-gradient(45deg, transparent 50%, var(--accent-dark) 50%) calc(100% - 20px) 19px / 7px 7px no-repeat,
-    linear-gradient(135deg, var(--accent-dark) 50%, transparent 50%) calc(100% - 15px) 19px / 7px 7px no-repeat,
-    rgba(var(--accent-rgb), 0.14);
+  background: rgba(var(--accent-rgb), 0.1);
   color: var(--text);
   font: inherit;
   font-weight: 850;
-  appearance: none;
+  cursor: pointer;
 }
 
-.filter-select:focus {
+.level-filter-option:hover {
+  background: rgba(var(--accent-rgb), 0.18);
+}
+
+.level-filter-option.active {
+  border-color: var(--accent-dark);
+  background: var(--accent);
+  color: var(--accent-text);
+  box-shadow: 0 5px 14px rgba(var(--accent-rgb), 0.2);
+}
+
+.level-filter-option:focus-visible {
   outline: 3px solid rgba(var(--accent-rgb), 0.28);
   outline-offset: 2px;
 }

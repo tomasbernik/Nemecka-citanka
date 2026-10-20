@@ -2,8 +2,7 @@ const state = {
   articles: [],
   profiles: [],
   preLoginLanguage: localStorage.getItem(PRELOGIN_LANGUAGE_KEY) || DEFAULT_PRELOGIN_LANGUAGE,
-  selectedCategory: ALL_CATEGORIES,
-  selectedLevel: ALL_LEVELS,
+  selectedLevels: [],
   selectedArticleLanguage: localStorage.getItem(ARTICLE_LANGUAGE_KEY) || DEFAULT_ARTICLE_LANGUAGE,
   currentArticle: null,
   activePracticeGroup: "vocab",
@@ -630,7 +629,6 @@ function updateStaticTexts() {
   setText("nextStartupQuizBtn", "next");
 
   renderCurrentProfileLabel();
-  renderCategories();
   renderLevelFilters();
   renderArticles();
   renderArticleEditorList();
