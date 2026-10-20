@@ -496,26 +496,20 @@
               Názov
               <input id="articleTitleInput">
             </label>
-            <label class="field-row">
-              ID
-              <input id="articleIdInput">
-            </label>
-            <label class="field-row">
-              Kategória
-              <select id="articleCategorySelect"></select>
-            </label>
-            <label id="articleNewCategoryWrap" class="field-row hidden">
-              Nová kategória
-              <input id="articleCategoryInput">
-            </label>
-            <label class="field-row">
-              Druha kategoria
-              <select id="articleCategory2Select"></select>
-            </label>
-            <label id="articleNewCategory2Wrap" class="field-row hidden">
-              Nova druha kategoria
-              <input id="articleCategory2Input">
-            </label>
+            <input id="articleIdInput" type="hidden">
+            <fieldset class="article-categories-fieldset">
+              <legend id="articleCategoriesLegend">Kategórie</legend>
+              <select id="articleCategorySelect" aria-labelledby="articleCategoriesLegend"></select>
+              <label id="articleNewCategoryWrap" class="field-row hidden">
+                Nová kategória
+                <input id="articleCategoryInput">
+              </label>
+              <select id="articleCategory2Select" aria-labelledby="articleCategoriesLegend"></select>
+              <label id="articleNewCategory2Wrap" class="field-row hidden">
+                Nová kategória
+                <input id="articleCategory2Input">
+              </label>
+            </fieldset>
             <label class="field-row">
               Krátky popis
               <textarea id="articleSummaryInput" class="editor-textarea compact"></textarea>

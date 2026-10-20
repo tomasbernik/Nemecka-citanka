@@ -582,12 +582,15 @@ async function createArticleSeries(title, articleIds) {
     .sort(compareArticleDisplayOrder);
   if (selected.length < 2) throw new Error(t("seriesNeedsTwoArticles"));
   if (new Set(selected.map(getArticleLanguage)).size > 1) throw new Error(t("seriesNeedsSameLanguage"));
-  const displayOrder = Math.min(...selected.map(article => Number.isFinite(article.displayOrder) ? article.displayOrder : Number.MAX_SAFE_INTEGER));
+  const existingDisplayOrders = selected
+    .map(article => article.displayOrder)
+    .filter(displayOrder => Number.isInteger(displayOrder));
+  const displayOrder = existingDisplayOrders.length ? Math.min(...existingDisplayOrders) : 0;
   await Promise.all(selected.map((article, chapterOrder) => updateArticleOrganization(article.id, {
     seriesId,
     seriesTitle: cleanTitle,
     chapterOrder,
-    displayOrder: Number.isFinite(displayOrder) ? displayOrder : 0
+    displayOrder
   })));
   await saveCachedArticles(state.articles);
   renderArticles();

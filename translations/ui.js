@@ -1825,42 +1825,52 @@ Object.entries({
 
 Object.entries({
   sk: {
+    categories: "Kategórie",
     chooseCategory: "-- vyber kategóriu --",
     categoryTranslations: "Preklady novej kategórie"
   },
   de: {
+    categories: "Kategorien",
     chooseCategory: "-- Kategorie wählen --",
     categoryTranslations: "Übersetzungen der neuen Kategorie"
   },
   ru: {
+    categories: "Категории",
     chooseCategory: "-- выберите категорию --",
     categoryTranslations: "Переводы новой категории"
   },
   pl: {
+    categories: "Kategorie",
     chooseCategory: "-- wybierz kategorię --",
     categoryTranslations: "Tłumaczenia nowej kategorii"
   },
   hu: {
+    categories: "Kategóriák",
     chooseCategory: "-- válassz kategóriát --",
     categoryTranslations: "Az új kategória fordításai"
   },
   ro: {
+    categories: "Categorii",
     chooseCategory: "-- alege categoria --",
     categoryTranslations: "Traducerile noii categorii"
   },
   it: {
+    categories: "Categorie",
     chooseCategory: "-- scegli categoria --",
     categoryTranslations: "Traduzioni della nuova categoria"
   },
   en: {
+    categories: "Categories",
     chooseCategory: "-- choose category --",
     categoryTranslations: "New category translations"
   },
   fr: {
+    categories: "Catégories",
     chooseCategory: "-- choisir une catégorie --",
     categoryTranslations: "Traductions de la nouvelle catégorie"
   },
   tr: {
+    categories: "Kategoriler",
     chooseCategory: "-- kategori seç --",
     categoryTranslations: "Yeni kategori çevirileri"
   }

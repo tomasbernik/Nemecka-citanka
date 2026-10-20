@@ -1382,14 +1382,13 @@ function updateArticleEditorFlow() {
   const hasVocabulary = hasTranslatedVocabulary();
   const isReadyToSave = hasQuestions && hasVocabulary;
   const hasUnsavedChanges = getArticleEditorSnapshot() !== state.editorSavedSnapshot;
-  const hasExistingImage = Boolean(selectedArticle?.image?.desktop);
   const showInlineVocabularyEditor = $("articleInlineVocabularyInput").dataset.manual === "true"
     || Boolean($("articleInlineVocabularyInput").value.trim());
   const showContentStep = isExpanded && (isEditing || hasGeneratedPrompt || hasContent);
 
   document.querySelector(".editor-helper")?.classList.toggle("hidden", !isExpanded);
   $("articleContentStep").classList.toggle("hidden", !showContentStep);
-  $("articleImageStep").classList.toggle("hidden", !(showContentStep || (isEditing && !hasExistingImage)));
+  $("articleImageStep").classList.toggle("hidden", !showContentStep);
   $("articleQuestionsStep").classList.add("hidden");
   $("articleVocabularyStep").classList.toggle("hidden", !isExpanded || !showInlineVocabularyEditor);
   $("inlineTranslationActions").classList.toggle("hidden", !showInlineVocabularyEditor);
@@ -1562,6 +1561,7 @@ async function saveArticleFromEditor() {
     state.articleImageFile = null;
     $("articleImageInput").value = "";
     const savedArticle = state.articles.find(item => item.id === article.id) || article;
+    state.editorExpanded = false;
     fillArticleEditor(savedArticle);
     $("articleEditorStatus").textContent = t("articleSaved");
   } catch (error) {

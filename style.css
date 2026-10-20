@@ -945,6 +945,32 @@ h3 { font-size: 1.1rem; }
   display: none;
 }
 
+.article-categories-fieldset {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 12px 0;
+  border: 0;
+}
+
+.article-categories-fieldset legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.article-categories-fieldset select {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.article-categories-fieldset .field-row {
+  padding: 0;
+}
+
 .manual-json-import {
   border: 1px solid var(--border);
   border-radius: 16px;

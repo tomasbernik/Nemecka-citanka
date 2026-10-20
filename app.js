@@ -575,9 +575,8 @@ function updateStaticTexts() {
   document.querySelector(".article-editor .practice-heading h2").textContent = t("articleEditor");
   setText("newArticleBtn", "newArticle");
   setLabelText("articleEditorSelect", "editArticle");
-  setLabelText("articleCategorySelect", "category");
+  setText("articleCategoriesLegend", "categories");
   setLabelText("articleCategoryInput", "newCategory");
-  setLabelText("articleCategory2Select", "category");
   setLabelText("articleCategory2Input", "newCategory");
   setLabelText("articleApprovalStatusSelect", "approvalStatus");
   setText("articleAssignmentTitle", "articleAssignmentTitle");
@@ -989,7 +988,7 @@ onClick("floatingSaveArticleBtn", saveArticleFromEditor);
 onClick("editArticleDetailsBtn", () => {
   state.editorExpanded = true;
   updateArticleEditorFlow();
-  $("articleContentStep")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  document.querySelector(".editor-helper")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 onClick("deleteArticleBtn", deleteArticleFromEditor);
 onClick("assignArticleBtn", assignSelectedArticleToStudents);
