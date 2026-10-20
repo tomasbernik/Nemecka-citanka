@@ -1,14 +1,14 @@
 
-const CACHE_NAME = "citanka-v146";
+const CACHE_NAME = "citanka-v148";
 const IMAGE_CACHE_NAME = "citanka-article-images-v114";
 const IMAGE_CACHE_LIMIT = 25;
 const APP_FILES = [
   "./",
   "./index.html",
   "./theme.js?v=117",
-  "./style.css?v=137",
+  "./style.css?v=139",
   "./constants.js?v=133",
-  "./translations/ui.js?v=134",
+  "./translations/ui.js?v=136",
   "./translations/auth.js?v=135",
   "./translations/new-languages.js?v=135",
   "./translations/prompts.js?v=120",
@@ -21,8 +21,8 @@ const APP_FILES = [
   "./reader.js?v=136",
   "./games.js?v=125",
   "./editor.js?v=137",
-  "./app.js?v=139",
-  "./home.js?v=135",
+  "./app.js?v=140",
+  "./home.js?v=136",
   "./config.js?v=117",
   "./articles.json",
   "./manifest.json",

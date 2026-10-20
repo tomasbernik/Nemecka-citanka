@@ -908,12 +908,22 @@ h3 { font-size: 1.1rem; }
 
 .editor-helper {
   display: grid;
-  gap: 10px;
+  gap: 6px;
   margin: 16px 0;
-  padding: 14px;
+  padding: 12px;
   border: 1px solid var(--border);
   border-radius: 18px;
   background: rgba(127, 127, 127, 0.06);
+}
+
+.editor-helper > .field-row {
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.editor-helper-inline-row {
+  grid-template-columns: minmax(120px, 0.32fr) minmax(0, 1fr);
+  align-items: center;
 }
 
 .editor-step {
@@ -969,7 +979,7 @@ h3 { font-size: 1.1rem; }
 }
 
 #articlePromptInput {
-  min-height: 150px;
+  min-height: 112px;
 }
 
 #articleRequiredWordsInput {
@@ -2225,6 +2235,32 @@ select {
   background: var(--accent);
   color: var(--accent-text);
   font-weight: 700;
+}
+
+.management-entry-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.story-type-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--support-dark) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--support) 30%, var(--card));
+  color: color-mix(in srgb, var(--support-dark) 78%, var(--text));
+  font-size: 0.76rem;
+  font-weight: 850;
+  line-height: 1.1;
+}
+
+.move-to-start-btn {
+  background: color-mix(in srgb, var(--accent) 28%, var(--card));
+  color: var(--text);
 }
 
 .series-creator,

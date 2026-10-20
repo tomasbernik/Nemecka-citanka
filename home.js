@@ -174,11 +174,15 @@ function buildArticleOrganizationSection() {
             <div class="management-order-label">
               <span class="management-order-number">${index + 1}</span>
               <div>
-                <strong>${escapeHtml(entry.type === "series" ? entry.title : entry.article.title)}</strong>
+                <div class="management-entry-title">
+                  <strong>${escapeHtml(entry.type === "series" ? entry.title : entry.article.title)}</strong>
+                  ${entry.type === "series" ? `<span class="story-type-badge">${escapeHtml(t("completeStory"))}</span>` : ""}
+                </div>
                 <p class="muted">${escapeHtml(entry.type === "series" ? formatText("chapterCount", { count: entry.articles.length }) : getArticleLanguageLabel(getArticleLanguage(entry.article)))}</p>
               </div>
             </div>
             <div class="management-actions">
+              <button class="secondary-btn compact move-to-start-btn" type="button" data-order-move="top" data-entry-id="${escapeHtml(entry.id)}" ${index === 0 ? "disabled" : ""} title="${escapeHtml(t("moveToTop"))}" aria-label="${escapeHtml(t("moveToTop"))}">⇈</button>
               <button class="secondary-btn compact" type="button" data-order-move="-1" data-entry-id="${escapeHtml(entry.id)}" ${index === 0 ? "disabled" : ""} aria-label="${escapeHtml(t("moveUp"))}">↑</button>
               <button class="secondary-btn compact" type="button" data-order-move="1" data-entry-id="${escapeHtml(entry.id)}" ${index === entries.length - 1 ? "disabled" : ""} aria-label="${escapeHtml(t("moveDown"))}">↓</button>
             </div>
@@ -218,6 +222,7 @@ function buildArticleOrganizationSection() {
                   <li>
                     <span>${escapeHtml(article.title)}</span>
                     <div class="management-actions">
+                      <button class="secondary-btn compact move-to-start-btn" type="button" data-chapter-move="top" data-article-id="${escapeHtml(article.id)}" ${index === 0 ? "disabled" : ""} title="${escapeHtml(t("moveToTop"))}" aria-label="${escapeHtml(t("moveToTop"))}">⇈</button>
                       <button class="secondary-btn compact" type="button" data-chapter-move="-1" data-article-id="${escapeHtml(article.id)}" ${index === 0 ? "disabled" : ""} aria-label="${escapeHtml(t("moveUp"))}">↑</button>
                       <button class="secondary-btn compact" type="button" data-chapter-move="1" data-article-id="${escapeHtml(article.id)}" ${index === entry.articles.length - 1 ? "disabled" : ""} aria-label="${escapeHtml(t("moveDown"))}">↓</button>
                       <button class="text-btn" type="button" data-remove-from-series data-article-id="${escapeHtml(article.id)}">${escapeHtml(t("removeFromSeries"))}</button>
@@ -340,18 +345,20 @@ async function handleAdminOverviewClick(event) {
     if (button.dataset.orderMove) {
       const entries = getArticleDisplayEntries(state.articles.filter(article => canViewArticle(article)));
       const index = entries.findIndex(entry => entry.id === button.dataset.entryId);
-      const targetIndex = index + Number(button.dataset.orderMove);
+      const targetIndex = button.dataset.orderMove === "top" ? 0 : index + Number(button.dataset.orderMove);
       if (index >= 0 && targetIndex >= 0 && targetIndex < entries.length) {
-        [entries[index], entries[targetIndex]] = [entries[targetIndex], entries[index]];
+        const [movedEntry] = entries.splice(index, 1);
+        entries.splice(targetIndex, 0, movedEntry);
         await saveArticleDisplayEntries(entries);
       }
     } else if (button.dataset.chapterMove) {
       const article = state.articles.find(item => item.id === button.dataset.articleId);
       const chapters = state.articles.filter(item => item.seriesId === article?.seriesId).sort(compareChapterOrder);
       const index = chapters.findIndex(item => item.id === article?.id);
-      const targetIndex = index + Number(button.dataset.chapterMove);
+      const targetIndex = button.dataset.chapterMove === "top" ? 0 : index + Number(button.dataset.chapterMove);
       if (index >= 0 && targetIndex >= 0 && targetIndex < chapters.length) {
-        [chapters[index], chapters[targetIndex]] = [chapters[targetIndex], chapters[index]];
+        const [movedChapter] = chapters.splice(index, 1);
+        chapters.splice(targetIndex, 0, movedChapter);
         await Promise.all(chapters.map((chapter, chapterOrder) => updateArticleOrganization(chapter.id, { chapterOrder })));
         await saveCachedArticles(state.articles);
       }

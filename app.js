@@ -592,7 +592,6 @@ function updateStaticTexts() {
   setOptionText("articleApprovalStatusSelect", "pending", "pending");
   setOptionText("articleApprovalStatusSelect", "approved", "approved");
   setOptionText("articleApprovalStatusSelect", "rejected", "rejected");
-  document.querySelector(".editor-helper .eyebrow").textContent = t("chatGptHelper");
   setLabelText("articlePromptInput", "articleTask");
   setPlaceholder("articlePromptInput", "articleTaskPlaceholder");
   setLabelText("articleRequiredWordsMode", "requiredWordsMode");
