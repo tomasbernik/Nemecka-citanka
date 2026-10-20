@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=132">
+  <link rel="stylesheet" href="style.css?v=133">
 </head>
 <body>
   <div id="app">
@@ -148,6 +148,18 @@
             <p id="speechStatus" class="muted listen-status"></p>
           </div>
           <div id="articleImageWrap" class="article-image-wrap hidden"></div>
+
+          <div id="articleTeacherActions" class="article-teacher-actions hidden">
+            <button id="assignCurrentArticleBtn" class="secondary-btn" type="button" aria-expanded="false" aria-controls="currentArticleAssignmentPanel">Prideliť článok</button>
+          </div>
+          <section id="currentArticleAssignmentPanel" class="assignment-panel article-assignment-panel hidden">
+            <p class="eyebrow">Zadanie</p>
+            <h3 id="currentArticleAssignmentTitle">Zadať článok triedam alebo žiakom</h3>
+            <p id="currentArticleAssignmentHelp" class="muted">Vyber jednu alebo viac tried, prípadne iba konkrétnych žiakov.</p>
+            <div id="currentArticleAssignmentList" class="assignment-list"></div>
+            <button id="saveCurrentArticleAssignmentBtn" class="secondary-btn" type="button">Uložiť zadanie</button>
+            <p id="currentArticleAssignmentStatus" class="muted"></p>
+          </section>
 
           <nav id="articlePracticeTabs" class="practice-tabs" aria-label="Cvicenia v clanku">
             <button id="practiceTabVocab" class="practice-tab" type="button" data-practice-tab="vocab">Slovicka</button>
@@ -464,13 +476,16 @@
               Vygenerovaný prompt
               <textarea id="generatedPromptOutput" class="editor-textarea tall" readonly></textarea>
             </label>
-            <label class="field-row">
-              Hotový článok z ChatGPT vo formáte JSON
-              <textarea id="articleImportInput" class="editor-textarea tall" placeholder='{"title":"...","summary":"...","text":["..."],"vocabulary":[...],"inlineVocabulary":[...],"questions":[...]}'></textarea>
-            </label>
-            <div class="editor-actions">
-              <button id="importArticleBtn" class="secondary-btn" type="button">Vložiť do editora</button>
-            </div>
+            <details class="manual-json-import">
+              <summary id="manualJsonImportSummary">Manuálny import JSON</summary>
+              <label class="field-row">
+                Hotový článok z ChatGPT vo formáte JSON
+                <textarea id="articleImportInput" class="editor-textarea tall" placeholder='{"title":"...","summary":"...","text":["..."],"vocabulary":[...],"inlineVocabulary":[...],"questions":[...]}'></textarea>
+              </label>
+              <div class="editor-actions">
+                <button id="importArticleBtn" class="secondary-btn" type="button">Vložiť do editora</button>
+              </div>
+            </details>
           </section>
 
           <div id="articleContentStep" class="editor-step hidden">
@@ -490,7 +505,6 @@
               Nová kategória
               <input id="articleCategoryInput">
             </label>
-            <div id="articleCategoryTranslations" class="category-translations hidden"></div>
             <label class="field-row">
               Druha kategoria
               <select id="articleCategory2Select"></select>
@@ -499,7 +513,6 @@
               Nova druha kategoria
               <input id="articleCategory2Input">
             </label>
-            <div id="articleCategory2Translations" class="category-translations hidden"></div>
             <label class="field-row">
               Krátky popis
               <textarea id="articleSummaryInput" class="editor-textarea compact"></textarea>
@@ -646,7 +659,7 @@
 
   <script src="config.js?v=117"></script>
   <script src="constants.js?v=133"></script>
-  <script src="translations/ui.js?v=131"></script>
+  <script src="translations/ui.js?v=132"></script>
   <script src="translations/auth.js?v=135"></script>
   <script src="translations/new-languages.js?v=135"></script>
   <script src="translations/prompts.js?v=120"></script>
@@ -656,10 +669,10 @@
   <script src="profiles.js?v=134"></script>
   <script src="teams.js?v=132"></script>
   <script src="articles.js?v=132"></script>
-  <script src="reader.js?v=132"></script>
+  <script src="reader.js?v=133"></script>
   <script src="games.js?v=125"></script>
-  <script src="editor.js?v=134"></script>
+  <script src="editor.js?v=135"></script>
   <script src="home.js?v=134"></script>
-  <script src="app.js?v=136"></script>
+  <script src="app.js?v=137"></script>
 </body>
 </html>

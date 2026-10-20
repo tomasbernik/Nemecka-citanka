@@ -141,6 +141,7 @@ const UI_TEXT = {
     copyImagePrompt: "Bild-Prompt kopieren",
     articleImportJson: "Fertiger Artikel aus ChatGPT im JSON-Format",
     importArticle: "In den Editor einfügen",
+    manualJsonImport: "Manueller JSON-Import",
     copyTranslationPrompt: "Neue Inline-Wörter übersetzen",
     copyQuestionsPrompt: "Prompt für Fragen kopieren",
     generatedPrompt: "Generierter Prompt",
@@ -308,6 +309,7 @@ const UI_TEXT = {
     copyImagePrompt: "Kopírovať prompt pre obrázok",
     articleImportJson: "Hotový článok z ChatGPT vo formáte JSON",
     importArticle: "Vložiť do editora",
+    manualJsonImport: "Manuálny import JSON",
     copyTranslationPrompt: "Kopírovať nové inline slovíčka na preklad",
     copyQuestionsPrompt: "Kopírovať prompt pre otázky",
     generatedPrompt: "Vygenerovaný prompt",
@@ -475,6 +477,7 @@ const UI_TEXT = {
     copyImagePrompt: "Копировать prompt для картинки",
     articleImportJson: "Готовая статья из ChatGPT в формате JSON",
     importArticle: "Вставить в редактор",
+    manualJsonImport: "Ручной импорт JSON",
     copyTranslationPrompt: "Перевести новые inline-слова",
     copyQuestionsPrompt: "Копировать prompt для вопросов",
     generatedPrompt: "Сгенерированный prompt",
@@ -642,6 +645,7 @@ const UI_TEXT = {
     copyImagePrompt: "Kopiuj prompt obrazka",
     articleImportJson: "Gotowy artykuł z ChatGPT w formacie JSON",
     importArticle: "Wstaw do edytora",
+    manualJsonImport: "Ręczny import JSON",
     copyTranslationPrompt: "Kopiuj nowe inline słówka do tłumaczenia",
     copyQuestionsPrompt: "Kopiuj prompt dla pytań",
     generatedPrompt: "Wygenerowany prompt",
@@ -809,6 +813,7 @@ const UI_TEXT = {
     copyImagePrompt: "Kép prompt másolása",
     articleImportJson: "Kész ChatGPT-cikk JSON formátumban",
     importArticle: "Beillesztés a szerkesztőbe",
+    manualJsonImport: "Kézi JSON-importálás",
     copyTranslationPrompt: "Új inline szavak fordítása",
     copyQuestionsPrompt: "Kérdések prompt másolása",
     generatedPrompt: "Generált prompt",
@@ -1416,6 +1421,35 @@ Object.entries({
     articleLengthMedium: "300-350 kelime",
     articleLengthLong: "450-550 kelime"
   }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
+  de: {
+    assignArticle: "Artikel zuweisen",
+    articleAssignmentTitle: "Artikel Klassen oder Lernenden zuweisen",
+    articleAssignmentHelp: "Wähle eine oder mehrere Klassen oder nur bestimmte Lernende aus.",
+    saveAssignment: "Zuweisung speichern",
+    assignWholeClass: "Gesamte Klasse auswählen: {class}",
+    noClassesForAssignment: "Erstelle zuerst eine Klasse.",
+    assignmentSaved: "Die Zuweisung wurde gespeichert."
+  },
+  sk: {
+    assignArticle: "Prideliť článok",
+    articleAssignmentTitle: "Prideliť článok triedam alebo žiakom",
+    articleAssignmentHelp: "Vyber jednu alebo viac tried, prípadne iba konkrétnych žiakov.",
+    saveAssignment: "Uložiť zadanie",
+    assignWholeClass: "Vybrať celú triedu: {class}",
+    noClassesForAssignment: "Najprv vytvor triedu.",
+    assignmentSaved: "Zadanie bolo uložené."
+  },
+  ru: { assignArticle: "Назначить статью", assignmentSaved: "Задание сохранено." },
+  pl: { assignArticle: "Przypisz artykuł", assignmentSaved: "Zadanie zostało zapisane." },
+  hu: { assignArticle: "Cikk kiosztása", assignmentSaved: "A feladat mentve." },
+  ro: { assignArticle: "Atribuie articolul", assignmentSaved: "Tema a fost salvată." },
+  it: { assignArticle: "Assegna articolo", assignmentSaved: "Assegnazione salvata." },
+  en: { assignArticle: "Assign article", assignmentSaved: "Assignment saved." },
+  fr: { assignArticle: "Attribuer l’article", assignmentSaved: "Devoir enregistré." },
+  tr: { assignArticle: "Makaleyi ata", assignmentSaved: "Ödev kaydedildi." }
 }).forEach(([language, text]) => assignUiText(language, text));
 
 assignUiText("de", {

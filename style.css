@@ -816,31 +816,20 @@ h3 { font-size: 1.1rem; }
   display: none;
 }
 
-.category-translations {
+.manual-json-import {
   border: 1px solid var(--border);
   border-radius: 16px;
   padding: 12px;
   background: rgba(255, 255, 255, 0.52);
 }
 
-.category-translations.hidden {
-  display: none;
+.manual-json-import > summary {
+  cursor: pointer;
+  font-weight: 800;
 }
 
-.category-translations .muted {
-  margin: 0 0 10px;
-}
-
-.category-translation-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
-}
-
-.field-row.compact {
-  gap: 5px;
-  margin: 0;
-  font-size: 0.8rem;
+.manual-json-import[open] > summary {
+  margin-bottom: 12px;
 }
 
 .editor-actions {
@@ -1656,6 +1645,21 @@ h3 { font-size: 1.1rem; }
   border-top: 1px solid var(--border);
   margin-top: 18px;
   padding-top: 16px;
+}
+
+.article-teacher-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 14px 0 4px;
+}
+
+.article-teacher-actions.hidden,
+.article-assignment-panel.hidden {
+  display: none;
+}
+
+.article-assignment-panel {
+  margin-bottom: 18px;
 }
 
 .assignment-list {

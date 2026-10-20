@@ -962,23 +962,26 @@ function buildArticleJsonPrompt() {
   ].filter(Boolean).join("\n");
 }
 
+function applyImportedArticleToEditor(article) {
+  $("articleEditorSelect").value = "";
+  fillArticleEditor({
+    ...article,
+    visibility: DEFAULT_ARTICLE_VISIBILITY,
+    approvalStatus: DEFAULT_ARTICLE_APPROVAL_STATUS
+  });
+  $("articleVocabularyInput").value = JSON.stringify(article.vocabulary, null, 2);
+  state.editorBaseInlineVocabulary = article.inlineVocabulary || [];
+  state.editorManualInlineVocabulary = [];
+  $("articleInlineVocabularyInput").value = "";
+  $("articleInlineVocabularyInput").dataset.manual = "";
+  $("articleQuestionsInput").value = formatQuestionLines(article.questions);
+  updateArticleEditorFlow();
+}
+
 function importArticleToEditor() {
   try {
-    const article = parseArticleImport($("articleImportInput").value);
-    $("articleEditorSelect").value = "";
-    fillArticleEditor({
-      ...article,
-      visibility: DEFAULT_ARTICLE_VISIBILITY,
-      approvalStatus: DEFAULT_ARTICLE_APPROVAL_STATUS
-    });
-    $("articleVocabularyInput").value = JSON.stringify(article.vocabulary, null, 2);
-    state.editorBaseInlineVocabulary = article.inlineVocabulary || [];
-    state.editorManualInlineVocabulary = [];
-    $("articleInlineVocabularyInput").value = "";
-    $("articleInlineVocabularyInput").dataset.manual = "";
-    $("articleQuestionsInput").value = formatQuestionLines(article.questions);
+    applyImportedArticleToEditor(parseArticleImport($("articleImportInput").value));
     $("articleEditorStatus").textContent = t("articleImported");
-    updateArticleEditorFlow();
   } catch (error) {
     $("articleEditorStatus").textContent = error.message;
   }
@@ -1044,14 +1047,17 @@ function buildImagePrompt() {
   ].filter(Boolean).join("\n");
 }
 
-async function renderArticleAssignmentPanel(article = state.articles.find(item => item.id === $("articleEditorSelect")?.value) || null) {
-  const panel = $("articleAssignmentPanel");
-  const list = $("articleAssignmentList");
+async function renderArticleAssignmentPanel(article = state.articles.find(item => item.id === $("articleEditorSelect")?.value) || null, options = {}) {
+  const panelId = options.panelId || "articleAssignmentPanel";
+  const listId = options.listId || "articleAssignmentList";
+  const statusId = options.statusId || "articleAssignmentStatus";
+  const panel = $(panelId);
+  const list = $(listId);
   if (!panel || !list) return;
 
   const canAssign = Boolean(article?.id && hasTeacherLicense());
   panel.classList.toggle("hidden", !canAssign);
-  $("articleAssignmentStatus").textContent = "";
+  $(statusId).textContent = "";
   if (!canAssign) {
     list.innerHTML = "";
     return;
@@ -1112,6 +1118,39 @@ async function renderArticleAssignmentPanel(article = state.articles.find(item =
   list.querySelectorAll("[data-assignment-team]").forEach(updateAssignmentClassToggle);
 }
 
+function renderCurrentArticleTeacherActions(article = state.currentArticle) {
+  const actions = $("articleTeacherActions");
+  const panel = $("currentArticleAssignmentPanel");
+  const button = $("assignCurrentArticleBtn");
+  if (!actions || !panel || !button) return;
+
+  const canAssign = Boolean(article?.id && hasTeacherLicense());
+  actions.classList.toggle("hidden", !canAssign);
+  panel.classList.add("hidden");
+  button.setAttribute("aria-expanded", "false");
+}
+
+async function toggleCurrentArticleAssignmentPanel() {
+  const panel = $("currentArticleAssignmentPanel");
+  const button = $("assignCurrentArticleBtn");
+  if (!panel || !button || !state.currentArticle || !hasTeacherLicense()) return;
+
+  const opening = panel.classList.contains("hidden");
+  if (!opening) {
+    panel.classList.add("hidden");
+    button.setAttribute("aria-expanded", "false");
+    return;
+  }
+
+  button.setAttribute("aria-expanded", "true");
+  await renderArticleAssignmentPanel(state.currentArticle, {
+    panelId: "currentArticleAssignmentPanel",
+    listId: "currentArticleAssignmentList",
+    statusId: "currentArticleAssignmentStatus"
+  });
+  panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
 function updateAssignmentClassToggle(section) {
   const toggle = section?.querySelector("[data-assignment-team-toggle]");
   const students = Array.from(section?.querySelectorAll("[data-assignment-student]") || []);
@@ -1132,12 +1171,14 @@ function handleArticleAssignmentChange(event) {
   updateAssignmentClassToggle(section);
 }
 
-async function assignSelectedArticleToStudents() {
-  const article = state.articles.find(item => item.id === $("articleEditorSelect")?.value);
+async function saveArticleAssignments(article, options = {}) {
   if (!article) return;
 
+  const listId = options.listId || "articleAssignmentList";
+  const statusId = options.statusId || "articleAssignmentStatus";
+
   const studentChoices = new Map();
-  document.querySelectorAll("#articleAssignmentList [data-assignment-student]").forEach(input => {
+  document.querySelectorAll(`#${listId} [data-assignment-student]`).forEach(input => {
     const current = studentChoices.get(input.value) || {
       student: state.profiles.find(profile => profile.id === input.value),
       teamId: input.dataset.teamId,
@@ -1164,12 +1205,25 @@ async function assignSelectedArticleToStudents() {
         })
       });
     }));
-    $("articleAssignmentStatus").textContent = t("assignmentSaved");
-    renderArticleAssignmentPanel(article);
+    await renderArticleAssignmentPanel(article, options);
+    $(statusId).textContent = t("assignmentSaved");
     await renderTeacherOverview();
   } catch (error) {
-    $("articleAssignmentStatus").textContent = error.message;
+    $(statusId).textContent = error.message;
   }
+}
+
+async function assignSelectedArticleToStudents() {
+  const article = state.articles.find(item => item.id === $("articleEditorSelect")?.value);
+  await saveArticleAssignments(article);
+}
+
+async function assignCurrentArticleToStudents() {
+  await saveArticleAssignments(state.currentArticle, {
+    panelId: "currentArticleAssignmentPanel",
+    listId: "currentArticleAssignmentList",
+    statusId: "currentArticleAssignmentStatus"
+  });
 }
 
 function renderArticleEditorList(selectedId = $("articleEditorSelect")?.value) {
@@ -1253,54 +1307,11 @@ function normalizeArticleCategoryLabels(labels = {}, categoryValue = "") {
     }));
 }
 
-function renderCategoryTranslationInputs(rootId, category, labels = {}) {
-  const root = $(rootId);
-  if (!root) return;
-
-  root.innerHTML = `
-    <p class="muted">${escapeHtml(t("categoryTranslations"))}</p>
-    <div class="category-translation-grid">
-      ${Object.entries(NATIVE_LANGUAGES).map(([code, language]) => `
-        <label class="field-row compact">
-          ${escapeHtml(language.label)}
-          <input data-category-translation="${escapeHtml(code)}" value="${escapeHtml(labels[code] || category || "")}">
-        </label>
-      `).join("")}
-    </div>
-  `;
-}
-
-function readCategoryTranslationInputs(rootId, category) {
-  const root = $(rootId);
-  if (!root || root.classList.contains("hidden")) return null;
-
-  const labels = getEmptyCategoryLabels(category);
-  root.querySelectorAll("[data-category-translation]").forEach(input => {
-    labels[input.dataset.categoryTranslation] = input.value.trim() || category;
-  });
-  return labels;
-}
-
 function getArticleEditorCategoryLabels() {
-  const categoryPairs = [
-    {
-      category: $("articleCategorySelect").value === NEW_CATEGORY_VALUE ? $("articleCategoryInput").value.trim() : $("articleCategorySelect").value.trim(),
-      rootId: "articleCategoryTranslations",
-      isNew: $("articleCategorySelect").value === NEW_CATEGORY_VALUE
-    },
-    {
-      category: $("articleCategory2Select").value === NEW_CATEGORY_VALUE ? $("articleCategory2Input").value.trim() : $("articleCategory2Select").value.trim(),
-      rootId: "articleCategory2Translations",
-      isNew: $("articleCategory2Select").value === NEW_CATEGORY_VALUE
-    }
-  ];
-
-  return categoryPairs.reduce((labelsByCategory, item) => {
-    if (!item.category) return labelsByCategory;
-    const enteredLabels = readCategoryTranslationInputs(item.rootId, item.category);
-    const existingArticleLabels = state.editorCategoryLabels?.[item.category];
-    if ((item.isNew && !getCategoryLabels(item.category)) || existingArticleLabels) {
-      labelsByCategory[item.category] = normalizeCategoryLabels(enteredLabels || existingArticleLabels || {}, item.category);
+  return getArticleEditorCategories().reduce((labelsByCategory, category) => {
+    const existingArticleLabels = state.editorCategoryLabels?.[category];
+    if (!getCategoryLabels(category) || existingArticleLabels) {
+      labelsByCategory[category] = normalizeCategoryLabels(existingArticleLabels || {}, category);
     }
     return labelsByCategory;
   }, {});
@@ -1342,19 +1353,6 @@ function updateArticleCategoryMode() {
   $("articleNewCategoryWrap").classList.toggle("hidden", !isNewCategory);
   const isNewCategory2 = $("articleCategory2Select")?.value === NEW_CATEGORY_VALUE;
   $("articleNewCategory2Wrap")?.classList.toggle("hidden", !isNewCategory2);
-  const isEditingArticle = Boolean($("articleEditorSelect")?.value);
-  const showCategoryTranslations = isNewCategory && isEditingArticle;
-  const showCategory2Translations = isNewCategory2 && isEditingArticle;
-  $("articleCategoryTranslations")?.classList.toggle("hidden", !showCategoryTranslations);
-  $("articleCategory2Translations")?.classList.toggle("hidden", !showCategory2Translations);
-  if (showCategoryTranslations) {
-    const category = $("articleCategoryInput").value.trim();
-    renderCategoryTranslationInputs("articleCategoryTranslations", category, state.editorCategoryLabels?.[category] || getEmptyCategoryLabels(category));
-  }
-  if (showCategory2Translations) {
-    const category = $("articleCategory2Input").value.trim();
-    renderCategoryTranslationInputs("articleCategory2Translations", category, state.editorCategoryLabels?.[category] || getEmptyCategoryLabels(category));
-  }
 }
 
 function hasTranslatedVocabulary() {
@@ -1515,8 +1513,30 @@ function readArticleEditor() {
 async function saveArticleFromEditor() {
   try {
     const article = readArticleEditor();
+    const existingArticle = state.articles.find(item => item.id === article.id) || null;
+    const requestedApprovalStatus = article.approvalStatus;
+    const shouldModerateAfterSave = Boolean(
+      existingArticle
+      && canModerateArticleApproval(existingArticle)
+      && ["approved", "rejected"].includes(requestedApprovalStatus)
+      && requestedApprovalStatus !== existingArticle.approvalStatus
+    );
+
+    // Content and moderation are separate operations. Saving both in one PATCH
+    // makes the workflow trigger reset the status back to pending whenever the
+    // teacher also corrected article content.
+    if (shouldModerateAfterSave) {
+      article.approvalStatus = existingArticle.approvalStatus;
+      article.published = existingArticle.published === true;
+    }
+
     article.image = await uploadArticleImage(article);
     await saveArticle(article);
+    if (shouldModerateAfterSave) {
+      await setArticleApprovalStatus(article.id, requestedApprovalStatus);
+      article.approvalStatus = requestedApprovalStatus;
+      article.published = requestedApprovalStatus === "approved";
+    }
     state.editorBaseInlineVocabulary = getInlineVocabulary(article);
     state.editorManualInlineVocabulary = [];
     $("articleInlineVocabularyInput").value = "";
@@ -1615,9 +1635,9 @@ async function generateArticleDirectlyWithAi() {
       JSON.stringify(result.article)
     );
 
-    // Použijeme existujúci import článkov.
-    $("articleImportInput").value = JSON.stringify(article);
-    importArticleToEditor();
+    // AI výsledok ide priamo do editora; manuálny JSON import ostáva iba ako
+    // voliteľná cesta pre články vytvorené mimo aplikácie.
+    applyImportedArticleToEditor(article);
 
     status.textContent =
       "Článok bol vygenerovaný. Skontroluj ho a potom ulož.";

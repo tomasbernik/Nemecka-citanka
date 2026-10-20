@@ -581,6 +581,10 @@ function updateStaticTexts() {
   setText("articleAssignmentTitle", "articleAssignmentTitle");
   setText("articleAssignmentHelp", "articleAssignmentHelp");
   setText("assignArticleBtn", "saveAssignment");
+  setText("assignCurrentArticleBtn", "assignArticle");
+  setText("currentArticleAssignmentTitle", "articleAssignmentTitle");
+  setText("currentArticleAssignmentHelp", "articleAssignmentHelp");
+  setText("saveCurrentArticleAssignmentBtn", "saveAssignment");
   setOptionText("articleApprovalStatusSelect", "draft", "draft");
   setOptionText("articleApprovalStatusSelect", "pending", "pending");
   setOptionText("articleApprovalStatusSelect", "approved", "approved");
@@ -600,6 +604,7 @@ function updateStaticTexts() {
   setText("copyArticleJsonPromptBtn", "copyArticleJsonPrompt");
   setText("copyImagePromptBtn", "copyImagePrompt");
   setLabelText("articleImportInput", "articleImportJson");
+  setText("manualJsonImportSummary", "manualJsonImport");
   setText("importArticleBtn", "importArticle");
   setText("copyTranslationPromptBtn", "copyTranslationPrompt");
   setLabelText("generatedPromptOutput", "generatedPrompt");
@@ -981,6 +986,9 @@ onClick("saveArticleBtn", saveArticleFromEditor);
 onClick("deleteArticleBtn", deleteArticleFromEditor);
 onClick("assignArticleBtn", assignSelectedArticleToStudents);
 onEvent("articleAssignmentList", "change", handleArticleAssignmentChange);
+onClick("assignCurrentArticleBtn", toggleCurrentArticleAssignmentPanel);
+onClick("saveCurrentArticleAssignmentBtn", assignCurrentArticleToStudents);
+onEvent("currentArticleAssignmentList", "change", handleArticleAssignmentChange);
 onChange("articleEditorSelect", () => {
   const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
   fillArticleEditor(article || null);

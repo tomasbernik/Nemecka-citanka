@@ -477,6 +477,7 @@ async function openArticle(id) {
   renderArticleVariantSwitch(article);
   cleanupDiscoveredVocabulary(article);
   renderArticleImage(article);
+  renderCurrentArticleTeacherActions(article);
   renderArticleText(article);
   renderVocabulary();
   renderQuestions(article);
