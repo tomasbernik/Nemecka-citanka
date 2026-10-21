@@ -1278,7 +1278,7 @@ async function init() {
   const hasPendingAuth = Boolean(localStorage.getItem(AUTH_PENDING_ACTION_KEY));
   const savedProfileId = localStorage.getItem(CURRENT_PROFILE_KEY);
   if (!state.authUser) {
-    localStorage.removeItem(CURRENT_PROFILE_KEY);
+    if (!state.authSession) localStorage.removeItem(CURRENT_PROFILE_KEY);
     if (hasPendingInvite || hasPendingAuth) showLogin();
     else showGuestHome();
     logAppOpened({

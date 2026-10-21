@@ -1,3 +1,17 @@
+let authRefreshPromise = null;
+let authRefreshRetryAfter = 0;
+
+const AUTH_USER_STORAGE_KEY = `${AUTH_SESSION_KEY}:user`;
+const TERMINAL_AUTH_ERROR_CODES = new Set([
+  "bad_jwt",
+  "refresh_token_already_used",
+  "refresh_token_not_found",
+  "session_expired",
+  "session_not_found",
+  "user_banned",
+  "user_not_found",
+]);
+
 function getStoredAuthSession() {
   try {
     return JSON.parse(localStorage.getItem(AUTH_SESSION_KEY) || "null");
@@ -6,12 +20,53 @@ function getStoredAuthSession() {
   }
 }
 
+function getStoredAuthUser(session = state.authSession || getStoredAuthSession()) {
+  try {
+    const storedUser = JSON.parse(localStorage.getItem(AUTH_USER_STORAGE_KEY) || "null");
+    if (storedUser?.id) return storedUser;
+  } catch (error) {
+    console.info("Stored auth user could not be read.", error);
+  }
+
+  if (session?.user?.id) return session.user;
+
+  try {
+    const payloadPart = String(session?.access_token || "").split(".")[1];
+    if (!payloadPart) return null;
+    const normalized = payloadPart.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(payloadPart.length / 4) * 4, "=");
+    const payload = JSON.parse(atob(normalized));
+    return payload?.sub ? { id: payload.sub, email: payload.email || "" } : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveAuthUser(user) {
+  state.authUser = user || null;
+  if (user?.id) {
+    localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(user));
+  } else {
+    localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+  }
+}
+
+function isDefinitiveAuthSessionError(error) {
+  return TERMINAL_AUTH_ERROR_CODES.has(String(error?.code || "").toLowerCase());
+}
+
+function clearInvalidAuthSession() {
+  saveAuthSession(null);
+  saveAuthUser(null);
+}
+
 function saveAuthSession(session) {
   state.authSession = session;
   if (session) {
     localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
   } else {
     localStorage.removeItem(AUTH_SESSION_KEY);
+    localStorage.removeItem(AUTH_USER_STORAGE_KEY);
+    state.authUser = null;
   }
 }
 
@@ -56,7 +111,11 @@ function getCurrentAuthUserId() {
 }
 
 async function supabaseAuthRequest(path, options = {}) {
-  if (!isRemoteNetworkAvailable()) return null;
+  if (!isRemoteNetworkAvailable()) {
+    const error = new Error("Supabase Auth is temporarily unavailable while offline.");
+    error.code = "network_unavailable";
+    throw error;
+  }
 
   const response = await remoteFetch(`${SUPABASE_CONFIG.url.replace(/\/$/, "")}/auth/v1/${path}`, {
     ...options,
@@ -68,7 +127,18 @@ async function supabaseAuthRequest(path, options = {}) {
   });
 
   if (!response.ok) {
-    throw new Error(`Supabase Auth ${response.status}: ${await response.text()}`);
+    const text = await response.text();
+    let payload = null;
+    try {
+      payload = text ? JSON.parse(text) : null;
+    } catch {
+      payload = null;
+    }
+    const errorMessage = payload?.message || payload?.msg;
+    const error = new Error(errorMessage ? `Supabase Auth ${response.status}: ${errorMessage}` : `Supabase Auth ${response.status}`);
+    error.status = response.status;
+    error.code = payload?.error_code || payload?.code || payload?.error || "";
+    throw error;
   }
 
   const text = await response.text();
@@ -91,9 +161,9 @@ function readAuthSessionFromHash() {
   };
 }
 
-async function refreshAuthSession() {
+async function performAuthSessionRefresh() {
   const session = state.authSession || getStoredAuthSession();
-  const expiresAt = Number(session.expires_at || 0);
+  const expiresAt = Number(session?.expires_at || 0);
   if (!session?.refresh_token) {
     if (expiresAt && expiresAt - 60 <= Math.floor(Date.now() / 1000)) {
       saveAuthSession(null);
@@ -108,15 +178,51 @@ async function refreshAuthSession() {
     method: "POST",
     body: JSON.stringify({ refresh_token: session.refresh_token })
   });
+  if (!refreshed?.access_token) {
+    const error = new Error("Supabase Auth returned an incomplete refreshed session.");
+    error.code = "invalid_refresh_response";
+    throw error;
+  }
 
   const nextSession = {
     access_token: refreshed.access_token,
     refresh_token: refreshed.refresh_token || session.refresh_token,
     token_type: refreshed.token_type || "bearer",
+    user: refreshed.user || session.user || state.authUser || getStoredAuthUser(session),
     expires_at: Math.floor(Date.now() / 1000) + Number(refreshed.expires_in || 3600)
   };
   saveAuthSession(nextSession);
+  if (nextSession.user?.id) saveAuthUser(nextSession.user);
   return nextSession;
+}
+
+async function refreshAuthSession() {
+  const session = state.authSession || getStoredAuthSession();
+  const expiresAt = Number(session?.expires_at || 0);
+  const now = Math.floor(Date.now() / 1000);
+  if (!session?.refresh_token || (expiresAt && expiresAt - 60 > now)) {
+    return performAuthSessionRefresh();
+  }
+  if (authRefreshRetryAfter > Date.now()) {
+    const error = new Error("Auth refresh is waiting before retrying a temporary failure.");
+    error.code = "refresh_retry_later";
+    throw error;
+  }
+  if (!authRefreshPromise) {
+    authRefreshPromise = performAuthSessionRefresh()
+      .then((nextSession) => {
+        authRefreshRetryAfter = 0;
+        return nextSession;
+      })
+      .catch((error) => {
+        if (!isDefinitiveAuthSessionError(error)) authRefreshRetryAfter = Date.now() + 30_000;
+        throw error;
+      })
+      .finally(() => {
+        authRefreshPromise = null;
+      });
+  }
+  return authRefreshPromise;
 }
 
 async function getFreshAuthAccessToken() {
@@ -125,8 +231,7 @@ async function getFreshAuthAccessToken() {
     return session?.access_token || null;
   } catch (error) {
     console.info("Auth refresh skipped:", error.message);
-    saveAuthSession(null);
-    state.authUser = null;
+    if (isDefinitiveAuthSessionError(error)) clearInvalidAuthSession();
     return null;
   }
 }
@@ -135,19 +240,24 @@ async function loadAuthUser() {
   try {
     const session = await refreshAuthSession();
     if (!session?.access_token) {
-      state.authUser = null;
+      saveAuthUser(null);
       return null;
     }
 
     const user = await supabaseAuthRequest("user", {
       headers: { Authorization: `Bearer ${session.access_token}` }
     });
-    state.authUser = user;
+    saveAuthUser(user);
     return user;
   } catch (error) {
     console.info("Auth user lookup skipped:", error.message);
-    state.authUser = null;
-    return null;
+    if (isDefinitiveAuthSessionError(error)) {
+      clearInvalidAuthSession();
+      return null;
+    }
+    const cachedUser = getStoredAuthUser();
+    if (cachedUser?.id) state.authUser = cachedUser;
+    return cachedUser;
   }
 }
 
@@ -206,7 +316,7 @@ function saveAuthResponseSession(response) {
   const session = response?.session || response;
   if (!session?.access_token) return false;
   saveAuthSession(session);
-  state.authUser = session.user || response?.user || null;
+  saveAuthUser(session.user || response?.user || null);
   return true;
 }
 
