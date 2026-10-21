@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "citanka-v155";
+const CACHE_NAME = "citanka-v156";
 const IMAGE_CACHE_NAME = "citanka-article-images-v114";
 const IMAGE_CACHE_LIMIT = 25;
 const APP_FILES = [
@@ -19,7 +19,7 @@ const APP_FILES = [
   "./teams.js?v=132",
   "./articles.js?v=135",
   "./reader.js?v=139",
-  "./games.js?v=126",
+  "./games.js?v=127",
   "./editor.js?v=139",
   "./app.js?v=144",
   "./home.js?v=138",

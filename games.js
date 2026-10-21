@@ -239,10 +239,34 @@ function normalizeSearchWord(value) {
 }
 
 function getWordSearchVocabulary(article) {
+  const discoveredKeys = new Set(
+    getSavedVocabulary(article).map(item => normalizeVocabularyKey(item.de))
+  );
+
   return getPracticeVocabulary(article)
-    .map(item => ({ ...item, search: normalizeSearchWord(item.de) }))
-    .filter(item => item.search.length >= 4 && item.search.length <= 10)
-    .slice(0, 24);
+    .map(item => ({
+      ...item,
+      search: normalizeSearchWord(item.de),
+      discovered: discoveredKeys.has(normalizeVocabularyKey(item.de))
+    }))
+    .filter(item => item.search.length >= 4 && item.search.length <= 10);
+}
+
+function selectWordSearchVocabulary(article, limit = 6) {
+  const vocabulary = getWordSearchVocabulary(article);
+  const discovered = shuffle(vocabulary.filter(item => item.discovered));
+  const initial = shuffle(vocabulary.filter(item => !item.discovered));
+  const discoveredCount = Math.min(discovered.length, Math.ceil(limit / 2));
+  const selected = [
+    ...discovered.slice(0, discoveredCount),
+    ...initial.slice(0, limit - discoveredCount)
+  ];
+
+  if (selected.length < limit) {
+    selected.push(...discovered.slice(discoveredCount, discoveredCount + limit - selected.length));
+  }
+
+  return shuffle(selected);
 }
 
 async function saveProfileData() {
@@ -920,7 +944,7 @@ function createWordSearchGrid(words) {
 }
 
 function startWordSearchGame() {
-  const vocabulary = shuffle(getWordSearchVocabulary(state.currentArticle)).slice(0, 6);
+  const vocabulary = selectWordSearchVocabulary(state.currentArticle);
   if (vocabulary.length < 3) {
     state.wordSearchGame = { words: [], found: [], selected: [], grid: [] };
     $("wordSearchHints").innerHTML = "";
