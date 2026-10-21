@@ -50,6 +50,7 @@ function setTeacherPanel(panel) {
   $("teacherArticlesTabBtn").classList.toggle("quiet", !showArticles);
   $("teacherStudentsTabBtn").classList.toggle("quiet", !showStudents);
   $("adminOverviewTabBtn").classList.toggle("quiet", !showAdmin);
+  if (!showArticles) setArticleModerationExpanded(false);
   if (showArticles) renderArticleModerationQueue();
   renderGamification();
   renderMobileBottomNav(getActiveViewId());
@@ -58,6 +59,7 @@ function setTeacherPanel(panel) {
 
 async function showTeacherView(panel = "articles") {
   if (!state.currentProfile) return;
+  setArticleModerationExpanded(false);
   renderArticleEditorList();
   if (panel === "students") {
     setTeacherPanel("students");
@@ -79,6 +81,26 @@ function getArticleOwnerLabel(article) {
     || "-";
 }
 
+function setArticleModerationExpanded(expanded) {
+  const button = $("toggleArticleModerationBtn");
+  const content = $("articleModerationContent");
+  if (!button || !content) return;
+
+  button.setAttribute("aria-expanded", String(expanded));
+  button.textContent = t(expanded ? "hideArticlesAwaitingApproval" : "showArticlesAwaitingApproval");
+  content.classList.toggle("hidden", !expanded);
+  if (!expanded) {
+    $("articleModerationList").innerHTML = "";
+    $("articleModerationStatus").textContent = "";
+  }
+}
+
+function toggleArticleModeration() {
+  const expanded = $("toggleArticleModerationBtn")?.getAttribute("aria-expanded") === "true";
+  setArticleModerationExpanded(!expanded);
+  if (!expanded) renderArticleModerationQueue();
+}
+
 function renderArticleModerationQueue() {
   const panel = $("articleModerationPanel");
   const root = $("articleModerationList");
@@ -88,7 +110,14 @@ function renderArticleModerationQueue() {
     .filter(article => ["draft", "pending"].includes(article.approvalStatus))
     .sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
 
-  panel.classList.toggle("hidden", !hasTeacherLicense());
+  const canModerate = hasTeacherLicense();
+  panel.classList.toggle("hidden", !canModerate);
+  if (!canModerate) {
+    setArticleModerationExpanded(false);
+    return;
+  }
+  if ($("toggleArticleModerationBtn")?.getAttribute("aria-expanded") !== "true") return;
+
   root.innerHTML = articles.length
     ? articles.map(article => `
         <article class="management-row">

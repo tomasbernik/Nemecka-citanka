@@ -2354,6 +2354,20 @@ select {
   background: var(--bg);
 }
 
+.article-moderation-toggle {
+  justify-self: start;
+}
+
+#articleModerationContent {
+  display: grid;
+  gap: 12px;
+}
+
+.article-moderation-panel.hidden,
+#articleModerationContent.hidden {
+  display: none;
+}
+
 .management-list,
 .management-profile-grid {
   display: grid;

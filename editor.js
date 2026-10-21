@@ -1456,12 +1456,18 @@ function fillArticleEditor(article) {
   updateArticleEditorFlow();
 }
 
+function resetManualJsonImport() {
+  $("articleImportInput").value = "";
+  const details = document.querySelector(".manual-json-import");
+  if (details) details.open = false;
+}
+
 function clearArticleCreationHelperInputs() {
   $("articlePromptInput").value = "";
   $("articleRequiredWordsMode").value = "no";
   $("articleRequiredWordsInput").value = "";
   updateArticleRequiredWordsMode();
-  $("articleImportInput").value = "";
+  resetManualJsonImport();
   $("generatedPromptOutput").value = "";
   $("generatedPromptWrap").classList.add("hidden");
 }
@@ -1579,6 +1585,7 @@ async function saveArticleFromEditor() {
     $("articleInlineVocabularyInput").dataset.manual = "";
     state.articleImageFile = null;
     $("articleImageInput").value = "";
+    resetManualJsonImport();
     const savedArticle = state.articles.find(item => item.id === article.id) || article;
     state.editorExpanded = false;
     fillArticleEditor(savedArticle);

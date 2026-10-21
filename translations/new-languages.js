@@ -1352,6 +1352,29 @@ Object.entries({
 }).forEach(([language, text]) => assignUiText(language, text));
 
 Object.entries({
+  ro: {
+    showArticlesAwaitingApproval: "Afișează articolele pentru aprobare",
+    hideArticlesAwaitingApproval: "Ascunde articolele pentru aprobare"
+  },
+  it: {
+    showArticlesAwaitingApproval: "Mostra gli articoli da approvare",
+    hideArticlesAwaitingApproval: "Nascondi gli articoli da approvare"
+  },
+  en: {
+    showArticlesAwaitingApproval: "Show articles awaiting approval",
+    hideArticlesAwaitingApproval: "Hide articles awaiting approval"
+  },
+  fr: {
+    showArticlesAwaitingApproval: "Afficher les articles à approuver",
+    hideArticlesAwaitingApproval: "Masquer les articles à approuver"
+  },
+  tr: {
+    showArticlesAwaitingApproval: "Onay bekleyen makaleleri göster",
+    hideArticlesAwaitingApproval: "Onay bekleyen makaleleri gizle"
+  }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
   ru: {
     articleAssignmentTitle: "Назначить статью классам или ученикам",
     articleAssignmentHelp: "Выберите один или несколько классов либо только отдельных учеников.",

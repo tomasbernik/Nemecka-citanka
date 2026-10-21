@@ -1440,6 +1440,29 @@ Object.entries({
 
 Object.entries({
   de: {
+    showArticlesAwaitingApproval: "Artikel zur Freigabe anzeigen",
+    hideArticlesAwaitingApproval: "Artikel zur Freigabe ausblenden"
+  },
+  sk: {
+    showArticlesAwaitingApproval: "Zobraziť články na schválenie",
+    hideArticlesAwaitingApproval: "Skryť články na schválenie"
+  },
+  ru: {
+    showArticlesAwaitingApproval: "Показать статьи на одобрение",
+    hideArticlesAwaitingApproval: "Скрыть статьи на одобрение"
+  },
+  pl: {
+    showArticlesAwaitingApproval: "Pokaż artykuły do zatwierdzenia",
+    hideArticlesAwaitingApproval: "Ukryj artykuły do zatwierdzenia"
+  },
+  hu: {
+    showArticlesAwaitingApproval: "Jóváhagyásra váró cikkek megjelenítése",
+    hideArticlesAwaitingApproval: "Jóváhagyásra váró cikkek elrejtése"
+  }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
+  de: {
     assignArticle: "Artikel zuweisen",
     articleAssignmentTitle: "Artikel Klassen oder Lernenden zuweisen",
     articleAssignmentHelp: "Wähle eine oder mehrere Klassen oder nur bestimmte Lernende aus.",

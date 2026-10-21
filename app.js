@@ -560,6 +560,7 @@ function updateStaticTexts() {
   setText("adminOverviewTitle", "adminOverviewTitle");
   setText("articleModerationEyebrow", "approval");
   setText("articleModerationTitle", "articlesAwaitingApproval");
+  setArticleModerationExpanded($("toggleArticleModerationBtn")?.getAttribute("aria-expanded") === "true");
   setText("joinInviteTitle", "joinInviteTitle");
   setLabelText("joinInviteInput", "joinInviteLabel");
   setText("joinInviteBtn", "joinInvite");
@@ -935,6 +936,7 @@ onClick("adminOverviewTabBtn", async () => {
   setTeacherPanel("admin");
   renderAdminOverview();
 });
+onClick("toggleArticleModerationBtn", toggleArticleModeration);
 onEvent("articleModerationList", "click", handleArticleModerationClick);
 onEvent("adminOverview", "click", handleAdminOverviewClick);
 onEvent("teacherOverview", "click", handleTeacherOverviewClick);
