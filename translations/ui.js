@@ -1441,23 +1441,33 @@ Object.entries({
 Object.entries({
   de: {
     showArticlesAwaitingApproval: "Artikel zur Freigabe anzeigen",
-    hideArticlesAwaitingApproval: "Artikel zur Freigabe ausblenden"
+    hideArticlesAwaitingApproval: "Artikel zur Freigabe ausblenden",
+    chapterRead: "Gelesen",
+    chaptersReadProgress: "{read} von {total} gelesen"
   },
   sk: {
     showArticlesAwaitingApproval: "Zobraziť články na schválenie",
-    hideArticlesAwaitingApproval: "Skryť články na schválenie"
+    hideArticlesAwaitingApproval: "Skryť články na schválenie",
+    chapterRead: "Prečítané",
+    chaptersReadProgress: "{read} z {total} prečítaných"
   },
   ru: {
     showArticlesAwaitingApproval: "Показать статьи на одобрение",
-    hideArticlesAwaitingApproval: "Скрыть статьи на одобрение"
+    hideArticlesAwaitingApproval: "Скрыть статьи на одобрение",
+    chapterRead: "Прочитано",
+    chaptersReadProgress: "Прочитано: {read} из {total}"
   },
   pl: {
     showArticlesAwaitingApproval: "Pokaż artykuły do zatwierdzenia",
-    hideArticlesAwaitingApproval: "Ukryj artykuły do zatwierdzenia"
+    hideArticlesAwaitingApproval: "Ukryj artykuły do zatwierdzenia",
+    chapterRead: "Przeczytane",
+    chaptersReadProgress: "Przeczytano {read} z {total}"
   },
   hu: {
     showArticlesAwaitingApproval: "Jóváhagyásra váró cikkek megjelenítése",
-    hideArticlesAwaitingApproval: "Jóváhagyásra váró cikkek elrejtése"
+    hideArticlesAwaitingApproval: "Jóváhagyásra váró cikkek elrejtése",
+    chapterRead: "Elolvasva",
+    chaptersReadProgress: "{read}/{total} elolvasva"
   }
 }).forEach(([language, text]) => assignUiText(language, text));
 

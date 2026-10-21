@@ -435,6 +435,7 @@ function markCurrentArticleRead(source = "manual") {
   renderArticles();
   renderHomeAssignments();
   renderGamification();
+  renderArticleChapterSwitch(article);
 }
 
 function updateMarkReadButtons(label) {
@@ -501,15 +502,36 @@ function renderArticleChapterSwitch(article) {
     return;
   }
 
+  const readIds = new Set(state.profileData.readIds || []);
+  const readCount = chapters.filter(chapter => readIds.has(chapter.id)).length;
+  const progressLabel = formatText("chaptersReadProgress", {
+    read: readCount,
+    total: chapters.length
+  });
+  const progressPercent = Math.round((readCount / chapters.length) * 100);
+
   root.classList.remove("hidden");
   root.innerHTML = `
-    <p class="eyebrow">${escapeHtml(article.seriesTitle || t("articleSeries"))}</p>
+    <div class="chapter-switch-heading">
+      <p class="eyebrow">${escapeHtml(article.seriesTitle || t("articleSeries"))}</p>
+      <span class="chapter-progress-label">${escapeHtml(progressLabel)}</span>
+    </div>
+    <div class="chapter-series-progress" role="progressbar" aria-label="${escapeHtml(progressLabel)}" aria-valuemin="0" aria-valuemax="${chapters.length}" aria-valuenow="${readCount}">
+      <span style="width: ${progressPercent}%"></span>
+    </div>
     <div class="chapter-switch-list" role="navigation" aria-label="${escapeHtml(t("chapters"))}">
-      ${chapters.map((chapter, index) => `
-        <button class="chapter-switch-btn ${chapter.id === article.id ? "active" : ""}" type="button" data-chapter-id="${escapeHtml(chapter.id)}" aria-current="${chapter.id === article.id ? "page" : "false"}">
-          <span>${index + 1}</span>${escapeHtml(chapter.title)}
-        </button>
-      `).join("")}
+      ${chapters.map((chapter, index) => {
+        const isActive = chapter.id === article.id;
+        const isRead = readIds.has(chapter.id);
+        const accessibleLabel = isRead ? `${chapter.title}, ${t("chapterRead")}` : chapter.title;
+        return `
+          <button class="chapter-switch-btn ${isActive ? "active" : ""} ${isRead ? "completed" : ""}" type="button" data-chapter-id="${escapeHtml(chapter.id)}" aria-current="${isActive ? "page" : "false"}" aria-label="${escapeHtml(accessibleLabel)}">
+            <span class="chapter-switch-marker" aria-hidden="true">${isRead ? "✓" : index + 1}</span>
+            <span class="chapter-switch-title">${escapeHtml(chapter.title)}</span>
+            ${isRead ? `<span class="chapter-read-label">${escapeHtml(t("chapterRead"))}</span>` : ""}
+          </button>
+        `;
+      }).join("")}
     </div>
   `;
   root.querySelectorAll("[data-chapter-id]").forEach(button => {

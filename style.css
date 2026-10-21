@@ -422,16 +422,46 @@ h3 { font-size: 1.1rem; }
   margin: 0;
 }
 
-.chapter-switch-list {
+.chapter-switch-heading {
   display: flex;
-  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.chapter-progress-label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
+.chapter-series-progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 16%, var(--card));
+}
+
+.chapter-series-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent-dark);
+  transition: width 180ms ease;
+}
+
+.chapter-switch-list {
+  display: grid;
   gap: 8px;
 }
 
 .chapter-switch-btn {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 7px;
+  width: 100%;
   padding: 9px 12px;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -440,7 +470,7 @@ h3 { font-size: 1.1rem; }
   text-align: left;
 }
 
-.chapter-switch-btn span {
+.chapter-switch-marker {
   display: inline-grid;
   width: 22px;
   height: 22px;
@@ -449,11 +479,49 @@ h3 { font-size: 1.1rem; }
   background: var(--accent);
   color: var(--accent-text);
   font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.chapter-switch-title {
+  min-width: 0;
+}
+
+.chapter-switch-btn.completed {
+  border-color: color-mix(in srgb, var(--accent-dark) 42%, var(--border));
+  background: color-mix(in srgb, var(--accent) 11%, var(--card));
+}
+
+.chapter-switch-btn.completed .chapter-switch-marker {
+  background: var(--accent-dark);
+  color: #fff;
+}
+
+.chapter-read-label {
+  color: var(--accent-dark);
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
 }
 
 .chapter-switch-btn.active {
   border-color: var(--accent-dark);
   box-shadow: 0 0 0 2px rgba(var(--accent-dark-rgb), 0.2);
+}
+
+@media (max-width: 560px) {
+  .chapter-switch-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .chapter-switch-btn {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .chapter-read-label {
+    grid-column: 2;
+  }
 }
 
 .series-badge {

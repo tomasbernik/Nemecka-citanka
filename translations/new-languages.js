@@ -1354,23 +1354,33 @@ Object.entries({
 Object.entries({
   ro: {
     showArticlesAwaitingApproval: "Afișează articolele pentru aprobare",
-    hideArticlesAwaitingApproval: "Ascunde articolele pentru aprobare"
+    hideArticlesAwaitingApproval: "Ascunde articolele pentru aprobare",
+    chapterRead: "Citit",
+    chaptersReadProgress: "{read} din {total} citite"
   },
   it: {
     showArticlesAwaitingApproval: "Mostra gli articoli da approvare",
-    hideArticlesAwaitingApproval: "Nascondi gli articoli da approvare"
+    hideArticlesAwaitingApproval: "Nascondi gli articoli da approvare",
+    chapterRead: "Letto",
+    chaptersReadProgress: "{read} di {total} letti"
   },
   en: {
     showArticlesAwaitingApproval: "Show articles awaiting approval",
-    hideArticlesAwaitingApproval: "Hide articles awaiting approval"
+    hideArticlesAwaitingApproval: "Hide articles awaiting approval",
+    chapterRead: "Read",
+    chaptersReadProgress: "{read} of {total} read"
   },
   fr: {
     showArticlesAwaitingApproval: "Afficher les articles à approuver",
-    hideArticlesAwaitingApproval: "Masquer les articles à approuver"
+    hideArticlesAwaitingApproval: "Masquer les articles à approuver",
+    chapterRead: "Lu",
+    chaptersReadProgress: "{read} sur {total} lus"
   },
   tr: {
     showArticlesAwaitingApproval: "Onay bekleyen makaleleri göster",
-    hideArticlesAwaitingApproval: "Onay bekleyen makaleleri gizle"
+    hideArticlesAwaitingApproval: "Onay bekleyen makaleleri gizle",
+    chapterRead: "Okundu",
+    chaptersReadProgress: "{read}/{total} okundu"
   }
 }).forEach(([language, text]) => assignUiText(language, text));
 
