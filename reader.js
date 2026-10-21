@@ -528,7 +528,6 @@ function renderArticleChapterSwitch(article) {
           <button class="chapter-switch-btn ${isActive ? "active" : ""} ${isRead ? "completed" : ""}" type="button" data-chapter-id="${escapeHtml(chapter.id)}" aria-current="${isActive ? "page" : "false"}" aria-label="${escapeHtml(accessibleLabel)}">
             <span class="chapter-switch-marker" aria-hidden="true">${isRead ? "✓" : index + 1}</span>
             <span class="chapter-switch-title">${escapeHtml(chapter.title)}</span>
-            ${isRead ? `<span class="chapter-read-label">${escapeHtml(t("chapterRead"))}</span>` : ""}
           </button>
         `;
       }).join("")}

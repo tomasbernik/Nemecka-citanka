@@ -458,7 +458,7 @@ h3 { font-size: 1.1rem; }
 
 .chapter-switch-btn {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: 7px;
   width: 100%;
@@ -496,13 +496,6 @@ h3 { font-size: 1.1rem; }
   color: #fff;
 }
 
-.chapter-read-label {
-  color: var(--accent-dark);
-  font-size: 0.76rem;
-  font-weight: 800;
-  white-space: nowrap;
-}
-
 .chapter-switch-btn.active {
   border-color: var(--accent-dark);
   box-shadow: 0 0 0 2px rgba(var(--accent-dark-rgb), 0.2);
@@ -515,13 +508,6 @@ h3 { font-size: 1.1rem; }
     gap: 3px;
   }
 
-  .chapter-switch-btn {
-    grid-template-columns: auto minmax(0, 1fr);
-  }
-
-  .chapter-read-label {
-    grid-column: 2;
-  }
 }
 
 .series-badge {
