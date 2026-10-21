@@ -1364,6 +1364,25 @@ function getArticleEditorSnapshot() {
   });
 }
 
+function getLastArticleLevel() {
+  try {
+    return localStorage.getItem(LAST_ARTICLE_LEVEL_KEY)?.trim() || "B1";
+  } catch (error) {
+    return "B1";
+  }
+}
+
+function rememberArticleLevel() {
+  const level = $("articleLevelInput")?.value.trim();
+  if (!level) return;
+
+  try {
+    localStorage.setItem(LAST_ARTICLE_LEVEL_KEY, level);
+  } catch (error) {
+    console.info("Article level preference could not be saved:", error.message);
+  }
+}
+
 function updateArticleEditorFlow() {
   const isEditing = Boolean($("articleEditorSelect")?.value);
   const selectedArticle = state.articles.find(item => item.id === $("articleEditorSelect")?.value) || null;
@@ -1413,7 +1432,7 @@ function fillArticleEditor(article) {
   $("articleTitleInput").value = article?.title || "";
   $("articleIdInput").value = article?.id || "";
   $("articleApprovalStatusSelect").value = article?.approvalStatus || DEFAULT_ARTICLE_APPROVAL_STATUS;
-  $("articleLevelInput").value = article?.level || "B1";
+  $("articleLevelInput").value = article?.level || getLastArticleLevel();
   renderArticleCategoryOptionsMulti(article?.category || "");
   $("articleSummaryInput").value = article?.summary || "";
   $("articleTextInput").value = (article?.text || []).join("\n");

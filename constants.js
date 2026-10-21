@@ -19,6 +19,7 @@ const ARTICLE_CACHE_STORE_NAME = "articleSnapshots";
 const ARTICLE_CACHE_KEY = "publishedArticles";
 const ARTICLE_CACHE_LOCAL_STORAGE_KEY = "cachedPublishedArticles";
 const ARTICLE_LANGUAGE_KEY = "selectedArticleLanguage";
+const LAST_ARTICLE_LEVEL_KEY = "lastArticleLevel";
 const ADMIN_PROFILE_IDS = new Set(window.NC_ADMIN_PROFILE_IDS || []);
 const PUBLISHER_EMAIL = "tomas.bernik@gmail.com";
 const VISIBLE_CATEGORY_LIMIT = 6;

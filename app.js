@@ -1050,6 +1050,7 @@ onChange("articleImageInput", (event) => {
 });
 onChange("articleApprovalStatusSelect", updateArticleEditorFlow);
 onEvent("articleLevelInput", "input", updateArticleEditorFlow);
+onChange("articleLevelInput", rememberArticleLevel);
 onEvent("articleIdInput", "input", updateArticleEditorFlow);
 onEvent("articleQuestionsInput", "input", updateArticleEditorFlow);
 onEvent("articleVocabularyInput", "input", updateArticleEditorFlow);
