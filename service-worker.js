@@ -1,5 +1,5 @@
 
-const CACHE_NAME = "citanka-v158";
+const CACHE_NAME = "citanka-v159";
 const IMAGE_CACHE_NAME = "citanka-article-images-v114";
 const IMAGE_CACHE_LIMIT = 25;
 const APP_FILES = [
@@ -15,14 +15,14 @@ const APP_FILES = [
   "./translations/prompts.js?v=121",
   "./i18n.js?v=117",
   "./auth.js?v=133",
-  "./api.js?v=118",
-  "./profiles.js?v=135",
+  "./api.js?v=119",
+  "./profiles.js?v=136",
   "./teams.js?v=132",
   "./articles.js?v=135",
   "./reader.js?v=139",
   "./games.js?v=127",
-  "./editor.js?v=140",
-  "./app.js?v=146",
+  "./editor.js?v=141",
+  "./app.js?v=147",
   "./home.js?v=139",
   "./config.js?v=117",
   "./articles.json",
@@ -110,7 +110,7 @@ self.addEventListener("notificationclick", event => {
     clients.matchAll({ type: "window", includeUncontrolled: true }).then(clientList => {
       const existingClient = clientList.find(client => client.url.startsWith(self.location.origin));
       if (existingClient) {
-        return existingClient.focus();
+        return existingClient.navigate(targetUrl).then(client => client?.focus());
       }
 
       return clients.openWindow(targetUrl);
@@ -119,7 +119,13 @@ self.addEventListener("notificationclick", event => {
 });
 
 self.addEventListener("push", event => {
-  const data = event.data?.json?.() || {
+  let data;
+  try {
+    data = event.data?.json?.();
+  } catch {
+    data = null;
+  }
+  data ||= {
     title: "Lesebuch",
     body: "Heute reichen ein paar Minuten Deutsch.",
     url: "./index.html"
@@ -130,6 +136,8 @@ self.addEventListener("push", event => {
       body: data.body || "Heute reichen ein paar Minuten Deutsch.",
       icon: "icons/icon-v2-192.png",
       badge: "icons/icon-v2-192.png",
+      tag: data.tag || undefined,
+      renotify: Boolean(data.tag),
       data: { url: data.url || "./index.html" }
     })
   );

@@ -214,3 +214,86 @@ async function generateArticleWithAi({ topic, level, category, minWords, maxWord
 
   return result;
 }
+
+function urlBase64ToUint8Array(value) {
+  const padding = "=".repeat((4 - value.length % 4) % 4);
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(base64);
+  return Uint8Array.from(raw, character => character.charCodeAt(0));
+}
+
+async function pushNotificationRequest(payload) {
+  if (!isRemoteNetworkAvailable()) throw new Error("push_offline");
+  const accessToken = await getFreshAuthAccessToken();
+  if (!accessToken) throw new Error("push_sign_in_required");
+
+  const response = await remoteFetch(
+    `${SUPABASE_CONFIG.url.replace(/\/$/, "")}/functions/v1/push-notifications`,
+    {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_CONFIG.anonKey,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    }
+  );
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(result.error || `push_failed_${response.status}`);
+  return result;
+}
+
+async function syncPushSubscription({ requestPermission = false } = {}) {
+  if (state.currentProfile?.role !== "student") return false;
+  if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+    throw new Error("push_unsupported");
+  }
+
+  let permission = Notification.permission;
+  if (permission === "default" && requestPermission) {
+    permission = await Notification.requestPermission();
+  }
+  if (permission !== "granted") return false;
+
+  const registration = await navigator.serviceWorker.ready;
+  const { publicKey } = await pushNotificationRequest({ action: "config" });
+  if (!publicKey) throw new Error("push_not_configured");
+  const applicationServerKey = urlBase64ToUint8Array(publicKey);
+  let subscription = await registration.pushManager.getSubscription();
+  const currentKey = subscription?.options?.applicationServerKey
+    ? new Uint8Array(subscription.options.applicationServerKey)
+    : null;
+  const keyChanged = currentKey && (
+    currentKey.length !== applicationServerKey.length
+    || currentKey.some((byte, index) => byte !== applicationServerKey[index])
+  );
+  if (subscription && keyChanged) {
+    await subscription.unsubscribe();
+    subscription = null;
+  }
+  if (!subscription) {
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey
+    });
+  }
+
+  await pushNotificationRequest({
+    action: "subscribe",
+    profileId: state.currentProfile.id,
+    deviceId: getDeviceId(),
+    subscription: subscription.toJSON()
+  });
+  return true;
+}
+
+async function sendAssignmentPushNotification({ article, student, teamId }) {
+  if (!article?.id || !student?.id || !teamId) return null;
+  return pushNotificationRequest({
+    action: "notify-assignment",
+    articleId: article.id,
+    profileId: student.id,
+    teamId
+  });
+}

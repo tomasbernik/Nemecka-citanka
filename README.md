@@ -217,3 +217,30 @@ supabase secrets set DEEPL_API_URL="https://api-free.deepl.com"
 6. Pri prvom spustení vytvor profily. Druhý mobil si ich potom načíta z databázy a stačí sa prihlásiť menom a PINom.
 
 Poznámka: Toto je jednoduchý súkromný režim pre dvoch ľudí. PINy sú uložené v databáze ako obyčajný text, takže to nie je bezpečnostný systém pre verejnú aplikáciu.
+
+## Push upozornenia na nové zadania
+
+Keď učiteľ pridelí článok alebo kapitolu príbehu žiakovi v triede, aplikácia vie poslať systémové upozornenie na jeho prihlásené zariadenia. Žiak musí v Nastaveniach raz stlačiť „Skúšobná notifikácia“ a povoliť upozornenia. Na iPhone musí byť PWA nainštalovaná na ploche.
+
+1. V Supabase SQL editore spusti `supabase/add-push-notifications.sql`.
+2. Voliteľne vygeneruj vlastné VAPID kľúče:
+
+```bash
+npx web-push generate-vapid-keys
+```
+
+3. Ak si ich vygeneroval, ulož ich ako Supabase secrets:
+
+```bash
+supabase secrets set VAPID_PUBLIC_KEY="..." VAPID_PRIVATE_KEY="..." VAPID_SUBJECT="mailto:tvoj@email.sk"
+```
+
+Bez týchto voliteľných secrets funkcia stabilné VAPID kľúče bezpečne odvodí zo serverového service-role kľúča. Pri jeho rotácii sa zariadenia pri ďalšom otvorení aplikácie automaticky preregistrujú.
+
+4. Nasaď Edge Function a novú verziu aplikácie:
+
+```bash
+supabase functions deploy push-notifications --no-verify-jwt
+```
+
+Funkcia napriek `--no-verify-jwt` overuje používateľský token sama a pred odoslaním kontroluje vlastníctvo triedy, členstvo žiaka aj existenciu zadania.

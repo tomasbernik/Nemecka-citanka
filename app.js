@@ -896,6 +896,18 @@ async function showTestNotification() {
     return;
   }
 
+  if (state.currentProfile?.role === "student") {
+    try {
+      await syncPushSubscription({ requestPermission: false });
+    } catch (error) {
+      console.info("Push subscription could not be saved:", error.message);
+      updateNotificationStatus(error.message === "push_not_configured"
+        ? "Push upozornenia ešte nie sú nakonfigurované na serveri."
+        : t("notificationNotAllowed"));
+      return;
+    }
+  }
+
   const registration = await navigator.serviceWorker?.ready;
   if (!registration?.showNotification) {
     new Notification(t("appTitle"), {
@@ -913,6 +925,19 @@ async function showTestNotification() {
     data: { url: "./index.html" }
   });
   updateNotificationStatus(t("notificationSent"));
+}
+
+async function openAssignedArticleFromUrl() {
+  if (!state.currentProfile) return false;
+  const url = new URL(location.href);
+  const articleId = url.searchParams.get("assignedArticle");
+  if (!articleId) return false;
+
+  url.searchParams.delete("assignedArticle");
+  history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  if (!state.articles.some(article => article.id === articleId)) return false;
+  await openArticle(articleId);
+  return true;
 }
 
 onClick("backBtn", showHome);

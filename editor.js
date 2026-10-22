@@ -1199,6 +1199,7 @@ async function saveArticleAssignments(article, options = {}) {
   });
 
   try {
+    const newlyAssigned = [];
     await Promise.all(Array.from(studentChoices.values()).map(async choice => {
       const { student, teamId, assigned } = choice;
       if (!student || !teamId) return;
@@ -1213,7 +1214,13 @@ async function saveArticleAssignments(article, options = {}) {
           target_assigned: assigned
         })
       });
+      if (assigned) newlyAssigned.push({ article, student, teamId });
     }));
+    await Promise.all(newlyAssigned.map(payload =>
+      sendAssignmentPushNotification(payload).catch(error => {
+        console.info("Assignment push notification skipped:", error.message);
+      })
+    ));
     await renderArticleAssignmentPanel(article, options);
     $(statusId).textContent = t("assignmentSaved");
     await renderTeacherOverview();
