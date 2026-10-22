@@ -454,7 +454,7 @@ function formatPracticeType(type) {
 
 function formatDateTime(value) {
   if (!value) return "";
-  return new Date(value).toLocaleString("sk-SK", {
+  return new Date(value).toLocaleString(getUiLanguage(), {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",

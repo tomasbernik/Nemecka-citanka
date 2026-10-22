@@ -640,6 +640,9 @@ function updateStaticTexts() {
   renderArticles();
   renderArticleEditorList();
   renderGamification();
+  renderTeamManagement();
+  renderHomeAssignments();
+  renderArticleModerationQueue();
   renderMobileBottomNav(getActiveViewId());
   renderArticlePracticeTabs();
 }
