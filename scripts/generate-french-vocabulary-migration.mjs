@@ -12,6 +12,8 @@ const frenchTranslations = Object.fromEntries(
 const translationsJson = JSON.stringify(frenchTranslations, null, 2);
 
 process.stdout.write(`-- Backfill missing French vocabulary translations without overwriting reviewed values.
+alter table public.app_articles disable trigger app_guard_article_workflow_trigger;
+
 do $migration$
 declare
   french_translations jsonb := $translations$
@@ -94,4 +96,6 @@ begin
   );
 end
 $migration$;
+
+alter table public.app_articles enable trigger app_guard_article_workflow_trigger;
 `);
