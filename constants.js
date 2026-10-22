@@ -42,7 +42,7 @@ const ARTICLE_LANGUAGES = {
   en: { label: "English", shortLabel: "EN", speechLang: "en-US" }
 };
 const VOCABULARY_LANGUAGE_CODES = ["sk", "ru", "pl", "hu", "ro", "it", "en", "fr", "tr"];
-const PROMPT_TRANSLATION_LANGUAGE_CODES = ["sk", "pl", "hu", "ru", "en"];
+const PROMPT_TRANSLATION_LANGUAGE_CODES = ["sk", "pl", "hu", "ru", "en", "fr"];
 const NATIVE_LANGUAGES = {
   de: { label: "Deutsch", promptName: "Deutsch", lineFormat: "auf Deutsch", locale: "de" },
   sk: { label: "Slovenčina", promptName: "slovenčiny", lineFormat: "slovensky", locale: "sk" },

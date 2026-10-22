@@ -739,6 +739,7 @@ function getTeachingLanguagePromptInfo() {
 function getArticleJsonPromptInstructions(level) {
   const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
+  const isFrench = getUiLanguage() === "fr";
   const teachingLanguage = getTeachingLanguagePromptInfo();
   const vocabularyExample = `{\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",${PROMPT_TRANSLATION_LANGUAGE_CODES
     .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
@@ -796,6 +797,31 @@ function getArticleJsonPromptInstructions(level) {
       `Add translations for every category or topic to \"categoryLabels\" for these languages: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}. The object key must exactly match the value in \"category\"; if multiple categories are separated by |, add each one separately.`,
       `All vocabulary items must have these keys: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
       "For \"base\", use the dictionary form: for a noun, include the definite article and nominative singular, for example \"der Mann\"; for a verb, use the infinitive, for example \"gehen\"; for an adjective, use the base form, for example \"freundlich\". If \"de\" is already the base form or is a whole phrase, \"base\" may be the same as \"de\"."
+    ];
+  }
+
+  if (isFrench) {
+    const frenchVocabularyExample = `{"de":"mot ou expression du texte","base":"forme du dictionnaire",${PROMPT_TRANSLATION_LANGUAGE_CODES
+      .map(code => `"${code}":"traduction en ${NATIVE_LANGUAGES[code]?.label || code}"`)
+      .join(",")}}`;
+
+    return [
+      "", "Schéma JSON :", "{",
+      "  \"title\": \"titre de l’article\",",
+      `  "level": "${level}",`,
+      "  \"category\": \"catégorie ou thème\",",
+      `  "categoryLabels": {"nom de la catégorie ou du thème":{"${PROMPT_TRANSLATION_LANGUAGE_CODES.join("\":\"traduction\", \"")}":"traduction"}},`,
+      "  \"summary\": \"brève description de l’article\",",
+      "  \"text\": [\"paragraphe 1\", \"paragraphe 2\", \"paragraphe 3\", \"paragraphe 4\"],",
+      "  \"vocabulary\": [", `    ${frenchVocabularyExample}`, "  ],",
+      "  \"questions\": [", "    {\"statement\":\"affirmation vraie ou fausse\",\"answer\":true}", "  ]", "}", "",
+      "Utilise exactement le texte collé ci-dessous. Ne le reformule pas, ne le raccourcis pas et ne modifie pas sa longueur.",
+      "Répartis les paragraphes dans le tableau \"text\".",
+      `Ajoute exactement 5 mots ou expressions utiles de niveau ${level} dans "vocabulary". Ils doivent apparaître naturellement dans le texte.`,
+      "Ajoute 6 à 8 affirmations vraies ou fausses dans \"questions\", avec un ordre naturel et sans alternance régulière.",
+      `Ajoute les traductions de chaque catégorie dans "categoryLabels" pour ces langues : ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+      `Chaque élément de "vocabulary" doit contenir les clés suivantes : de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+      "Dans \"base\", utilise la forme du dictionnaire : article défini et nominatif singulier pour un nom, infinitif pour un verbe et forme de base pour un adjectif."
     ];
   }
 
@@ -1642,23 +1668,21 @@ async function generateArticleDirectlyWithAi() {
   const requiredWords = getArticleRequiredWords();
 
   if (!topic) {
-    status.textContent = "Najprv zadaj tému alebo opis článku.";
+    status.textContent = t("articleTopicRequired");
     $("articlePromptInput").focus();
     return;
   }
 
   if ($("articleEditorSelect").value ||
       $("articleTextInput").value.trim()) {
-    const confirmed = confirm(
-      "V editore už máš článok. Chceš ho nahradiť novým článkom od AI? Neuložené zmeny sa stratia."
-    );
+    const confirmed = confirm(t("replaceArticleConfirm"));
     if (!confirmed) return;
   }
 
   button.disabled = true;
   const originalText = button.textContent;
-  button.textContent = "⏳ Generujem článok...";
-  status.textContent = "Gemini vytvára nemecký článok, slovíčka a otázky.";
+  button.textContent = t("generatingArticle");
+  status.textContent = t("generatingArticleStatus");
 
   try {
     const result = await generateArticleWithAi({
@@ -1671,7 +1695,7 @@ async function generateArticleDirectlyWithAi() {
     });
 
     if (!result.article) {
-      throw new Error("AI nevrátila žiadny článok.");
+      throw new Error(t("generationEmpty"));
     }
 
     // Overenie pomocou existujúceho validátora editora.
@@ -1683,13 +1707,11 @@ async function generateArticleDirectlyWithAi() {
     // voliteľná cesta pre články vytvorené mimo aplikácie.
     applyImportedArticleToEditor(article);
 
-    status.textContent =
-      "Článok bol vygenerovaný. Skontroluj ho a potom ulož.";
+    status.textContent = t("generationDone");
 
   } catch (error) {
     console.error("Gemini article generation:", error);
-    status.textContent =
-      "Generovanie zlyhalo: " + error.message;
+    status.textContent = formatText("generationFailed", { message: error.message });
   } finally {
     button.disabled = false;
     button.textContent = originalText;

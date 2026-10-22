@@ -163,15 +163,18 @@ async function saveChangedArticles(articles, changedArticleIds, args) {
   const changedArticles = articles.filter(article => changedArticleIds.has(article.id));
 
   for (const [index, article] of changedArticles.entries()) {
-    await supabaseRequest(`app_articles?id=eq.${encodeURIComponent(article.id)}`, {
+    const updatedRows = await supabaseRequest(`app_articles?id=eq.${encodeURIComponent(article.id)}&select=id`, {
       method: "PATCH",
-      headers: { Prefer: "return=minimal" },
+      headers: { Prefer: "return=representation" },
       body: JSON.stringify({
         vocabulary: article.vocabulary,
         inline_vocabulary: article.inlineVocabulary,
         updated_at: new Date().toISOString()
       })
     }, args);
+    if (!Array.isArray(updatedRows) || updatedRows.length !== 1) {
+      throw new Error(`Article ${article.id} was not updated. Check that the supplied Supabase key has update permission.`);
+    }
     console.log(`Saved ${index + 1}/${changedArticles.length}: ${article.id}`);
   }
 

@@ -6,6 +6,7 @@ const FILES = [
   "translations/ui.js",
   "translations/auth.js",
   "translations/new-languages.js",
+  "translations/ui-completions.js",
   "translations/prompts.js"
 ];
 

@@ -178,13 +178,13 @@ async function logAppOpened(details = {}) {
 
 async function generateArticleWithAi({ topic, level, category, minWords, maxWords, requiredWords }) {
   if (!isRemoteNetworkAvailable()) {
-    throw new Error("Nie je dostupné internetové pripojenie.");
+    throw new Error(t("generationOffline"));
   }
 
   const accessToken = await getFreshAuthAccessToken();
 
   if (!accessToken) {
-    throw new Error("Na generovanie článku sa musíš prihlásiť.");
+    throw new Error(t("generationSignIn"));
   }
 
   const response = await remoteFetch(

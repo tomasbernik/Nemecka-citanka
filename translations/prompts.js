@@ -15,7 +15,8 @@ function getPromptVocabularyExample() {
     pl: "doświadczenie",
     hu: "tapasztalat",
     ru: "опыт",
-    en: "experience"
+    en: "experience",
+    fr: "expérience"
   });
 }
 
@@ -201,6 +202,36 @@ const PROMPT_TEXT = {
       "német mondat = false",
       "Legyen benne igaz és hamis mondat is. Ne írj semmi mást.",
       title ? `Cím: ${title}` : "",
+      "",
+      text
+    ]
+  },
+  fr: {
+    article: ({ level, category, topic, requiredWords }) => [
+      `Rédige un article court en allemand de niveau ${level}.`,
+      category ? `Catégorie/thème : ${category}.` : "",
+      topic ? `Consigne précise : ${topic}` : "",
+      requiredWords.length
+        ? `Utilise naturellement chacun de ces mots ou expressions en allemand entre 2 et 4 fois : ${requiredWords.join(", ")}.`
+        : "",
+      "Renvoie uniquement un JSON valide selon le schéma ci-dessous, sans explication."
+    ],
+    translation: (missing) => [
+      `Traduis ces mots et expressions allemands dans les langues suivantes : ${getPromptVocabularyLanguageList("en")}.`,
+      "Renvoie uniquement un tableau JSON valide, sans explication ni bloc Markdown.",
+      `Chaque objet doit contenir exactement ces clés : ${getPromptVocabularyKeys()}.`,
+      "Format d’un objet :",
+      getPromptVocabularyExample(),
+      "",
+      missing.join("\n")
+    ],
+    questions: ({ title, text }) => [
+      "Crée des affirmations vraies ou fausses sur cet article en allemand.",
+      "Renvoie 6 à 8 lignes au format suivant :",
+      "phrase allemande = true",
+      "phrase allemande = false",
+      "Mélange les réponses vraies et fausses sans alternance régulière. N’ajoute rien d’autre.",
+      title ? `Titre : ${title}` : "",
       "",
       text
     ]

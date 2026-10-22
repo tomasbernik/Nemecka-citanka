@@ -496,6 +496,7 @@ function updateStaticTexts() {
   setText("refreshBtn", "refresh");
 
   setText("backBtn", "back");
+  $("listenPanel")?.setAttribute("aria-label", t("readText"));
   setButtonLabel("readAloudBtn", "readText");
   setText("readAloudLabel", "readText");
   setButtonLabel("pauseReadBtn", "pause");
@@ -546,6 +547,7 @@ function updateStaticTexts() {
   setText("testNotificationBtn", "testNotification");
 
   setText("teacherBackBtn", "back");
+  document.querySelector(".teacher-tabs")?.setAttribute("aria-label", t("teacherView"));
   setText("articleEditorBottomBackBtn", "back");
   setText("gamificationEyebrow", "gamificationEyebrow");
   setText("gamificationTitle", "gamificationTitle");
@@ -605,8 +607,10 @@ function updateStaticTexts() {
   setOptionText("articleLengthSelect", "300-350", "articleLengthMedium");
   setOptionText("articleLengthSelect", "450-550", "articleLengthLong");
   setText("copyArticlePromptBtn", "copyArticlePrompt");
+  setText("generateArticleAiBtn", "generateArticleAi");
   setText("copyArticleJsonPromptBtn", "copyArticleJsonPrompt");
   setText("copyImagePromptBtn", "copyImagePrompt");
+  $("articleImageDialog")?.setAttribute("aria-label", t("articleImage"));
   setLabelText("articleImportInput", "articleImportJson");
   setText("manualJsonImportSummary", "manualJsonImport");
   setText("importArticleBtn", "importArticle");

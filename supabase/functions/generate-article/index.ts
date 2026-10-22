@@ -84,8 +84,8 @@ WORD COUNT:
 VOCABULARY:
 - Generate exactly 5 useful German vocabulary entries appropriate for level ${level}.
 - Select meaningful words or expressions that actually occur in the article.
-- Provide correct translations into Slovak (sk), Polish (pl), Hungarian (hu), Russian (ru) and English (en).
-- Each vocabulary entry must include: de, base, sk, pl, hu, ru, en.
+- Provide correct translations into Slovak (sk), Polish (pl), Hungarian (hu), Russian (ru), English (en) and French (fr).
+- Each vocabulary entry must include: de, base, sk, pl, hu, ru, en, fr.
 - For nouns, the "base" field must contain the definite article and nominative singular, e.g. "der Irrtum".
 - For verbs, use the infinitive in "base", e.g. "bestellen".
 - For adjectives, use the basic dictionary form.
@@ -161,10 +161,11 @@ generationConfig: {
             pl: { type: "string" },
             hu: { type: "string" },
             ru: { type: "string" },
-            en: { type: "string" }
+            en: { type: "string" },
+            fr: { type: "string" }
           },
           required: [
-            "de", "base", "sk", "pl", "hu", "ru", "en"
+            "de", "base", "sk", "pl", "hu", "ru", "en", "fr"
           ]
         }
       },
