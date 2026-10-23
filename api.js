@@ -177,7 +177,58 @@ async function logAppOpened(details = {}) {
   }
 }
 
-async function generateArticleWithAi({ topic, level, category, minWords, maxWords, requiredWords }) {
+async function requestArticleGenerationPhase(accessToken, action, payload = {}) {
+  const response = await remoteFetch(
+    `${SUPABASE_CONFIG.url.replace(/\/$/, "")}/functions/v1/generate-article-workflow`,
+    {
+      method: "POST",
+      headers: {
+        apikey: SUPABASE_CONFIG.anonKey,
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ action, ...payload }),
+      timeoutMs: ARTICLE_GENERATION_TIMEOUT_MS
+    }
+  );
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const detail = result.message ? `${result.error}: ${result.message}` : result.error;
+    const error = new Error(detail || `AI generation failed: ${response.status}`);
+    error.code = result.error || "generation_failed";
+    error.phase = result.phase || action;
+    error.jobId = result.jobId || payload.jobId || "";
+    throw error;
+  }
+  return result;
+}
+
+async function requestArticleGenerationPhaseWithRetry(accessToken, action, payload) {
+  try {
+    return await requestArticleGenerationPhase(accessToken, action, payload);
+  } catch (error) {
+    const retryableCodes = new Set([
+      "invalid_story_output",
+      "invalid_materials_output",
+      "invalid_ai_output",
+      "gemini_failed",
+      "ai_timeout_or_network_error"
+    ]);
+    if (!retryableCodes.has(error?.code)) throw error;
+    return requestArticleGenerationPhase(accessToken, action, payload);
+  }
+}
+
+async function generateArticleWithAi({
+  topic,
+  level,
+  category,
+  minWords,
+  maxWords,
+  requiredWords,
+  onProgress
+}) {
   if (!isRemoteNetworkAvailable()) {
     throw new Error(t("generationOffline"));
   }
@@ -188,34 +239,26 @@ async function generateArticleWithAi({ topic, level, category, minWords, maxWord
     throw new Error(t("generationSignIn"));
   }
 
-  const response = await remoteFetch(
-    `${SUPABASE_CONFIG.url.replace(/\/$/, "")}/functions/v1/generate-article`,
-    {
-      method: "POST",
-      headers: {
-        apikey: SUPABASE_CONFIG.anonKey,
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        topic,
-        level,
-        category,
-        lengthMin: minWords,
-        lengthMax: maxWords,
-        requiredWords
-      }),
-      timeoutMs: ARTICLE_GENERATION_TIMEOUT_MS
-    }
-  );
+  onProgress?.("starting");
+  const started = await requestArticleGenerationPhase(accessToken, "start", {
+    topic,
+    level,
+    category,
+    lengthMin: minWords,
+    lengthMax: maxWords,
+    requiredWords
+  });
+  const jobId = started.jobId;
+  if (!jobId) throw new Error("generation_job_create_failed");
 
-  const result = await response.json().catch(() => ({}));
+  onProgress?.("draft");
+  await requestArticleGenerationPhaseWithRetry(accessToken, "draft", { jobId });
 
-  if (!response.ok) {
-    throw new Error(result.error || `AI generation failed: ${response.status}`);
-  }
+  onProgress?.("review");
+  await requestArticleGenerationPhaseWithRetry(accessToken, "review", { jobId });
 
-  return result;
+  onProgress?.("materials");
+  return requestArticleGenerationPhaseWithRetry(accessToken, "materials", { jobId });
 }
 
 function urlBase64ToUint8Array(value) {

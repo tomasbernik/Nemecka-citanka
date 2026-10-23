@@ -316,6 +316,19 @@ Object.entries({
 }).forEach(([language, text]) => assignUiText(language, text));
 
 Object.entries({
+  de: { generationStartingStatus: "Die Erstellung wird vorbereitet…", generationDraftStatus: "1/3 Die KI schreibt den deutschen Entwurf…", generationReviewStatus: "2/3 Die KI prüft Grammatik, Sprachniveau und Logik…", generationMaterialsStatus: "3/3 Die KI erstellt Wortschatz, Fragen und die Übung…" },
+  sk: { generationStartingStatus: "Pripravujem generovanie…", generationDraftStatus: "1/3 AI píše návrh nemeckého článku…", generationReviewStatus: "2/3 AI kontroluje gramatiku, úroveň a logiku…", generationMaterialsStatus: "3/3 AI vytvára slovíčka, otázky a cvičenie…" },
+  ru: { generationStartingStatus: "Подготовка создания…", generationDraftStatus: "1/3 ИИ пишет черновик статьи на немецком…", generationReviewStatus: "2/3 ИИ проверяет грамматику, уровень и логику…", generationMaterialsStatus: "3/3 ИИ создаёт словарь, вопросы и упражнение…" },
+  pl: { generationStartingStatus: "Przygotowywanie generowania…", generationDraftStatus: "1/3 AI pisze niemiecki szkic artykułu…", generationReviewStatus: "2/3 AI sprawdza gramatykę, poziom i logikę…", generationMaterialsStatus: "3/3 AI tworzy słownictwo, pytania i ćwiczenie…" },
+  hu: { generationStartingStatus: "A létrehozás előkészítése…", generationDraftStatus: "1/3 Az MI megírja a német cikk vázlatát…", generationReviewStatus: "2/3 Az MI ellenőrzi a nyelvtant, a szintet és a logikát…", generationMaterialsStatus: "3/3 Az MI szókincset, kérdéseket és feladatot készít…" },
+  ro: { generationStartingStatus: "Se pregătește generarea…", generationDraftStatus: "1/3 AI scrie schița articolului în germană…", generationReviewStatus: "2/3 AI verifică gramatica, nivelul și logica…", generationMaterialsStatus: "3/3 AI creează vocabularul, întrebările și exercițiul…" },
+  it: { generationStartingStatus: "Preparazione della generazione…", generationDraftStatus: "1/3 L’IA scrive la bozza dell’articolo in tedesco…", generationReviewStatus: "2/3 L’IA controlla grammatica, livello e logica…", generationMaterialsStatus: "3/3 L’IA crea vocabolario, domande ed esercizio…" },
+  en: { generationStartingStatus: "Preparing generation…", generationDraftStatus: "1/3 AI is writing the German article draft…", generationReviewStatus: "2/3 AI is checking grammar, level and story logic…", generationMaterialsStatus: "3/3 AI is creating vocabulary, questions and the exercise…" },
+  fr: { generationStartingStatus: "Préparation de la génération…", generationDraftStatus: "1/3 L’IA rédige l’article allemand…", generationReviewStatus: "2/3 L’IA vérifie la grammaire, le niveau et la logique…", generationMaterialsStatus: "3/3 L’IA crée le vocabulaire, les questions et l’exercice…" },
+  tr: { generationStartingStatus: "Oluşturma hazırlanıyor…", generationDraftStatus: "1/3 Yapay zekâ Almanca makale taslağını yazıyor…", generationReviewStatus: "2/3 Yapay zekâ dil bilgisini, seviyeyi ve mantığı kontrol ediyor…", generationMaterialsStatus: "3/3 Yapay zekâ kelimeleri, soruları ve alıştırmayı oluşturuyor…" }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
   de: { languagePhenomenon: "Sprachphänomen", oneShortExercise: "Eine kurze Übung", languageFocusWordOrderPrompt: "Bringe die Wörter in die richtige Reihenfolge.", generationTimeout: "Die Erstellung hat zu lange gedauert. Bitte versuche es noch einmal." },
   sk: { languagePhenomenon: "Jazykový jav", oneShortExercise: "Jedno krátke cvičenie", languageFocusWordOrderPrompt: "Zoraď slová do správnej vety.", generationTimeout: "Generovanie trvalo príliš dlho. Skús to ešte raz." },
   ru: { languagePhenomenon: "Языковое явление", oneShortExercise: "Короткое упражнение", languageFocusWordOrderPrompt: "Расположи слова в правильном порядке.", generationTimeout: "Создание заняло слишком много времени. Попробуй ещё раз." },

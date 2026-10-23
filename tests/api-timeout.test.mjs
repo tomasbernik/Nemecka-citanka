@@ -35,3 +35,50 @@ test("remoteFetch supports a request-specific timeout without forwarding it to f
   assert.equal("timeoutMs" in receivedOptions, false);
   assert.ok(receivedOptions.signal instanceof AbortSignal);
 });
+
+test("article generation runs draft, review and materials as separate requests", async () => {
+  const calls = [];
+  const progress = [];
+  const responses = [
+    { jobId: "job-1", status: "created" },
+    { jobId: "job-1", status: "draft_ready" },
+    { jobId: "job-1", status: "review_ready" },
+    { jobId: "job-1", status: "completed", article: { title: "Test" } }
+  ];
+  const context = vm.createContext({
+    REMOTE_REQUEST_TIMEOUT_MS: 8_000,
+    ARTICLE_GENERATION_TIMEOUT_MS: 140_000,
+    SUPABASE_CONFIG: { url: "https://project.test", anonKey: "anon" },
+    state: { remoteReady: true },
+    navigator: { onLine: true },
+    AbortController,
+    window: { setTimeout, clearTimeout },
+    fetch: async () => {
+      throw new Error("unexpected native fetch");
+    },
+    t: key => key
+  });
+  vm.runInContext(apiSource, context, { filename: "api.js" });
+  context.getFreshAuthAccessToken = async () => "access-token";
+  context.remoteFetch = async (url, options) => {
+    calls.push({ url, body: JSON.parse(options.body), timeoutMs: options.timeoutMs });
+    const payload = responses.shift();
+    return { ok: true, status: 200, json: async () => payload };
+  };
+
+  const result = await context.generateArticleWithAi({
+    topic: "Ein Morgen",
+    level: "A1",
+    category: "Alltag",
+    minWords: 300,
+    maxWords: 350,
+    requiredWords: [],
+    onProgress: phase => progress.push(phase)
+  });
+
+  assert.deepEqual(calls.map(call => call.body.action), ["start", "draft", "review", "materials"]);
+  assert.deepEqual(calls.slice(1).map(call => call.body.jobId), ["job-1", "job-1", "job-1"]);
+  assert.ok(calls.every(call => call.timeoutMs === 140_000));
+  assert.deepEqual(progress, ["starting", "draft", "review", "materials"]);
+  assert.equal(result.article.title, "Test");
+});

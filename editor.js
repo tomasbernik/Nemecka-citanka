@@ -1765,7 +1765,16 @@ async function generateArticleDirectlyWithAi() {
       category,
       minWords: range.min,
       maxWords: range.max,
-      requiredWords
+      requiredWords,
+      onProgress(phase) {
+        const statusKey = {
+          starting: "generationStartingStatus",
+          draft: "generationDraftStatus",
+          review: "generationReviewStatus",
+          materials: "generationMaterialsStatus"
+        }[phase] || "generatingArticleStatus";
+        setArticleGenerationStatus(t(statusKey), "progress");
+      }
     });
 
     if (!result.article) {
