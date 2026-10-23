@@ -245,7 +245,7 @@ async function pushNotificationRequest(payload) {
 }
 
 async function syncPushSubscription({ requestPermission = false } = {}) {
-  if (state.currentProfile?.role !== "student") return false;
+  if (state.currentProfile?.role !== "student" && !isPublisherAccount()) return false;
   if (!("Notification" in window) || !("serviceWorker" in navigator) || !("PushManager" in window)) {
     throw new Error("push_unsupported");
   }
@@ -295,5 +295,13 @@ async function sendAssignmentPushNotification({ article, student, teamId }) {
     articleId: article.id,
     profileId: student.id,
     teamId
+  });
+}
+
+async function sendTeacherRequestPushNotification({ profile, request }) {
+  if (!profile?.id || request?.status !== "pending") return null;
+  return pushNotificationRequest({
+    action: "notify-teacher-request",
+    profileId: profile.id
   });
 }

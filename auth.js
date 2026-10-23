@@ -625,6 +625,12 @@ async function requestTeacherAccess() {
   try {
     const request = await submitTeacherRequest(state.currentProfile);
     state.currentProfile.teacherRequest = request;
+    sendTeacherRequestPushNotification({
+      profile: state.currentProfile,
+      request
+    }).catch(error => {
+      console.info("Teacher request push notification skipped:", error.message);
+    });
     renderCurrentProfileLabel();
     renderAuthControls(t("teacherRequestSubmitted"));
   } catch (error) {

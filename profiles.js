@@ -231,7 +231,7 @@ async function setCurrentProfile(profile) {
   $("logoutBtn").classList.remove("hidden");
   renderAccessControls();
   showHome();
-  if (state.currentProfile.role === "student"
+  if ((state.currentProfile.role === "student" || isPublisherAccount())
     && "Notification" in window
     && Notification.permission === "granted") {
     syncPushSubscription().catch(error => {

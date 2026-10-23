@@ -7,9 +7,16 @@ create table if not exists public.app_push_subscriptions (
   auth text not null,
   device_id text,
   user_agent text,
+  is_admin boolean not null default false,
   created_at timestamptz not null default now(),
   last_seen_at timestamptz not null default now()
 );
+
+alter table public.app_push_subscriptions
+add column if not exists is_admin boolean not null default false;
+
+alter table public.app_teacher_requests
+add column if not exists push_notified_at timestamptz;
 
 create index if not exists app_push_subscriptions_profile_idx
 on public.app_push_subscriptions (profile_id);

@@ -67,6 +67,42 @@ async function getAuthenticatedUser(req: Request, supabaseUrl: string, anonKey: 
   return response.json();
 }
 
+type StoredSubscription = {
+  id: string;
+  endpoint: string;
+  p256dh: string;
+  auth: string;
+};
+
+async function deliverPushes(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  subscriptions: StoredSubscription[],
+  notification: string
+) {
+  let sent = 0;
+  await Promise.all(subscriptions.map(async subscription => {
+    try {
+      await webpush.sendNotification({
+        endpoint: subscription.endpoint,
+        keys: { p256dh: subscription.p256dh, auth: subscription.auth }
+      }, notification, { TTL: 86400, urgency: "high" });
+      sent += 1;
+    } catch (error) {
+      const pushError = error as { statusCode?: number; message?: string };
+      const statusCode = Number(pushError.statusCode || 0);
+      if (statusCode === 404 || statusCode === 410) {
+        await restRequest(supabaseUrl, serviceRoleKey,
+          `app_push_subscriptions?id=eq.${encodeURIComponent(subscription.id)}`,
+          { method: "DELETE" });
+      } else {
+        console.error("Push delivery failed", statusCode, String(pushError.message || error).slice(0, 300));
+      }
+    }
+  }));
+  return sent;
+}
+
 const messages: Record<string, { title: string; body: (title: string) => string }> = {
   sk: { title: "Nové čítanie", body: title => `Učiteľ ti pridelil text „${title}“.` },
   de: { title: "Neue Leseaufgabe", body: title => `Deine Lehrkraft hat dir „${title}“ zugewiesen.` },
@@ -133,8 +169,10 @@ Deno.serve(async req => {
       `app_profiles?id=eq.${encodeURIComponent(profileId)}&select=id,role,auth_user_id,owner_auth_user_id&limit=1`
     ));
     const profile = profiles[0];
-    if (!profile || profile.role !== "student"
-      || (profile.auth_user_id !== user.id && profile.owner_auth_user_id !== user.id)) {
+    const isAdmin = String(user.email || "").toLowerCase() === publisherEmail;
+    if (!profile
+      || (profile.auth_user_id !== user.id && profile.owner_auth_user_id !== user.id)
+      || (profile.role !== "student" && !isAdmin)) {
       return jsonResponse({ error: "profile_forbidden" }, 403);
     }
 
@@ -153,6 +191,7 @@ Deno.serve(async req => {
           auth,
           device_id: deviceId || null,
           user_agent: req.headers.get("user-agent") || "",
+          is_admin: isAdmin,
           last_seen_at: new Date().toISOString()
         })
       }
@@ -161,8 +200,58 @@ Deno.serve(async req => {
     return jsonResponse({ subscribed: true });
   }
 
-  if (action !== "notify-assignment") return jsonResponse({ error: "invalid_action" }, 400);
   if (!vapidPublicKey || !vapidPrivateKey) return jsonResponse({ error: "push_not_configured" }, 503);
+  webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
+
+  if (action === "notify-teacher-request") {
+    const profileId = normalize(payload.profileId, 120);
+    if (!profileId) return jsonResponse({ error: "invalid_request" }, 400);
+
+    const [profiles, requests] = await Promise.all([
+      readRows(await restRequest(supabaseUrl, serviceRoleKey,
+        `app_profiles?id=eq.${encodeURIComponent(profileId)}&select=id,name,auth_user_id,owner_auth_user_id&limit=1`)),
+      readRows(await restRequest(supabaseUrl, serviceRoleKey,
+        `app_teacher_requests?profile_id=eq.${encodeURIComponent(profileId)}&status=eq.pending&select=profile_id,email,status,requested_at,push_notified_at&limit=1`))
+    ]);
+    const profile = profiles[0];
+    const teacherRequest = requests[0];
+    if (!profile || !teacherRequest
+      || (profile.auth_user_id !== user.id && profile.owner_auth_user_id !== user.id)) {
+      return jsonResponse({ error: "teacher_request_forbidden" }, 403);
+    }
+
+    const requestedAt = normalize(teacherRequest.requested_at, 80);
+    if (teacherRequest.push_notified_at
+      && new Date(teacherRequest.push_notified_at).getTime() >= new Date(requestedAt).getTime()) {
+      return jsonResponse({ sent: 0, alreadyNotified: true });
+    }
+    const claimResponse = await restRequest(
+      supabaseUrl,
+      serviceRoleKey,
+      `app_teacher_requests?profile_id=eq.${encodeURIComponent(profileId)}&status=eq.pending&or=(push_notified_at.is.null,push_notified_at.lt.${encodeURIComponent(requestedAt)})`,
+      {
+        method: "PATCH",
+        headers: { Prefer: "return=representation" },
+        body: JSON.stringify({ push_notified_at: new Date().toISOString() })
+      }
+    );
+    const claimedRequests = await readRows(claimResponse);
+    if (!claimedRequests.length) return jsonResponse({ sent: 0, alreadyNotified: true });
+
+    const subscriptions = await readRows(await restRequest(supabaseUrl, serviceRoleKey,
+      "app_push_subscriptions?is_admin=eq.true&select=id,endpoint,p256dh,auth")) as StoredSubscription[];
+    const applicant = normalize(profile.name || teacherRequest.email, 120);
+    const notification = JSON.stringify({
+      title: "Nová žiadosť o učiteľský účet",
+      body: `${applicant} čaká na schválenie licencie.`,
+      url: "./index.html?adminPanel=teacherRequests",
+      tag: `teacher-request-${profileId}`
+    });
+    const sent = await deliverPushes(supabaseUrl, serviceRoleKey, subscriptions, notification);
+    return jsonResponse({ sent, subscribedDevices: subscriptions.length });
+  }
+
+  if (action !== "notify-assignment") return jsonResponse({ error: "invalid_action" }, 400);
 
   const profileId = normalize(payload.profileId, 120);
   const articleId = normalize(payload.articleId, 200);
@@ -206,7 +295,6 @@ Deno.serve(async req => {
     `app_push_subscriptions?profile_id=eq.${encodeURIComponent(profileId)}&select=id,endpoint,p256dh,auth`));
   if (!subscriptions.length) return jsonResponse({ sent: 0, subscribedDevices: 0 });
 
-  webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
   const language = messages[student.native_language] ? student.native_language : "de";
   const copy = messages[language];
   const readingTitle = normalize(article.series_title || article.title, 180);
@@ -217,31 +305,12 @@ Deno.serve(async req => {
     tag: `assignment-${profileId}-${articleId}`
   });
 
-  let sent = 0;
-  await Promise.all(subscriptions.map(async (subscription: {
-    id: string;
-    endpoint: string;
-    p256dh: string;
-    auth: string;
-  }) => {
-    try {
-      await webpush.sendNotification({
-        endpoint: subscription.endpoint,
-        keys: { p256dh: subscription.p256dh, auth: subscription.auth }
-      }, notification, { TTL: 86400, urgency: "high" });
-      sent += 1;
-    } catch (error) {
-      const pushError = error as { statusCode?: number; message?: string };
-      const statusCode = Number(pushError.statusCode || 0);
-      if (statusCode === 404 || statusCode === 410) {
-        await restRequest(supabaseUrl, serviceRoleKey,
-          `app_push_subscriptions?id=eq.${encodeURIComponent(subscription.id)}`,
-          { method: "DELETE" });
-      } else {
-        console.error("Push delivery failed", statusCode, String(pushError.message || error).slice(0, 300));
-      }
-    }
-  }));
+  const sent = await deliverPushes(
+    supabaseUrl,
+    serviceRoleKey,
+    subscriptions as StoredSubscription[],
+    notification
+  );
 
   return jsonResponse({ sent, subscribedDevices: subscriptions.length });
 });

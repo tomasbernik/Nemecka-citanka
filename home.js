@@ -61,7 +61,11 @@ async function showTeacherView(panel = "articles") {
   if (!state.currentProfile) return;
   setArticleModerationExpanded(false);
   renderArticleEditorList();
-  if (panel === "students") {
+  if (panel === "admin" && isPublisherAccount()) {
+    setTeacherPanel("admin");
+    showView("teacherView");
+    await renderAdminOverview();
+  } else if (panel === "students") {
     setTeacherPanel("students");
     showView("teacherView");
     await renderTeacherOverview();

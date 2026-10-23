@@ -1045,9 +1045,13 @@ create table if not exists public.app_teacher_requests (
     check (status in ('pending', 'approved', 'rejected')),
   requested_at timestamptz not null default now(),
   reviewed_at timestamptz,
+  push_notified_at timestamptz,
   license_tier text not null default 'none'
     check (license_tier in ('none', 'pilot', 'paid'))
 );
+
+alter table public.app_teacher_requests
+add column if not exists push_notified_at timestamptz;
 
 alter table public.app_teacher_requests enable row level security;
 
@@ -1235,9 +1239,13 @@ create table if not exists public.app_push_subscriptions (
   auth text not null,
   device_id text,
   user_agent text,
+  is_admin boolean not null default false,
   created_at timestamptz not null default now(),
   last_seen_at timestamptz not null default now()
 );
+
+alter table public.app_push_subscriptions
+add column if not exists is_admin boolean not null default false;
 
 create index if not exists app_push_subscriptions_profile_idx
 on public.app_push_subscriptions (profile_id);

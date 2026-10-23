@@ -896,7 +896,7 @@ async function showTestNotification() {
     return;
   }
 
-  if (state.currentProfile?.role === "student") {
+  if (state.currentProfile?.role === "student" || isPublisherAccount()) {
     try {
       await syncPushSubscription({ requestPermission: false });
     } catch (error) {
@@ -931,10 +931,16 @@ async function openAssignedArticleFromUrl() {
   if (!state.currentProfile) return false;
   const url = new URL(location.href);
   const articleId = url.searchParams.get("assignedArticle");
-  if (!articleId) return false;
+  const adminPanel = url.searchParams.get("adminPanel");
+  if (!articleId && !adminPanel) return false;
 
   url.searchParams.delete("assignedArticle");
+  url.searchParams.delete("adminPanel");
   history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  if (adminPanel === "teacherRequests" && isPublisherAccount()) {
+    await showTeacherView("admin");
+    return true;
+  }
   if (!state.articles.some(article => article.id === articleId)) return false;
   await openArticle(articleId);
   return true;

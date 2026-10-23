@@ -222,6 +222,8 @@ Poznámka: Toto je jednoduchý súkromný režim pre dvoch ľudí. PINy sú ulo�
 
 Keď učiteľ pridelí článok alebo kapitolu príbehu žiakovi v triede, aplikácia vie poslať systémové upozornenie na jeho prihlásené zariadenia. Žiak musí v Nastaveniach raz stlačiť „Skúšobná notifikácia“ a povoliť upozornenia. Na iPhone musí byť PWA nainštalovaná na ploche.
 
+Rovnakým spôsobom si upozornenia aktivuje aj administrátor. Keď používateľ odošle žiadosť o učiteľský účet, administrátor dostane upozornenie, ktoré otvorí prehľad čakajúcich žiadostí.
+
 1. V Supabase SQL editore spusti `supabase/add-push-notifications.sql`.
 2. Voliteľne vygeneruj vlastné VAPID kľúče:
 
