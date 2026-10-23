@@ -322,7 +322,7 @@ const requestKey = async (request: JsonObject) => {
   return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
 };
 
-async function findActiveJob(url: string, serviceKey: string, userId: string, key: string) {
+async function findReusableJob(url: string, serviceKey: string, userId: string, key: string) {
   const response = await restRequest(
     url,
     serviceKey,
@@ -330,7 +330,13 @@ async function findActiveJob(url: string, serviceKey: string, userId: string, ke
   );
   const rows = response.ok ? await response.json() : [];
   const job = Array.isArray(rows) ? rows[0] as JsonObject | undefined : undefined;
-  return job && ACTIVE_STATUSES.has(asText(job.status, 40)) ? job : null;
+  if (!job) return null;
+  if (ACTIVE_STATUSES.has(asText(job.status, 40))) return job;
+  const createdAt = Date.parse(asText(job.created_at, 80));
+  const recentlyCompleted = job.status === "completed"
+    && Number.isFinite(createdAt)
+    && Date.now() - createdAt < 30 * 60 * 1_000;
+  return recentlyCompleted ? job : null;
 }
 
 function kickWorker(url: string, serviceKey: string) {
@@ -589,7 +595,7 @@ Deno.serve(async req => {
 
     const requestPayload = { topic, level, category, lengthMin, lengthMax, requiredWords };
     const key = await requestKey(requestPayload);
-    const existing = await findActiveJob(url, serviceKey, userId, key);
+    const existing = await findReusableJob(url, serviceKey, userId, key);
     if (existing) {
       jobId = asText(existing.id, 80);
       kickWorker(url, serviceKey);
