@@ -27,10 +27,10 @@ test("remoteFetch supports a request-specific timeout without forwarding it to f
 
   await context.remoteFetch("https://example.test", {
     method: "POST",
-    timeoutMs: 95_000
+    timeoutMs: 140_000
   });
 
-  assert.equal(scheduledDelay, 95_000);
+  assert.equal(scheduledDelay, 140_000);
   assert.equal(receivedOptions.method, "POST");
   assert.equal("timeoutMs" in receivedOptions, false);
   assert.ok(receivedOptions.signal instanceof AbortSignal);
