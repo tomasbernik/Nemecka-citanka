@@ -3,13 +3,14 @@ function isRemoteNetworkAvailable() {
 }
 
 async function remoteFetch(url, options = {}) {
+  const { timeoutMs = REMOTE_REQUEST_TIMEOUT_MS, ...fetchOptions } = options;
   const controller = new AbortController();
-  const timeoutId = window.setTimeout(() => controller.abort(), REMOTE_REQUEST_TIMEOUT_MS);
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     return await fetch(url, {
-      ...options,
-      signal: options.signal || controller.signal
+      ...fetchOptions,
+      signal: fetchOptions.signal || controller.signal
     });
   } finally {
     window.clearTimeout(timeoutId);
@@ -203,7 +204,9 @@ async function generateArticleWithAi({ topic, level, category, minWords, maxWord
         lengthMin: minWords,
         lengthMax: maxWords,
         requiredWords
-      })    }
+      }),
+      timeoutMs: ARTICLE_GENERATION_TIMEOUT_MS
+    }
   );
 
   const result = await response.json().catch(() => ({}));

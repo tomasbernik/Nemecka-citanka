@@ -14,6 +14,7 @@ const GEO_APP_OPENED_KEY_PREFIX = "geoAppOpened";
 const INSTALL_PROMPT_DISMISSED_KEY = "installPromptDismissedSession";
 const SUPABASE_CONFIG = window.NC_SUPABASE_CONFIG || {};
 const REMOTE_REQUEST_TIMEOUT_MS = 8000;
+const ARTICLE_GENERATION_TIMEOUT_MS = 95000;
 const ARTICLE_CACHE_DB_NAME = "citanka-article-cache";
 const ARTICLE_CACHE_STORE_NAME = "articleSnapshots";
 const ARTICLE_CACHE_KEY = "publishedArticles";

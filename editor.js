@@ -1531,6 +1531,7 @@ function fillArticleEditor(article) {
   $("articleQuestionsInput").value = formatQuestionLines(article?.questions || []);
   $("generatedPromptOutput").value = "";
   $("generatedPromptWrap").classList.add("hidden");
+  setArticleGenerationStatus();
   state.editorExpanded = !article || !$("articleEditorSelect")?.value;
   $("articleEditorStatus").textContent = state.remoteReady
     ? ""
@@ -1558,6 +1559,16 @@ function clearArticleCreationHelperInputs() {
   resetManualJsonImport();
   $("generatedPromptOutput").value = "";
   $("generatedPromptWrap").classList.add("hidden");
+  setArticleGenerationStatus();
+}
+
+function setArticleGenerationStatus(message = "", type = "") {
+  const status = $("articleGenerationStatus");
+  if (!status) return;
+  status.textContent = message;
+  status.classList.toggle("is-progress", type === "progress");
+  status.classList.toggle("is-success", type === "success");
+  status.classList.toggle("is-error", type === "error");
 }
 
 function canModerateArticleApproval(article) {
@@ -1722,7 +1733,7 @@ async function deleteArticleFromEditor() {
 
 async function generateArticleDirectlyWithAi() {
   const button = $("generateArticleAiBtn");
-  const status = $("articleEditorStatus");
+  const status = $("articleGenerationStatus");
 
   const topic = $("articlePromptInput").value.trim();
   const level = $("articleLevelInput").value;
@@ -1731,7 +1742,7 @@ async function generateArticleDirectlyWithAi() {
   const requiredWords = getArticleRequiredWords();
 
   if (!topic) {
-    status.textContent = t("articleTopicRequired");
+    setArticleGenerationStatus(t("articleTopicRequired"), "error");
     $("articlePromptInput").focus();
     return;
   }
@@ -1745,7 +1756,7 @@ async function generateArticleDirectlyWithAi() {
   button.disabled = true;
   const originalText = button.textContent;
   button.textContent = t("generatingArticle");
-  status.textContent = t("generatingArticleStatus");
+  setArticleGenerationStatus(t("generatingArticleStatus"), "progress");
 
   try {
     const result = await generateArticleWithAi({
@@ -1770,11 +1781,15 @@ async function generateArticleDirectlyWithAi() {
     // voliteľná cesta pre články vytvorené mimo aplikácie.
     applyImportedArticleToEditor(article);
 
-    status.textContent = t("generationDone");
+    setArticleGenerationStatus(t("generationDone"), "success");
 
   } catch (error) {
     console.error("Gemini article generation:", error);
-    status.textContent = formatText("generationFailed", { message: error.message });
+    const message = error?.name === "AbortError" || /aborted/i.test(error?.message || "")
+      ? t("generationTimeout")
+      : error?.message || t("generationEmpty");
+    setArticleGenerationStatus(formatText("generationFailed", { message }), "error");
+    status?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } finally {
     button.disabled = false;
     button.textContent = originalText;

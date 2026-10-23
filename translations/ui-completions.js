@@ -316,16 +316,16 @@ Object.entries({
 }).forEach(([language, text]) => assignUiText(language, text));
 
 Object.entries({
-  de: { languagePhenomenon: "Sprachphänomen", oneShortExercise: "Eine kurze Übung", languageFocusWordOrderPrompt: "Bringe die Wörter in die richtige Reihenfolge." },
-  sk: { languagePhenomenon: "Jazykový jav", oneShortExercise: "Jedno krátke cvičenie", languageFocusWordOrderPrompt: "Zoraď slová do správnej vety." },
-  ru: { languagePhenomenon: "Языковое явление", oneShortExercise: "Короткое упражнение", languageFocusWordOrderPrompt: "Расположи слова в правильном порядке." },
-  pl: { languagePhenomenon: "Zjawisko językowe", oneShortExercise: "Krótkie ćwiczenie", languageFocusWordOrderPrompt: "Ułóż słowa w poprawnej kolejności." },
-  hu: { languagePhenomenon: "Nyelvi jelenség", oneShortExercise: "Egy rövid gyakorlat", languageFocusWordOrderPrompt: "Rendezd a szavakat helyes sorrendbe." },
-  ro: { languagePhenomenon: "Fenomen lingvistic", oneShortExercise: "Un exercițiu scurt", languageFocusWordOrderPrompt: "Așază cuvintele în ordinea corectă." },
-  it: { languagePhenomenon: "Fenomeno linguistico", oneShortExercise: "Un breve esercizio", languageFocusWordOrderPrompt: "Metti le parole nell’ordine corretto." },
-  en: { languagePhenomenon: "Language feature", oneShortExercise: "One short exercise", languageFocusWordOrderPrompt: "Put the words in the correct order." },
-  fr: { languagePhenomenon: "Point de langue", oneShortExercise: "Un court exercice", languageFocusWordOrderPrompt: "Mets les mots dans le bon ordre." },
-  tr: { languagePhenomenon: "Dil özelliği", oneShortExercise: "Kısa bir alıştırma", languageFocusWordOrderPrompt: "Kelimeleri doğru sıraya koy." }
+  de: { languagePhenomenon: "Sprachphänomen", oneShortExercise: "Eine kurze Übung", languageFocusWordOrderPrompt: "Bringe die Wörter in die richtige Reihenfolge.", generationTimeout: "Die Erstellung hat zu lange gedauert. Bitte versuche es noch einmal." },
+  sk: { languagePhenomenon: "Jazykový jav", oneShortExercise: "Jedno krátke cvičenie", languageFocusWordOrderPrompt: "Zoraď slová do správnej vety.", generationTimeout: "Generovanie trvalo príliš dlho. Skús to ešte raz." },
+  ru: { languagePhenomenon: "Языковое явление", oneShortExercise: "Короткое упражнение", languageFocusWordOrderPrompt: "Расположи слова в правильном порядке.", generationTimeout: "Создание заняло слишком много времени. Попробуй ещё раз." },
+  pl: { languagePhenomenon: "Zjawisko językowe", oneShortExercise: "Krótkie ćwiczenie", languageFocusWordOrderPrompt: "Ułóż słowa w poprawnej kolejności.", generationTimeout: "Generowanie trwało zbyt długo. Spróbuj ponownie." },
+  hu: { languagePhenomenon: "Nyelvi jelenség", oneShortExercise: "Egy rövid gyakorlat", languageFocusWordOrderPrompt: "Rendezd a szavakat helyes sorrendbe.", generationTimeout: "A létrehozás túl sokáig tartott. Próbáld újra." },
+  ro: { languagePhenomenon: "Fenomen lingvistic", oneShortExercise: "Un exercițiu scurt", languageFocusWordOrderPrompt: "Așază cuvintele în ordinea corectă.", generationTimeout: "Generarea a durat prea mult. Încearcă din nou." },
+  it: { languagePhenomenon: "Fenomeno linguistico", oneShortExercise: "Un breve esercizio", languageFocusWordOrderPrompt: "Metti le parole nell’ordine corretto.", generationTimeout: "La generazione ha richiesto troppo tempo. Riprova." },
+  en: { languagePhenomenon: "Language feature", oneShortExercise: "One short exercise", languageFocusWordOrderPrompt: "Put the words in the correct order.", generationTimeout: "Generation took too long. Please try again." },
+  fr: { languagePhenomenon: "Point de langue", oneShortExercise: "Un court exercice", languageFocusWordOrderPrompt: "Mets les mots dans le bon ordre.", generationTimeout: "La génération a pris trop de temps. Réessaie." },
+  tr: { languagePhenomenon: "Dil özelliği", oneShortExercise: "Kısa bir alıştırma", languageFocusWordOrderPrompt: "Kelimeleri doğru sıraya koy.", generationTimeout: "Oluşturma çok uzun sürdü. Lütfen tekrar dene." }
 }).forEach(([language, text]) => assignUiText(language, text));
 
 assignUiText("sk", {
