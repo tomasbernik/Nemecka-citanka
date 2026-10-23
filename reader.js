@@ -219,6 +219,135 @@ function renderQuestions(article) {
     .join("");
 }
 
+function renderLanguageFocusExample(example) {
+  const sentence = String(example?.sentence || "");
+  const highlight = String(example?.highlight || "");
+  const index = highlight ? sentence.indexOf(highlight) : -1;
+  if (index < 0) return escapeHtml(sentence);
+  return `${escapeHtml(sentence.slice(0, index))}<strong>${escapeHtml(highlight)}</strong>${escapeHtml(sentence.slice(index + highlight.length))}`;
+}
+
+function shuffleLanguageFocusWords(words) {
+  const shuffled = words.map((word, index) => ({ word, index }));
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+  }
+  if (shuffled.every((item, index) => item.index === index) && shuffled.length > 1) {
+    [shuffled[0], shuffled[1]] = [shuffled[1], shuffled[0]];
+  }
+  return shuffled;
+}
+
+function getLanguageFocusAnswer(article) {
+  return state.profileData.languageFocusAnswers?.[article?.id] || null;
+}
+
+function saveLanguageFocusAnswer(article, answer) {
+  if (!article || !state.currentProfile) return;
+  state.profileData.languageFocusAnswers = {
+    ...(state.profileData.languageFocusAnswers || {}),
+    [article.id]: answer
+  };
+  saveProfileData();
+}
+
+function renderLanguageFocus(article) {
+  const panel = $("languageFocusPanel");
+  const focus = article?.languageFocus;
+  if (!panel || !focus?.title || !focus?.exercise) {
+    panel?.classList.add("hidden");
+    return;
+  }
+
+  const saved = getLanguageFocusAnswer(article);
+  const exercise = focus.exercise;
+  const examples = (focus.examples || [])
+    .map(example => `<li>${renderLanguageFocusExample(example)}</li>`)
+    .join("");
+  let exerciseHtml = "";
+
+  if (exercise.type === "word_order") {
+    if (!state.languageFocusOrder.length) {
+      state.languageFocusOrder = shuffleLanguageFocusWords(exercise.words || []);
+    }
+    const selected = state.languageFocusOrder
+      .filter(item => item.selected)
+      .sort((a, b) => a.selected - b.selected);
+    const completedAnswer = saved?.type === "word_order" ? saved : null;
+    const completedCorrectly = completedAnswer?.correct === true;
+    exerciseHtml = `
+      <p class="language-focus-instruction">${escapeHtml(t("languageFocusWordOrderPrompt"))}</p>
+      <div class="sentence-target language-focus-target">${completedCorrectly ? escapeHtml(exercise.answer) : selected.map(item => `<span class="word-chip selected">${escapeHtml(item.word)}</span>`).join("")}</div>
+      <div class="word-bank">${completedCorrectly ? "" : state.languageFocusOrder.map((item, index) => item.selected ? "" : `<button class="word-chip" type="button" data-language-focus-word="${index}">${escapeHtml(item.word)}</button>`).join("")}</div>
+      <button class="text-btn" type="button" data-language-focus-reset>${escapeHtml(t("restart"))}</button>
+      <p class="practice-feedback">${completedAnswer ? escapeHtml(completedAnswer.correct ? t("correct") : t("sentenceRetry")) : ""}</p>
+    `;
+  } else {
+    exerciseHtml = `
+      <p class="language-focus-question">${escapeHtml(exercise.prompt || "")}</p>
+      <div class="language-focus-options">${(exercise.options || []).map(option => `<button class="choice-btn ${saved?.answer === option ? "selected" : ""}" type="button" data-language-focus-option="${escapeHtml(option)}">${escapeHtml(option)}</button>`).join("")}</div>
+      <p class="practice-feedback">${saved ? escapeHtml(saved.correct ? t("correct") : `${t("correctIs")} ${exercise.answer}`) : ""}</p>
+    `;
+  }
+
+  panel.innerHTML = `
+    <div class="practice-heading">
+      <div><p class="eyebrow">${escapeHtml(t("languagePhenomenon"))}</p><h3>${escapeHtml(focus.title)}</h3></div>
+    </div>
+    <ul class="language-focus-examples">${examples}</ul>
+    <div class="language-focus-exercise">
+      <p class="eyebrow">${escapeHtml(t("oneShortExercise"))}</p>
+      ${exerciseHtml}
+    </div>
+  `;
+  panel.classList.remove("hidden");
+  panel.onclick = handleLanguageFocusClick;
+}
+
+function handleLanguageFocusClick(event) {
+  const article = state.currentArticle;
+  const exercise = article?.languageFocus?.exercise;
+  if (!exercise) return;
+
+  const optionButton = event.target.closest("[data-language-focus-option]");
+  if (optionButton) {
+    const answer = optionButton.dataset.languageFocusOption;
+    const correct = answer === exercise.answer;
+    saveLanguageFocusAnswer(article, { type: "multiple_choice", answer, correct });
+    logPractice("language-focus", { correct, answer, expected: exercise.answer, phenomenon: article.languageFocus.title });
+    renderLanguageFocus(article);
+    return;
+  }
+
+  if (event.target.closest("[data-language-focus-reset]")) {
+    state.languageFocusOrder = shuffleLanguageFocusWords(exercise.words || []);
+    if (state.profileData.languageFocusAnswers?.[article.id]) {
+      delete state.profileData.languageFocusAnswers[article.id];
+      saveProfileData();
+    }
+    renderLanguageFocus(article);
+    return;
+  }
+
+  const wordButton = event.target.closest("[data-language-focus-word]");
+  if (!wordButton) return;
+  const item = state.languageFocusOrder[Number(wordButton.dataset.languageFocusWord)];
+  if (!item || item.selected) return;
+  item.selected = state.languageFocusOrder.filter(candidate => candidate.selected).length + 1;
+  const selectedWords = state.languageFocusOrder
+    .filter(candidate => candidate.selected)
+    .sort((a, b) => a.selected - b.selected)
+    .map(candidate => candidate.word);
+  if (selectedWords.length === state.languageFocusOrder.length) {
+    const answer = selectedWords.join(" ");
+    const correct = answer === exercise.answer;
+    saveLanguageFocusAnswer(article, { type: "word_order", answer, correct });
+    logPractice("language-focus", { correct, answer, expected: exercise.answer, phenomenon: article.languageFocus.title });
+  }
+  renderLanguageFocus(article);
+}
+
 function setSpeechStatus(message = "") {
   $("speechStatus").textContent = message;
 }
@@ -547,6 +676,7 @@ async function openArticle(id) {
 
   stopReading();
   state.currentArticle = article;
+  state.languageFocusOrder = [];
   state.activePracticeGroup = "vocab";
   logAppEvent("article_opened", {
     articleId: article.id,
@@ -566,6 +696,7 @@ async function openArticle(id) {
   renderArticleImage(article);
   renderCurrentArticleTeacherActions(article);
   renderArticleText(article);
+  renderLanguageFocus(article);
   renderVocabulary();
   renderQuestions(article);
   renderArticleTaskProgress();

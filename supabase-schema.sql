@@ -87,6 +87,7 @@ create table if not exists public.app_articles (
   inline_vocabulary jsonb not null default '[]'::jsonb,
   image jsonb,
   questions jsonb not null default '[]'::jsonb,
+  language_focus jsonb not null default '{}'::jsonb,
   display_order integer,
   series_id text,
   series_title text,
@@ -268,6 +269,9 @@ add column if not exists image jsonb;
 
 alter table public.app_articles
 add column if not exists category_labels jsonb not null default '{}'::jsonb;
+
+alter table public.app_articles
+add column if not exists language_focus jsonb not null default '{}'::jsonb;
 
 alter table public.app_articles
 add column if not exists display_order integer;
@@ -715,7 +719,8 @@ begin
     or new.vocabulary is distinct from old.vocabulary
     or new.inline_vocabulary is distinct from old.inline_vocabulary
     or new.image is distinct from old.image
-    or new.questions is distinct from old.questions;
+    or new.questions is distinct from old.questions
+    or new.language_focus is distinct from old.language_focus;
 
   if content_changed and not publisher then
     new.approval_status := 'pending';
@@ -948,7 +953,8 @@ BEGIN
     OR new.vocabulary IS DISTINCT FROM old.vocabulary
     OR new.inline_vocabulary IS DISTINCT FROM old.inline_vocabulary
     OR new.image IS DISTINCT FROM old.image
-    OR new.questions IS DISTINCT FROM old.questions;
+    OR new.questions IS DISTINCT FROM old.questions
+    OR new.language_focus IS DISTINCT FROM old.language_focus;
 
   IF content_changed AND NOT publisher THEN
     new.approval_status := 'pending';

@@ -118,6 +118,48 @@ function normalizeQuestionImportItem(item) {
   };
 }
 
+function normalizeLanguageFocusImport(value, textParagraphs = null) {
+  if (!value || typeof value !== "object") return null;
+
+  const title = String(value.title || value.name || "").trim();
+  const articleText = Array.isArray(textParagraphs) ? textParagraphs.join("\n") : "";
+  const examples = (Array.isArray(value.examples) ? value.examples : [])
+    .slice(0, 3)
+    .map(item => typeof item === "string"
+      ? { sentence: item.trim(), highlight: "" }
+      : {
+          sentence: String(item?.sentence || "").trim(),
+          highlight: String(item?.highlight || "").trim()
+        })
+    .filter(item => item.sentence && (!articleText || articleText.includes(item.sentence)))
+    .filter(item => !item.highlight || item.sentence.includes(item.highlight));
+  const sourceExercise = value.exercise && typeof value.exercise === "object"
+    ? value.exercise
+    : null;
+  if (!title || examples.length < 2 || !sourceExercise) return null;
+
+  const type = sourceExercise.type;
+  if (!["multiple_choice", "word_order"].includes(type)) return null;
+  if (type === "word_order") {
+    const words = (Array.isArray(sourceExercise.words) ? sourceExercise.words : [])
+      .map(word => String(word).trim())
+      .filter(Boolean)
+      .slice(0, 16);
+    const answer = String(sourceExercise.answer || "").trim();
+    if (words.length < 4 || words.length > 12 || !answer || words.join(" ") !== answer) return null;
+    return { title, examples, exercise: { type, words, answer } };
+  }
+
+  const prompt = String(sourceExercise.prompt || "").trim();
+  const options = (Array.isArray(sourceExercise.options) ? sourceExercise.options : [])
+    .map(option => String(option).trim())
+    .filter(Boolean)
+    .slice(0, 4);
+  const answer = String(sourceExercise.answer || "").trim();
+  if (!prompt.includes("___") || options.length !== 3 || !options.includes(answer)) return null;
+  return { title, examples, exercise: { type, prompt, options, answer } };
+}
+
 function hasStrictAlternatingAnswers(questions) {
   return questions.length > 2
     && questions.every((question, index) => index === 0 || Boolean(question.answer) !== Boolean(questions[index - 1].answer));
@@ -160,6 +202,7 @@ function parseArticleImport(value) {
     source.categoryLabels || source.category_labels || {},
     source.category || getArticleEditorCategory()
   );
+  const languageFocus = normalizeLanguageFocusImport(source.languageFocus || source.language_focus, textParagraphs);
 
   const article = {
     id: (source.id || makeArticleId(title)).trim(),
@@ -171,6 +214,7 @@ function parseArticleImport(value) {
     text: textParagraphs,
     vocabulary,
     inlineVocabulary,
+    languageFocus,
     questions: avoidAlternatingQuestionPattern(questions)
   };
 
@@ -840,13 +884,19 @@ function getArticleJsonPromptInstructions(level) {
     "  ],",
     "  \"questions\": [",
     `    {\"statement\":\"${teachingLanguage.slovakStatement}\",\"answer\":true}`,
-    "  ]",
+    "  ],",
+    "  \"languageFocus\": {",
+    "    \"title\": \"názov jedného jazykového javu\",",
+    "    \"examples\": [{\"sentence\":\"presná veta z textu\",\"highlight\":\"presná časť na zvýraznenie\"}],",
+    "    \"exercise\": {\"type\":\"multiple_choice\",\"prompt\":\"veta s ___\",\"options\":[\"možnosť 1\",\"možnosť 2\",\"možnosť 3\"],\"answer\":\"možnosť 1\"}",
+    "  }",
     "}",
     "",
     "Použi nižšie vložený text presne tak, ako je. Neprepisuj ho, neskracuj ho a nemen dĺžku textu.",
     "Text rozdeľ do poľa \"text\" podľa odsekov.",
     `Do "vocabulary" pridaj presne 5 slov alebo fráz vo vyučovanom jazyku (${getArticleLanguageLabel(getSelectedArticleLanguage())}), ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
     `Do \"questions\" pridaj 6 až 8 pravda/nepravda viet vo vyučovanom jazyku (${getArticleLanguageLabel(getSelectedArticleLanguage())}) s mixom true a false. Odpovede nesmú byť v pravidelnom poradí true/false/true/false ani false/true/false/true; poradie musí pôsobiť prirodzene a môže mať aj dve rovnaké odpovede za sebou.`,
+    `Do \"languageFocus\" vyber jeden užitočný jazykový jav primeraný úrovni ${level}. Nepridávaj teoretické vysvetlenie. Pridaj 2 až 3 príklady, pričom \"sentence\" musí byť presná celá veta z textu a \"highlight\" presná časť tejto vety. Pridaj práve jedno krátke cvičenie. Pre tvary použi type \"multiple_choice\" s tromi možnosťami a odpoveďou, ktorá je presne jednou z možností. Pre slovosled môžeš použiť type \"word_order\" s poľom \"words\" a hotovou správnou vetou v \"answer\".`,
     `Do \"categoryLabels\" pridaj pre každú kategóriu alebo tému preklady do týchto jazykov: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}. Kľúč objektu musí presne zodpovedať hodnote v poli \"category\"; ak je viac kategórií oddelených znakom |, pridaj každú zvlášť.`,
     `Všetky položky vocabulary musia mať kľúče de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
     "Do \"base\" daj základný slovníkový tvar: pri podstatnom mene s určitým členom a v nominatíve jednotného čísla, napríklad \"der Mann\"; pri slovese infinitív, napríklad \"gehen\"; pri prídavnom mene základný tvar, napríklad \"freundlich\". Ak je \"de\" už základný tvar alebo ide o celú frázu, môže byť \"base\" rovnaké ako \"de\"."
@@ -1388,6 +1438,7 @@ function getArticleEditorSnapshot() {
     level: $("articleLevelInput")?.value || "",
     category: getArticleEditorCategory(),
     categoryLabels: state.editorCategoryLabels || {},
+    languageFocus: state.editorLanguageFocus || null,
     summary: $("articleSummaryInput")?.value || "",
     text: $("articleTextInput")?.value || "",
     vocabulary: $("articleVocabularyInput")?.value || "",
@@ -1457,6 +1508,10 @@ function fillArticleEditor(article) {
   state.editorBaseInlineVocabulary = getInlineVocabulary(article || {});
   state.editorManualInlineVocabulary = [];
   state.editorCategoryLabels = article?.categoryLabels || {};
+  state.editorLanguageFocus = normalizeLanguageFocusImport(
+    article?.languageFocus || article?.language_focus,
+    article?.text || null
+  );
   state.editorInlineSelection = null;
   hideInlineSelectionButton();
   $("articleRequiredWordsMode").value = "no";
@@ -1562,6 +1617,7 @@ function readArticleEditor() {
     level: $("articleLevelInput").value.trim(),
     category: getArticleEditorCategory(),
     categoryLabels: getArticleEditorCategoryLabels(),
+    languageFocus: state.editorLanguageFocus,
     summary: $("articleSummaryInput").value.trim(),
     text: linesToList($("articleTextInput").value),
     image: existingArticle?.image || null,

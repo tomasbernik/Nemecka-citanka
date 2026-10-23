@@ -1417,6 +1417,57 @@ body.image-dialog-open {
   font-weight: 850;
 }
 
+.language-focus-panel {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0;
+  border-color: rgba(var(--support-rgb), 0.55);
+  background: linear-gradient(135deg, rgba(var(--support-rgb), 0.12), var(--card));
+}
+
+.language-focus-examples {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.language-focus-examples li {
+  line-height: 1.55;
+}
+
+.language-focus-examples strong {
+  padding: 1px 4px;
+  border-radius: 5px;
+  background: rgba(var(--accent-rgb), 0.2);
+  color: var(--accent-dark);
+}
+
+.language-focus-exercise {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.language-focus-question,
+.language-focus-instruction {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.language-focus-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.language-focus-target {
+  margin-bottom: 0;
+}
+
 .quiz-prompt.compact,
 .cloze-sentence,
 .mistake-sentence {

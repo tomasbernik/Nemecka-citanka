@@ -259,6 +259,7 @@ function normalizeArticle(article) {
     teamId: article.teamId || article.team_id || null,
     teacherGroupId: article.teacherGroupId || article.teacher_group_id || null,
     categoryLabels: article.categoryLabels || article.category_labels || {},
+    languageFocus: article.languageFocus || article.language_focus || null,
     image: article.image || null,
     visibility: article.visibility || "public",
     approvalStatus: article.approvalStatus || article.approval_status || "approved",
@@ -436,8 +437,9 @@ async function saveArticleRows(rows) {
   } catch (error) {
     const missingColumns = [
       ...(isMissingCategoryLabelsColumn(error) ? ["category_labels"] : []),
-      ...(error?.message?.includes("language") ? ["language"] : []),
+      ...(error?.message?.includes("language") && !error?.message?.includes("language_focus") ? ["language"] : []),
       ...(error?.message?.includes("variant_group_id") ? ["variant_group_id"] : []),
+      ...(error?.message?.includes("language_focus") ? ["language_focus"] : []),
       ...(["display_order", "series_id", "series_title", "chapter_order"].filter(column => error?.message?.includes(column)))
     ];
     if (!missingColumns.length) throw error;
@@ -468,8 +470,9 @@ async function updateArticleRow(row) {
   } catch (error) {
     const missingColumns = [
       ...(isMissingCategoryLabelsColumn(error) ? ["category_labels"] : []),
-      ...(error?.message?.includes("language") ? ["language"] : []),
+      ...(error?.message?.includes("language") && !error?.message?.includes("language_focus") ? ["language"] : []),
       ...(error?.message?.includes("variant_group_id") ? ["variant_group_id"] : []),
+      ...(error?.message?.includes("language_focus") ? ["language_focus"] : []),
       ...(["display_order", "series_id", "series_title", "chapter_order"].filter(column => error?.message?.includes(column)))
     ];
     if (!missingColumns.length) throw error;
@@ -492,6 +495,7 @@ function rowToArticle(row) {
     level: row.level,
     category: row.category,
     categoryLabels: row.category_labels || {},
+    languageFocus: row.language_focus || null,
     summary: row.summary,
     text: row.text || [],
     vocabulary: row.vocabulary || [],
@@ -521,6 +525,7 @@ function articleToRow(article, options = {}) {
     level: article.level,
     category: article.category,
     category_labels: article.categoryLabels || {},
+    language_focus: article.languageFocus || {},
     summary: article.summary,
     text: article.text || [],
     vocabulary: article.vocabulary || [],

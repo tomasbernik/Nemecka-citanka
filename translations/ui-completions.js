@@ -315,6 +315,19 @@ Object.entries({
   }
 }).forEach(([language, text]) => assignUiText(language, text));
 
+Object.entries({
+  de: { languagePhenomenon: "Sprachphänomen", oneShortExercise: "Eine kurze Übung", languageFocusWordOrderPrompt: "Bringe die Wörter in die richtige Reihenfolge." },
+  sk: { languagePhenomenon: "Jazykový jav", oneShortExercise: "Jedno krátke cvičenie", languageFocusWordOrderPrompt: "Zoraď slová do správnej vety." },
+  ru: { languagePhenomenon: "Языковое явление", oneShortExercise: "Короткое упражнение", languageFocusWordOrderPrompt: "Расположи слова в правильном порядке." },
+  pl: { languagePhenomenon: "Zjawisko językowe", oneShortExercise: "Krótkie ćwiczenie", languageFocusWordOrderPrompt: "Ułóż słowa w poprawnej kolejności." },
+  hu: { languagePhenomenon: "Nyelvi jelenség", oneShortExercise: "Egy rövid gyakorlat", languageFocusWordOrderPrompt: "Rendezd a szavakat helyes sorrendbe." },
+  ro: { languagePhenomenon: "Fenomen lingvistic", oneShortExercise: "Un exercițiu scurt", languageFocusWordOrderPrompt: "Așază cuvintele în ordinea corectă." },
+  it: { languagePhenomenon: "Fenomeno linguistico", oneShortExercise: "Un breve esercizio", languageFocusWordOrderPrompt: "Metti le parole nell’ordine corretto." },
+  en: { languagePhenomenon: "Language feature", oneShortExercise: "One short exercise", languageFocusWordOrderPrompt: "Put the words in the correct order." },
+  fr: { languagePhenomenon: "Point de langue", oneShortExercise: "Un court exercice", languageFocusWordOrderPrompt: "Mets les mots dans le bon ordre." },
+  tr: { languagePhenomenon: "Dil özelliği", oneShortExercise: "Kısa bir alıştırma", languageFocusWordOrderPrompt: "Kelimeleri doğru sıraya koy." }
+}).forEach(([language, text]) => assignUiText(language, text));
+
 assignUiText("sk", {
   imageLoadFailed: "Vybraný obrázok sa nepodarilo načítať.", imagePrepareFailed: "Prehliadač nedokázal pripraviť obrázok na nahratie.", imageConvertFailed: "Prehliadač nedokázal skonvertovať obrázok do formátu JPG.", clipboardUnavailable: "Schránka nie je dostupná.", reviewPracticeHint: "Nazbierané slovíčka a frázy: {count}. Precvič si ich, keď budeš mať chvíľu.", practiceNow: "Precvičiť", groupLabel: "Skupina", classSummary: "Prehľad triedy", assignmentSummary: "Prehľad zadaní", activeStudents: "aktívni", inactiveStudents: "dlhšie neaktívni", completedAssignments: "splnené zadania", unfinishedAssignmentsCount: "ešte otvorené", noActivity: "bez aktivity", noAssignmentsLabel: "bez zadaní", doneAssignmentsHeading: "Splnené zadania", unfinishedAssignmentsHeading: "Otvorené zadania", otherActivity: "Ďalšia aktivita mimo zadaní", detail: "Detail", assignedLower: "zadané", doneLower: "splnené", openedLower: "otvorené", inactiveLabel: "dlhšie neaktívny", activeLabel: "aktívny", studentNoOpenAssignments: "Žiadne otvorené zadania.", noDoneAssignments: "Zatiaľ žiadne splnené zadania.", noOtherActivity: "Zatiaľ žiadna ďalšia aktivita mimo zadaní.", lastActivityLabel: "posledná aktivita", answersLabel: "odpovede", questionNumber: "Otázka {number}", correctLower: "správne", incorrectLower: "nesprávne", otherProfilesTitle: "Ostatné profily mimo tvojej skupiny", genericDevice: "Zariadenie", notSignedIn: "Neprihlásený"
 });
