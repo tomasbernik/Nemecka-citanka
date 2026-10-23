@@ -1731,9 +1731,66 @@ async function deleteArticleFromEditor() {
   }
 }
 
-async function generateArticleDirectlyWithAi() {
+let articleGenerationRunning = false;
+
+function showArticleGenerationProgress(phase) {
+  const statusKey = {
+    starting: "generationStartingStatus",
+    draft: "generationDraftStatus",
+    review: "generationReviewStatus",
+    materials: "generationMaterialsStatus",
+    retry: "generationRetryStatus"
+  }[phase] || "generatingArticleStatus";
+  const backgroundNote = phase === "retry" ? "" : ` ${t("generationRunsInBackground")}`;
+  setArticleGenerationStatus(`${t(statusKey)}${backgroundNote}`, "progress");
+}
+
+function applyGeneratedArticleResult(result) {
+  if (!result?.article) throw new Error(t("generationEmpty"));
+  const article = parseArticleImport(JSON.stringify(result.article));
+  applyImportedArticleToEditor(article);
+  setArticleGenerationStatus(t("generationDone"), "success");
+}
+
+function showArticleGenerationError(error) {
+  console.error("Gemini article generation:", error);
+  const message = error?.code === "generation_continues_in_background"
+    ? t("generationContinuesInBackground")
+    : error?.name === "AbortError" || /aborted/i.test(error?.message || "")
+      ? t("generationTimeout")
+      : error?.message || t("generationEmpty");
+  const type = error?.code === "generation_continues_in_background" ? "progress" : "error";
+  setArticleGenerationStatus(
+    type === "progress" ? message : formatText("generationFailed", { message }),
+    type
+  );
+  $("articleGenerationStatus")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+async function resumePendingArticleGeneration() {
+  if (articleGenerationRunning) return;
   const button = $("generateArticleAiBtn");
-  const status = $("articleGenerationStatus");
+  articleGenerationRunning = true;
+  button.disabled = true;
+  const originalText = button.textContent;
+  button.textContent = t("generatingArticle");
+  try {
+    const result = await resumeArticleGenerationWithAi({
+      onProgress: showArticleGenerationProgress
+    });
+    if (result) applyGeneratedArticleResult(result);
+  } catch (error) {
+    showArticleGenerationError(error);
+  } finally {
+    articleGenerationRunning = false;
+    button.disabled = false;
+    button.textContent = originalText;
+  }
+}
+
+async function generateArticleDirectlyWithAi() {
+  if (articleGenerationRunning) return;
+  const button = $("generateArticleAiBtn");
 
   const topic = $("articlePromptInput").value.trim();
   const level = $("articleLevelInput").value;
@@ -1753,10 +1810,11 @@ async function generateArticleDirectlyWithAi() {
     if (!confirmed) return;
   }
 
+  articleGenerationRunning = true;
   button.disabled = true;
   const originalText = button.textContent;
   button.textContent = t("generatingArticle");
-  setArticleGenerationStatus(t("generatingArticleStatus"), "progress");
+  showArticleGenerationProgress("starting");
 
   try {
     const result = await generateArticleWithAi({
@@ -1766,40 +1824,13 @@ async function generateArticleDirectlyWithAi() {
       minWords: range.min,
       maxWords: range.max,
       requiredWords,
-      onProgress(phase) {
-        const statusKey = {
-          starting: "generationStartingStatus",
-          draft: "generationDraftStatus",
-          review: "generationReviewStatus",
-          materials: "generationMaterialsStatus"
-        }[phase] || "generatingArticleStatus";
-        setArticleGenerationStatus(t(statusKey), "progress");
-      }
+      onProgress: showArticleGenerationProgress
     });
-
-    if (!result.article) {
-      throw new Error(t("generationEmpty"));
-    }
-
-    // Overenie pomocou existujúceho validátora editora.
-    const article = parseArticleImport(
-      JSON.stringify(result.article)
-    );
-
-    // AI výsledok ide priamo do editora; manuálny JSON import ostáva iba ako
-    // voliteľná cesta pre články vytvorené mimo aplikácie.
-    applyImportedArticleToEditor(article);
-
-    setArticleGenerationStatus(t("generationDone"), "success");
-
+    applyGeneratedArticleResult(result);
   } catch (error) {
-    console.error("Gemini article generation:", error);
-    const message = error?.name === "AbortError" || /aborted/i.test(error?.message || "")
-      ? t("generationTimeout")
-      : error?.message || t("generationEmpty");
-    setArticleGenerationStatus(formatText("generationFailed", { message }), "error");
-    status?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    showArticleGenerationError(error);
   } finally {
+    articleGenerationRunning = false;
     button.disabled = false;
     button.textContent = originalText;
   }

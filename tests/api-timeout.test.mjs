@@ -36,23 +36,34 @@ test("remoteFetch supports a request-specific timeout without forwarding it to f
   assert.ok(receivedOptions.signal instanceof AbortSignal);
 });
 
-test("article generation runs draft, review and materials as separate requests", async () => {
+test("article generation starts one server job and polls its checkpoints", async () => {
   const calls = [];
   const progress = [];
   const responses = [
-    { jobId: "job-1", status: "created" },
-    { jobId: "job-1", status: "draft_ready" },
-    { jobId: "job-1", status: "review_ready" },
+    { jobId: "job-1", status: "draft_queued" },
+    { jobId: "job-1", status: "draft_running" },
+    { jobId: "job-1", status: "review_queued" },
+    { jobId: "job-1", status: "materials_running" },
     { jobId: "job-1", status: "completed", article: { title: "Test" } }
   ];
+  const storage = new Map();
   const context = vm.createContext({
     REMOTE_REQUEST_TIMEOUT_MS: 8_000,
     ARTICLE_GENERATION_TIMEOUT_MS: 140_000,
+    ARTICLE_GENERATION_STATUS_TIMEOUT_MS: 20_000,
+    ARTICLE_GENERATION_POLL_INTERVAL_MS: 3_000,
+    ARTICLE_GENERATION_POLL_LIMIT_MS: 15 * 60 * 1_000,
+    ARTICLE_GENERATION_JOB_KEY: "pendingArticleGenerationJob",
     SUPABASE_CONFIG: { url: "https://project.test", anonKey: "anon" },
     state: { remoteReady: true },
     navigator: { onLine: true },
     AbortController,
-    window: { setTimeout, clearTimeout },
+    window: { setTimeout: callback => (callback(), 1), clearTimeout },
+    localStorage: {
+      getItem: key => storage.get(key) || null,
+      setItem: (key, value) => storage.set(key, value),
+      removeItem: key => storage.delete(key)
+    },
     fetch: async () => {
       throw new Error("unexpected native fetch");
     },
@@ -76,9 +87,11 @@ test("article generation runs draft, review and materials as separate requests",
     onProgress: phase => progress.push(phase)
   });
 
-  assert.deepEqual(calls.map(call => call.body.action), ["start", "draft", "review", "materials"]);
-  assert.deepEqual(calls.slice(1).map(call => call.body.jobId), ["job-1", "job-1", "job-1"]);
-  assert.ok(calls.every(call => call.timeoutMs === 140_000));
+  assert.deepEqual(calls.map(call => call.body.action), ["start", "status", "status", "status", "status"]);
+  assert.deepEqual(calls.slice(1).map(call => call.body.jobId), ["job-1", "job-1", "job-1", "job-1"]);
+  assert.equal(calls[0].timeoutMs, 140_000);
+  assert.ok(calls.slice(1).every(call => call.timeoutMs === 20_000));
   assert.deepEqual(progress, ["starting", "draft", "review", "materials"]);
   assert.equal(result.article.title, "Test");
+  assert.equal(storage.has("pendingArticleGenerationJob"), false);
 });

@@ -687,6 +687,7 @@ function showArticleEditorView() {
     return;
   }
   showTeacherView("articles");
+  resumePendingArticleGeneration();
 }
 
 async function showOverviewView() {

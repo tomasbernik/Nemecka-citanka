@@ -1,6 +1,6 @@
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info",
+  "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info, x-workflow-secret",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
@@ -270,6 +270,19 @@ async function loadJob(url: string, serviceKey: string, jobId: string, userId: s
   return rows[0] as JsonObject;
 }
 
+async function loadJobById(url: string, serviceKey: string, jobId: string) {
+  const response = await restRequest(
+    url,
+    serviceKey,
+    `article_generation_jobs?id=eq.${encodeURIComponent(jobId)}&select=*`,
+  );
+  const rows = response.ok ? await response.json() : [];
+  if (!response.ok || !Array.isArray(rows) || !rows[0]) {
+    throw new WorkflowError("generation_job_not_found", 404, "Article generation job was not found.");
+  }
+  return rows[0] as JsonObject;
+}
+
 async function updateJob(
   url: string,
   serviceKey: string,
@@ -292,85 +305,93 @@ async function updateJob(
 
 const getRequest = (job: JsonObject) => job.request_payload as JsonObject;
 
-Deno.serve(async req => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
-  if (req.method !== "POST") return respond({ error: "method_not_allowed" }, 405);
+const ACTIVE_STATUSES = new Set([
+  "created", "draft_queued", "draft_running", "draft_ready",
+  "review_queued", "review_running", "review_ready",
+  "materials_queued", "materials_running",
+]);
+const RETRYABLE_CODES = new Set([
+  "gemini_limit_reached", "gemini_failed", "ai_timeout_or_network_error",
+  "invalid_ai_output", "invalid_story_output", "invalid_materials_output",
+]);
+const MAX_PHASE_ATTEMPTS = 5;
 
-  const url = Deno.env.get("SUPABASE_URL");
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  const geminiKey = Deno.env.get("GEMINI_API_KEY");
-  const model = Deno.env.get("GEMINI_ARTICLE_MODEL") || "gemini-3.8-flash";
-  if (!url || !anonKey || !serviceKey || !geminiKey) {
-    return respond({ error: "missing_configuration" }, 503);
-  }
+const requestKey = async (request: JsonObject) => {
+  const bytes = new TextEncoder().encode(JSON.stringify(request));
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, "0")).join("");
+};
 
-  const jwt = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") || "";
-  if (!jwt) return respond({ error: "login_required" }, 401);
-  const auth = await fetch(`${url}/auth/v1/user`, {
-    headers: { apikey: anonKey, Authorization: `Bearer ${jwt}` },
+async function findActiveJob(url: string, serviceKey: string, userId: string, key: string) {
+  const response = await restRequest(
+    url,
+    serviceKey,
+    `article_generation_jobs?user_id=eq.${encodeURIComponent(userId)}&request_key=eq.${key}&order=created_at.desc&limit=1&select=*`,
+  );
+  const rows = response.ok ? await response.json() : [];
+  const job = Array.isArray(rows) ? rows[0] as JsonObject | undefined : undefined;
+  return job && ACTIVE_STATUSES.has(asText(job.status, 40)) ? job : null;
+}
+
+function kickWorker(url: string, serviceKey: string) {
+  const task = fetch(`${url}/functions/v1/generate-article-workflow`, {
+    method: "POST",
+    headers: {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ action: "tick" }),
+  }).catch(error => console.error("Could not wake article worker:", error));
+  const edgeRuntime = (globalThis as unknown as { EdgeRuntime?: { waitUntil: (promise: Promise<unknown>) => void } }).EdgeRuntime;
+  if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(task);
+}
+
+async function claimJob(url: string, serviceKey: string) {
+  const response = await restRequest(url, serviceKey, "rpc/claim_article_generation_job", {
+    method: "POST",
+    body: "{}",
   });
-  if (!auth.ok) return respond({ error: "login_required" }, 401);
-  const userId = asText((await auth.json())?.id, 80);
-  if (!userId) return respond({ error: "login_required" }, 401);
+  const rows = response.ok ? await response.json() : [];
+  if (!response.ok) throw new WorkflowError("generation_queue_unavailable", 503);
+  return Array.isArray(rows) && rows[0] ? rows[0] as JsonObject : null;
+}
 
-  let payload: JsonObject;
+async function hasValidWorkerSecret(url: string, serviceKey: string, candidate: string) {
+  if (!candidate) return false;
+  const response = await restRequest(url, serviceKey, "rpc/verify_article_generation_worker_secret", {
+    method: "POST",
+    body: JSON.stringify({ candidate }),
+  });
+  return response.ok && await response.json() === true;
+}
+
+const retryDelaySeconds = (attempt: number) => [30, 60, 120, 120][Math.min(Math.max(attempt - 1, 0), 3)];
+
+async function runClaimedPhase(
+  url: string,
+  serviceKey: string,
+  geminiKey: string,
+  primaryModel: string,
+  fallbackModel: string,
+  claim: JsonObject,
+) {
+  const jobId = asText(claim.id, 80);
+  const userId = asText(claim.user_id, 80);
+  const phase = asText(claim.phase, 20);
+  const attempt = Number(claim.phase_attempt) || 1;
+  const model = attempt >= 3 ? fallbackModel : primaryModel;
+  const job = await loadJobById(url, serviceKey, jobId);
+  const request = getRequest(job);
+  const level = asText(request.level, 10);
+  const topic = asText(request.topic, 6_000);
+  const category = asText(request.category, 120) || "Alltag";
+  const lengthMin = Number(request.lengthMin);
+  const lengthMax = Number(request.lengthMax);
+  const requiredWords = asStringArray(request.requiredWords, 15, 60);
+
   try {
-    payload = await req.json();
-  } catch {
-    return respond({ error: "invalid_json" }, 400);
-  }
-
-  const action = asText(payload.action, 30);
-  let jobId = asText(payload.jobId, 80);
-  let activePhase = action;
-  try {
-    if (action === "start") {
-      const topic = asText(payload.topic, 6_000);
-      const level = asText(payload.level, 10);
-      const category = asText(payload.category, 120) || "Alltag";
-      const lengthMin = Number(payload.lengthMin);
-      const lengthMax = Number(payload.lengthMax);
-      const requiredWords = asStringArray(payload.requiredWords, 15, 60);
-      if (!topic || !["A1", "A2", "A2-B1", "B1", "B2", "C1"].includes(level)
-        || !Number.isInteger(lengthMin) || !Number.isInteger(lengthMax)
-        || lengthMin < 100 || lengthMax > 800 || lengthMax < lengthMin) {
-        throw new WorkflowError("invalid_request", 400);
-      }
-      const claim = await fetch(`${url}/rest/v1/rpc/claim_ai_article_generation`, {
-        method: "POST",
-        headers: { apikey: anonKey, Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" },
-        body: "{}",
-      });
-      if (!claim.ok) throw new WorkflowError("quota_not_configured", 503);
-      if (await claim.json() !== true) throw new WorkflowError("daily_limit_reached", 429);
-
-      const requestPayload = { topic, level, category, lengthMin, lengthMax, requiredWords };
-      const created = await restRequest(url, serviceKey, "article_generation_jobs?select=id,status", {
-        method: "POST",
-        headers: { Prefer: "return=representation" },
-        body: JSON.stringify({ user_id: userId, status: "created", request_payload: requestPayload }),
-      });
-      const rows = created.ok ? await created.json() : [];
-      if (!created.ok || !rows?.[0]?.id) throw new WorkflowError("generation_job_create_failed", 503);
-      return respond({ jobId: rows[0].id, status: rows[0].status });
-    }
-
-    if (!jobId || !["draft", "review", "materials"].includes(action)) {
-      throw new WorkflowError("invalid_request", 400);
-    }
-    const job = await loadJob(url, serviceKey, jobId, userId);
-    const request = getRequest(job);
-    const level = asText(request.level, 10);
-    const topic = asText(request.topic, 6_000);
-    const category = asText(request.category, 120) || "Alltag";
-    const lengthMin = Number(request.lengthMin);
-    const lengthMax = Number(request.lengthMax);
-    const requiredWords = asStringArray(request.requiredWords, 15, 60);
-
-    if (action === "draft") {
-      if (job.draft) return respond({ jobId, status: job.status, draft: job.draft });
-      await updateJob(url, serviceKey, jobId, userId, { status: "draft_running", last_error: null });
+    if (phase === "draft") {
       const prompt = `You are an expert German teacher and story writer. Create only the German reading story.
 
 TARGET:
@@ -393,14 +414,16 @@ QUALITY RULES:
 Return only JSON with a German title and the story paragraphs in text.`;
       const rawDraft = await callGemini(geminiKey, model, prompt, DRAFT_SCHEMA, "medium", 6_000);
       const draft = normalizeStory(rawDraft, lengthMin, lengthMax);
-      await updateJob(url, serviceKey, jobId, userId, { status: "draft_ready", draft });
-      return respond({ jobId, status: "draft_ready", draft });
+      await updateJob(url, serviceKey, jobId, userId, {
+        status: "review_queued", draft, model_used: model,
+        next_attempt_at: new Date().toISOString(), locked_until: null,
+      });
+      kickWorker(url, serviceKey);
+      return;
     }
 
     const draft = normalizeStory(job.draft, lengthMin, lengthMax);
-    if (action === "review") {
-      if (job.reviewed) return respond({ jobId, status: job.status, reviewed: job.reviewed });
-      await updateJob(url, serviceKey, jobId, userId, { status: "review_running", last_error: null });
+    if (phase === "review") {
       const prompt = `Act as a meticulous native German editor and CEFR examiner. Independently proofread and rewrite the supplied story. Return the corrected story, not comments.
 
 REQUIREMENTS:
@@ -420,13 +443,15 @@ ${JSON.stringify({ title: draft.title, text: draft.text })}
 Return only JSON with the corrected German title and paragraphs in text.`;
       const rawReviewed = await callGemini(geminiKey, model, prompt, DRAFT_SCHEMA, "medium", 6_000);
       const reviewed = normalizeStory(rawReviewed, lengthMin, lengthMax);
-      await updateJob(url, serviceKey, jobId, userId, { status: "review_ready", reviewed });
-      return respond({ jobId, status: "review_ready", reviewed });
+      await updateJob(url, serviceKey, jobId, userId, {
+        status: "materials_queued", reviewed, model_used: model,
+        next_attempt_at: new Date().toISOString(), locked_until: null,
+      });
+      kickWorker(url, serviceKey);
+      return;
     }
 
     const reviewed = normalizeStory(job.reviewed, lengthMin, lengthMax);
-    if (job.article) return respond({ jobId, status: "completed", article: job.article });
-    await updateJob(url, serviceKey, jobId, userId, { status: "materials_running", last_error: null });
     const prompt = `You are a German teacher creating learning materials from an already approved story. Do not rewrite the story.
 
 LEVEL: ${level}
@@ -443,21 +468,163 @@ Create:
 Before returning, verify every vocabulary form and every example against the supplied story. Return only the requested JSON.`;
     const materials = await callGemini(geminiKey, model, prompt, MATERIALS_SCHEMA, "medium", 10_000);
     const article = validateMaterials(materials, reviewed, request);
-    await updateJob(url, serviceKey, jobId, userId, { status: "completed", article });
-    return respond({ jobId, status: "completed", article });
+    await updateJob(url, serviceKey, jobId, userId, {
+      status: "completed", article, model_used: model,
+      completed_at: new Date().toISOString(), locked_until: null,
+    });
   } catch (error) {
     const failure = error instanceof WorkflowError
       ? error
       : new WorkflowError("generation_failed", 500, asText(String(error), 300));
-    console.error("Article workflow failed:", { action: activePhase, jobId, code: failure.code, message: failure.message });
-    if (jobId && ["draft", "review", "materials"].includes(activePhase)) {
-      const status = `${activePhase}_failed`;
-      try {
-        await updateJob(url, serviceKey, jobId, userId, { status, last_error: failure.message });
-      } catch (updateError) {
-        console.error("Could not store workflow failure:", updateError);
+    const retry = RETRYABLE_CODES.has(failure.code) && attempt < MAX_PHASE_ATTEMPTS;
+    console.error("Article worker phase failed:", {
+      jobId, phase, attempt, model, retry, code: failure.code, message: failure.message,
+    });
+    await updateJob(url, serviceKey, jobId, userId, retry
+      ? {
+        status: `${phase}_queued`,
+        next_attempt_at: new Date(Date.now() + retryDelaySeconds(attempt) * 1_000).toISOString(),
+        locked_until: null,
+        last_error: failure.message,
+        last_error_code: failure.code,
+        model_used: model,
       }
+      : {
+        status: `${phase}_failed`,
+        locked_until: null,
+        last_error: failure.message,
+        last_error_code: failure.code,
+        model_used: model,
+      });
+  }
+}
+
+async function runWorker(
+  url: string,
+  serviceKey: string,
+  geminiKey: string,
+  primaryModel: string,
+  fallbackModel: string,
+) {
+  const claim = await claimJob(url, serviceKey);
+  if (claim) await runClaimedPhase(url, serviceKey, geminiKey, primaryModel, fallbackModel, claim);
+}
+
+Deno.serve(async req => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: cors });
+  if (req.method !== "POST") return respond({ error: "method_not_allowed" }, 405);
+
+  const url = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const geminiKey = Deno.env.get("GEMINI_API_KEY");
+  const primaryModel = Deno.env.get("GEMINI_ARTICLE_MODEL") || "gemini-3.8-flash";
+  const fallbackModel = Deno.env.get("GEMINI_ARTICLE_FALLBACK_MODEL") || "gemini-3.6-flash";
+  if (!url || !anonKey || !serviceKey || !geminiKey) {
+    return respond({ error: "missing_configuration" }, 503);
+  }
+
+  let payload: JsonObject;
+  try {
+    payload = await req.json();
+  } catch {
+    return respond({ error: "invalid_json" }, 400);
+  }
+  const action = asText(payload.action, 30);
+
+  if (action === "tick") {
+    const jwt = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") || "";
+    const internalCall = jwt === serviceKey;
+    const scheduledCall = await hasValidWorkerSecret(
+      url,
+      serviceKey,
+      req.headers.get("x-workflow-secret") || "",
+    );
+    if (!internalCall && !scheduledCall) return respond({ error: "worker_unauthorized" }, 401);
+    const task = runWorker(url, serviceKey, geminiKey, primaryModel, fallbackModel)
+      .catch(error => console.error("Article worker failed:", error));
+    const edgeRuntime = (globalThis as unknown as { EdgeRuntime?: { waitUntil: (promise: Promise<unknown>) => void } }).EdgeRuntime;
+    if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(task);
+    else await task;
+    return respond({ accepted: true }, 202);
+  }
+
+  const jwt = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") || "";
+  if (!jwt) return respond({ error: "login_required" }, 401);
+  const auth = await fetch(`${url}/auth/v1/user`, {
+    headers: { apikey: anonKey, Authorization: `Bearer ${jwt}` },
+  });
+  if (!auth.ok) return respond({ error: "login_required" }, 401);
+  const userId = asText((await auth.json())?.id, 80);
+  if (!userId) return respond({ error: "login_required" }, 401);
+
+  let jobId = asText(payload.jobId, 80);
+  try {
+    if (action === "status") {
+      if (!jobId) throw new WorkflowError("invalid_request", 400);
+      const job = await loadJob(url, serviceKey, jobId, userId);
+      return respond({
+        jobId,
+        status: job.status,
+        article: job.article || null,
+        lastError: job.last_error || null,
+        lastErrorCode: job.last_error_code || null,
+        nextAttemptAt: job.next_attempt_at || null,
+        modelUsed: job.model_used || null,
+      });
     }
-    return respond({ error: failure.code, message: failure.message, phase: activePhase, jobId }, failure.status);
+
+    if (action !== "start") throw new WorkflowError("invalid_request", 400);
+    const topic = asText(payload.topic, 6_000);
+    const level = asText(payload.level, 10);
+    const category = asText(payload.category, 120) || "Alltag";
+    const lengthMin = Number(payload.lengthMin);
+    const lengthMax = Number(payload.lengthMax);
+    const requiredWords = asStringArray(payload.requiredWords, 15, 60);
+    if (!topic || !["A1", "A2", "A2-B1", "B1", "B2", "C1"].includes(level)
+      || !Number.isInteger(lengthMin) || !Number.isInteger(lengthMax)
+      || lengthMin < 100 || lengthMax > 800 || lengthMax < lengthMin) {
+      throw new WorkflowError("invalid_request", 400);
+    }
+
+    const requestPayload = { topic, level, category, lengthMin, lengthMax, requiredWords };
+    const key = await requestKey(requestPayload);
+    const existing = await findActiveJob(url, serviceKey, userId, key);
+    if (existing) {
+      jobId = asText(existing.id, 80);
+      kickWorker(url, serviceKey);
+      return respond({ jobId, status: existing.status, resumed: true });
+    }
+
+    const quota = await fetch(`${url}/rest/v1/rpc/claim_ai_article_generation`, {
+      method: "POST",
+      headers: { apikey: anonKey, Authorization: `Bearer ${jwt}`, "Content-Type": "application/json" },
+      body: "{}",
+    });
+    if (!quota.ok) throw new WorkflowError("quota_not_configured", 503);
+    if (await quota.json() !== true) throw new WorkflowError("daily_limit_reached", 429);
+
+    const created = await restRequest(url, serviceKey, "article_generation_jobs?select=id,status", {
+      method: "POST",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({
+        user_id: userId,
+        status: "draft_queued",
+        request_payload: requestPayload,
+        request_key: key,
+        next_attempt_at: new Date().toISOString(),
+      }),
+    });
+    const rows = created.ok ? await created.json() : [];
+    if (!created.ok || !rows?.[0]?.id) throw new WorkflowError("generation_job_create_failed", 503);
+    jobId = rows[0].id;
+    kickWorker(url, serviceKey);
+    return respond({ jobId, status: rows[0].status, resumed: false }, 202);
+  } catch (error) {
+    const failure = error instanceof WorkflowError
+      ? error
+      : new WorkflowError("generation_failed", 500, asText(String(error), 300));
+    console.error("Article workflow request failed:", { action, jobId, code: failure.code, message: failure.message });
+    return respond({ error: failure.code, message: failure.message, jobId }, failure.status);
   }
 });
