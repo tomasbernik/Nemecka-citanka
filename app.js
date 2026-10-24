@@ -601,6 +601,8 @@ function updateStaticTexts() {
   setOptionText("articleApprovalStatusSelect", "rejected", "rejected");
   setLabelText("articlePromptInput", "articleTask");
   setPlaceholder("articlePromptInput", "articleTaskPlaceholder");
+  setLabelText("articleLanguageFocusInput", "articleLanguageFocusRequest");
+  setPlaceholder("articleLanguageFocusInput", "articleLanguageFocusPlaceholder");
   setLabelText("articleRequiredWordsMode", "requiredWordsMode");
   setOptionText("articleRequiredWordsMode", "no", "no");
   setOptionText("articleRequiredWordsMode", "yes", "yes");
@@ -1068,6 +1070,7 @@ onChange("articleRequiredWordsMode", () => {
   updateArticleEditorFlow();
 });
 onEvent("articlePromptInput", "input", updateArticleEditorFlow);
+onEvent("articleLanguageFocusInput", "input", updateArticleEditorFlow);
 onEvent("articleRequiredWordsInput", "input", updateArticleEditorFlow);
 onEvent("articleSummaryInput", "input", updateArticleEditorFlow);
 onEvent("articleTextInput", "input", () => {

@@ -918,6 +918,7 @@ function buildArticlePrompt() {
   const level = $("articleLevelInput").value.trim() || "A2-B1";
   const category = getArticleEditorCategory();
   const requiredWords = getArticleRequiredWords();
+  const languageFocus = getArticleLanguageFocusRequirement();
   const range = getSelectedArticleLengthRange();
   const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
@@ -928,6 +929,7 @@ function buildArticlePrompt() {
       `Schreibe eine ${teachingLanguage.germanPlural} Geschichte oder einen ${teachingLanguage.germanAccusative} Artikel auf dem Niveau ${level}.`,
       category ? `Kategorie/Thema: ${category}.` : "",
       topic ? `Konkrete Aufgabe: ${topic}` : "",
+      languageFocus ? `Verbindliches Sprachphänomen: ${languageFocus}. Verwende es mehrfach natürlich im Text.` : "",
       requiredWords.length ? `Verwende diese ${teachingLanguage.germanPlural} Wörter oder Phrasen natürlich: ${requiredWords.join(", ")}.` : "",
       `Länge: ${range.min} bis ${range.max} Wörter.`,
       `Der Inhalt muss mindestens einen natürlichen Dialog auf ${getArticleLanguageLabel(getSelectedArticleLanguage())} enthalten, zum Beispiel 2 bis 4 Gesprächszeilen.`,
@@ -941,6 +943,7 @@ function buildArticlePrompt() {
       `Write ${teachingLanguage.englishIndefinite} ${teachingLanguage.english} story or article at level ${level}.`,
       category ? `Category/topic: ${category}.` : "",
       topic ? `Specific brief: ${topic}` : "",
+      languageFocus ? `Required language feature: ${languageFocus}. Use it naturally several times in the text.` : "",
       requiredWords.length
         ? `Use these ${teachingLanguage.english} words or phrases naturally: ${requiredWords.join(", ")}.`
         : "",
@@ -955,6 +958,7 @@ function buildArticlePrompt() {
     `Napíš ${teachingLanguage.slovak} príbeh alebo článok na úrovni ${level}.`,
     category ? `Kategória/téma: ${category}.` : "",
     topic ? `Konkrétne zadanie: ${topic}` : "",
+    languageFocus ? `Povinný jazykový jav: ${languageFocus}. Použi ho v texte viackrát prirodzene.` : "",
     requiredWords.length
       ? `Tieto slová alebo frázy vo vyučovanom jazyku použi prirodzene: ${requiredWords.join(", ")}.`
       : "",
@@ -1408,6 +1412,10 @@ function getArticleRequiredWords() {
   return wantsRequiredWords() ? linesToList($("articleRequiredWordsInput").value) : [];
 }
 
+function getArticleLanguageFocusRequirement() {
+  return $("articleLanguageFocusInput")?.value.trim() || "";
+}
+
 function updateArticleRequiredWordsMode() {
   const enabled = wantsRequiredWords();
   $("articleRequiredWordsWrap")?.classList.toggle("hidden", !enabled);
@@ -1478,6 +1486,7 @@ function updateArticleEditorFlow() {
     || $("articleSummaryInput").value.trim()
     || getArticleEditorCategory()
     || $("articlePromptInput").value.trim()
+    || getArticleLanguageFocusRequirement()
     || getArticleRequiredWords().length
   );
   const hasText = Boolean($("articleTextInput").value.trim());
@@ -1516,6 +1525,7 @@ function fillArticleEditor(article) {
   hideInlineSelectionButton();
   $("articleRequiredWordsMode").value = "no";
   $("articleRequiredWordsInput").value = "";
+  $("articleLanguageFocusInput").value = "";
   updateArticleRequiredWordsMode();
   $("articleTitleInput").value = article?.title || "";
   $("articleIdInput").value = article?.id || "";
@@ -1553,6 +1563,7 @@ function resetManualJsonImport() {
 
 function clearArticleCreationHelperInputs() {
   $("articlePromptInput").value = "";
+  $("articleLanguageFocusInput").value = "";
   $("articleRequiredWordsMode").value = "no";
   $("articleRequiredWordsInput").value = "";
   updateArticleRequiredWordsMode();
@@ -1797,6 +1808,7 @@ async function generateArticleDirectlyWithAi() {
   const category = getArticleEditorCategory();
   const range = getSelectedArticleLengthRange();
   const requiredWords = getArticleRequiredWords();
+  const languageFocus = getArticleLanguageFocusRequirement();
 
   if (!topic) {
     setArticleGenerationStatus(t("articleTopicRequired"), "error");
@@ -1824,6 +1836,7 @@ async function generateArticleDirectlyWithAi() {
       minWords: range.min,
       maxWords: range.max,
       requiredWords,
+      languageFocus,
       onProgress: showArticleGenerationProgress
     });
     applyGeneratedArticleResult(result);

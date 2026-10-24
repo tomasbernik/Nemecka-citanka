@@ -316,6 +316,19 @@ Object.entries({
 }).forEach(([language, text]) => assignUiText(language, text));
 
 Object.entries({
+  de: { articleLanguageFocusRequest: "Sprachphänomen (optional)", articleLanguageFocusPlaceholder: "z. B. trennbare Verben im Hauptsatz" },
+  sk: { articleLanguageFocusRequest: "Jazykový jav (voliteľné)", articleLanguageFocusPlaceholder: "Napr. odlučiteľné slovesá v hlavnej vete" },
+  ru: { articleLanguageFocusRequest: "Языковое явление (необязательно)", articleLanguageFocusPlaceholder: "Например, отделяемые глаголы в главном предложении" },
+  pl: { articleLanguageFocusRequest: "Zjawisko językowe (opcjonalnie)", articleLanguageFocusPlaceholder: "Np. czasowniki rozdzielnie złożone w zdaniu głównym" },
+  hu: { articleLanguageFocusRequest: "Nyelvi jelenség (nem kötelező)", articleLanguageFocusPlaceholder: "Pl. elváló igekötős igék a főmondatban" },
+  ro: { articleLanguageFocusRequest: "Fenomen lingvistic (opțional)", articleLanguageFocusPlaceholder: "De ex. verbe separabile în propoziția principală" },
+  it: { articleLanguageFocusRequest: "Fenomeno linguistico (facoltativo)", articleLanguageFocusPlaceholder: "Ad es. verbi separabili nella frase principale" },
+  en: { articleLanguageFocusRequest: "Language feature (optional)", articleLanguageFocusPlaceholder: "For example, separable verbs in main clauses" },
+  fr: { articleLanguageFocusRequest: "Point de langue (facultatif)", articleLanguageFocusPlaceholder: "Par ex. les verbes séparables dans la proposition principale" },
+  tr: { articleLanguageFocusRequest: "Dil özelliği (isteğe bağlı)", articleLanguageFocusPlaceholder: "Örn. ana cümlede ayrılabilen fiiller" }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
   de: { generationStartingStatus: "Die Erstellung wird vorbereitet…", generationDraftStatus: "1/3 Die KI schreibt den deutschen Entwurf…", generationReviewStatus: "2/3 Die KI prüft Grammatik, Sprachniveau und Logik…", generationMaterialsStatus: "3/3 Die KI erstellt Wortschatz, Fragen und die Übung…", generationRetryStatus: "Das Modell ist ausgelastet. Der Server versucht diese Phase automatisch erneut…", generationRunsInBackground: "Du kannst diese Seite schließen; die Erstellung läuft auf dem Server weiter.", generationContinuesInBackground: "Die Erstellung läuft auf dem Server weiter. Öffne den Artikeleditor später erneut." },
   sk: { generationStartingStatus: "Pripravujem generovanie…", generationDraftStatus: "1/3 AI píše návrh nemeckého článku…", generationReviewStatus: "2/3 AI kontroluje gramatiku, úroveň a logiku…", generationMaterialsStatus: "3/3 AI vytvára slovíčka, otázky a cvičenie…", generationRetryStatus: "Model je preťažený. Server túto fázu automaticky skúsi znova…", generationRunsInBackground: "Stránku môžeš zavrieť; generovanie bude pokračovať na serveri.", generationContinuesInBackground: "Generovanie pokračuje na serveri. Neskôr znovu otvor editor článkov." },
   ru: { generationStartingStatus: "Подготовка создания…", generationDraftStatus: "1/3 ИИ пишет черновик статьи на немецком…", generationReviewStatus: "2/3 ИИ проверяет грамматику, уровень и логику…", generationMaterialsStatus: "3/3 ИИ создаёт словарь, вопросы и упражнение…", generationRetryStatus: "Модель перегружена. Сервер автоматически повторит этот этап…", generationRunsInBackground: "Эту страницу можно закрыть; создание продолжится на сервере.", generationContinuesInBackground: "Создание продолжается на сервере. Открой редактор статей позже." },

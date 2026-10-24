@@ -285,6 +285,7 @@ async function generateArticleWithAi({
   minWords,
   maxWords,
   requiredWords,
+  languageFocus,
   onProgress
 }) {
   if (!isRemoteNetworkAvailable()) {
@@ -303,7 +304,8 @@ async function generateArticleWithAi({
     category,
     lengthMin: minWords,
     lengthMax: maxWords,
-    requiredWords
+    requiredWords,
+    languageFocus
   };
   const signature = JSON.stringify(generationRequest);
   const pending = readPendingArticleGeneration();

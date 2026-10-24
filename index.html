@@ -469,6 +469,18 @@
               <textarea id="articlePromptInput" class="editor-textarea compact" placeholder="For example, an article about packing for a holiday; use simple sentences..."></textarea>
             </label>
             <label class="field-row">
+              Jazykový jav (voliteľné)
+              <input id="articleLanguageFocusInput" list="articleLanguageFocusSuggestions" placeholder="Napr. odlučiteľné slovesá v hlavnej vete">
+              <datalist id="articleLanguageFocusSuggestions">
+                <option value="Trennbare Verben im Hauptsatz"></option>
+                <option value="Inversion nach Zeitangaben"></option>
+                <option value="Modalverben im Hauptsatz"></option>
+                <option value="Perfekt mit haben und sein"></option>
+                <option value="Akkusativ"></option>
+                <option value="Dativ"></option>
+              </datalist>
+            </label>
+            <label class="field-row">
               Chceš pridať konkrétne slová, ktoré majú byť v texte?
               <select id="articleRequiredWordsMode">
                 <option value="no" selected>No</option>
@@ -678,18 +690,18 @@
   <script src="translations/ui.js?v=139"></script>
   <script src="translations/auth.js?v=135"></script>
   <script src="translations/new-languages.js?v=137"></script>
-  <script src="translations/ui-completions.js?v=5"></script>
+  <script src="translations/ui-completions.js?v=6"></script>
   <script src="translations/prompts.js?v=121"></script>
   <script src="i18n.js?v=117"></script>
   <script src="auth.js?v=134"></script>
-  <script src="api.js?v=123"></script>
+  <script src="api.js?v=124"></script>
   <script src="profiles.js?v=137"></script>
   <script src="teams.js?v=132"></script>
   <script src="articles.js?v=136"></script>
   <script src="reader.js?v=140"></script>
   <script src="games.js?v=127"></script>
-  <script src="editor.js?v=145"></script>
+  <script src="editor.js?v=146"></script>
   <script src="home.js?v=140"></script>
-  <script src="app.js?v=150"></script>
+  <script src="app.js?v=151"></script>
 </body>
 </html>
