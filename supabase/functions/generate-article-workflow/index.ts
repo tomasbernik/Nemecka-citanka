@@ -14,11 +14,13 @@ type JsonObject = Record<string, unknown>;
 class WorkflowError extends Error {
   code: string;
   status: number;
+  providerStatus: number | null;
 
-  constructor(code: string, status = 502, message = code) {
+  constructor(code: string, status = 502, message = code, providerStatus: number | null = null) {
     super(message);
     this.code = code;
     this.status = status;
+    this.providerStatus = providerStatus;
   }
 }
 
@@ -234,6 +236,7 @@ async function callGemini(
         response.status === 429 ? "gemini_limit_reached" : "gemini_failed",
         502,
         providerMessage || `Gemini HTTP ${response.status}`,
+        response.status,
       );
     }
     const body = await response.json();
@@ -316,6 +319,39 @@ async function updateJob(
     },
   );
   if (!response.ok) throw new WorkflowError("generation_job_update_failed", 503);
+}
+
+async function logGenerationAttempt(
+  url: string,
+  serviceKey: string,
+  event: JsonObject,
+) {
+  try {
+    const response = await restRequest(url, serviceKey, "article_generation_job_events", {
+      method: "POST",
+      headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({
+        job_id: event.jobId,
+        phase: event.phase,
+        attempt: event.attempt,
+        model: event.model,
+        outcome: event.outcome,
+        error_code: event.errorCode || null,
+        provider_status: event.providerStatus || null,
+        duration_ms: event.durationMs,
+        will_retry: event.willRetry === true,
+        message: asText(event.message, 500) || null,
+      }),
+    });
+    if (!response.ok) {
+      console.error("Could not persist article generation event:", {
+        status: response.status,
+        body: (await response.text()).slice(0, 500),
+      });
+    }
+  } catch (error) {
+    console.error("Could not persist article generation event:", asText(String(error), 500));
+  }
 }
 
 const getRequest = (job: JsonObject) => job.request_payload as JsonObject;
@@ -425,6 +461,7 @@ async function runClaimedPhase(
   const lengthMax = Number(request.lengthMax);
   const requiredWords = asStringArray(request.requiredWords, 15, 60);
   const languageFocus = asText(request.languageFocus, 200);
+  const phaseStartedAt = Date.now();
 
   try {
     if (phase === "draft") {
@@ -458,6 +495,10 @@ Return only JSON with a German title and the story paragraphs in text.`;
         status: "review_queued", draft, model_used: model,
         next_attempt_at: new Date().toISOString(), locked_until: null,
       });
+      await logGenerationAttempt(url, serviceKey, {
+        jobId, phase, attempt, model, outcome: "succeeded",
+        durationMs: Date.now() - phaseStartedAt,
+      });
       kickWorker(url, serviceKey);
       return;
     }
@@ -490,6 +531,10 @@ Return only JSON with the corrected German title and paragraphs in text.`;
         status: "materials_queued", reviewed, model_used: model,
         next_attempt_at: new Date().toISOString(), locked_until: null,
       });
+      await logGenerationAttempt(url, serviceKey, {
+        jobId, phase, attempt, model, outcome: "succeeded",
+        durationMs: Date.now() - phaseStartedAt,
+      });
       kickWorker(url, serviceKey);
       return;
     }
@@ -516,6 +561,10 @@ Before returning, verify every vocabulary form and every example against the sup
       status: "completed", article, model_used: model,
       completed_at: new Date().toISOString(), locked_until: null,
     });
+    await logGenerationAttempt(url, serviceKey, {
+      jobId, phase, attempt, model, outcome: "succeeded",
+      durationMs: Date.now() - phaseStartedAt,
+    });
   } catch (error) {
     const failure = error instanceof WorkflowError
       ? error
@@ -540,6 +589,15 @@ Before returning, verify every vocabulary form and every example against the sup
         last_error_code: failure.code,
         model_used: model,
       });
+    await logGenerationAttempt(url, serviceKey, {
+      jobId, phase, attempt, model,
+      outcome: retry ? "retry" : "failed",
+      errorCode: failure.code,
+      providerStatus: failure.providerStatus,
+      durationMs: Date.now() - phaseStartedAt,
+      willRetry: retry,
+      message: failure.message,
+    });
   }
 }
 

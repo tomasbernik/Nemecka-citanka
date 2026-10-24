@@ -261,6 +261,7 @@ function renderLanguageFocus(article) {
   }
 
   const saved = getLanguageFocusAnswer(article);
+  const focusLabel = getArticleLanguageFocusLabel(article);
   const exercise = focus.exercise;
   const examples = (focus.examples || [])
     .map(example => `<li>${renderLanguageFocusExample(example)}</li>`)
@@ -293,7 +294,7 @@ function renderLanguageFocus(article) {
 
   panel.innerHTML = `
     <div class="practice-heading">
-      <div><p class="eyebrow">${escapeHtml(t("languagePhenomenon"))}</p><h3>${escapeHtml(focus.title)}</h3></div>
+      <div><p class="eyebrow">${escapeHtml(t("languagePhenomenon"))}</p><h3>${escapeHtml(focusLabel)}</h3></div>
     </div>
     <ul class="language-focus-examples">${examples}</ul>
     <div class="language-focus-exercise">
