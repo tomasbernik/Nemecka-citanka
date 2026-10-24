@@ -782,16 +782,38 @@ function getArticleApprovalBadge(article) {
   return `<span class="badge">${escapeHtml(t(labelKey))}</span>`;
 }
 
-function getArticleLanguageFocusTitles(articles = []) {
+function getKnownLanguageFocusLabel(title, language) {
+  if (language !== "sk") return "";
+  return {
+    "trennbare verben im hauptsatz": "Oddeliteľné slovesá v hlavnej vete",
+    "inversion nach zeitangaben": "Inverzia po časových údajoch",
+    "inversion: verb an position 2 nach zeitangaben": "Inverzia: sloveso na 2. mieste po časovom údaji",
+    "modalverben im hauptsatz": "Modálne slovesá v hlavnej vete",
+    "perfekt mit haben und sein": "Perfektum s pomocnými slovesami haben a sein",
+    "konjunktiv i in der indirekten rede": "Konjunktív I v nepriamej reči",
+    "akkusativ": "Akuzatív",
+    "dativ": "Datív"
+  }[String(title || "").trim().toLocaleLowerCase("de")] || "";
+}
+
+function getArticleLanguageFocusLabel(article, language = getNativeLanguage()) {
+  const focus = article?.languageFocus;
+  if (!focus || typeof focus !== "object") return "";
+  return String(
+    focus.labels?.[language]
+    || getKnownLanguageFocusLabel(focus.title, language)
+    || focus.title
+    || focus.requestedFeature
+    || ""
+  ).trim();
+}
+
+function getArticleLanguageFocusTitles(articles = [], language = getNativeLanguage()) {
   const titles = [];
   const seen = new Set();
 
   articles.forEach(article => {
-    const title = String(
-      article?.languageFocus?.title
-      || article?.languageFocus?.requestedFeature
-      || ""
-    ).trim();
+    const title = getArticleLanguageFocusLabel(article, language);
     const key = title.toLocaleLowerCase();
     if (!title || seen.has(key)) return;
     seen.add(key);

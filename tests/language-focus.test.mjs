@@ -4,7 +4,9 @@ import test from "node:test";
 import vm from "node:vm";
 
 const editorSource = await readFile(new URL("../editor.js", import.meta.url), "utf8");
-const context = vm.createContext({});
+const context = vm.createContext({
+  NATIVE_LANGUAGES: { de: {}, sk: {}, ru: {}, pl: {}, hu: {}, ro: {}, it: {}, en: {}, fr: {}, tr: {} }
+});
 vm.runInContext(editorSource, context);
 const normalizeLanguageFocusImport = vm.runInContext("normalizeLanguageFocusImport", context);
 
@@ -16,6 +18,8 @@ const paragraphs = [
 test("accepts a valid multiple-choice language focus", () => {
   const focus = normalizeLanguageFocusImport({
     title: "Perfekt mit haben und sein",
+    requestedFeature: "Perfektum s haben a sein",
+    labels: { sk: "Perfektum s pomocnými slovesami haben a sein" },
     examples: [
       { sentence: paragraphs[0], highlight: "habe ich lange gearbeitet" },
       { sentence: paragraphs[1], highlight: "bin ich nach Hause gegangen" }
@@ -29,6 +33,8 @@ test("accepts a valid multiple-choice language focus", () => {
   }, paragraphs);
 
   assert.equal(focus.title, "Perfekt mit haben und sein");
+  assert.equal(focus.requestedFeature, "Perfektum s haben a sein");
+  assert.equal(focus.labels.sk, "Perfektum s pomocnými slovesami haben a sein");
   assert.equal(focus.examples.length, 2);
   assert.equal(focus.exercise.answer, "habe");
 });

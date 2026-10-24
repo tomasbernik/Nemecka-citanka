@@ -122,6 +122,12 @@ function normalizeLanguageFocusImport(value, textParagraphs = null) {
   if (!value || typeof value !== "object") return null;
 
   const title = String(value.title || value.name || "").trim();
+  const requestedFeature = String(value.requestedFeature || "").trim();
+  const labels = Object.fromEntries(
+    Object.entries(value.labels && typeof value.labels === "object" ? value.labels : {})
+      .map(([language, label]) => [language, String(label || "").trim()])
+      .filter(([language, label]) => NATIVE_LANGUAGES[language] && label)
+  );
   const articleText = Array.isArray(textParagraphs) ? textParagraphs.join("\n") : "";
   const examples = (Array.isArray(value.examples) ? value.examples : [])
     .slice(0, 3)
@@ -147,7 +153,7 @@ function normalizeLanguageFocusImport(value, textParagraphs = null) {
       .slice(0, 16);
     const answer = String(sourceExercise.answer || "").trim();
     if (words.length < 4 || words.length > 12 || !answer || words.join(" ") !== answer) return null;
-    return { title, examples, exercise: { type, words, answer } };
+    return { title, requestedFeature, labels, examples, exercise: { type, words, answer } };
   }
 
   const prompt = String(sourceExercise.prompt || "").trim();
@@ -157,7 +163,7 @@ function normalizeLanguageFocusImport(value, textParagraphs = null) {
     .slice(0, 4);
   const answer = String(sourceExercise.answer || "").trim();
   if (!prompt.includes("___") || options.length !== 3 || !options.includes(answer)) return null;
-  return { title, examples, exercise: { type, prompt, options, answer } };
+  return { title, requestedFeature, labels, examples, exercise: { type, prompt, options, answer } };
 }
 
 function hasStrictAlternatingAnswers(questions) {
@@ -1758,7 +1764,16 @@ function showArticleGenerationProgress(phase) {
 
 function applyGeneratedArticleResult(result) {
   if (!result?.article) throw new Error(t("generationEmpty"));
-  const article = parseArticleImport(JSON.stringify(result.article));
+  const generatedArticle = JSON.parse(JSON.stringify(result.article));
+  const focus = generatedArticle.languageFocus;
+  const requestedFeature = String(focus?.requestedFeature || "").trim();
+  if (focus && requestedFeature) {
+    focus.labels = {
+      ...(focus.labels && typeof focus.labels === "object" ? focus.labels : {}),
+      [getNativeLanguage()]: requestedFeature
+    };
+  }
+  const article = parseArticleImport(JSON.stringify(generatedArticle));
   applyImportedArticleToEditor(article);
   setArticleGenerationStatus(t("generationDone"), "success");
 }
