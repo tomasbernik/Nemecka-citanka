@@ -1749,6 +1749,20 @@ async function deleteArticleFromEditor() {
 }
 
 let articleGenerationRunning = false;
+let articleGenerationCancelling = false;
+
+function updateArticleGenerationControls() {
+  const generateButton = $("generateArticleAiBtn");
+  const cancelButton = $("cancelArticleGenerationBtn");
+  if (generateButton) generateButton.disabled = articleGenerationRunning;
+  if (!cancelButton) return;
+  const hasPendingJob = Boolean(readPendingArticleGeneration()?.jobId);
+  cancelButton.classList.toggle("hidden", !articleGenerationRunning || !hasPendingJob);
+  cancelButton.disabled = articleGenerationCancelling;
+  cancelButton.textContent = t(articleGenerationCancelling
+    ? "cancellingArticleGeneration"
+    : "cancelArticleGeneration");
+}
 
 function showArticleGenerationProgress(phase) {
   const statusKey = {
@@ -1760,6 +1774,7 @@ function showArticleGenerationProgress(phase) {
   }[phase] || "generatingArticleStatus";
   const backgroundNote = phase === "retry" ? "" : ` ${t("generationRunsInBackground")}`;
   setArticleGenerationStatus(`${t(statusKey)}${backgroundNote}`, "progress");
+  updateArticleGenerationControls();
 }
 
 function applyGeneratedArticleResult(result) {
@@ -1779,7 +1794,11 @@ function applyGeneratedArticleResult(result) {
 }
 
 function showArticleGenerationError(error) {
-  console.error("Gemini article generation:", error);
+  if (error?.code === "generation_cancelled") {
+    setArticleGenerationStatus(t("generationCancelled"), "success");
+    return;
+  }
+  console.error("AI article generation:", error);
   const message = error?.code === "generation_continues_in_background"
     ? t("generationContinuesInBackground")
     : error?.name === "AbortError" || /aborted/i.test(error?.message || "")
@@ -1793,11 +1812,35 @@ function showArticleGenerationError(error) {
   $("articleGenerationStatus")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
+async function cancelPendingArticleGeneration() {
+  if (articleGenerationCancelling || !readPendingArticleGeneration()?.jobId) return;
+  if (!confirm(t("cancelArticleGenerationConfirm"))) return;
+
+  articleGenerationCancelling = true;
+  updateArticleGenerationControls();
+  try {
+    const result = await cancelArticleGenerationWithAi();
+    setArticleGenerationStatus(
+      t(result.cancelled === true ? "generationCancelled" : "generationAlreadyFinished"),
+      "success"
+    );
+  } catch (error) {
+    console.error("AI article generation cancellation:", error);
+    setArticleGenerationStatus(
+      formatText("generationCancelFailed", { message: error?.message || t("generationEmpty") }),
+      "error"
+    );
+  } finally {
+    articleGenerationCancelling = false;
+    updateArticleGenerationControls();
+  }
+}
+
 async function resumePendingArticleGeneration() {
   if (articleGenerationRunning) return;
   const button = $("generateArticleAiBtn");
   articleGenerationRunning = true;
-  button.disabled = true;
+  updateArticleGenerationControls();
   const originalText = button.textContent;
   button.textContent = t("generatingArticle");
   try {
@@ -1809,8 +1852,8 @@ async function resumePendingArticleGeneration() {
     showArticleGenerationError(error);
   } finally {
     articleGenerationRunning = false;
-    button.disabled = false;
     button.textContent = originalText;
+    updateArticleGenerationControls();
   }
 }
 
@@ -1838,7 +1881,7 @@ async function generateArticleDirectlyWithAi() {
   }
 
   articleGenerationRunning = true;
-  button.disabled = true;
+  updateArticleGenerationControls();
   const originalText = button.textContent;
   button.textContent = t("generatingArticle");
   showArticleGenerationProgress("starting");
@@ -1859,7 +1902,7 @@ async function generateArticleDirectlyWithAi() {
     showArticleGenerationError(error);
   } finally {
     articleGenerationRunning = false;
-    button.disabled = false;
     button.textContent = originalText;
+    updateArticleGenerationControls();
   }
 }

@@ -91,7 +91,54 @@ test("article generation starts one server job and polls its checkpoints", async
   assert.deepEqual(calls.slice(1).map(call => call.body.jobId), ["job-1", "job-1", "job-1", "job-1"]);
   assert.equal(calls[0].timeoutMs, 140_000);
   assert.ok(calls.slice(1).every(call => call.timeoutMs === 20_000));
-  assert.deepEqual(progress, ["starting", "draft", "review", "materials"]);
+  assert.deepEqual(progress, ["starting", "starting", "draft", "review", "materials"]);
   assert.equal(result.article.title, "Test");
+  assert.equal(storage.has("pendingArticleGenerationJob"), false);
+});
+
+test("article generation cancellation calls the server and clears the pending job", async () => {
+  const storage = new Map([
+    ["pendingArticleGenerationJob", JSON.stringify({ jobId: "job-cancel", signature: "request" })]
+  ]);
+  let request = null;
+  const context = vm.createContext({
+    REMOTE_REQUEST_TIMEOUT_MS: 8_000,
+    ARTICLE_GENERATION_TIMEOUT_MS: 140_000,
+    ARTICLE_GENERATION_STATUS_TIMEOUT_MS: 20_000,
+    ARTICLE_GENERATION_POLL_INTERVAL_MS: 3_000,
+    ARTICLE_GENERATION_POLL_LIMIT_MS: 15 * 60 * 1_000,
+    ARTICLE_GENERATION_JOB_KEY: "pendingArticleGenerationJob",
+    SUPABASE_CONFIG: { url: "https://project.test", anonKey: "anon" },
+    state: { remoteReady: true },
+    navigator: { onLine: true },
+    AbortController,
+    window: { setTimeout, clearTimeout },
+    localStorage: {
+      getItem: key => storage.get(key) || null,
+      setItem: (key, value) => storage.set(key, value),
+      removeItem: key => storage.delete(key)
+    },
+    fetch: async () => {
+      throw new Error("unexpected native fetch");
+    },
+    t: key => key
+  });
+  vm.runInContext(apiSource, context, { filename: "api.js" });
+  context.getFreshAuthAccessToken = async () => "access-token";
+  context.remoteFetch = async (url, options) => {
+    request = { url, body: JSON.parse(options.body), timeoutMs: options.timeoutMs };
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ jobId: "job-cancel", status: "cancelled", cancelled: true })
+    };
+  };
+
+  const result = await context.cancelArticleGenerationWithAi();
+
+  assert.equal(request.body.action, "cancel");
+  assert.equal(request.body.jobId, "job-cancel");
+  assert.equal(request.timeoutMs, 20_000);
+  assert.equal(result.cancelled, true);
   assert.equal(storage.has("pendingArticleGenerationJob"), false);
 });

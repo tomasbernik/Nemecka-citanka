@@ -218,6 +218,29 @@ supabase secrets set DEEPL_API_URL="https://api-free.deepl.com"
 
 Poznámka: Toto je jednoduchý súkromný režim pre dvoch ľudí. PINy sú uložené v databáze ako obyčajný text, takže to nie je bezpečnostný systém pre verejnú aplikáciu.
 
+## AI generovanie článkov
+
+Aktívna Edge Function `generate-article-workflow` používa prednostne Groq. Prvé dva
+pokusy každej fázy používa model `openai/gpt-oss-120b`; pri opakovanom zlyhaní
+pokračuje cez Gemini 3.8 Flash a posledný pokus cez Gemini 3.6 Flash. Ak niektorý
+API kľúč nie je nastavený, workflow pokračuje s dostupným poskytovateľom.
+
+Pred nasadením funkcie nastav secrets:
+
+```bash
+supabase secrets set GROQ_API_KEY="..." GEMINI_API_KEY="..."
+```
+
+Modely možno zmeniť bez úpravy kódu:
+
+```bash
+supabase secrets set GROQ_ARTICLE_MODEL="openai/gpt-oss-120b" GEMINI_ARTICLE_MODEL="gemini-3.8-flash" GEMINI_ARTICLE_FALLBACK_MODEL="gemini-3.6-flash"
+```
+
+Najprv nasaď databázové migrácie a potom funkciu. Auditná tabuľka
+`article_generation_job_events` zaznamenáva pri každom pokuse poskytovateľa,
+presný model, výsledok, trvanie a stavové číslo API.
+
 ## Push upozornenia na nové zadania
 
 Keď učiteľ pridelí článok alebo kapitolu príbehu žiakovi v triede, aplikácia vie poslať systémové upozornenie na jeho prihlásené zariadenia. Žiak musí v Nastaveniach raz stlačiť „Skúšobná notifikácia“ a povoliť upozornenia. Na iPhone musí byť PWA nainštalovaná na ploche.

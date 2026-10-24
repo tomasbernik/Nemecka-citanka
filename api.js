@@ -217,6 +217,15 @@ function savePendingArticleGeneration(value) {
   else localStorage.removeItem(ARTICLE_GENERATION_JOB_KEY);
 }
 
+const cancelledArticleGenerationJobs = new Set();
+
+function articleGenerationCancelledError(jobId) {
+  const error = new Error("generation_cancelled");
+  error.code = "generation_cancelled";
+  error.jobId = jobId;
+  return error;
+}
+
 function articleGenerationPhase(status) {
   if (/^review_/.test(status)) return "review";
   if (/^materials_/.test(status)) return "materials";
@@ -230,6 +239,10 @@ async function waitForArticleGeneration(accessToken, jobId, onProgress) {
   let lastStatus = "";
 
   while (Date.now() < deadline) {
+    if (cancelledArticleGenerationJobs.has(jobId)) {
+      savePendingArticleGeneration(null);
+      throw articleGenerationCancelledError(jobId);
+    }
     let result;
     try {
       result = await requestArticleGenerationPhase(
@@ -242,6 +255,11 @@ async function waitForArticleGeneration(accessToken, jobId, onProgress) {
       if (error?.code === "login_required" || error?.code === "generation_job_not_found") throw error;
       await waitForArticleGenerationPoll(ARTICLE_GENERATION_POLL_INTERVAL_MS);
       continue;
+    }
+
+    if (cancelledArticleGenerationJobs.has(jobId) || result.status === "cancelled") {
+      savePendingArticleGeneration(null);
+      throw articleGenerationCancelledError(jobId);
     }
 
     if (result.status === "completed" && result.article) {
@@ -274,8 +292,36 @@ async function resumeArticleGenerationWithAi({ onProgress } = {}) {
   if (!pending?.jobId || !isRemoteNetworkAvailable()) return null;
   const accessToken = await getFreshAuthAccessToken();
   if (!accessToken) return null;
-  onProgress?.("starting", { resumed: true });
+  onProgress?.("starting", { resumed: true, jobId: pending.jobId });
   return waitForArticleGeneration(accessToken, pending.jobId, onProgress);
+}
+
+async function cancelArticleGenerationWithAi() {
+  const pending = readPendingArticleGeneration();
+  if (!pending?.jobId) return { cancelled: false, status: "not_found" };
+  if (!isRemoteNetworkAvailable()) throw new Error(t("generationOffline"));
+
+  const accessToken = await getFreshAuthAccessToken();
+  if (!accessToken) throw new Error(t("generationSignIn"));
+
+  try {
+    const result = await requestArticleGenerationPhase(
+      accessToken,
+      "cancel",
+      { jobId: pending.jobId },
+      ARTICLE_GENERATION_STATUS_TIMEOUT_MS
+    );
+    if (result.cancelled === true) {
+      cancelledArticleGenerationJobs.add(pending.jobId);
+      savePendingArticleGeneration(null);
+    } else {
+      cancelledArticleGenerationJobs.delete(pending.jobId);
+    }
+    return result;
+  } catch (error) {
+    cancelledArticleGenerationJobs.delete(pending.jobId);
+    throw error;
+  }
 }
 
 async function generateArticleWithAi({
@@ -317,6 +363,7 @@ async function generateArticleWithAi({
   const jobId = started.jobId;
   if (!jobId) throw new Error("generation_job_create_failed");
   savePendingArticleGeneration({ jobId, signature, createdAt: Date.now() });
+  onProgress?.("starting", { resumed: started.resumed === true, jobId });
   return waitForArticleGeneration(accessToken, jobId, onProgress);
 }
 

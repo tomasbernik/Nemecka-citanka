@@ -613,6 +613,7 @@ function updateStaticTexts() {
   setOptionText("articleLengthSelect", "450-550", "articleLengthLong");
   setText("copyArticlePromptBtn", "copyArticlePrompt");
   setText("generateArticleAiBtn", "generateArticleAi");
+  setText("cancelArticleGenerationBtn", "cancelArticleGeneration");
   setText("copyArticleJsonPromptBtn", "copyArticleJsonPrompt");
   setText("copyImagePromptBtn", "copyImagePrompt");
   $("articleImageDialog")?.setAttribute("aria-label", t("articleImage"));
@@ -1120,6 +1121,7 @@ onClick("copyImagePromptBtn", async () => {
   updateArticleEditorFlow();
 });
 onClick("generateArticleAiBtn", generateArticleDirectlyWithAi);
+onClick("cancelArticleGenerationBtn", cancelPendingArticleGeneration);
 onClick("importArticleBtn", importArticleToEditor);
 onClick("copyTranslationPromptBtn", () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied")));
 
