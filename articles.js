@@ -782,6 +782,25 @@ function getArticleApprovalBadge(article) {
   return `<span class="badge">${escapeHtml(t(labelKey))}</span>`;
 }
 
+function getArticleLanguageFocusTitles(articles = []) {
+  const titles = [];
+  const seen = new Set();
+
+  articles.forEach(article => {
+    const title = String(
+      article?.languageFocus?.title
+      || article?.languageFocus?.requestedFeature
+      || ""
+    ).trim();
+    const key = title.toLocaleLowerCase();
+    if (!title || seen.has(key)) return;
+    seen.add(key);
+    titles.push(title);
+  });
+
+  return titles;
+}
+
 function renderArticles() {
   const root = $("articleList");
   const entries = getArticleDisplayEntries().filter(entry => entry.articles.some(article => {
@@ -799,6 +818,7 @@ function renderArticles() {
     const article = entry.article;
     const isSeries = entry.type === "series";
     const isRead = entry.articles.every(item => state.profileData.readIds.includes(item.id));
+    const languageFocusTitles = getArticleLanguageFocusTitles(entry.articles);
     const showStartBadge = index === 0 && state.currentProfile?.role !== "teacher" && !isOnboardingDone("studentIntroDone");
     const image = article.image || {};
     const imageSrc = image.desktop || `images/articles/${article.id}.jpg`;
@@ -815,6 +835,7 @@ function renderArticles() {
           ${isSeries ? `<span class="badge series-badge">${escapeHtml(formatText("chapterCount", { count: entry.articles.length }))}</span>` : ""}
           ${showStartBadge ? `<span class="badge start-badge">${escapeHtml(t("startHere"))}</span>` : ""}
           ${getArticleCategoriesForFilter(article).map(category => `<span class="badge">${escapeHtml(getCategoryLabel(category))}</span>`).join("")}
+          ${languageFocusTitles.map(title => `<span class="badge language-focus-badge">${escapeHtml(title)}</span>`).join("")}
           ${entry.articles.some(item => isArticleAssignedToProfile(item.id)) ? `<span class="badge">${escapeHtml(t("assignedBadge"))}</span>` : ""}
           ${article.visibility === "private" ? `<span class="badge">${escapeHtml(t("private"))}</span>` : ""}
           ${getArticleApprovalBadge(article)}
