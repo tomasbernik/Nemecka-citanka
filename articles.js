@@ -547,8 +547,10 @@ function articleToRow(article, options = {}) {
 }
 
 async function updateArticleOrganization(articleId, changes) {
-  if (!isPublisherAccount()) throw new Error(t("adminOnlyAction"));
+  const existingArticle = state.articles.find(item => item.id === articleId);
+  if (!isPublisherAccount() && !canEditArticle(existingArticle)) throw new Error(t("adminOnlyAction"));
   const has = key => Object.prototype.hasOwnProperty.call(changes, key);
+  if (!isPublisherAccount() && has("displayOrder")) throw new Error(t("adminOnlyAction"));
   const payload = {
     ...(has("displayOrder") ? { display_order: changes.displayOrder } : {}),
     ...(has("seriesId") ? { series_id: changes.seriesId } : {}),

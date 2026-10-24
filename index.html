@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=146">
+  <link rel="stylesheet" href="style.css?v=147">
 </head>
 <body>
   <div id="app">
@@ -452,6 +452,36 @@
           </label>
 
           <section class="editor-helper">
+            <div class="article-creation-mode">
+              <span id="articleCreationModeLabel" class="article-creation-mode-label">Režim tvorby</span>
+              <div class="segmented-filter compact" role="group" aria-labelledby="articleCreationModeLabel">
+                <button id="articleModeBtn" class="segmented-filter-btn active" type="button" aria-pressed="true">Článok</button>
+                <button id="storyModeBtn" class="segmented-filter-btn" type="button" aria-pressed="false">Príbeh</button>
+              </div>
+              <p id="storyModeHelp" class="muted hidden">AI vytvorí a priebežne uloží všetky kapitoly ako jeden príbeh.</p>
+            </div>
+            <div id="storyGenerationOptions" class="story-generation-options hidden">
+              <label class="field-row editor-helper-inline-row">
+                Názov príbehu (voliteľné)
+                <input id="storyTitleInput" placeholder="Ak ho nezadáš, navrhne ho AI">
+              </label>
+              <label class="field-row editor-helper-inline-row">
+                Počet kapitol
+                <select id="storyChapterCountSelect">
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                  <option value="5" selected>5</option>
+                  <option value="6">6</option>
+                  <option value="7">7</option>
+                  <option value="8">8</option>
+                </select>
+              </label>
+              <div id="storyGenerationProgress" class="story-generation-progress hidden" aria-live="polite">
+                <p id="storyGenerationProgressTitle" class="story-generation-progress-title"></p>
+                <ol id="storyGenerationProgressList"></ol>
+              </div>
+            </div>
             <label class="field-row editor-helper-inline-row">
               Výber úrovne
               <input id="articleLevelInput" placeholder="A2, A2-B1, B1">
@@ -687,22 +717,22 @@
   </div>
 
   <script src="config.js?v=117"></script>
-  <script src="constants.js?v=138"></script>
+  <script src="constants.js?v=139"></script>
   <script src="translations/ui.js?v=139"></script>
   <script src="translations/auth.js?v=135"></script>
   <script src="translations/new-languages.js?v=137"></script>
-  <script src="translations/ui-completions.js?v=7"></script>
+  <script src="translations/ui-completions.js?v=8"></script>
   <script src="translations/prompts.js?v=121"></script>
   <script src="i18n.js?v=117"></script>
   <script src="auth.js?v=134"></script>
   <script src="api.js?v=125"></script>
   <script src="profiles.js?v=137"></script>
   <script src="teams.js?v=132"></script>
-  <script src="articles.js?v=138"></script>
+  <script src="articles.js?v=139"></script>
   <script src="reader.js?v=141"></script>
   <script src="games.js?v=127"></script>
-  <script src="editor.js?v=148"></script>
+  <script src="editor.js?v=149"></script>
   <script src="home.js?v=140"></script>
-  <script src="app.js?v=152"></script>
+  <script src="app.js?v=153"></script>
 </body>
 </html>

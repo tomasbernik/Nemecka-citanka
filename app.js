@@ -583,6 +583,13 @@ function updateStaticTexts() {
   document.querySelector(".article-editor .practice-heading .eyebrow").textContent = t("teacherArticles");
   document.querySelector(".article-editor .practice-heading h2").textContent = t("articleEditor");
   setText("newArticleBtn", "newArticle");
+  setText("articleCreationModeLabel", "articleCreationMode");
+  setText("articleModeBtn", "articleMode");
+  setText("storyModeBtn", "storyMode");
+  setText("storyModeHelp", "storyModeHelp");
+  setLabelText("storyTitleInput", "storyTitle");
+  setPlaceholder("storyTitleInput", "storyTitlePlaceholder");
+  setLabelText("storyChapterCountSelect", "storyChapterCount");
   setLabelText("articleEditorSelect", "editArticle");
   setText("articleCategoriesLegend", "categories");
   setLabelText("articleCategoryInput", "newCategory");
@@ -635,6 +642,7 @@ function updateStaticTexts() {
   setText("floatingSaveArticleBtn", "saveArticle");
   setText("editArticleDetailsBtn", "editArticleDetails");
   setText("deleteArticleBtn", "deleteArticle");
+  setArticleCreationMode(articleCreationMode);
 
   document.querySelector("#startupQuiz .eyebrow").textContent = t("startupWarmup");
   setText("startupQuizTitle", "startupTitle");
@@ -1029,6 +1037,7 @@ onClick("linkGoogleAccountBtn", () => linkCurrentProfileToAuthUser());
 onClick("signOutGoogleBtn", signOutGoogle);
 onClick("requestTeacherAccessBtn", requestTeacherAccess);
 onClick("newArticleBtn", () => {
+  setArticleCreationMode("article");
   $("articleEditorSelect").value = "";
   clearArticleCreationHelperInputs();
   fillArticleEditor(null);
@@ -1047,9 +1056,12 @@ onClick("assignCurrentArticleBtn", toggleCurrentArticleAssignmentPanel);
 onClick("saveCurrentArticleAssignmentBtn", assignCurrentArticleToStudents);
 onEvent("currentArticleAssignmentList", "change", handleArticleAssignmentChange);
 onChange("articleEditorSelect", () => {
+  setArticleCreationMode("article");
   const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
   fillArticleEditor(article || null);
 });
+onClick("articleModeBtn", () => setArticleCreationMode("article"));
+onClick("storyModeBtn", () => setArticleCreationMode("story"));
 onEvent("articleTitleInput", "input", () => {
   if (!$("articleEditorSelect").value) {
     $("articleIdInput").value = makeArticleId($("articleTitleInput").value);

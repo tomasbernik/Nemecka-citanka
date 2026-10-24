@@ -1057,6 +1057,72 @@ body.image-dialog-open {
   background: rgba(127, 127, 127, 0.06);
 }
 
+.article-creation-mode {
+  grid-column: 1 / -1;
+}
+
+.article-creation-mode .segmented-filter {
+  margin: 6px 0 0;
+}
+
+.article-creation-mode-label {
+  display: block;
+  color: var(--muted);
+  font-size: 0.88rem;
+  font-weight: 900;
+}
+
+.story-generation-options {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(150px, 1fr);
+  gap: 12px;
+  grid-column: 1 / -1;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(127, 127, 127, 0.05);
+}
+
+.story-generation-options.hidden {
+  display: none;
+}
+
+.story-generation-progress {
+  grid-column: 1 / -1;
+  padding-top: 4px;
+}
+
+.story-generation-progress-title {
+  margin: 0 0 8px;
+  font-weight: 900;
+}
+
+.story-generation-progress ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 24px;
+}
+
+.story-generation-progress li {
+  color: var(--muted);
+}
+
+.story-generation-progress li.is-complete {
+  color: var(--success, #287a4b);
+}
+
+.story-generation-progress li.is-active {
+  color: var(--accent-dark);
+  font-weight: 900;
+}
+
+@media (max-width: 620px) {
+  .story-generation-options {
+    grid-template-columns: 1fr;
+  }
+}
+
 .editor-helper > .field-row {
   gap: 6px;
   padding: 6px 0;

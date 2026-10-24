@@ -19,6 +19,7 @@ const ARTICLE_GENERATION_STATUS_TIMEOUT_MS = 20000;
 const ARTICLE_GENERATION_POLL_INTERVAL_MS = 3000;
 const ARTICLE_GENERATION_POLL_LIMIT_MS = 15 * 60 * 1000;
 const ARTICLE_GENERATION_JOB_KEY = "pendingArticleGenerationJob";
+const STORY_GENERATION_STATE_KEY = "pendingStoryGeneration";
 const ARTICLE_CACHE_DB_NAME = "citanka-article-cache";
 const ARTICLE_CACHE_STORE_NAME = "articleSnapshots";
 const ARTICLE_CACHE_KEY = "publishedArticles";

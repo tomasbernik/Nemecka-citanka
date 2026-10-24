@@ -1569,6 +1569,7 @@ function resetManualJsonImport() {
 
 function clearArticleCreationHelperInputs() {
   $("articlePromptInput").value = "";
+  if ($("storyTitleInput")) $("storyTitleInput").value = "";
   $("articleLanguageFocusInput").value = "";
   $("articleRequiredWordsMode").value = "no";
   $("articleRequiredWordsInput").value = "";
@@ -1577,6 +1578,37 @@ function clearArticleCreationHelperInputs() {
   $("generatedPromptOutput").value = "";
   $("generatedPromptWrap").classList.add("hidden");
   setArticleGenerationStatus();
+}
+
+let articleCreationMode = "article";
+
+function readPendingStoryGeneration() {
+  try {
+    return JSON.parse(localStorage.getItem(STORY_GENERATION_STATE_KEY) || "null");
+  } catch {
+    return null;
+  }
+}
+
+function savePendingStoryGeneration(value) {
+  if (value?.seriesId) localStorage.setItem(STORY_GENERATION_STATE_KEY, JSON.stringify(value));
+  else localStorage.removeItem(STORY_GENERATION_STATE_KEY);
+}
+
+function setArticleCreationMode(mode = "article") {
+  articleCreationMode = mode === "story" ? "story" : "article";
+  const isStory = articleCreationMode === "story";
+  $("articleModeBtn")?.classList.toggle("active", !isStory);
+  $("storyModeBtn")?.classList.toggle("active", isStory);
+  $("articleModeBtn")?.setAttribute("aria-pressed", String(!isStory));
+  $("storyModeBtn")?.setAttribute("aria-pressed", String(isStory));
+  $("storyGenerationOptions")?.classList.toggle("hidden", !isStory);
+  $("storyModeHelp")?.classList.toggle("hidden", !isStory);
+  const generateButton = $("generateArticleAiBtn");
+  if (generateButton && !articleGenerationRunning) {
+    generateButton.textContent = t(isStory ? "generateStoryAi" : "generateArticleAi");
+  }
+  updateArticleGenerationControls();
 }
 
 function setArticleGenerationStatus(message = "", type = "") {
@@ -1755,6 +1787,10 @@ function updateArticleGenerationControls() {
   const generateButton = $("generateArticleAiBtn");
   const cancelButton = $("cancelArticleGenerationBtn");
   if (generateButton) generateButton.disabled = articleGenerationRunning;
+  if ($("articleModeBtn")) $("articleModeBtn").disabled = articleGenerationRunning;
+  if ($("storyModeBtn")) $("storyModeBtn").disabled = articleGenerationRunning;
+  if ($("storyTitleInput")) $("storyTitleInput").disabled = articleGenerationRunning;
+  if ($("storyChapterCountSelect")) $("storyChapterCountSelect").disabled = articleGenerationRunning;
   if (!cancelButton) return;
   const hasPendingJob = Boolean(readPendingArticleGeneration()?.jobId);
   cancelButton.classList.toggle("hidden", !articleGenerationRunning || !hasPendingJob);
@@ -1762,6 +1798,218 @@ function updateArticleGenerationControls() {
   cancelButton.textContent = t(articleGenerationCancelling
     ? "cancellingArticleGeneration"
     : "cancelArticleGeneration");
+}
+
+function getStoryChapterCount() {
+  const count = Number.parseInt($("storyChapterCountSelect")?.value || "5", 10);
+  return Math.min(8, Math.max(2, Number.isFinite(count) ? count : 5));
+}
+
+function getStoryArcInstruction(chapterIndex, chapterCount) {
+  if (chapterIndex === 0) return "Introduce the main characters, situation and central problem. Do not resolve the main problem yet.";
+  if (chapterIndex === chapterCount - 1) return "This is the final chapter. Resolve the central problem and the important open plot lines with a satisfying ending.";
+  if (chapterIndex === chapterCount - 2) return "Move decisively toward the climax, but leave the central problem for the final chapter.";
+  return "Develop the conflict, reveal something new and end with a natural reason to continue.";
+}
+
+function buildStoryChapterBrief(story, chapterIndex) {
+  const completed = Array.isArray(story.completedChapters) ? story.completedChapters : [];
+  const previous = completed[completed.length - 1] || null;
+  const olderSummaries = completed.slice(0, -1).map((chapter, index) =>
+    `Chapter ${index + 1} (${chapter.title}): ${chapter.summary}`
+  ).join("\n").slice(-1_200);
+  const previousText = previous
+    ? String((previous.text || []).join("\n")).slice(-2_800)
+    : "";
+
+  return [
+    `Write chapter ${chapterIndex + 1} of ${story.chapterCount} of one continuous story.`,
+    story.seriesTitle ? `Overall story title: ${story.seriesTitle}.` : "",
+    `Overall story brief: ${String(story.topic || "").slice(0, 1_600)}`,
+    `Chapter role: ${getStoryArcInstruction(chapterIndex, story.chapterCount)}`,
+    "Keep all names, relationships, facts, chronology and unresolved plot lines consistent.",
+    "Do not retell earlier chapters. Give this chapter its own short German title without a chapter number.",
+    olderSummaries ? `Earlier chapter summaries:\n${olderSummaries}` : "",
+    previous ? `Immediately previous chapter (${previous.title}), full ending context:\n${previousText}` : "",
+    chapterIndex > 0 ? "Continue directly and naturally from the preceding events." : ""
+  ].filter(Boolean).join("\n\n").slice(0, 6_000);
+}
+
+function renderStoryGenerationProgress(story, activeIndex = story?.nextChapter || 0) {
+  const wrap = $("storyGenerationProgress");
+  const list = $("storyGenerationProgressList");
+  const title = $("storyGenerationProgressTitle");
+  if (!wrap || !list || !title || !story) return;
+  wrap.classList.remove("hidden");
+  title.textContent = formatText("storyProgressTitle", {
+    current: Math.min(activeIndex + 1, story.chapterCount),
+    total: story.chapterCount
+  });
+  list.replaceChildren();
+  for (let index = 0; index < story.chapterCount; index += 1) {
+    const item = document.createElement("li");
+    const completed = story.completedChapters?.[index];
+    item.textContent = completed
+      ? `✓ ${completed.title}`
+      : formatText("storyChapterLabel", { number: index + 1 });
+    item.classList.toggle("is-complete", Boolean(completed));
+    item.classList.toggle("is-active", index === activeIndex && !completed);
+    list.append(item);
+  }
+}
+
+function showStoryChapterProgress(story, chapterIndex, phase) {
+  const phaseKey = {
+    starting: "generationStartingStatus",
+    draft: "generationDraftStatus",
+    review: "generationReviewStatus",
+    materials: "generationMaterialsStatus",
+    retry: "generationRetryStatus"
+  }[phase] || "generatingArticleStatus";
+  setArticleGenerationStatus(
+    `${formatText("storyChapterProgress", { current: chapterIndex + 1, total: story.chapterCount })} ${t(phaseKey)}`,
+    "progress"
+  );
+  renderStoryGenerationProgress(story, chapterIndex);
+  updateArticleGenerationControls();
+}
+
+function makeGeneratedStoryChapter(result, story, chapterIndex) {
+  if (!result?.article) throw new Error(t("generationEmpty"));
+  const generated = JSON.parse(JSON.stringify(result.article));
+  const requestedFeature = String(generated.languageFocus?.requestedFeature || "").trim();
+  if (generated.languageFocus && requestedFeature) {
+    generated.languageFocus.labels = {
+      ...(generated.languageFocus.labels && typeof generated.languageFocus.labels === "object"
+        ? generated.languageFocus.labels
+        : {}),
+      [getNativeLanguage()]: requestedFeature
+    };
+  }
+  if (!story.seriesTitle) story.seriesTitle = generated.title;
+  const idBase = makeArticleId(`${story.seriesTitle}-${chapterIndex + 1}-${generated.title}`)
+    || `${story.seriesId}-${chapterIndex + 1}`;
+  const id = state.articles.some(article => article.id === idBase)
+    ? `${idBase}-${Date.now().toString(36)}`
+    : idBase;
+
+  return normalizeArticle({
+    ...generated,
+    id,
+    language: story.language || getSelectedArticleLanguage(),
+    ownerProfileId: state.currentProfile?.id || null,
+    teamId: null,
+    teacherGroupId: state.currentProfile?.teacherGroupId || state.currentProfile?.id || null,
+    visibility: DEFAULT_ARTICLE_VISIBILITY,
+    approvalStatus: DEFAULT_ARTICLE_APPROVAL_STATUS,
+    published: false,
+    displayOrder: null,
+    seriesId: story.seriesId,
+    seriesTitle: story.seriesTitle,
+    chapterOrder: chapterIndex,
+    categoryLabels: generated.categoryLabels || {},
+    inlineVocabulary: generated.inlineVocabulary || [],
+    image: null
+  });
+}
+
+async function continueStoryGeneration(story) {
+  setArticleCreationMode("story");
+  if ($("storyTitleInput")) $("storyTitleInput").value = story.requestedStoryTitle || story.seriesTitle || "";
+  if ($("storyChapterCountSelect")) $("storyChapterCountSelect").value = String(story.chapterCount);
+
+  for (let chapterIndex = story.nextChapter || 0; chapterIndex < story.chapterCount; chapterIndex += 1) {
+    story.nextChapter = chapterIndex;
+    savePendingStoryGeneration(story);
+    showStoryChapterProgress(story, chapterIndex, "starting");
+    const result = await generateArticleWithAi({
+      topic: buildStoryChapterBrief(story, chapterIndex),
+      level: story.level,
+      category: story.category,
+      minWords: story.minWords,
+      maxWords: story.maxWords,
+      requiredWords: story.requiredWords,
+      languageFocus: story.languageFocus,
+      onProgress: phase => showStoryChapterProgress(story, chapterIndex, phase)
+    });
+    const article = makeGeneratedStoryChapter(result, story, chapterIndex);
+    await saveArticle(article);
+    story.completedChapters = [...(story.completedChapters || []), {
+      id: article.id,
+      title: article.title,
+      summary: article.summary,
+      text: article.text
+    }];
+    story.nextChapter = chapterIndex + 1;
+    savePendingStoryGeneration(story);
+    renderStoryGenerationProgress(story, story.nextChapter);
+  }
+
+  savePendingStoryGeneration(null);
+  const lastId = story.completedChapters?.[story.completedChapters.length - 1]?.id;
+  const lastArticle = state.articles.find(article => article.id === lastId);
+  if (lastArticle) {
+    $("articleEditorSelect").value = lastArticle.id;
+    fillArticleEditor(lastArticle);
+  }
+  renderStoryGenerationProgress(story, story.chapterCount);
+  setArticleGenerationStatus(
+    formatText("storyGenerationDone", { title: story.seriesTitle, count: story.chapterCount }),
+    "success"
+  );
+}
+
+async function generateStoryDirectlyWithAi() {
+  if (articleGenerationRunning) return;
+  const button = $("generateArticleAiBtn");
+  let story = readPendingStoryGeneration();
+
+  if (!story) {
+    const topic = $("articlePromptInput").value.trim();
+    if (!topic) {
+      setArticleGenerationStatus(t("articleTopicRequired"), "error");
+      $("articlePromptInput").focus();
+      return;
+    }
+    if ($("articleEditorSelect").value || $("articleTextInput").value.trim()) {
+      if (!confirm(t("replaceStoryConfirm"))) return;
+    }
+    const range = getSelectedArticleLengthRange();
+    const requestedStoryTitle = $("storyTitleInput")?.value.trim() || "";
+    story = {
+      version: 1,
+      seriesId: `story-${Date.now().toString(36)}`,
+      requestedStoryTitle,
+      seriesTitle: requestedStoryTitle,
+      topic,
+      chapterCount: getStoryChapterCount(),
+      nextChapter: 0,
+      completedChapters: [],
+      level: $("articleLevelInput").value.trim(),
+      category: getArticleEditorCategory(),
+      minWords: range.min,
+      maxWords: range.max,
+      requiredWords: getArticleRequiredWords(),
+      languageFocus: getArticleLanguageFocusRequirement(),
+      language: getSelectedArticleLanguage(),
+      createdAt: Date.now()
+    };
+    savePendingStoryGeneration(story);
+  }
+
+  articleGenerationRunning = true;
+  updateArticleGenerationControls();
+  button.textContent = t("generatingStory");
+  try {
+    await continueStoryGeneration(story);
+  } catch (error) {
+    if (error?.code === "generation_cancelled") savePendingStoryGeneration(null);
+    showArticleGenerationError(error);
+  } finally {
+    articleGenerationRunning = false;
+    button.textContent = t("generateStoryAi");
+    updateArticleGenerationControls();
+  }
 }
 
 function showArticleGenerationProgress(phase) {
@@ -1820,6 +2068,7 @@ async function cancelPendingArticleGeneration() {
   updateArticleGenerationControls();
   try {
     const result = await cancelArticleGenerationWithAi();
+    if (result.cancelled === true) savePendingStoryGeneration(null);
     setArticleGenerationStatus(
       t(result.cancelled === true ? "generationCancelled" : "generationAlreadyFinished"),
       "success"
@@ -1838,6 +2087,10 @@ async function cancelPendingArticleGeneration() {
 
 async function resumePendingArticleGeneration() {
   if (articleGenerationRunning) return;
+  if (readPendingStoryGeneration()) {
+    await generateStoryDirectlyWithAi();
+    return;
+  }
   const button = $("generateArticleAiBtn");
   articleGenerationRunning = true;
   updateArticleGenerationControls();
@@ -1859,6 +2112,10 @@ async function resumePendingArticleGeneration() {
 
 async function generateArticleDirectlyWithAi() {
   if (articleGenerationRunning) return;
+  if (articleCreationMode === "story") {
+    await generateStoryDirectlyWithAi();
+    return;
+  }
   const button = $("generateArticleAiBtn");
 
   const topic = $("articlePromptInput").value.trim();
