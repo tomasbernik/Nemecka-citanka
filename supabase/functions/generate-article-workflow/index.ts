@@ -17,12 +17,20 @@ class WorkflowError extends Error {
   code: string;
   status: number;
   providerStatus: number | null;
+  retryAfterSeconds: number | null;
 
-  constructor(code: string, status = 502, message = code, providerStatus: number | null = null) {
+  constructor(
+    code: string,
+    status = 502,
+    message = code,
+    providerStatus: number | null = null,
+    retryAfterSeconds: number | null = null,
+  ) {
     super(message);
     this.code = code;
     this.status = status;
     this.providerStatus = providerStatus;
+    this.retryAfterSeconds = retryAfterSeconds;
   }
 }
 
@@ -33,6 +41,15 @@ const asStringArray = (value: unknown, maxItems: number, maxLength: number) =>
   Array.isArray(value)
     ? value.slice(0, maxItems).map(item => asText(item, maxLength)).filter(Boolean)
     : [];
+
+const retryAfterSecondsFromResponse = (response: Response) => {
+  const value = response.headers.get("retry-after")?.trim() || "";
+  if (!value) return null;
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.ceil(seconds);
+  const date = Date.parse(value);
+  return Number.isFinite(date) ? Math.max(0, Math.ceil((date - Date.now()) / 1_000)) : null;
+};
 
 const countWords = (paragraphs: string[]) => paragraphs
   .join(" ")
@@ -293,7 +310,7 @@ async function callGroq(
         reasoning_effort: thinkingLevel,
         reasoning_format: "hidden",
         // Keep enough headroom for the prompt inside Groq's free-tier TPM limit.
-        max_completion_tokens: Math.min(maxOutputTokens, 6_000),
+        max_completion_tokens: Math.min(maxOutputTokens, 4_000),
         response_format: {
           type: "json_schema",
           json_schema: {
@@ -318,6 +335,7 @@ async function callGroq(
         502,
         providerMessage || `Groq HTTP ${response.status}`,
         response.status,
+        retryAfterSecondsFromResponse(response),
       );
     }
     const body = await response.json();
@@ -581,7 +599,14 @@ async function hasValidWorkerSecret(url: string, serviceKey: string, candidate: 
   return response.ok && await response.json() === true;
 }
 
-const retryDelaySeconds = (attempt: number) => [30, 60, 120, 120][Math.min(Math.max(attempt - 1, 0), 3)];
+const retryDelaySeconds = (attempt: number, failure: WorkflowError) => {
+  const standardDelay = [30, 60, 120, 120][Math.min(Math.max(attempt - 1, 0), 3)];
+  const providerDelay = failure.retryAfterSeconds || 0;
+  // Groq's TPM window is shared by all phases. A full minute prevents a fast
+  // retry from colliding with tokens consumed by the preceding phase.
+  const rateLimitDelay = failure.code === "groq_limit_reached" ? 65 : 0;
+  return Math.max(standardDelay, providerDelay, rateLimitDelay);
+};
 
 async function runClaimedPhase(
   url: string,
@@ -593,10 +618,14 @@ async function runClaimedPhase(
   const userId = asText(claim.user_id, 80);
   const phase = asText(claim.phase, 20);
   const attempt = Number(claim.phase_attempt) || 1;
-  const target = selectArticleAiTarget({ attempt, ...aiConfig }) as AiTarget | null;
+  const job = await loadJobById(url, serviceKey, jobId);
+  const target = selectArticleAiTarget({
+    attempt,
+    lastErrorCode: asText(job.last_error_code, 80),
+    ...aiConfig,
+  }) as AiTarget | null;
   if (!target) throw new WorkflowError("missing_configuration", 503);
   const { provider, model } = target;
-  const job = await loadJobById(url, serviceKey, jobId);
   const request = getRequest(job);
   const level = asText(request.level, 10);
   const topic = asText(request.topic, 6_000);
@@ -639,6 +668,7 @@ Return only JSON with a German title and the story paragraphs in text.`;
       await updateJob(url, serviceKey, jobId, userId, {
         status: "review_queued", draft, provider_used: provider, model_used: model,
         next_attempt_at: new Date().toISOString(), locked_until: null,
+        last_error: null, last_error_code: null,
       }, true);
       await logGenerationAttempt(url, serviceKey, {
         jobId, phase, attempt, provider, model, outcome: "succeeded",
@@ -675,6 +705,7 @@ Return only JSON with the corrected German title and paragraphs in text.`;
       await updateJob(url, serviceKey, jobId, userId, {
         status: "materials_queued", reviewed, provider_used: provider, model_used: model,
         next_attempt_at: new Date().toISOString(), locked_until: null,
+        last_error: null, last_error_code: null,
       }, true);
       await logGenerationAttempt(url, serviceKey, {
         jobId, phase, attempt, provider, model, outcome: "succeeded",
@@ -705,6 +736,7 @@ Before returning, verify every vocabulary form and every example against the sup
     await updateJob(url, serviceKey, jobId, userId, {
       status: "completed", article, provider_used: provider, model_used: model,
       completed_at: new Date().toISOString(), locked_until: null,
+      last_error: null, last_error_code: null,
     }, true);
     await logGenerationAttempt(url, serviceKey, {
       jobId, phase, attempt, provider, model, outcome: "succeeded",
@@ -729,7 +761,7 @@ Before returning, verify every vocabulary form and every example against the sup
       await updateJob(url, serviceKey, jobId, userId, retry
         ? {
           status: `${phase}_queued`,
-          next_attempt_at: new Date(Date.now() + retryDelaySeconds(attempt) * 1_000).toISOString(),
+          next_attempt_at: new Date(Date.now() + retryDelaySeconds(attempt, failure) * 1_000).toISOString(),
           locked_until: null,
           last_error: failure.message,
           last_error_code: failure.code,

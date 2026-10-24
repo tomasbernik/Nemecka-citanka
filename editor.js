@@ -1874,6 +1874,34 @@ function showStoryChapterProgress(story, chapterIndex, phase) {
   updateArticleGenerationControls();
 }
 
+const STORY_CHAPTER_COOLDOWN_MS = 65_000;
+
+function getStoryChapterCooldownSeconds(story, now = Date.now()) {
+  const nextChapterAt = Number(story?.nextChapterAt) || 0;
+  return Math.max(0, Math.ceil((nextChapterAt - now) / 1_000));
+}
+
+async function waitForStoryChapterCooldown(story, chapterIndex) {
+  let seconds = getStoryChapterCooldownSeconds(story);
+  while (seconds > 0) {
+    setArticleGenerationStatus(
+      formatText("storyChapterCooldown", {
+        current: chapterIndex + 1,
+        total: story.chapterCount,
+        seconds
+      }),
+      "progress"
+    );
+    renderStoryGenerationProgress(story, chapterIndex);
+    await new Promise(resolve => window.setTimeout(resolve, 1_000));
+    seconds = getStoryChapterCooldownSeconds(story);
+  }
+  if (story.nextChapterAt) {
+    delete story.nextChapterAt;
+    savePendingStoryGeneration(story);
+  }
+}
+
 function makeGeneratedStoryChapter(result, story, chapterIndex) {
   if (!result?.article) throw new Error(t("generationEmpty"));
   const generated = JSON.parse(JSON.stringify(result.article));
@@ -1921,6 +1949,7 @@ async function continueStoryGeneration(story) {
   for (let chapterIndex = story.nextChapter || 0; chapterIndex < story.chapterCount; chapterIndex += 1) {
     story.nextChapter = chapterIndex;
     savePendingStoryGeneration(story);
+    await waitForStoryChapterCooldown(story, chapterIndex);
     showStoryChapterProgress(story, chapterIndex, "starting");
     const result = await generateArticleWithAi({
       topic: buildStoryChapterBrief(story, chapterIndex),
@@ -1941,6 +1970,9 @@ async function continueStoryGeneration(story) {
       text: article.text
     }];
     story.nextChapter = chapterIndex + 1;
+    if (story.nextChapter < story.chapterCount) {
+      story.nextChapterAt = Date.now() + STORY_CHAPTER_COOLDOWN_MS;
+    }
     savePendingStoryGeneration(story);
     renderStoryGenerationProgress(story, story.nextChapter);
   }

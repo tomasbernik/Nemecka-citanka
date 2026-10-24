@@ -316,6 +316,19 @@ Object.entries({
 }).forEach(([language, text]) => assignUiText(language, text));
 
 Object.entries({
+  de: { storyChapterCooldown: "Kapitel {current}/{total} startet in {seconds} s, damit sich das KI-Limit erholen kann…" },
+  sk: { storyChapterCooldown: "Kapitola {current}/{total} sa spustí o {seconds} s, aby sa obnovil limit AI…" },
+  en: { storyChapterCooldown: "Chapter {current}/{total} starts in {seconds}s to let the AI limit recover…" },
+  ru: { storyChapterCooldown: "Глава {current}/{total} начнётся через {seconds} с, чтобы лимит ИИ успел восстановиться…" },
+  pl: { storyChapterCooldown: "Rozdział {current}/{total} rozpocznie się za {seconds} s, aby limit AI zdążył się odnowić…" },
+  hu: { storyChapterCooldown: "A(z) {current}/{total}. fejezet {seconds} mp múlva indul, hogy az MI-korlát helyreálljon…" },
+  ro: { storyChapterCooldown: "Capitolul {current}/{total} începe în {seconds} s, pentru ca limita AI să se refacă…" },
+  it: { storyChapterCooldown: "Il capitolo {current}/{total} inizierà tra {seconds} s, per consentire il ripristino del limite IA…" },
+  fr: { storyChapterCooldown: "Le chapitre {current}/{total} commencera dans {seconds} s, le temps que la limite de l’IA se réinitialise…" },
+  tr: { storyChapterCooldown: "Yapay zekâ sınırının yenilenmesi için {current}/{total}. bölüm {seconds} sn sonra başlayacak…" }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
   de: { articleCreationMode: "Erstellungsmodus", articleMode: "Artikel", storyMode: "Geschichte", storyModeHelp: "Die KI erstellt und speichert alle Kapitel nacheinander als eine Geschichte.", storyTitle: "Titel der Geschichte (optional)", storyTitlePlaceholder: "Leer lassen, damit die KI einen Titel vorschlägt", storyChapterCount: "Anzahl der Kapitel", generateStoryAi: "✨ Ganze Geschichte mit KI erstellen", generatingStory: "⏳ Geschichte wird erstellt...", storyProgressTitle: "Kapitel {current} von {total}", storyChapterLabel: "Kapitel {number}", storyChapterProgress: "Kapitel {current}/{total}:", storyGenerationDone: "Die Geschichte „{title}“ mit {count} Kapiteln wurde erstellt und als Entwurf gespeichert.", replaceStoryConfirm: "Im Editor befinden sich bereits Inhalte. Eine neue Geschichte starten? Nicht gespeicherte Änderungen gehen verloren." },
   sk: { articleCreationMode: "Režim tvorby", articleMode: "Článok", storyMode: "Príbeh", storyModeHelp: "AI vytvorí a priebežne uloží všetky kapitoly ako jeden príbeh.", storyTitle: "Názov príbehu (voliteľné)", storyTitlePlaceholder: "Ak ho nezadáš, navrhne ho AI", storyChapterCount: "Počet kapitol", generateStoryAi: "✨ Vytvoriť celý príbeh pomocou AI", generatingStory: "⏳ Vytváram príbeh...", storyProgressTitle: "Kapitola {current} z {total}", storyChapterLabel: "Kapitola {number}", storyChapterProgress: "Kapitola {current}/{total}:", storyGenerationDone: "Príbeh „{title}“ s {count} kapitolami bol vytvorený a uložený ako koncept.", replaceStoryConfirm: "V editore už je obsah. Chceš začať nový príbeh? Neuložené zmeny sa stratia." },
   en: { articleCreationMode: "Creation mode", articleMode: "Article", storyMode: "Story", storyModeHelp: "AI creates and saves every chapter in sequence as one story.", storyTitle: "Story title (optional)", storyTitlePlaceholder: "Leave blank and AI will suggest one", storyChapterCount: "Number of chapters", generateStoryAi: "✨ Create a full story with AI", generatingStory: "⏳ Creating story...", storyProgressTitle: "Chapter {current} of {total}", storyChapterLabel: "Chapter {number}", storyChapterProgress: "Chapter {current}/{total}:", storyGenerationDone: "The story “{title}” with {count} chapters was created and saved as a draft.", replaceStoryConfirm: "The editor already contains content. Start a new story? Unsaved changes will be lost." },

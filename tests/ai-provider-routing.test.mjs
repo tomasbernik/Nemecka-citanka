@@ -30,6 +30,19 @@ test("falls back to Gemini primary and then fallback model", () => {
   assert.equal(selectArticleAiTarget({ attempt: 5, ...config }).model, "gemini-3.6-flash");
 });
 
+test("gives Groq one protected retry after a temporary TPM limit", () => {
+  assert.equal(selectArticleAiTarget({
+    attempt: 3,
+    lastErrorCode: "groq_limit_reached",
+    ...config,
+  }).provider, "groq");
+  assert.equal(selectArticleAiTarget({
+    attempt: 4,
+    lastErrorCode: "groq_limit_reached",
+    ...config,
+  }).provider, "gemini");
+});
+
 test("continues with the configured provider when only one API key exists", () => {
   assert.equal(selectArticleAiTarget({ attempt: 1, ...config, groqKey: "" }).provider, "gemini");
   assert.equal(selectArticleAiTarget({ attempt: 5, ...config, geminiKey: "" }).provider, "groq");

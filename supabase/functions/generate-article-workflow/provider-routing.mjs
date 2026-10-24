@@ -1,5 +1,6 @@
 export function selectArticleAiTarget({
   attempt,
+  lastErrorCode,
   groqKey,
   groqModel,
   geminiKey,
@@ -7,8 +8,9 @@ export function selectArticleAiTarget({
   geminiFallbackModel,
 }) {
   const normalizedAttempt = Number.isFinite(attempt) && attempt > 0 ? Math.floor(attempt) : 1;
+  const retryGroqAfterRateLimit = lastErrorCode === "groq_limit_reached" && normalizedAttempt === 3;
 
-  if (groqKey && (normalizedAttempt <= 2 || !geminiKey)) {
+  if (groqKey && (normalizedAttempt <= 2 || retryGroqAfterRateLimit || !geminiKey)) {
     return { provider: "groq", apiKey: groqKey, model: groqModel };
   }
   if (geminiKey) {

@@ -7,6 +7,7 @@ const editorSource = await readFile(new URL("../editor.js", import.meta.url), "u
 const context = vm.createContext({});
 vm.runInContext(editorSource, context, { filename: "editor.js" });
 const buildStoryChapterBrief = vm.runInContext("buildStoryChapterBrief", context);
+const getStoryChapterCooldownSeconds = vm.runInContext("getStoryChapterCooldownSeconds", context);
 
 test("later story chapters receive summaries of all older chapters and the previous chapter text", () => {
   const story = {
@@ -40,4 +41,11 @@ test("the final chapter is explicitly instructed to resolve open plot lines", ()
 
   assert.match(brief, /final chapter/i);
   assert.match(brief, /Resolve the central problem/);
+});
+
+test("chapter cooldown survives a reload and counts down from persisted time", () => {
+  assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 165_000 }, 100_000), 65);
+  assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 100_001 }, 100_000), 1);
+  assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 99_000 }, 100_000), 0);
+  assert.equal(getStoryChapterCooldownSeconds({}, 100_000), 0);
 });
