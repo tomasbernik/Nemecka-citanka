@@ -353,6 +353,20 @@ function kickWorker(url: string, serviceKey: string) {
   if (edgeRuntime?.waitUntil) edgeRuntime.waitUntil(task);
 }
 
+function jobNeedsWake(job: JsonObject) {
+  const status = asText(job.status, 40);
+  const now = Date.now();
+  if (["created", "draft_queued", "review_queued", "materials_queued"].includes(status)) {
+    const nextAttemptAt = Date.parse(asText(job.next_attempt_at, 80));
+    return !Number.isFinite(nextAttemptAt) || nextAttemptAt <= now;
+  }
+  if (["draft_running", "review_running", "materials_running"].includes(status)) {
+    const lockedUntil = Date.parse(asText(job.locked_until, 80));
+    return !Number.isFinite(lockedUntil) || lockedUntil <= now;
+  }
+  return false;
+}
+
 async function claimJob(url: string, serviceKey: string) {
   const response = await restRequest(url, serviceKey, "rpc/claim_article_generation_job", {
     method: "POST",
@@ -569,6 +583,7 @@ Deno.serve(async req => {
     if (action === "status") {
       if (!jobId) throw new WorkflowError("invalid_request", 400);
       const job = await loadJob(url, serviceKey, jobId, userId);
+      if (jobNeedsWake(job)) kickWorker(url, serviceKey);
       return respond({
         jobId,
         status: job.status,
@@ -577,6 +592,12 @@ Deno.serve(async req => {
         lastErrorCode: job.last_error_code || null,
         nextAttemptAt: job.next_attempt_at || null,
         modelUsed: job.model_used || null,
+        updatedAt: job.updated_at || null,
+        attempts: {
+          draft: job.draft_attempts || 0,
+          review: job.review_attempts || 0,
+          materials: job.materials_attempts || 0,
+        },
       });
     }
 
