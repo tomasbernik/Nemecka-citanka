@@ -28,6 +28,16 @@ test("falls back to Gemini primary and then fallback model", () => {
   });
   assert.equal(selectArticleAiTarget({ attempt: 4, ...config }).model, "gemini-3.8-flash");
   assert.equal(selectArticleAiTarget({ attempt: 5, ...config }).model, "gemini-3.6-flash");
+  assert.equal(selectArticleAiTarget({ attempt: 6, ...config }).provider, "groq");
+  assert.equal(selectArticleAiTarget({ attempt: 7, ...config }).model, "gemini-3.6-flash");
+});
+
+test("switches immediately to Gemini after Groq cannot produce the JSON schema", () => {
+  assert.equal(selectArticleAiTarget({
+    attempt: 2,
+    lastErrorCode: "groq_json_failed",
+    ...config,
+  }).provider, "gemini");
 });
 
 test("gives Groq one protected retry after a temporary TPM limit", () => {

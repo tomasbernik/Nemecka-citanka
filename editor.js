@@ -2115,8 +2115,12 @@ function showArticleGenerationError(error) {
     return;
   }
   console.error("AI article generation:", error);
+  const providerBusy = ["groq_failed", "gemini_failed"].includes(error?.code)
+    && /high demand|temporar(?:y|ily)|overload|busy/iu.test(error?.message || "");
   const message = error?.code === "generation_continues_in_background"
     ? t("generationContinuesInBackground")
+    : providerBusy
+      ? t("generationProviderBusy")
     : error?.name === "AbortError" || /aborted/i.test(error?.message || "")
       ? t("generationTimeout")
       : error?.message || t("generationEmpty");

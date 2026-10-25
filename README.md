@@ -220,10 +220,12 @@ Poznámka: Toto je jednoduchý súkromný režim pre dvoch ľudí. PINy sú ulo�
 
 ## AI generovanie článkov
 
-Aktívna Edge Function `generate-article-workflow` používa prednostne Groq. Prvé dva
-pokusy každej fázy používa model `openai/gpt-oss-120b`; pri opakovanom zlyhaní
-pokračuje cez Gemini 3.8 Flash a posledný pokus cez Gemini 3.6 Flash. Ak niektorý
-API kľúč nie je nastavený, workflow pokračuje s dostupným poskytovateľom.
+Aktívna Edge Function `generate-article-workflow` používa prednostne Groq. Bežne
+začína modelom `openai/gpt-oss-120b`; ak Groq nedokáže vytvoriť požadovaný JSON,
+hneď prepne na Gemini. Pri dočasnom preťažení používa Gemini 3.8 Flash, Gemini 3.6
+Flash a jeden neskorší obnovovací pokus cez Groq. Jedna fáza môže mať najviac sedem
+odložených pokusov. Ak niektorý API kľúč nie je nastavený, workflow pokračuje s
+dostupným poskytovateľom.
 
 Pred nasadením funkcie nastav secrets:
 
@@ -244,8 +246,8 @@ dostane tento stav, osnovu, krátke zhrnutia a iba koniec bezprostredne
 predchádzajúcej kapitoly. Revízna fáza musí navyše potvrdiť štruktúrovanú kontrolu
 kánonu, lokalít, príčin a následkov, setup/payoff a jazykovej úrovne. Osnova ani
 stav nepridávajú ďalšie API volanie; vznikajú v existujúcich fázach návrhu a
-materiálov. Výstupné limity jednotlivých fáz sú 2 400 až 3 200 tokenov, aby zostala
-rezerva pre Groq TPM limit.
+materiálov. Výstupné limity jednotlivých fáz sú 2 400 až 4 000 tokenov; najvyšší
+limit sa používa iba pri spoločnom vytvorení osnovy a prvej kapitoly.
 
 Najprv nasaď databázové migrácie a potom funkciu. Auditná tabuľka
 `article_generation_job_events` zaznamenáva pri každom pokuse poskytovateľa,

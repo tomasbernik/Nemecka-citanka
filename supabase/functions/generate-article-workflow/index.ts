@@ -504,8 +504,12 @@ async function callGroq(
         providerMessage = asText(raw, 400);
       }
       console.error("Groq workflow error:", { model, status: response.status, body: raw.slice(0, 2_000) });
+      const jsonGenerationFailed = response.status === 400
+        && /failed to generate json|failed_generation/iu.test(`${providerMessage} ${raw}`);
       throw new WorkflowError(
-        response.status === 429 ? "groq_limit_reached" : "groq_failed",
+        response.status === 429
+          ? "groq_limit_reached"
+          : jsonGenerationFailed ? "groq_json_failed" : "groq_failed",
         502,
         providerMessage || `Groq HTTP ${response.status}`,
         response.status,
@@ -684,11 +688,12 @@ const ACTIVE_STATUSES = new Set([
   "materials_queued", "materials_running",
 ]);
 const RETRYABLE_CODES = new Set([
-  "groq_limit_reached", "groq_failed", "gemini_limit_reached", "gemini_failed", "ai_timeout_or_network_error",
+  "groq_limit_reached", "groq_failed", "groq_json_failed", "gemini_limit_reached", "gemini_failed",
+  "ai_timeout_or_network_error",
   "invalid_ai_output", "invalid_story_output", "invalid_story_plan", "invalid_story_review",
   "invalid_materials_output",
 ]);
-const MAX_PHASE_ATTEMPTS = 5;
+const MAX_PHASE_ATTEMPTS = 7;
 
 async function logCancelledAttempt(
   url: string,
@@ -775,7 +780,7 @@ async function hasValidWorkerSecret(url: string, serviceKey: string, candidate: 
 }
 
 const retryDelaySeconds = (attempt: number, failure: WorkflowError) => {
-  const standardDelay = [30, 60, 120, 120][Math.min(Math.max(attempt - 1, 0), 3)];
+  const standardDelay = [30, 60, 120, 120, 180, 240][Math.min(Math.max(attempt - 1, 0), 5)];
   const providerDelay = failure.retryAfterSeconds || 0;
   // Groq's TPM window is shared by all phases. A full minute prevents a fast
   // retry from colliding with tokens consumed by the preceding phase.
@@ -876,8 +881,8 @@ Return only the requested JSON.`;
         prompt,
         mustCreatePlan ? "story_first_draft" : "article_draft",
         mustCreatePlan ? FIRST_STORY_DRAFT_SCHEMA : DRAFT_SCHEMA,
-        "medium",
-        mustCreatePlan ? 3_200 : 2_600,
+        mustCreatePlan ? "low" : "medium",
+        mustCreatePlan ? 4_000 : 2_600,
       );
       const normalizedDraft = normalizeStory(rawDraft, lengthMin, lengthMax);
       const draft = mustCreatePlan
