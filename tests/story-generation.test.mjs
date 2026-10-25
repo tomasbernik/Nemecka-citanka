@@ -212,11 +212,31 @@ test("a targeted review can load an intermediate story outside the total word ra
   assert.match(workflowSource, /!options\.allowTotalLengthRepair/);
 });
 
-test("targeted repairs use the whole story and receive one bounded final audit", () => {
+test("targeted repairs use the whole story and must pass a later independent audit", () => {
   assert.match(workflowSource, /COMPLETE STORY CONTEXT:/);
-  assert.match(workflowSource, /reviewAuditCount\s*<\s*2/);
-  assert.match(workflowSource, /complete story queued for final independent audit/);
+  assert.match(workflowSource, /const MAX_STORY_AUDITS = 3/);
+  assert.match(workflowSource, /complete story queued for independent verification/);
   assert.match(workflowSource, /reviewPassCompleted:\s*false/);
+  assert.doesNotMatch(workflowSource, /all chapters now pass validation/);
+  assert.match(workflowSource, /story_quality_failed/);
+});
+
+test("the story plan has a binding brief contract and an independent brief review", () => {
+  assert.match(workflowSource, /briefContract:/);
+  assert.match(workflowSource, /primaryPromise/);
+  assert.match(workflowSource, /PLAN_REVIEW_SCHEMA/);
+  assert.match(workflowSource, /story_plan_review/);
+  assert.match(workflowSource, /For romance or love, plan at least two suitable romantic leads/);
+  assert.match(workflowSource, /A hotel, travel or booking problem alone does not satisfy a love story/);
+});
+
+test("story review findings require evidence and verify the original brief", () => {
+  assert.match(workflowSource, /briefSatisfied/);
+  assert.match(workflowSource, /STORY_ISSUE_SCHEMA/);
+  assert.match(workflowSource, /quote one or two exact evidence snippets/);
+  assert.match(workflowSource, /evidence that does not occur verbatim in the story/);
+  assert.match(workflowSource, /Track every important object and document by identity/);
+  assert.match(workflowSource, /leaving a building and then still being inside its lift/);
 });
 
 test("the reviewer ignores stylistic preferences that are not publish-blocking defects", () => {

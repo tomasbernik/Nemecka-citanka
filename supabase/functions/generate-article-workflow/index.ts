@@ -151,6 +151,21 @@ const STORY_PLAN_SCHEMA = {
     title: { type: "string" },
     premise: { type: "string" },
     ending: { type: "string" },
+    briefContract: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        primaryPromise: { type: "string" },
+        requiredThemes: { type: "array", items: { type: "string" } },
+        requiredDevelopments: { type: "array", items: { type: "string" } },
+        forbiddenSubstitutions: { type: "array", items: { type: "string" } },
+        endingPayoff: { type: "string" },
+      },
+      required: [
+        "primaryPromise", "requiredThemes", "requiredDevelopments",
+        "forbiddenSubstitutions", "endingPayoff",
+      ],
+    },
     characters: {
       type: "array",
       items: {
@@ -197,15 +212,57 @@ const STORY_PLAN_SCHEMA = {
     },
   },
   required: [
-    "title", "premise", "ending", "characters", "centralConflict",
+    "title", "premise", "ending", "briefContract", "characters", "centralConflict",
     "objectLedger", "timeline", "fixedFacts", "chapterPlans",
   ],
+};
+
+const PLAN_REVIEW_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    passes: { type: "boolean" },
+    issues: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          requirement: { type: "string" },
+          evidence: { type: "string" },
+          requiredChange: { type: "string" },
+        },
+        required: ["requirement", "evidence", "requiredChange"],
+      },
+    },
+  },
+  required: ["passes", "issues"],
+};
+
+const STORY_ISSUE_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    category: {
+      type: "string",
+      enum: [
+        "brief", "logic", "location", "timeline", "object_state", "knowledge",
+        "continuity", "causality", "language", "cefr", "safety", "length",
+      ],
+    },
+    description: { type: "string" },
+    evidence: { type: "array", items: { type: "string" } },
+    requiredFix: { type: "string" },
+  },
+  required: ["category", "description", "evidence", "requiredFix"],
 };
 
 const STORY_REVIEW_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
+    briefSatisfied: { type: "boolean" },
+    storyIssues: { type: "array", items: STORY_ISSUE_SCHEMA },
     chapters: {
       type: "array",
       items: {
@@ -214,13 +271,13 @@ const STORY_REVIEW_SCHEMA = {
         properties: {
           chapter: { type: "integer" },
           needsRepair: { type: "boolean" },
-          issues: { type: "array", items: { type: "string" } },
+          issues: { type: "array", items: STORY_ISSUE_SCHEMA },
         },
         required: ["chapter", "needsRepair", "issues"],
       },
     },
   },
-  required: ["chapters"],
+  required: ["briefSatisfied", "storyIssues", "chapters"],
 };
 
 const CONTINUITY_STATE_SCHEMA = {
@@ -417,6 +474,23 @@ const normalizeStoryPlan = (value: unknown, chapterCount: number) => {
     title: asText(source.title, 160),
     premise: asText(source.premise, 500),
     ending: asText(source.ending, 500),
+    briefContract: source.briefContract && typeof source.briefContract === "object"
+      ? {
+        primaryPromise: asText((source.briefContract as JsonObject).primaryPromise, 400),
+        requiredThemes: asStringArray((source.briefContract as JsonObject).requiredThemes, 8, 160),
+        requiredDevelopments: asStringArray(
+          (source.briefContract as JsonObject).requiredDevelopments,
+          10,
+          240,
+        ),
+        forbiddenSubstitutions: asStringArray(
+          (source.briefContract as JsonObject).forbiddenSubstitutions,
+          8,
+          240,
+        ),
+        endingPayoff: asText((source.briefContract as JsonObject).endingPayoff, 400),
+      }
+      : null,
     characters: Array.isArray(source.characters)
       ? (source.characters as JsonObject[]).slice(0, 8).map(character => ({
         name: asText(character.name, 80),
@@ -437,11 +511,16 @@ const normalizeStoryPlan = (value: unknown, chapterCount: number) => {
     timeline: asStringArray(source.timeline, chapterCount + 2, 240),
     fixedFacts: asStringArray(source.fixedFacts, 16, 240),
     chapterPlans,
+    briefVerified: source.briefVerified === true,
   };
   const failedChecks = [
     !plan.title && "missing title",
     !plan.premise && "missing premise",
     !plan.ending && "missing ending",
+    !plan.briefContract?.primaryPromise && "brief contract missing primary promise",
+    !plan.briefContract?.requiredThemes.length && "brief contract missing required themes",
+    !plan.briefContract?.requiredDevelopments.length && "brief contract missing required developments",
+    !plan.briefContract?.endingPayoff && "brief contract missing ending payoff",
     !plan.characters.length && "no characters",
     ...plan.characters.flatMap((character, index) => [
       !character.name && `character ${index + 1} missing name`,
@@ -452,8 +531,6 @@ const normalizeStoryPlan = (value: unknown, chapterCount: number) => {
     !plan.centralConflict?.reality && "central conflict missing objective reality",
     !plan.centralConflict?.cause && "central conflict missing cause",
     !plan.centralConflict?.resolution && "central conflict missing resolution",
-    (plan.centralConflict?.differingBeliefs.length || 0) < 2
-      && "central conflict needs at least two differing beliefs",
     plan.timeline.length !== chapterCount
       && `timeline has ${plan.timeline.length} entries; expected ${chapterCount}`,
     chapterPlans.length !== chapterCount
@@ -474,6 +551,33 @@ const normalizeStoryPlan = (value: unknown, chapterCount: number) => {
   }
   return plan;
 };
+
+const normalizeStoryIssue = (value: unknown) => {
+  const source = value && typeof value === "object" ? value as JsonObject : {};
+  const category = asText(source.category, 40);
+  const description = asText(source.description, 320);
+  const evidence = asStringArray(source.evidence, 3, 260);
+  const requiredFix = asText(source.requiredFix, 320);
+  return category && description && evidence.length && requiredFix
+    ? { category, description, evidence, requiredFix }
+    : null;
+};
+
+const normalizeStoryIssues = (value: unknown, maxItems = 4) => Array.isArray(value)
+  ? value.slice(0, maxItems).map(normalizeStoryIssue).filter(Boolean) as Array<{
+    category: string;
+    description: string;
+    evidence: string[];
+    requiredFix: string;
+  }>
+  : [];
+
+const formatStoryIssues = (issues: ReturnType<typeof normalizeStoryIssues>) =>
+  issues.map(issue => [
+    `[${issue.category}] ${issue.description}`,
+    `Evidence: ${issue.evidence.join(" | ")}`,
+    `Required fix: ${issue.requiredFix}`,
+  ].join("\n")).join("\n\n");
 
 const normalizeContinuityState = (value: unknown) => {
   const source = value && typeof value === "object" ? value as JsonObject : {};
@@ -998,6 +1102,7 @@ const RETRYABLE_CODES = new Set([
   "invalid_materials_output", "generation_job_update_failed",
 ]);
 const MAX_PHASE_ATTEMPTS = 5;
+const MAX_STORY_AUDITS = 3;
 
 async function logCancelledAttempt(
   url: string,
@@ -1130,6 +1235,7 @@ async function runClaimedPhase(
   const languageFocus = isStory ? "" : asText(request.languageFocus, 200);
   const chapterNumber = Number(storyContext?.chapterNumber) || 0;
   const chapterCount = Number(storyContext?.chapterCount) || 0;
+  const planReviewCount = Math.max(0, Number(storyContext?.planReviewCount) || 0);
   const requestedPlan = storyContext?.plan && typeof storyContext.plan === "object"
     ? storyContext.plan as JsonObject
     : null;
@@ -1163,8 +1269,14 @@ ${isCompleteStory
 
   try {
     if (phase === "draft") {
-      const mustCreatePlan = isStory && !requestedPlan;
-      let storyPlan = requestedPlan;
+      const requestedPlanHasBriefContract = Boolean(
+        requestedPlan?.briefContract && typeof requestedPlan.briefContract === "object",
+      );
+      const mustCreatePlan = isStory
+        && (!requestedPlan || (isCompleteStory && !requestedPlanHasBriefContract));
+      let storyPlan = mustCreatePlan
+        ? null
+        : requestedPlan ? normalizeStoryPlan(requestedPlan, chapterCount) : null;
       if (mustCreatePlan) {
         const planPrompt = `Design a compact binding plan for a coherent German story with exactly ${chapterCount} chapters. This is planning only; do not write the chapter yet.
 
@@ -1176,14 +1288,16 @@ TARGET:
 - Required language feature: ${languageFocus || "none specified"}
 
 PLAN RULES:
+- First extract a binding briefContract from the user's actual request. Its primaryPromise is the experience the reader was promised, not merely the setting.
+- Every defining theme and relationship requested by the user must drive the plot, develop across chapters and receive an explicit payoff. A background location or an unrelated practical problem is not a substitute for the requested subject.
+- For romance or love, plan at least two suitable romantic leads, their meeting, growing mutual interest, a believable obstacle and an explicit emotional payoff. A hotel, travel or booking problem alone does not satisfy a love story.
 - Decide the real cause, final solution and ending now.
 - Give every character one unambiguous name, grammatical gender, role and goal. Prefer common names whose gender is clear to a language learner.
-- Define the objective reality and at least two genuinely different character beliefs behind the central conflict.
-- Test the conflict semantically: if both beliefs can be paraphrased as the same intention, redesign it before returning the plan.
+- Define the objective reality, cause and resolution of the central challenge. Fill differingBeliefs only when a genuine misunderstanding exists; otherwise return an empty array. Never invent a misunderstanding merely to create conflict.
 - Set up every object, skill and discovery before it becomes decisive.
 - Record ownership and location of every important object, and record one chronological step per chapter.
 - Do not leave any required string empty. Return exactly ${chapterCount} non-empty timeline entries.
-- Return at least one fully specified character and at least two non-empty differingBeliefs.
+- Return at least one fully specified character. Use differingBeliefs only when the planned challenge truly depends on different beliefs.
 - Give every important mystery or unusual object a payoff.
 - Keep fixed facts, locations and ownership concise and stable.
 - The plan must contain exactly ${chapterCount} ordered chapterPlans numbered 1-${chapterCount}.
@@ -1226,6 +1340,121 @@ Return only the requested compact JSON plan.`;
         return;
       }
 
+      if (isCompleteStory && storyPlan && storyPlan.briefVerified !== true) {
+        const planReviewTarget = selectArticleAiTarget({
+          phase: "review",
+          attempt: 1,
+          lastErrorCode: "",
+          completeStory: true,
+          reviewCompleted: false,
+          ...aiConfig,
+        }) as AiTarget | null;
+        if (!planReviewTarget) throw new WorkflowError("missing_configuration", 503);
+        const planReviewPrompt = `Act as an independent commissioning editor. Verify that a proposed story plan faithfully delivers the user's actual requested story before any prose is written.
+
+USER'S BINDING STORY BRIEF:
+${topic}
+
+PROPOSED PLAN:
+${JSON.stringify(storyPlan)}
+
+CHECKS:
+- Identify the primary promise, required themes, relationships and requested developments in the user's brief.
+- The requested subject must drive the beginning, development and ending; appearing only as scenery, a title or a final sentence does not count.
+- Reject any plan that replaces the requested main subject with an unrelated practical problem.
+- If the brief requests love or romance, the plan must include at least two suitable romantic leads, an on-page meeting or established connection, growing reciprocal interest, a believable emotional obstacle and a clear romantic payoff.
+- Verify that every required development appears in chapterPlans and that the ending pays off the primary promise.
+- Do not judge prose style because no prose exists yet.
+
+Return passes=true only if the plan unmistakably delivers the brief. For every failure provide the unmet requirement, exact plan evidence, and the required change. Return compact JSON only.`;
+        const rawPlanReview = await callAi(
+          planReviewTarget,
+          planReviewPrompt,
+          "story_plan_review",
+          PLAN_REVIEW_SCHEMA,
+          "low",
+          900,
+        );
+        const planIssues = Array.isArray(rawPlanReview.issues)
+          ? (rawPlanReview.issues as JsonObject[]).slice(0, 6).map(issue => ({
+            requirement: asText(issue.requirement, 240),
+            evidence: asText(issue.evidence, 320),
+            requiredChange: asText(issue.requiredChange, 320),
+          })).filter(issue => issue.requirement && issue.evidence && issue.requiredChange)
+          : [];
+        const planPasses = rawPlanReview.passes === true && planIssues.length === 0;
+        if (!planPasses) {
+          const completedPlanReviewCount = planReviewCount + 1;
+          if (completedPlanReviewCount >= MAX_STORY_AUDITS) {
+            throw new WorkflowError(
+              "story_quality_failed",
+              422,
+              `Story planning failed to satisfy the user's brief after ${completedPlanReviewCount} independent reviews: ${planIssues.map(issue => issue.requirement).join("; ") || "review returned no usable evidence"}`,
+            );
+          }
+          const { plan: _discardedPlan, ...storyContextWithoutPlan } = storyContext || {};
+          const failureMessage = planIssues.length
+            ? `Story plan does not satisfy the user's brief: ${planIssues.map(issue => `${issue.requirement} — ${issue.requiredChange}`).join("; ")}`
+            : "Story plan review failed without concrete evidence; regenerate the plan and make every requested theme explicit.";
+          await updateJob(url, serviceKey, jobId, userId, {
+            status: "draft_queued",
+            request_payload: {
+              ...request,
+              storyContext: {
+                ...storyContextWithoutPlan,
+                planReviewCount: completedPlanReviewCount,
+              },
+            },
+            provider_used: planReviewTarget.provider,
+            model_used: planReviewTarget.model,
+            next_attempt_at: nextGroqSlot(),
+            locked_until: null,
+            last_error: asText(failureMessage, 800),
+            last_error_code: "invalid_story_plan",
+          }, true);
+          await logGenerationAttempt(url, serviceKey, {
+            jobId,
+            phase,
+            attempt,
+            provider: planReviewTarget.provider,
+            model: planReviewTarget.model,
+            outcome: "retry",
+            willRetry: true,
+            durationMs: Date.now() - phaseStartedAt,
+            errorCode: "invalid_story_plan",
+            message: failureMessage,
+          });
+          return;
+        }
+
+        storyPlan = { ...storyPlan, briefVerified: true };
+        await updateJob(url, serviceKey, jobId, userId, {
+          status: "draft_queued",
+          request_payload: {
+            ...request,
+            storyContext: { ...storyContext, plan: storyPlan, planReviewCount: planReviewCount + 1 },
+          },
+          provider_used: planReviewTarget.provider,
+          model_used: planReviewTarget.model,
+          next_attempt_at: nextGroqSlot(),
+          locked_until: null,
+          last_error: null,
+          last_error_code: null,
+        }, true);
+        await logGenerationAttempt(url, serviceKey, {
+          jobId,
+          phase,
+          attempt,
+          provider: planReviewTarget.provider,
+          model: planReviewTarget.model,
+          outcome: "retry",
+          willRetry: true,
+          durationMs: Date.now() - phaseStartedAt,
+          message: `Story plan passed independent brief review; complete story queued after ${GROQ_COOLDOWN_SECONDS}-second Groq cooldown.`,
+        });
+        return;
+      }
+
       const completeStoryRange = isCompleteStory
         ? getCompleteStoryWordRange(lengthMin, lengthMax, chapterCount)
         : { min: lengthMin, max: lengthMax };
@@ -1243,6 +1472,8 @@ TARGET:
 - Required language feature: ${languageFocus || "none specified"}
 
 QUALITY RULES:
+- The briefContract is binding. The primary promise and every required development must appear clearly in the prose, drive the plot and receive the planned payoff. Do not replace them with a side problem.
+- If the requested genre is romance, show the romantic leads interacting and the relationship changing in every relevant chapter; do not merely place a non-romantic story in a holiday setting.
 - Use natural, grammatically correct German and vocabulary genuinely suitable for ${level}.
 - Prefer short, clear sentences. For A1, avoid idioms, literary words and advanced subordinate clauses.
 - At A2, use mostly short main clauses and familiar connectors such as "und", "aber", "weil" and "dann". Prefer concrete common words; introduce only necessary technical terms and make their meaning clear from context.
@@ -1289,7 +1520,13 @@ ${isCompleteStory
           fallbackTitle: asText(storyPlan?.title, 160),
         })
         : normalizeStoryText(rawDraft, lengthMin, lengthMax);
-      const draft = storyPlan ? { ...normalizedDraft, storyPlan } : normalizedDraft;
+      const draft = storyPlan
+        ? {
+          ...normalizedDraft,
+          storyPlan,
+          reviewAuditCount: Math.max(0, Number(storyContext?.reviewAuditCount) || 0),
+        }
+        : normalizedDraft;
       await updateJob(url, serviceKey, jobId, userId, {
         status: "review_queued", draft, provider_used: provider, model_used: model,
         next_attempt_at: nextGroqSlot(), locked_until: null,
@@ -1336,7 +1573,7 @@ ${isCompleteStory
       ? getStorySeriesWordStats(draftSeries, lengthMin, lengthMax, chapterCount)
       : null;
     const storyPlan = isStory
-      ? (requestedPlan || (storedDraft.storyPlan
+      ? (requestedPlan ? normalizeStoryPlan(requestedPlan, chapterCount) : (storedDraft.storyPlan
         ? normalizeStoryPlan(storedDraft.storyPlan, chapterCount)
         : null))
       : null;
@@ -1352,7 +1589,7 @@ ${isCompleteStory
         const storedReviewIssues = Array.isArray(storedDraft.reviewIssues)
           ? (storedDraft.reviewIssues as JsonObject[]).map(item => ({
             chapter: Number(item.chapter),
-            issues: asStringArray(item.issues, 4, 240),
+            issues: normalizeStoryIssues(item.issues, 2),
           })).filter(item => item.chapter >= 1 && item.chapter <= chapterCount)
           : [];
         const invalidIndexes = [...new Set([
@@ -1364,8 +1601,14 @@ ${isCompleteStory
         ])].sort((a, b) => a - b);
         if (!invalidIndexes.length) {
           await updateJob(url, serviceKey, jobId, userId, {
-            status: "materials_queued",
-            reviewed: draftSeries,
+            status: "review_queued",
+            draft: {
+              ...draftSeries,
+              storyPlan,
+              reviewPassCompleted: false,
+              reviewAuditCount,
+              reviewIssues: [],
+            },
             provider_used: provider,
             model_used: model,
             next_attempt_at: nextGroqSlot(),
@@ -1373,6 +1616,11 @@ ${isCompleteStory
             last_error: null,
             last_error_code: null,
           }, true);
+          await logGenerationAttempt(url, serviceKey, {
+            jobId, phase, attempt, provider, model, outcome: "retry", willRetry: true,
+            durationMs: Date.now() - phaseStartedAt,
+            message: "No pending repair remains; complete story queued for independent verification.",
+          });
           kickWorker(url, serviceKey);
           return;
         }
@@ -1406,7 +1654,10 @@ ${totalLengthInstruction}
 - Add only natural detail, action, dialogue or explanation that fits the established plot.
 - Do not introduce a new solution, character, object, conflict or subplot.
 - Use correct German quotation marks and language suitable for ${level}.
-${chapterReviewIssues.length ? `- Correct these independent-review findings: ${chapterReviewIssues.join("; ")}` : ""}
+- Correct every supplied finding literally and verify each cited sentence before returning the chapter.
+${chapterReviewIssues.length ? `
+INDEPENDENT-REVIEW FINDINGS THAT MUST ALL BE RESOLVED:
+${formatStoryIssues(chapterReviewIssues)}` : ""}
 
 BINDING PLAN:
 ${JSON.stringify(storyPlan)}
@@ -1448,35 +1699,23 @@ OUTPUT FORMAT:
           ...remainingReviewIssues.map(item => item.chapter - 1),
         ])].sort((a, b) => a - b);
         const repairFinished = remainingInvalid.length === 0;
-        const needsFinalAudit = repairFinished && reviewAuditCount < 2;
         await updateJob(url, serviceKey, jobId, userId, repairFinished
-          ? needsFinalAudit
-            ? {
-              status: "review_queued",
-              draft: {
-                ...repairedSeries,
-                storyPlan,
-                reviewPassCompleted: false,
-                reviewAuditCount,
-                reviewIssues: [],
-              },
-              provider_used: provider,
-              model_used: model,
-              next_attempt_at: nextGroqSlot(),
-              locked_until: null,
-              last_error: null,
-              last_error_code: null,
-            }
-            : {
-              status: "materials_queued",
-              reviewed: repairedSeries,
-              provider_used: provider,
-              model_used: model,
-              next_attempt_at: nextGroqSlot(),
-              locked_until: null,
-              last_error: null,
-              last_error_code: null,
-            }
+          ? {
+            status: "review_queued",
+            draft: {
+              ...repairedSeries,
+              storyPlan,
+              reviewPassCompleted: false,
+              reviewAuditCount,
+              reviewIssues: [],
+            },
+            provider_used: provider,
+            model_used: model,
+            next_attempt_at: nextGroqSlot(),
+            locked_until: null,
+            last_error: null,
+            last_error_code: null,
+          }
           : {
             status: "review_queued",
             draft: {
@@ -1495,13 +1734,11 @@ OUTPUT FORMAT:
           }, true);
         await logGenerationAttempt(url, serviceKey, {
           jobId, phase, attempt, provider, model,
-          outcome: repairFinished && !needsFinalAudit ? "succeeded" : "retry",
-          willRetry: !repairFinished || needsFinalAudit,
+          outcome: "retry",
+          willRetry: true,
           durationMs: Date.now() - phaseStartedAt,
           message: repairFinished
-            ? needsFinalAudit
-              ? `Targeted repairs completed; complete story queued for final independent audit.`
-              : `Targeted repair completed for chapter ${chapter.number}; all chapters now pass validation.`
+            ? `Targeted repairs completed; complete story queued for independent verification.`
             : `Targeted repair completed for chapter ${chapter.number}; ${remainingInvalid.length} chapter(s) remain.`,
         });
         kickWorker(url, serviceKey);
@@ -1522,10 +1759,15 @@ REQUIREMENTS:
     ? `Review exactly ${chapterCount} chapters. The target is ${reviewedStoryRange.min}-${reviewedStoryRange.max} German words in total and the accepted approximate range is ${reviewedStoryAcceptedRange.min}-${reviewedStoryAcceptedRange.max}. Flag length only when the complete story is outside the accepted range. Individual chapters may be shorter or longer and must not be flagged merely for differing from the selected average.`
     : `Keep between ${lengthMin} and ${lengthMax} German story words.`}
 - Preserve the requested plot: ${topic}
+- First test the story against the user's brief and the plan's briefContract. The primary promise must drive the plot and be visibly developed and paid off. A requested theme used only as scenery or in the title is a failure.
+- For a requested love or romance story, verify that romantic interaction and reciprocal relationship development actually occur in the prose. A holiday mishap without romance fails the brief.
 - Preserve required words when possible and use them correctly: ${requiredWords.join(", ") || "none"}.
 - Preserve and verify the required language feature: ${languageFocus || "none specified"}.
 - ${isCompleteStory ? "Check" : "Fix"} grammar, cases, verb placement, collocations, register, dialogue punctuation and unnatural phrasing.
 - Check chronology and logic. Characters must realistically be able to perform every action.
+- For every paragraph, silently track each character's location before the action, the transition, and the location afterward. Flag impossible sequences such as leaving a building and then still being inside its lift, or choosing stairs while already travelling in a lift.
+- Track every important object and document by identity, content, owner and transfer. Flag a key handed over twice, a document whose content changes, or an object used before it is obtained.
+- Track what each character has seen, heard and verified. Do not accept a claimed explanation unless the text actually establishes it.
 - For every disagreement or misunderstanding, paraphrase both positions internally. If they mean the same thing, repair the dialogue or the cause of the conflict.
 - Reject narrator claims that a misunderstanding remains if the preceding dialogue has already resolved every stated difference.
 - Keep names, grammatical gender, professions, goals and intended uses of creative works stable unless the text explicitly explains a change.
@@ -1551,9 +1793,11 @@ ${JSON.stringify(isCompleteStory
 OUTPUT FORMAT:
 ${isCompleteStory
     ? `- Return compact JSON only, matching the supplied schema.
+- Set briefSatisfied=false and add storyIssues when the complete story misses or replaces the requested primary subject. Use storyIssues only for whole-story defects that cannot be repaired safely inside one chapter.
 - Include exactly one verdict for every chapter, numbered 1-${chapterCount}.
 - Set needsRepair to true only when the chapter has at least one concrete publish-blocking length, logic, continuity, CEFR or language defect. Otherwise use false and an empty issues array.
-- Give at most 4 short, concrete issues per chapter. Use an empty issues array when it passes.
+- Every issue must name a category, describe one objective defect, quote one or two exact evidence snippets, and state a precise required fix. Never return a bare excerpt or vague stylistic comment.
+- Give at most 2 concrete issues per chapter and at most 2 storyIssues so the evidence remains compact. Use empty arrays when the text passes.
 - Do not repeat or rewrite the story.`
     : `- First line: one Markdown heading in the form "# German title".
 - Then one blank line followed by 4-6 corrected German story paragraphs separated by blank lines.`}
@@ -1561,7 +1805,11 @@ ${isCompleteStory
     ? "- Do not include explanations, Markdown or extra keys outside the JSON schema."
     : "- Do not include labels, word counts, explanations, code fences or JSON."}`;
       let reviewed: JsonObject;
-      let reviewIssues: Array<{ chapter: number; issues: string[] }> = [];
+      let reviewIssues: Array<{
+        chapter: number;
+        issues: ReturnType<typeof normalizeStoryIssues>;
+      }> = [];
+      let storyIssues: ReturnType<typeof normalizeStoryIssues> = [];
       let invalidIndexes: number[] = [];
       if (isCompleteStory) {
         const rawReview = await callAi(
@@ -1576,7 +1824,7 @@ ${isCompleteStory
           ? (rawReview.chapters as JsonObject[]).map(item => ({
             chapter: Number(item.chapter),
             needsRepair: item.needsRepair === true,
-            issues: asStringArray(item.issues, 4, 240),
+            issues: normalizeStoryIssues(item.issues, 2),
           }))
           : [];
         const chapterNumbers = verdicts.map(item => item.chapter);
@@ -1589,11 +1837,37 @@ ${isCompleteStory
             `Independent review returned chapters ${chapterNumbers.join(",") || "none"}; expected each chapter 1-${chapterCount} exactly once.`,
           );
         }
+        const verdictWithoutEvidence = verdicts.find(item => item.needsRepair && !item.issues.length);
+        storyIssues = normalizeStoryIssues(rawReview.storyIssues, 2);
+        if (verdictWithoutEvidence || (rawReview.briefSatisfied !== true && !storyIssues.length)) {
+          throw new WorkflowError(
+            "invalid_story_review",
+            502,
+            verdictWithoutEvidence
+              ? `Independent review marked chapter ${verdictWithoutEvidence.chapter} for repair without a complete evidence-based issue.`
+              : "Independent review rejected brief alignment without a complete evidence-based story issue.",
+          );
+        }
+        const completeStoryText = [
+          draftSeries.title,
+          ...draftSeries.chapters.flatMap(chapter => [chapter.title, ...chapter.text]),
+        ].join("\n").normalize("NFC");
+        const unsupportedIssue = [
+          ...storyIssues,
+          ...verdicts.flatMap(item => item.issues),
+        ].find(issue => issue.evidence.some(snippet => !completeStoryText.includes(snippet.normalize("NFC"))));
+        if (unsupportedIssue) {
+          throw new WorkflowError(
+            "invalid_story_review",
+            502,
+            `Independent review cited evidence that does not occur verbatim in the story: ${unsupportedIssue.evidence.join(" | ")}`,
+          );
+        }
         reviewIssues = verdicts
-          .filter(item => item.needsRepair || item.issues.length)
+          .filter(item => item.needsRepair || item.issues.length > 0)
           .map(item => ({
             chapter: item.chapter,
-            issues: item.issues.length ? item.issues : ["Independent reviewer marked this chapter for repair."],
+            issues: item.issues,
           }));
         reviewed = draftSeries as unknown as JsonObject;
         invalidIndexes = [...new Set([
@@ -1609,6 +1883,49 @@ ${isCompleteStory
       }
       const needsTargetedRepair = invalidIndexes.length > 0;
       const completedAuditCount = isCompleteStory ? reviewAuditCount + 1 : reviewAuditCount;
+      if (isCompleteStory && storyIssues.length) {
+        if (completedAuditCount >= MAX_STORY_AUDITS) {
+          throw new WorkflowError(
+            "story_quality_failed",
+            422,
+            `Story still fails the requested brief after ${completedAuditCount} independent audits: ${storyIssues.map(issue => issue.description).join("; ")}`,
+          );
+        }
+        await updateJob(url, serviceKey, jobId, userId, {
+          status: "draft_queued",
+          draft: null,
+          reviewed: null,
+          article: null,
+          request_payload: {
+            ...request,
+            storyContext: { ...storyContext, reviewAuditCount: completedAuditCount },
+          },
+          provider_used: provider,
+          model_used: model,
+          next_attempt_at: nextGroqSlot(),
+          locked_until: null,
+          last_error: asText(
+            `Complete story missed the binding brief and must be regenerated: ${formatStoryIssues(storyIssues)}`,
+            800,
+          ),
+          last_error_code: "invalid_story_output",
+        }, true);
+        await logGenerationAttempt(url, serviceKey, {
+          jobId, phase, attempt, provider, model, outcome: "retry", willRetry: true,
+          durationMs: Date.now() - phaseStartedAt,
+          errorCode: "invalid_story_output",
+          message: `Independent review rejected the story's brief alignment; complete story queued for regeneration.`,
+        });
+        kickWorker(url, serviceKey);
+        return;
+      }
+      if (isCompleteStory && needsTargetedRepair && completedAuditCount >= MAX_STORY_AUDITS) {
+        throw new WorkflowError(
+          "story_quality_failed",
+          422,
+          `Story still has publish-blocking defects after ${completedAuditCount} independent audits: ${reviewIssues.flatMap(item => item.issues.map(issue => issue.description)).join("; ") || "deterministic validation failed"}`,
+        );
+      }
       await updateJob(url, serviceKey, jobId, userId, needsTargetedRepair
         ? {
           status: "review_queued",
@@ -1637,8 +1954,8 @@ ${isCompleteStory
         willRetry: needsTargetedRepair,
         durationMs: Date.now() - phaseStartedAt,
         message: needsTargetedRepair
-          ? `${reviewAuditCount > 0 ? "Final" : "Independent"} review completed; ${invalidIndexes.length} chapter(s) queued for targeted repair.`
-          : undefined,
+          ? `Independent audit ${completedAuditCount}/${MAX_STORY_AUDITS} completed; ${invalidIndexes.length} chapter(s) queued for evidence-based repair.`
+          : `Independent audit ${completedAuditCount}/${MAX_STORY_AUDITS} passed; story queued for learning materials.`,
       });
       kickWorker(url, serviceKey);
       return;
