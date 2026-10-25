@@ -14,6 +14,7 @@ const applyGeneratedStoryMetadata = vm.runInContext("applyGeneratedStoryMetadata
 const getStoryChapterCooldownSeconds = vm.runInContext("getStoryChapterCooldownSeconds", context);
 const canAutoResumeStoryGeneration = vm.runInContext("canAutoResumeStoryGeneration", context);
 const getGenerationProgressStatusKey = vm.runInContext("getGenerationProgressStatusKey", context);
+const recoverCompletedStoryGeneration = vm.runInContext("recoverCompletedStoryGeneration", context);
 const shouldKeepPendingStoryGenerationAfterError = vm.runInContext(
   "shouldKeepPendingStoryGenerationAfterError",
   context
@@ -149,6 +150,40 @@ test("only a job still running in the background keeps the pending story", () =>
     shouldKeepPendingStoryGenerationAfterError({ code: "generation_continues_in_background" }),
     true
   );
+  assert.equal(shouldKeepPendingStoryGenerationAfterError({ code: "login_required" }), true);
+});
+
+test("a completed story job can be recovered from its saved request after reload", () => {
+  const request = {
+    topic: "Complete story brief",
+    level: "A2",
+    category: "Alltag",
+    lengthMin: 300,
+    lengthMax: 350,
+    requiredWords: ["Sommer"],
+    storyContext: {
+      mode: "complete_story",
+      seriesId: "story-original",
+      chapterCount: 3,
+      seriesTitle: "Sommerliebe",
+      originalBrief: "Eine Liebesgeschichte im Sommer."
+    }
+  };
+  const recovered = recoverCompletedStoryGeneration(
+    { jobId: "job-1", signature: JSON.stringify(request), createdAt: 123 },
+    { article: {
+      seriesTitle: "Sommerliebe",
+      storyPlan: { title: "Sommerliebe" },
+      chapters: [{ title: "Eins" }, { title: "Zwei" }, { title: "Drei" }]
+    } },
+    "de"
+  );
+
+  assert.equal(recovered.seriesId, "story-original");
+  assert.equal(recovered.chapterCount, 3);
+  assert.equal(recovered.generatedChapters.length, 3);
+  assert.equal(recovered.topic, "Eine Liebesgeschichte im Sommer.");
+  assert.equal(recovered.nextChapter, 0);
 });
 
 test("story generation does not request an optional language focus", () => {

@@ -1605,7 +1605,7 @@ function canAutoResumeStoryGeneration(story, pendingArticleGeneration) {
 }
 
 function shouldKeepPendingStoryGenerationAfterError(error) {
-  return error?.code === "generation_continues_in_background";
+  return ["generation_continues_in_background", "login_required"].includes(error?.code);
 }
 
 function setArticleCreationMode(mode = "article") {
@@ -1894,10 +1894,54 @@ function buildCompleteStoryContext(story) {
   return {
     version: 3,
     mode: "complete_story",
+    seriesId: story.seriesId || "",
     chapterCount: story.chapterCount,
     seriesTitle: story.requestedStoryTitle || story.seriesTitle || "",
     originalBrief: String(story.topic || "").slice(0, 3_000),
     plan: story.storyPlan || null
+  };
+}
+
+function recoverCompletedStoryGeneration(pendingGeneration, result, language = "de") {
+  const generated = result?.article;
+  if (!Array.isArray(generated?.chapters) || !generated.chapters.length) return null;
+  let request;
+  try {
+    request = JSON.parse(pendingGeneration?.signature || "null");
+  } catch {
+    return null;
+  }
+  const context = request?.storyContext;
+  if (context?.mode !== "complete_story") return null;
+  const chapterCount = Number(context.chapterCount) || generated.chapters.length;
+  if (generated.chapters.length !== chapterCount) return null;
+  const requestedStoryTitle = String(context.seriesTitle || "").trim();
+  return {
+    version: 3,
+    seriesId: String(context.seriesId || `story-${pendingGeneration?.jobId || Date.now().toString(36)}`),
+    requestedStoryTitle,
+    seriesTitle: String(
+      generated.seriesTitle
+      || generated.storyPlan?.title
+      || requestedStoryTitle
+      || generated.chapters[0]?.title
+      || ""
+    ).trim(),
+    topic: String(context.originalBrief || request.topic || ""),
+    chapterCount,
+    nextChapter: 0,
+    completedChapters: [],
+    generatedChapters: generated.chapters,
+    storyPlan: generated.storyPlan || context.plan || null,
+    continuityState: null,
+    level: String(request.level || "A2"),
+    category: String(request.category || "Alltag"),
+    minWords: Number(request.lengthMin),
+    maxWords: Number(request.lengthMax),
+    requiredWords: Array.isArray(request.requiredWords) ? request.requiredWords : [],
+    languageFocus: "",
+    language,
+    createdAt: Number(pendingGeneration?.createdAt) || Date.now()
   };
 }
 
@@ -2317,7 +2361,19 @@ async function resumePendingArticleGeneration() {
     const result = await resumeArticleGenerationWithAi({
       onProgress: showArticleGenerationProgress
     });
-    if (result) applyGeneratedArticleResult(result);
+    if (result) {
+      const recoveredStory = recoverCompletedStoryGeneration(
+        pendingArticleGeneration,
+        result,
+        getSelectedArticleLanguage()
+      );
+      if (recoveredStory) {
+        savePendingStoryGeneration(recoveredStory);
+        await continueCompleteStoryGeneration(recoveredStory);
+      } else {
+        applyGeneratedArticleResult(result);
+      }
+    }
   } catch (error) {
     showArticleGenerationError(error);
   } finally {
