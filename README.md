@@ -252,7 +252,8 @@ Všetky fázy používajú nízke reasoning úsilie, aby skryté reasoning token
 nespotrebovali celý priestor pre výsledok. Medzi každými dvoma väčšími Groq
 volaniami je najmenej 65 sekúnd, vrátane prechodov medzi osnovou, kapitolou,
 revíziou a materiálmi. Výstupné limity jednotlivých volaní sú 1 800 až 3 000
-tokenov.
+tokenov. Zvolený počet slov je cieľový rozsah; validácia povoľuje odchýlku 10 %
+na oboch stranách, aby sa kvalitný text zbytočne negeneroval znova.
 
 Najprv nasaď databázové migrácie a potom funkciu. Auditná tabuľka
 `article_generation_job_events` zaznamenáva pri každom pokuse poskytovateľa,

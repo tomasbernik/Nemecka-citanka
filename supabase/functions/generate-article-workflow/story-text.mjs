@@ -1,5 +1,12 @@
 const cleanLine = value => String(value || "").trim();
 
+export function getApproximateWordRange(minWords, maxWords, tolerance = 0.1) {
+  return {
+    min: minWords - Math.ceil(minWords * tolerance),
+    max: maxWords + Math.ceil(maxWords * tolerance),
+  };
+}
+
 export function parseStoryTextOutput(value) {
   if (typeof value !== "string") return null;
   const cleaned = value

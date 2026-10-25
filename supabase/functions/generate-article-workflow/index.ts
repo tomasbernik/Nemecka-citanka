@@ -1,5 +1,5 @@
 import { GROQ_COOLDOWN_SECONDS, selectArticleAiTarget } from "./provider-routing.mjs";
-import { parseStoryTextOutput } from "./story-text.mjs";
+import { getApproximateWordRange, parseStoryTextOutput } from "./story-text.mjs";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -190,15 +190,17 @@ const normalizeStory = (value: unknown, minWords: number, maxWords: number) => {
   const title = asText(source.title, 160);
   const text = asStringArray(source.text, 12, 4_000);
   const wordCount = countWords(text);
+  const acceptedRange = getApproximateWordRange(minWords, maxWords);
   const story = text.join("\n");
   const invalidQuoteSpacing = /[.!?]\s+[“”]/u.test(story);
-  if (!title || text.length < 4 || wordCount < minWords || wordCount > maxWords || invalidQuoteSpacing) {
+  if (!title || text.length < 4 || wordCount < acceptedRange.min
+    || wordCount > acceptedRange.max || invalidQuoteSpacing) {
     throw new WorkflowError(
       "invalid_story_output",
       502,
       invalidQuoteSpacing
         ? "AI story contains invalid spacing before a German closing quotation mark."
-        : `AI story failed validation (${wordCount} words; expected ${minWords}-${maxWords}).`,
+        : `AI story failed validation (${wordCount} words; target ${minWords}-${maxWords}, accepted ${acceptedRange.min}-${acceptedRange.max}).`,
     );
   }
   return { title, text, wordCount };

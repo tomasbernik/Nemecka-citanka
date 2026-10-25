@@ -1,7 +1,15 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { parseStoryTextOutput } from "../supabase/functions/generate-article-workflow/story-text.mjs";
+import {
+  getApproximateWordRange,
+  parseStoryTextOutput,
+} from "../supabase/functions/generate-article-workflow/story-text.mjs";
+
+test("allows a ten-percent tolerance around the selected word range", () => {
+  assert.deepEqual(getApproximateWordRange(300, 350), { min: 270, max: 385 });
+  assert.deepEqual(getApproximateWordRange(100, 150), { min: 90, max: 165 });
+});
 
 test("parses a Markdown story into a title and paragraphs", () => {
   assert.deepEqual(parseStoryTextOutput(`# Ein Tag am See
