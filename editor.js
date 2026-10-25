@@ -2317,7 +2317,9 @@ function showArticleGenerationError(error) {
   console.error("AI article generation:", error);
   const providerBusy = ["groq_failed", "gemini_failed"].includes(error?.code)
     && /high demand|temporar(?:y|ily)|overload|busy/iu.test(error?.message || "");
-  const message = error?.code === "generation_continues_in_background"
+  const message = error?.code === "daily_limit_reached"
+    ? t("generationDailyLimitReached")
+    : error?.code === "generation_continues_in_background"
     ? t("generationContinuesInBackground")
     : providerBusy
       ? t("generationProviderBusy")

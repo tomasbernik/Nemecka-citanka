@@ -199,6 +199,12 @@ test("a background story job reconnects automatically after polling expires", ()
   assert.match(appSource, /resumePendingArticleGeneration\(\);/);
 });
 
+test("the daily generation quota is shown as a localized user-facing message", () => {
+  assert.match(editorSource, /error\?\.code === "daily_limit_reached"/);
+  assert.match(editorSource, /t\("generationDailyLimitReached"\)/);
+  assert.doesNotMatch(editorSource, /daily_limit_reached:\s*daily_limit_reached/);
+});
+
 test("story generation does not request an optional language focus", () => {
   assert.match(editorSource, /languageFocus:\s*""/);
   assert.match(editorSource, /articleLanguageFocusRow"\)\?\.classList\.toggle\("hidden", isStory\)/);

@@ -14,6 +14,19 @@ Object.entries({
 }).forEach(([language, text]) => assignUiText(language, text));
 
 Object.entries({
+  de: { generationDailyLimitReached: "Das tägliche Limit für KI-Generierungen ist erreicht. Versuche es nach der täglichen Zurücksetzung erneut." },
+  sk: { generationDailyLimitReached: "Denný limit generovania pomocou AI je vyčerpaný. Skús to znova po obnovení dennej kvóty." },
+  en: { generationDailyLimitReached: "The daily AI generation limit has been reached. Try again after the daily quota resets." },
+  ru: { generationDailyLimitReached: "Дневной лимит генерации с помощью ИИ исчерпан. Повторите попытку после обновления дневной квоты." },
+  pl: { generationDailyLimitReached: "Dzienny limit generowania za pomocą AI został wyczerpany. Spróbuj ponownie po odnowieniu dziennego limitu." },
+  hu: { generationDailyLimitReached: "Elérted a napi MI-generálási korlátot. Próbáld újra a napi keret megújulása után." },
+  ro: { generationDailyLimitReached: "Limita zilnică pentru generarea cu AI a fost atinsă. Încearcă din nou după resetarea cotei zilnice." },
+  it: { generationDailyLimitReached: "È stato raggiunto il limite giornaliero per la generazione con l’IA. Riprova dopo il ripristino della quota giornaliera." },
+  fr: { generationDailyLimitReached: "La limite quotidienne de génération par IA a été atteinte. Réessaie après la réinitialisation du quota quotidien." },
+  tr: { generationDailyLimitReached: "Günlük yapay zekâ oluşturma sınırına ulaşıldı. Günlük kota yenilendikten sonra tekrar dene." }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
   en: {
     manualJsonImport: "Manual JSON import",
     nextClickedWord: "Next word →",
