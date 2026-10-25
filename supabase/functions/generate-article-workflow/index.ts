@@ -571,6 +571,10 @@ const formatStoryIssues = (issues: ReturnType<typeof normalizeStoryIssues>) =>
     `Required fix: ${issue.requiredFix}`,
   ].join("\n")).join("\n\n");
 
+const isPublishBlockingStoryIssue = (
+  issue: NonNullable<ReturnType<typeof normalizeStoryIssue>>,
+) => issue.category !== "cefr" || issue.evidence.length >= 2;
+
 const normalizeContinuityState = (value: unknown) => {
   const source = value && typeof value === "object" ? value as JsonObject : {};
   return {
@@ -1756,7 +1760,7 @@ OUTPUT FORMAT:
       const prompt = `Act as an independent meticulous native German editor, continuity checker and CEFR examiner. Another model wrote the supplied story. Judge only what the text actually says, not what its author may have intended. ${isCompleteStory ? "Return a compact review; do not rewrite the story." : "Return the corrected story with the smallest changes that fully fix its problems."}
 
 REQUIREMENTS:
-- Target CEFR level: ${level}. ${isCompleteStory ? "Flag words and constructions that are too difficult." : "Replace words and constructions that are too difficult."}
+- Target CEFR level: ${level}. Judge the overall readability, sentence structure and density of difficult language, not whether every individual word appears on a strict level list.
 - ${isCompleteStory
     ? `Review exactly ${chapterCount} chapters. The target is ${reviewedStoryRange.min}-${reviewedStoryRange.max} German words in total and the accepted approximate range is ${reviewedStoryAcceptedRange.min}-${reviewedStoryAcceptedRange.max}. Flag length only when the complete story is outside the accepted range. Individual chapters may be shorter or longer and must not be flagged merely for differing from the selected average.`
     : `Keep between ${lengthMin} and ${lengthMax} German story words.`}
@@ -1780,8 +1784,11 @@ REQUIREMENTS:
 - Use correct German quotation marks „...“ without spaces before the closing mark.
 - At A1, replace unnecessarily advanced words with common everyday alternatives.
 - At A2, prefer short main clauses and common vocabulary; avoid dense subordinate clauses, idioms and unexplained technical words.
+- An occasional higher-level but understandable word or expression is welcome as learning vocabulary and is not a defect. Never flag one isolated word, verb or idiom solely because a CEFR dictionary labels it B1 or higher.
+- Use category cefr only when difficult vocabulary or grammar forms a recurring pattern that makes the chapter unsuitable for the target reader. A blocking CEFR issue must cite two different complete sentences showing that pattern.
 - Prefer simple, natural everyday German over literal translations.
-- Flag only objective, publish-blocking defects in grammar, CEFR level, logic or continuity. Do not request a repair merely for natural repetition, simple imagery, a stylistic preference, or a word that is valid at the target level.
+- Prioritize plot logic, chronology, causality, character knowledge, object state and continuity over isolated vocabulary difficulty.
+- Flag only objective, publish-blocking defects in grammar, overall CEFR readability, logic or continuity. Do not request a repair merely for natural repetition, simple imagery, a stylistic preference, or isolated learnable vocabulary.
 - ${isCompleteStory ? "Check the complete-story total; chapter counts are diagnostic only." : "Count the corrected story before returning it."}
 ${isCompleteStory ? `- Current word counts:\n${lengthAudit}` : ""}
 ${continuityContract}
@@ -1874,7 +1881,11 @@ ${isCompleteStory
           chapter,
           issues: auditIssues
             .filter(item => item.chapter === chapter)
-            .map(item => item.issue!),
+            .map(item => item.issue!)
+            // A single advanced word is useful learning material, not a
+            // reason to reject an otherwise suitable story. Systemic CEFR
+            // findings must demonstrate the pattern in two exact sentences.
+            .filter(isPublishBlockingStoryIssue),
         })).filter(item => item.issues.length > 0);
         const completeStoryText = [
           draftSeries.title,
@@ -2007,7 +2018,7 @@ CHAPTER TEXT: ${JSON.stringify(chapter.text)}
 
 Create:
 1. A short German summary suitable for ${level}.
-2. Exactly 5 useful vocabulary entries occurring verbatim in this chapter. Copy each de value as one exact contiguous substring, including capitalization and inflection. Put the dictionary form separately in base. Include accurate sk, pl, hu, ru, en and fr translations.
+2. Exactly 5 useful vocabulary entries occurring verbatim in this chapter. If the chapter contains an occasional word or expression above ${level}, prioritize it as useful learning vocabulary. Copy each de value as one exact contiguous substring, including capitalization and inflection. Put the dictionary form separately in base. Include accurate sk, pl, hu, ru, en and fr translations.
 3. Six to eight clear German true/false statements with accurate boolean answers and a natural mixture of true and false.
 
 Do not invent or normalize the de value. Before returning, search for every de value character-for-character in CHAPTER TEXT and replace any value that is absent.

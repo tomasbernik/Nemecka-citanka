@@ -258,7 +258,15 @@ test("story review findings require evidence and verify the original brief", () 
 
 test("the reviewer ignores stylistic preferences that are not publish-blocking defects", () => {
   assert.match(workflowSource, /Do not request a repair merely for natural repetition/);
-  assert.match(workflowSource, /concrete publish-blocking length, logic, continuity, CEFR or language defect/);
+  assert.match(workflowSource, /Flag only objective, publish-blocking defects/);
+});
+
+test("isolated higher-level vocabulary does not block an otherwise suitable story", () => {
+  assert.match(workflowSource, /Never flag one isolated word, verb or idiom solely because a CEFR dictionary labels it B1 or higher/);
+  assert.match(workflowSource, /const isPublishBlockingStoryIssue/);
+  assert.match(workflowSource, /issue\.category !== "cefr" \|\| issue\.evidence\.length >= 2/);
+  assert.match(workflowSource, /filter\(isPublishBlockingStoryIssue\)/);
+  assert.match(workflowSource, /prioritize it as useful learning vocabulary/);
 });
 
 test("the Qwen reviewer uses a supported reasoning effort", () => {
