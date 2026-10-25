@@ -238,15 +238,17 @@ Modely možno zmeniť bez úpravy kódu:
 supabase secrets set GROQ_ARTICLE_MODEL="openai/gpt-oss-120b" GROQ_ARTICLE_FALLBACK_MODEL="openai/gpt-oss-20b"
 ```
 
-Pri viac-kapitolovom príbehu vytvorí prvá fáza spolu s prvou kapitolou aj záväznú
-osnovu celej série. Po každej kapitole sa uloží kompaktný stav postáv, predmetov,
-lokalít, otvorených dejových línií a príčinných súvislostí. Nasledujúca kapitola
-dostane tento stav, osnovu, krátke zhrnutia a iba koniec bezprostredne
-predchádzajúcej kapitoly. Revízna fáza musí navyše potvrdiť štruktúrovanú kontrolu
-kánonu, lokalít, príčin a následkov, setup/payoff a jazykovej úrovne. Osnova ani
-stav nepridávajú ďalšie API volanie; vznikajú v existujúcich fázach návrhu a
-materiálov. Výstupné limity jednotlivých fáz sú 2 400 až 4 000 tokenov; najvyšší
-limit sa používa iba pri spoločnom vytvorení osnovy a prvej kapitoly.
+Pri viac-kapitolovom príbehu sa najprv samostatne vytvorí malá záväzná JSON osnova
+celej série. Samotná kapitola aj jej jazyková a dejová revízia sa potom generujú
+ako obyčajný Markdown text, nie ako veľký JSON objekt. Server z textu bezpečne
+vyberie nadpis a odseky a overí počet slov. JSON zostáva iba tam, kde aplikácia
+potrebuje štruktúrované údaje: pri osnove, slovnej zásobe, otázkach, cvičení a stave
+kontinuity.
+
+Po každej kapitole sa uloží kompaktný stav postáv, predmetov, lokalít, otvorených
+dejových línií a príčinných súvislostí. Nasledujúca kapitola dostane tento stav,
+osnovu, krátke zhrnutia a iba koniec bezprostredne predchádzajúcej kapitoly.
+Výstupné limity jednotlivých volaní sú 1 800 až 3 000 tokenov.
 
 Najprv nasaď databázové migrácie a potom funkciu. Auditná tabuľka
 `article_generation_job_events` zaznamenáva pri každom pokuse poskytovateľa,
