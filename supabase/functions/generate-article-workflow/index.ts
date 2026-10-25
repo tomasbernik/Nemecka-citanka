@@ -854,7 +854,8 @@ function callAiText(
   maxOutputTokens: number,
 ) {
   const isQwen = target.model.startsWith("qwen/");
-  const effectiveThinkingLevel = isQwen ? "none" : thinkingLevel;
+  // Qwen accepts only low/medium/high, while GPT-OSS also accepts none.
+  const effectiveThinkingLevel = isQwen ? "low" : thinkingLevel;
   // Groq's free Qwen tier enforces a 1,000 output-token-per-minute cap.
   // Keep a small margin so the provider accepts the request.
   const effectiveMaxOutputTokens = isQwen ? Math.min(maxOutputTokens, 900) : maxOutputTokens;

@@ -214,3 +214,8 @@ test("the reviewer ignores stylistic preferences that are not publish-blocking d
   assert.match(workflowSource, /Do not request a repair merely for natural repetition/);
   assert.match(workflowSource, /concrete publish-blocking length, logic, continuity, CEFR or language defect/);
 });
+
+test("the Qwen reviewer uses a supported reasoning effort", () => {
+  assert.match(workflowSource, /const effectiveThinkingLevel = isQwen \? "low" : thinkingLevel;/);
+  assert.doesNotMatch(workflowSource, /const effectiveThinkingLevel = isQwen \? "none" : thinkingLevel;/);
+});
