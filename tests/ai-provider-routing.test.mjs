@@ -36,6 +36,15 @@ test("uses a different model for the independent review", () => {
   });
 });
 
+test("keeps the large writer model for complete-story draft retries", () => {
+  assert.equal(selectArticleAiTarget({
+    phase: "draft",
+    attempt: 5,
+    completeStory: true,
+    ...config,
+  }).model, "openai/gpt-oss-120b");
+});
+
 test("alternates to the smaller Groq model for later recovery", () => {
   assert.equal(selectArticleAiTarget({ attempt: 3, ...config }).model, "openai/gpt-oss-20b");
   assert.equal(selectArticleAiTarget({ attempt: 4, ...config }).model, "openai/gpt-oss-120b");

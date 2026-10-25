@@ -255,6 +255,12 @@ aj význam dialógov, aby nevzniklo zdanlivé nedorozumenie medzi dvoma rovnaký
 výrokmi. Učebné materiály sa kvôli free limitom generujú postupne pre každú
 kapitolu; nemenia už schválený dej.
 
+Prvý draft má miernejšiu minimálnu dĺžku, aby sa celý použiteľný príbeh
+nezahodil pre jednu krátku kapitolu. Nezávislá revízia dostane presné počty
+slov a krátke alebo inak nevyhovujúce kapitoly sa následne opravujú jednotlivo;
+už vyhovujúce kapitoly sa negenerujú znova. Parser toleruje bežné varianty
+Markdown nadpisov a chýbajúci názov série doplní zo záväznej osnovy.
+
 Všetky fázy používajú nízke reasoning úsilie. Medzi každými dvoma väčšími Groq
 volaniami je najmenej 65 sekúnd. Príbeh môže mať 3 alebo 5 kapitol. Pri piatich
 kapitolách je dlhý variant v rozhraní vypnutý a maximum je 300–350 slov na

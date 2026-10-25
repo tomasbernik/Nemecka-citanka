@@ -1919,10 +1919,14 @@ function renderStoryGenerationProgress(story, activeIndex = story?.nextChapter |
   const title = $("storyGenerationProgressTitle");
   if (!wrap || !list || !title || !story) return;
   wrap.classList.remove("hidden");
-  title.textContent = formatText("storyProgressTitle", {
-    current: Math.min(activeIndex + 1, story.chapterCount),
-    total: story.chapterCount
-  });
+  const generatingCompleteStory = Number(story.version) >= 3
+    && !Array.isArray(story.generatedChapters);
+  title.textContent = generatingCompleteStory
+    ? t("generatingStory")
+    : formatText("storyProgressTitle", {
+      current: Math.min(activeIndex + 1, story.chapterCount),
+      total: story.chapterCount
+    });
   list.replaceChildren();
   for (let index = 0; index < story.chapterCount; index += 1) {
     const item = document.createElement("li");
@@ -1931,7 +1935,10 @@ function renderStoryGenerationProgress(story, activeIndex = story?.nextChapter |
       ? `✓ ${completed.title}`
       : formatText("storyChapterLabel", { number: index + 1 });
     item.classList.toggle("is-complete", Boolean(completed));
-    item.classList.toggle("is-active", index === activeIndex && !completed);
+    item.classList.toggle(
+      "is-active",
+      generatingCompleteStory ? !completed : index === activeIndex && !completed
+    );
     list.append(item);
   }
 }
@@ -1944,10 +1951,12 @@ function showStoryChapterProgress(story, chapterIndex, phase) {
     materials: "generationMaterialsStatus",
     retry: "generationRetryStatus"
   }[phase] || "generatingArticleStatus";
-  setArticleGenerationStatus(
-    `${formatText("storyChapterProgress", { current: chapterIndex + 1, total: story.chapterCount })} ${t(phaseKey)}`,
-    "progress"
-  );
+  const generatingCompleteStory = Number(story.version) >= 3
+    && !Array.isArray(story.generatedChapters);
+  const progressPrefix = generatingCompleteStory
+    ? t("generatingStory")
+    : formatText("storyChapterProgress", { current: chapterIndex + 1, total: story.chapterCount });
+  setArticleGenerationStatus(`${progressPrefix} ${t(phaseKey)}`, "progress");
   renderStoryGenerationProgress(story, chapterIndex);
   updateArticleGenerationControls();
 }

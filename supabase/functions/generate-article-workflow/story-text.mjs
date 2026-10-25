@@ -39,7 +39,7 @@ export function parseStoryTextOutput(value) {
   return { title: cleanLine(titleMatch[1]), text };
 }
 
-export function parseStorySeriesTextOutput(value, expectedChapterCount) {
+export function parseStorySeriesTextOutput(value, expectedChapterCount, fallbackTitle = "") {
   if (typeof value !== "string") return null;
   const cleaned = value
     .replace(/^\uFEFF/u, "")
@@ -49,20 +49,26 @@ export function parseStorySeriesTextOutput(value, expectedChapterCount) {
   if (!cleaned) return null;
 
   const lines = cleaned.split(/\r?\n/u);
-  const firstContentIndex = lines.findIndex(line => cleanLine(line));
-  if (firstContentIndex < 0) return null;
-  const seriesMatch = cleanLine(lines[firstContentIndex]).match(/^#\s+(.+)$/u);
-  if (!seriesMatch?.[1]) return null;
-
+  let title = "";
   const chapters = [];
   let current = null;
-  for (const rawLine of lines.slice(firstContentIndex + 1)) {
+  for (const rawLine of lines) {
     const line = cleanLine(rawLine);
-    const chapterMatch = line.match(/^##\s+(?:Kapitel\s+)?(\d+)\s*[:.\-–—]?\s*(.+)$/iu);
+    const chapterMatch = line.match(/^(?:#{1,4}\s*)?Kapitel\s*(\d+)\s*[:.\-–—]?\s*(.*)$/iu)
+      || line.match(/^#{2,4}\s*(\d+)\s*[:.\-–—]\s*(.*)$/u);
     if (chapterMatch) {
       if (current) chapters.push(current);
-      current = { number: Number(chapterMatch[1]), title: cleanLine(chapterMatch[2]), lines: [] };
+      const number = Number(chapterMatch[1]);
+      current = {
+        number,
+        title: cleanLine(chapterMatch[2]) || `Kapitel ${number}`,
+        lines: [],
+      };
       continue;
+    }
+    if (!current && !title) {
+      const titleMatch = line.match(/^#{1,3}\s+(.+)$/u);
+      if (titleMatch?.[1]) title = cleanLine(titleMatch[1]);
     }
     if (current) current.lines.push(rawLine);
   }
@@ -74,13 +80,18 @@ export function parseStorySeriesTextOutput(value, expectedChapterCount) {
 
   const normalizedChapters = chapters.map(chapter => {
     const body = chapter.lines.join("\n").trim();
-    const text = body
+    let text = body
       .split(/\n\s*\n/u)
       .map(paragraph => paragraph.split(/\r?\n/u).map(cleanLine).filter(Boolean).join(" "))
       .filter(Boolean);
+    if (text.length < 3) {
+      text = chapter.lines.map(cleanLine).filter(Boolean);
+    }
     return { number: chapter.number, title: chapter.title, text };
   });
   if (normalizedChapters.some(chapter => chapter.text.length < 3)) return null;
 
-  return { title: cleanLine(seriesMatch[1]), chapters: normalizedChapters };
+  title = title || cleanLine(fallbackTitle);
+  if (!title) return null;
+  return { title, chapters: normalizedChapters };
 }

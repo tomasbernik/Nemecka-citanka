@@ -91,3 +91,17 @@ Absatz eins.\n\nAbsatz zwei.\n\nAbsatz drei.
 
 Absatz eins.\n\nAbsatz zwei.\n\nAbsatz drei.`, 2), null);
 });
+
+test("accepts common chapter heading variants and recovers a missing series title", () => {
+  const parsed = parseStorySeriesTextOutput(`### Kapitel 1 – Anfang
+
+Absatz eins.\n\nAbsatz zwei.\n\nAbsatz drei.
+
+## Kapitel 2: Ende
+
+Absatz eins.\n\nAbsatz zwei.\n\nAbsatz drei.`, 2, "Sommergeschichte");
+
+  assert.equal(parsed.title, "Sommergeschichte");
+  assert.equal(parsed.chapters[0].title, "Anfang");
+  assert.equal(parsed.chapters[1].title, "Ende");
+});

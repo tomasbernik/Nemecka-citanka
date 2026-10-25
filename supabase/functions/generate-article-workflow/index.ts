@@ -225,7 +225,12 @@ const STORY_MATERIALS_SCHEMA = {
   required: [...MATERIALS_SCHEMA.required, "continuityState"],
 };
 
-const normalizeStory = (value: unknown, minWords: number, maxWords: number) => {
+const normalizeStory = (
+  value: unknown,
+  minWords: number,
+  maxWords: number,
+  options: { minParagraphs?: number; allowQuoteSpacingRepair?: boolean } = {},
+) => {
   const source = value && typeof value === "object" ? value as JsonObject : {};
   const title = asText(source.title, 160);
   const text = asStringArray(source.text, 12, 4_000);
@@ -233,8 +238,9 @@ const normalizeStory = (value: unknown, minWords: number, maxWords: number) => {
   const acceptedRange = getApproximateWordRange(minWords, maxWords);
   const story = text.join("\n");
   const invalidQuoteSpacing = /[.!?]\s+[“”]/u.test(story);
-  if (!title || text.length < 4 || wordCount < acceptedRange.min
-    || wordCount > acceptedRange.max || invalidQuoteSpacing) {
+  const minParagraphs = options.minParagraphs ?? 4;
+  if (!title || text.length < minParagraphs || wordCount < acceptedRange.min
+    || wordCount > acceptedRange.max || (invalidQuoteSpacing && !options.allowQuoteSpacingRepair)) {
     throw new WorkflowError(
       "invalid_story_output",
       502,
@@ -264,13 +270,22 @@ const getWholeStoryChapterRange = (minWords: number, maxWords: number, chapterCo
   return { min: minWordsPerChapter, max: maxWordsPerChapter };
 };
 
+const getDraftStoryChapterRange = (minWords: number, maxWords: number, chapterCount: number) => {
+  const finalRange = getWholeStoryChapterRange(minWords, maxWords, chapterCount);
+  return {
+    min: Math.min(finalRange.min, 200),
+    max: Math.max(finalRange.max, 410),
+  };
+};
+
 const normalizeStorySeriesText = (
   value: unknown,
   chapterCount: number,
   minWords: number,
   maxWords: number,
+  options: { draft?: boolean; fallbackTitle?: string } = {},
 ) => {
-  const parsed = parseStorySeriesTextOutput(value, chapterCount);
+  const parsed = parseStorySeriesTextOutput(value, chapterCount, options.fallbackTitle || "");
   if (!parsed) {
     throw new WorkflowError(
       "invalid_story_output",
@@ -279,11 +294,36 @@ const normalizeStorySeriesText = (
     );
   }
   const range = getWholeStoryChapterRange(minWords, maxWords, chapterCount);
+  const validationRange = options.draft
+    ? getDraftStoryChapterRange(minWords, maxWords, chapterCount)
+    : range;
   const chapters = parsed.chapters.map((chapter: { number: number; title: string; text: string[] }) => ({
-    ...normalizeStory({ title: chapter.title, text: chapter.text }, range.min, range.max),
+    ...normalizeStory(
+      { title: chapter.title, text: chapter.text },
+      validationRange.min,
+      validationRange.max,
+      options.draft ? { minParagraphs: 3, allowQuoteSpacingRepair: true } : {},
+    ),
     number: chapter.number,
   }));
   return { title: asText(parsed.title, 160), chapters, chapterWordRange: range };
+};
+
+const getInvalidSeriesChapterIndexes = (
+  series: { chapters: Array<{ text: string[]; wordCount?: number }> },
+  minWords: number,
+  maxWords: number,
+  chapterCount: number,
+) => {
+  const range = getWholeStoryChapterRange(minWords, maxWords, chapterCount);
+  const accepted = getApproximateWordRange(range.min, range.max);
+  return series.chapters.flatMap((chapter, index) => {
+    const wordCount = Number(chapter.wordCount) || countWords(chapter.text);
+    const invalidQuoteSpacing = /[.!?]\s+[“”]/u.test(chapter.text.join("\n"));
+    return chapter.text.length < 4 || wordCount < accepted.min || wordCount > accepted.max || invalidQuoteSpacing
+      ? [index]
+      : [];
+  });
 };
 
 const formatStorySeriesMarkdown = (value: unknown) => {
@@ -929,14 +969,6 @@ async function runClaimedPhase(
   const phase = asText(claim.phase, 20);
   const attempt = Number(claim.phase_attempt) || 1;
   const job = await loadJobById(url, serviceKey, jobId);
-  const target = selectArticleAiTarget({
-    phase,
-    attempt,
-    lastErrorCode: asText(job.last_error_code, 80),
-    ...aiConfig,
-  }) as AiTarget | null;
-  if (!target) throw new WorkflowError("missing_configuration", 503);
-  const { provider, model } = target;
   const request = getRequest(job);
   const level = asText(request.level, 10);
   const topic = asText(request.topic, 6_000);
@@ -949,6 +981,15 @@ async function runClaimedPhase(
     : null;
   const isStory = Boolean(storyContext);
   const isCompleteStory = storyContext?.mode === "complete_story";
+  const target = selectArticleAiTarget({
+    phase,
+    attempt,
+    lastErrorCode: asText(job.last_error_code, 80),
+    completeStory: isCompleteStory,
+    ...aiConfig,
+  }) as AiTarget | null;
+  if (!target) throw new WorkflowError("missing_configuration", 503);
+  const { provider, model } = target;
   const languageFocus = isStory ? "" : asText(request.languageFocus, 200);
   const chapterNumber = Number(storyContext?.chapterNumber) || 0;
   const chapterCount = Number(storyContext?.chapterCount) || 0;
@@ -1038,12 +1079,16 @@ Return only the requested compact JSON plan.`;
       const completeStoryRange = isCompleteStory
         ? getWholeStoryChapterRange(lengthMin, lengthMax, chapterCount)
         : { min: lengthMin, max: lengthMax };
+      const preferredChapterMin = Math.max(
+        completeStoryRange.min,
+        completeStoryRange.max - 30,
+      );
       const prompt = `You are an expert German teacher and story writer. Create only the German reading story. Do not return JSON.
 
 TARGET:
 - CEFR level: ${level}
 - ${isCompleteStory
-    ? `Write exactly ${chapterCount} chapters. Each chapter must contain ${completeStoryRange.min}-${completeStoryRange.max} German words.`
+    ? `Write exactly ${chapterCount} chapters. Each chapter must contain ${completeStoryRange.min}-${completeStoryRange.max} German words. Aim for ${preferredChapterMin}-${completeStoryRange.max} words in every chapter; do not stop near or below the lower boundary.`
     : `Story length: ${lengthMin}-${lengthMax} German words; aim for ${Math.round((lengthMin + lengthMax) / 2)}.`}
 - Category: ${category}
 - User's story brief: ${topic}
@@ -1071,6 +1116,10 @@ ${storyPlan ? `BINDING WHOLE-STORY PLAN:
 ${JSON.stringify(storyPlan)}
 ${storyPlan && !isCompleteStory ? `- Write only chapter ${chapterNumber} according to its chapter plan.
 - Do not use decisive events planned for later chapters.` : ""}` : ""}
+${job.last_error ? `
+PREVIOUS ATTEMPT FAILED:
+${asText(job.last_error, 500)}
+Correct this exact problem in the new output.` : ""}
 
 OUTPUT FORMAT:
 ${isCompleteStory
@@ -1088,7 +1137,10 @@ ${isCompleteStory
         isCompleteStory ? 4_000 : 2_000,
       );
       const normalizedDraft = isCompleteStory
-        ? normalizeStorySeriesText(rawDraft, chapterCount, lengthMin, lengthMax)
+        ? normalizeStorySeriesText(rawDraft, chapterCount, lengthMin, lengthMax, {
+          draft: true,
+          fallbackTitle: asText(storyPlan?.title, 160),
+        })
         : normalizeStoryText(rawDraft, lengthMin, lengthMax);
       const draft = storyPlan ? { ...normalizedDraft, storyPlan } : normalizedDraft;
       await updateJob(url, serviceKey, jobId, userId, {
@@ -1111,11 +1163,12 @@ ${isCompleteStory
         chapterCount,
         lengthMin,
         lengthMax,
+        { draft: true, fallbackTitle: asText(storedDraft.title || requestedPlan?.title, 160) },
       )
       : normalizeStory(storedDraft, lengthMin, lengthMax);
     const draftSeries = draft as {
       title: string;
-      chapters: Array<{ number: number; title: string; text: string[] }>;
+      chapters: Array<{ number: number; title: string; text: string[]; wordCount: number }>;
     };
     const draftArticle = draft as { title: string; text: string[] };
     const reviewedChapterRange = getWholeStoryChapterRange(lengthMin, lengthMax, chapterCount);
@@ -1125,6 +1178,122 @@ ${isCompleteStory
         : null))
       : null;
     if (phase === "review") {
+      if (isCompleteStory && storedDraft.reviewPassCompleted === true) {
+        const invalidIndexes = getInvalidSeriesChapterIndexes(
+          draftSeries,
+          lengthMin,
+          lengthMax,
+          chapterCount,
+        );
+        if (!invalidIndexes.length) {
+          await updateJob(url, serviceKey, jobId, userId, {
+            status: "materials_queued",
+            reviewed: draftSeries,
+            provider_used: provider,
+            model_used: model,
+            next_attempt_at: nextGroqSlot(),
+            locked_until: null,
+            last_error: null,
+            last_error_code: null,
+          }, true);
+          kickWorker(url, serviceKey);
+          return;
+        }
+
+        const repairIndex = invalidIndexes[0];
+        const chapter = draftSeries.chapters[repairIndex];
+        const previousChapter = draftSeries.chapters[repairIndex - 1];
+        const nextChapter = draftSeries.chapters[repairIndex + 1];
+        const preferredMin = Math.max(reviewedChapterRange.min, reviewedChapterRange.max - 30);
+        const repairPrompt = `Repair only one German story chapter. Return the complete repaired chapter, not comments and not the other chapters.
+
+TARGET:
+- CEFR level: ${level}
+- Keep the title unchanged: ${chapter.title}
+- Required range: ${reviewedChapterRange.min}-${reviewedChapterRange.max} German words.
+- Aim for ${preferredMin}-${reviewedChapterRange.max} words, safely above the lower boundary.
+- Use 4-6 meaningful paragraphs.
+- Preserve every event, fact, character, object and causal link from the chapter and binding plan.
+- Add only natural detail, action, dialogue or explanation that fits the established plot.
+- Do not introduce a new solution, character, object, conflict or subplot.
+- Use correct German quotation marks and language suitable for ${level}.
+
+BINDING PLAN:
+${JSON.stringify(storyPlan)}
+
+PREVIOUS CHAPTER ENDING:
+${previousChapter ? JSON.stringify(previousChapter.text.slice(-1)) : "none"}
+
+CHAPTER TO REPAIR (${chapter.wordCount} words):
+${JSON.stringify({ title: chapter.title, text: chapter.text })}
+
+NEXT CHAPTER BEGINNING:
+${nextChapter ? JSON.stringify(nextChapter.text.slice(0, 1)) : "none"}
+
+OUTPUT FORMAT:
+- First line: "# ${chapter.title}"
+- Then 4-6 complete paragraphs separated by blank lines.
+- No word count, explanation, labels, code fences or JSON.`;
+        const rawRepair = await callAiText(target, repairPrompt, "low", 2_000);
+        const repairedText = normalizeStoryText(
+          rawRepair,
+          reviewedChapterRange.min,
+          reviewedChapterRange.max,
+        );
+        const repairedChapter = {
+          ...repairedText,
+          title: chapter.title,
+          number: chapter.number,
+        };
+        const repairedSeries = {
+          title: draftSeries.title,
+          chapters: draftSeries.chapters.map((item, index) => index === repairIndex ? repairedChapter : item),
+          chapterWordRange: reviewedChapterRange,
+        };
+        const remainingInvalid = getInvalidSeriesChapterIndexes(
+          repairedSeries,
+          lengthMin,
+          lengthMax,
+          chapterCount,
+        );
+        const repairFinished = remainingInvalid.length === 0;
+        await updateJob(url, serviceKey, jobId, userId, repairFinished
+          ? {
+            status: "materials_queued",
+            reviewed: repairedSeries,
+            provider_used: provider,
+            model_used: model,
+            next_attempt_at: nextGroqSlot(),
+            locked_until: null,
+            last_error: null,
+            last_error_code: null,
+          }
+          : {
+            status: "review_queued",
+            draft: { ...repairedSeries, storyPlan, reviewPassCompleted: true },
+            provider_used: provider,
+            model_used: model,
+            next_attempt_at: nextGroqSlot(),
+            locked_until: null,
+            last_error: null,
+            last_error_code: null,
+          }, true);
+        await logGenerationAttempt(url, serviceKey, {
+          jobId, phase, attempt, provider, model,
+          outcome: repairFinished ? "succeeded" : "retry",
+          willRetry: !repairFinished,
+          durationMs: Date.now() - phaseStartedAt,
+          message: repairFinished
+            ? `Targeted repair completed for chapter ${chapter.number}; all chapters now pass validation.`
+            : `Targeted repair completed for chapter ${chapter.number}; ${remainingInvalid.length} chapter(s) remain.`,
+        });
+        kickWorker(url, serviceKey);
+        return;
+      }
+
+      const lengthAudit = isCompleteStory
+        ? draftSeries.chapters.map(chapter => `Chapter ${chapter.number}: ${chapter.wordCount} words`).join("\n")
+        : "";
       const prompt = `Act as an independent meticulous native German editor, continuity checker and CEFR examiner. Another model wrote the supplied story. Judge only what the text actually says, not what its author may have intended. Inspect it against the binding context, then return only the corrected story as plain Markdown, not JSON or comments. Make the smallest changes that fully fix the problems.
 
 REQUIREMENTS:
@@ -1149,6 +1318,7 @@ REQUIREMENTS:
 - At A2, prefer short main clauses and common vocabulary; avoid dense subordinate clauses, idioms and unexplained technical words.
 - Prefer simple, natural everyday German over literal translations.
 - Count the corrected story before returning it.
+${isCompleteStory ? `- Current chapter word counts:\n${lengthAudit}\n- Expand every short chapter naturally and aim for ${Math.max(reviewedChapterRange.min, reviewedChapterRange.max - 30)}-${reviewedChapterRange.max} words. Do not shorten a valid chapter below the range.` : ""}
 ${continuityContract}
 ${storyPlan ? `BINDING WHOLE-STORY PLAN:\n${JSON.stringify(storyPlan)}` : ""}
 
@@ -1172,16 +1342,44 @@ ${isCompleteStory
         isCompleteStory ? 4_000 : 2_000,
       );
       const reviewed = isCompleteStory
-        ? normalizeStorySeriesText(rawReviewed, chapterCount, lengthMin, lengthMax)
+        ? normalizeStorySeriesText(rawReviewed, chapterCount, lengthMin, lengthMax, {
+          draft: true,
+          fallbackTitle: asText(storyPlan?.title || draftSeries.title, 160),
+        })
         : normalizeStoryText(rawReviewed, lengthMin, lengthMax);
-      await updateJob(url, serviceKey, jobId, userId, {
-        status: "materials_queued", reviewed, provider_used: provider, model_used: model,
-        next_attempt_at: nextGroqSlot(), locked_until: null,
-        last_error: null, last_error_code: null,
-      }, true);
+      const invalidIndexes = isCompleteStory
+        ? getInvalidSeriesChapterIndexes(
+          reviewed as { chapters: Array<{ text: string[]; wordCount?: number }> },
+          lengthMin,
+          lengthMax,
+          chapterCount,
+        )
+        : [];
+      const needsTargetedRepair = invalidIndexes.length > 0;
+      await updateJob(url, serviceKey, jobId, userId, needsTargetedRepair
+        ? {
+          status: "review_queued",
+          draft: { ...(reviewed as JsonObject), storyPlan, reviewPassCompleted: true },
+          provider_used: provider,
+          model_used: model,
+          next_attempt_at: nextGroqSlot(),
+          locked_until: null,
+          last_error: null,
+          last_error_code: null,
+        }
+        : {
+          status: "materials_queued", reviewed, provider_used: provider, model_used: model,
+          next_attempt_at: nextGroqSlot(), locked_until: null,
+          last_error: null, last_error_code: null,
+        }, true);
       await logGenerationAttempt(url, serviceKey, {
-        jobId, phase, attempt, provider, model, outcome: "succeeded",
+        jobId, phase, attempt, provider, model,
+        outcome: needsTargetedRepair ? "retry" : "succeeded",
+        willRetry: needsTargetedRepair,
         durationMs: Date.now() - phaseStartedAt,
+        message: needsTargetedRepair
+          ? `Independent review completed; ${invalidIndexes.length} chapter(s) queued for targeted repair.`
+          : undefined,
       });
       kickWorker(url, serviceKey);
       return;
@@ -1307,6 +1505,8 @@ Before returning, verify every vocabulary form${includeLanguageFocus ? " and eve
       return;
     }
     const allowedAttempts = MAX_PHASE_ATTEMPTS
+      + (isCompleteStory && phase === "draft" ? 1 : 0)
+      + (isCompleteStory && phase === "review" ? chapterCount + 1 : 0)
       + (isCompleteStory && phase === "materials" ? Math.max(0, chapterCount - 1) : 0);
     const retry = RETRYABLE_CODES.has(failure.code) && attempt < allowedAttempts;
     console.error("Article worker phase failed:", {

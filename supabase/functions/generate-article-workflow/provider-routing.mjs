@@ -8,15 +8,17 @@ export function selectArticleAiTarget({
   groqModel,
   groqFallbackModel,
   groqReviewModel,
+  completeStory = false,
 }) {
   const normalizedAttempt = Number.isFinite(attempt) && attempt > 0 ? Math.floor(attempt) : 1;
   if (!groqKey) return null;
 
-  const useFallback = lastErrorCode === "groq_json_failed"
+  const fallbackRequested = lastErrorCode === "groq_json_failed"
     || lastErrorCode === "groq_limit_reached"
     || normalizedAttempt === 3
     || normalizedAttempt >= 5;
   const isIndependentReview = phase === "review";
+  const useFallback = fallbackRequested && !(completeStory && phase === "draft");
   const preferredModel = isIndependentReview
     ? (groqReviewModel || groqFallbackModel)
     : groqModel;
