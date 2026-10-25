@@ -7,9 +7,11 @@ const editorSource = await readFile(new URL("../editor.js", import.meta.url), "u
 const context = vm.createContext({});
 vm.runInContext(editorSource, context, { filename: "editor.js" });
 const buildStoryChapterBrief = vm.runInContext("buildStoryChapterBrief", context);
+const buildStoryChapterContext = vm.runInContext("buildStoryChapterContext", context);
+const applyGeneratedStoryMetadata = vm.runInContext("applyGeneratedStoryMetadata", context);
 const getStoryChapterCooldownSeconds = vm.runInContext("getStoryChapterCooldownSeconds", context);
 
-test("later story chapters receive summaries of all older chapters and the previous chapter text", () => {
+test("the chapter brief stays compact and delegates history to structured context", () => {
   const story = {
     topic: "Anna follows a mysterious letter through Berlin.",
     seriesTitle: "Der geheimnisvolle Brief",
@@ -23,12 +25,11 @@ test("later story chapters receive summaries of all older chapters and the previ
 
   const brief = buildStoryChapterBrief(story, 3);
 
-  assert.match(brief, /Chapter 1 \(Der Brief\): Anna findet einen Brief\./);
-  assert.match(brief, /Chapter 2 \(Die Reise\): Anna fährt nach Berlin\./);
-  assert.match(brief, /Immediately previous chapter \(Die Spur\)/);
-  assert.match(brief, /PREVIOUS_CHAPTER_FULL_TEXT/);
+  assert.match(brief, /Write chapter 4 of 5/);
+  assert.match(brief, /Overall story brief/);
+  assert.doesNotMatch(brief, /PREVIOUS_CHAPTER_FULL_TEXT/);
   assert.doesNotMatch(brief, /OLD_FULL_TEXT_SHOULD_NOT_BE_INCLUDED/);
-  assert.ok(brief.length <= 6_000);
+  assert.ok(brief.length <= 3_000);
 });
 
 test("the final chapter is explicitly instructed to resolve open plot lines", () => {
@@ -41,6 +42,41 @@ test("the final chapter is explicitly instructed to resolve open plot lines", ()
 
   assert.match(brief, /final chapter/i);
   assert.match(brief, /Resolve the central problem/);
+});
+
+test("story context carries the binding plan, continuity state and only the previous ending", () => {
+  const story = {
+    topic: "A station crew repairs a cooling system.",
+    seriesTitle: "Aurora",
+    chapterCount: 3,
+    storyPlan: { title: "Aurora", ending: "The main system restarts." },
+    continuityState: { openThreads: ["Replace the pipe"] },
+    completedChapters: [
+      { title: "Alarm", summary: "The pipe breaks.", text: ["OLD_FULL_TEXT"] },
+      { title: "Der Kristall", summary: "Kiko tests the crystal.", text: ["START", "PREVIOUS_ENDING"] }
+    ]
+  };
+
+  const storyContext = buildStoryChapterContext(story, 2);
+
+  assert.equal(storyContext.chapterNumber, 3);
+  assert.equal(storyContext.plan.title, "Aurora");
+  assert.equal(storyContext.state.openThreads[0], "Replace the pipe");
+  assert.match(storyContext.earlierSummaries, /Chapter 1 \(Alarm\): The pipe breaks\./);
+  assert.match(storyContext.previousChapter.ending, /PREVIOUS_ENDING/);
+  assert.doesNotMatch(storyContext.previousChapter.ending, /OLD_FULL_TEXT/);
+});
+
+test("generated story metadata is persisted separately from the article", () => {
+  const story = { seriesTitle: "", storyPlan: null, continuityState: null };
+  const plan = { title: "Aurora", chapterPlans: [{ chapter: 1 }] };
+  const continuityState = { establishedFacts: ["The pipe is in the reactor module."] };
+
+  applyGeneratedStoryMetadata(story, { article: { storyPlan: plan, continuityState } });
+
+  assert.equal(story.seriesTitle, "Aurora");
+  assert.equal(story.storyPlan, plan);
+  assert.equal(story.continuityState, continuityState);
 });
 
 test("chapter cooldown survives a reload and counts down from persisted time", () => {

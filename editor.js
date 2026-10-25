@@ -1813,26 +1813,56 @@ function getStoryArcInstruction(chapterIndex, chapterCount) {
 }
 
 function buildStoryChapterBrief(story, chapterIndex) {
-  const completed = Array.isArray(story.completedChapters) ? story.completedChapters : [];
-  const previous = completed[completed.length - 1] || null;
-  const olderSummaries = completed.slice(0, -1).map((chapter, index) =>
-    `Chapter ${index + 1} (${chapter.title}): ${chapter.summary}`
-  ).join("\n").slice(-1_200);
-  const previousText = previous
-    ? String((previous.text || []).join("\n")).slice(-2_800)
-    : "";
+  const chapterPlan = story.storyPlan?.chapterPlans?.[chapterIndex] || null;
 
   return [
     `Write chapter ${chapterIndex + 1} of ${story.chapterCount} of one continuous story.`,
     story.seriesTitle ? `Overall story title: ${story.seriesTitle}.` : "",
     `Overall story brief: ${String(story.topic || "").slice(0, 1_600)}`,
     `Chapter role: ${getStoryArcInstruction(chapterIndex, story.chapterCount)}`,
+    chapterPlan ? `Binding chapter plan: ${JSON.stringify(chapterPlan)}` : "",
     "Keep all names, relationships, facts, chronology and unresolved plot lines consistent.",
     "Do not retell earlier chapters. Give this chapter its own short German title without a chapter number.",
-    olderSummaries ? `Earlier chapter summaries:\n${olderSummaries}` : "",
-    previous ? `Immediately previous chapter (${previous.title}), full ending context:\n${previousText}` : "",
     chapterIndex > 0 ? "Continue directly and naturally from the preceding events." : ""
-  ].filter(Boolean).join("\n\n").slice(0, 6_000);
+  ].filter(Boolean).join("\n\n").slice(0, 3_000);
+}
+
+function buildStoryChapterContext(story, chapterIndex) {
+  const completed = Array.isArray(story.completedChapters) ? story.completedChapters : [];
+  const previous = completed[completed.length - 1] || null;
+  const earlierSummaries = completed.map((chapter, index) =>
+    `Chapter ${index + 1} (${chapter.title}): ${chapter.summary}`
+  ).join("\n").slice(-1_600);
+  const previousText = previous ? String((previous.text || []).join("\n")) : "";
+
+  return {
+    version: 2,
+    chapterNumber: chapterIndex + 1,
+    chapterCount: story.chapterCount,
+    seriesTitle: story.seriesTitle || story.requestedStoryTitle || "",
+    originalBrief: String(story.topic || "").slice(0, 1_600),
+    arcInstruction: getStoryArcInstruction(chapterIndex, story.chapterCount),
+    plan: story.storyPlan || null,
+    state: story.continuityState || null,
+    earlierSummaries,
+    previousChapter: previous ? {
+      title: previous.title,
+      summary: previous.summary,
+      ending: previousText.slice(-1_600)
+    } : null
+  };
+}
+
+function applyGeneratedStoryMetadata(story, result) {
+  const generated = result?.article || {};
+  if (!story.storyPlan && generated.storyPlan) {
+    story.storyPlan = generated.storyPlan;
+    if (!story.seriesTitle && generated.storyPlan.title) {
+      story.seriesTitle = String(generated.storyPlan.title).trim();
+    }
+  }
+  if (generated.continuityState) story.continuityState = generated.continuityState;
+  return story;
 }
 
 function renderStoryGenerationProgress(story, activeIndex = story?.nextChapter || 0) {
@@ -1905,6 +1935,8 @@ async function waitForStoryChapterCooldown(story, chapterIndex) {
 function makeGeneratedStoryChapter(result, story, chapterIndex) {
   if (!result?.article) throw new Error(t("generationEmpty"));
   const generated = JSON.parse(JSON.stringify(result.article));
+  delete generated.storyPlan;
+  delete generated.continuityState;
   const requestedFeature = String(generated.languageFocus?.requestedFeature || "").trim();
   if (generated.languageFocus && requestedFeature) {
     generated.languageFocus.labels = {
@@ -1959,8 +1991,10 @@ async function continueStoryGeneration(story) {
       maxWords: story.maxWords,
       requiredWords: story.requiredWords,
       languageFocus: story.languageFocus,
+      storyContext: buildStoryChapterContext(story, chapterIndex),
       onProgress: phase => showStoryChapterProgress(story, chapterIndex, phase)
     });
+    applyGeneratedStoryMetadata(story, result);
     const article = makeGeneratedStoryChapter(result, story, chapterIndex);
     await saveArticle(article);
     story.completedChapters = [...(story.completedChapters || []), {
@@ -2009,7 +2043,7 @@ async function generateStoryDirectlyWithAi() {
     const range = getSelectedArticleLengthRange();
     const requestedStoryTitle = $("storyTitleInput")?.value.trim() || "";
     story = {
-      version: 1,
+      version: 2,
       seriesId: `story-${Date.now().toString(36)}`,
       requestedStoryTitle,
       seriesTitle: requestedStoryTitle,
@@ -2017,6 +2051,8 @@ async function generateStoryDirectlyWithAi() {
       chapterCount: getStoryChapterCount(),
       nextChapter: 0,
       completedChapters: [],
+      storyPlan: null,
+      continuityState: null,
       level: $("articleLevelInput").value.trim(),
       category: getArticleEditorCategory(),
       minWords: range.min,

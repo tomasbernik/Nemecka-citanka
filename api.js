@@ -332,6 +332,7 @@ async function generateArticleWithAi({
   maxWords,
   requiredWords,
   languageFocus,
+  storyContext = null,
   onProgress
 }) {
   if (!isRemoteNetworkAvailable()) {
@@ -351,7 +352,8 @@ async function generateArticleWithAi({
     lengthMin: minWords,
     lengthMax: maxWords,
     requiredWords,
-    languageFocus
+    languageFocus,
+    ...(storyContext ? { storyContext } : {})
   };
   const signature = JSON.stringify(generationRequest);
   const pending = readPendingArticleGeneration();

@@ -84,12 +84,21 @@ test("article generation starts one server job and polls its checkpoints", async
     minWords: 300,
     maxWords: 350,
     requiredWords: [],
+    storyContext: {
+      chapterNumber: 2,
+      chapterCount: 3,
+      plan: { title: "Testgeschichte" },
+      state: { openThreads: ["Das Rätsel lösen"] }
+    },
     onProgress: phase => progress.push(phase)
   });
 
   assert.deepEqual(calls.map(call => call.body.action), ["start", "status", "status", "status", "status"]);
   assert.deepEqual(calls.slice(1).map(call => call.body.jobId), ["job-1", "job-1", "job-1", "job-1"]);
   assert.equal(calls[0].timeoutMs, 140_000);
+  assert.equal(calls[0].body.storyContext.chapterNumber, 2);
+  assert.equal(calls[0].body.storyContext.plan.title, "Testgeschichte");
+  assert.deepEqual(calls[0].body.storyContext.state.openThreads, ["Das Rätsel lösen"]);
   assert.ok(calls.slice(1).every(call => call.timeoutMs === 20_000));
   assert.deepEqual(progress, ["starting", "starting", "draft", "review", "materials"]);
   assert.equal(result.article.title, "Test");

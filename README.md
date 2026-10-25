@@ -237,6 +237,16 @@ Modely možno zmeniť bez úpravy kódu:
 supabase secrets set GROQ_ARTICLE_MODEL="openai/gpt-oss-120b" GEMINI_ARTICLE_MODEL="gemini-3.8-flash" GEMINI_ARTICLE_FALLBACK_MODEL="gemini-3.6-flash"
 ```
 
+Pri viac-kapitolovom príbehu vytvorí prvá fáza spolu s prvou kapitolou aj záväznú
+osnovu celej série. Po každej kapitole sa uloží kompaktný stav postáv, predmetov,
+lokalít, otvorených dejových línií a príčinných súvislostí. Nasledujúca kapitola
+dostane tento stav, osnovu, krátke zhrnutia a iba koniec bezprostredne
+predchádzajúcej kapitoly. Revízna fáza musí navyše potvrdiť štruktúrovanú kontrolu
+kánonu, lokalít, príčin a následkov, setup/payoff a jazykovej úrovne. Osnova ani
+stav nepridávajú ďalšie API volanie; vznikajú v existujúcich fázach návrhu a
+materiálov. Výstupné limity jednotlivých fáz sú 2 400 až 3 200 tokenov, aby zostala
+rezerva pre Groq TPM limit.
+
 Najprv nasaď databázové migrácie a potom funkciu. Auditná tabuľka
 `article_generation_job_events` zaznamenáva pri každom pokuse poskytovateľa,
 presný model, výsledok, trvanie a stavové číslo API.
