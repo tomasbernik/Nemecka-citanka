@@ -239,10 +239,11 @@ const PLAN_REVIEW_SCHEMA = {
   required: ["passes", "issues"],
 };
 
-const STORY_ISSUE_SCHEMA = {
+const STORY_REVIEW_ISSUE_SCHEMA = {
   type: "object",
   additionalProperties: false,
   properties: {
+    chapter: { type: "integer" },
     category: {
       type: "string",
       enum: [
@@ -251,10 +252,13 @@ const STORY_ISSUE_SCHEMA = {
       ],
     },
     description: { type: "string" },
-    evidence: { type: "array", items: { type: "string" } },
+    evidence: { type: "string" },
+    relatedEvidence: { type: "string" },
     requiredFix: { type: "string" },
   },
-  required: ["category", "description", "evidence", "requiredFix"],
+  required: [
+    "chapter", "category", "description", "evidence", "relatedEvidence", "requiredFix",
+  ],
 };
 
 const STORY_REVIEW_SCHEMA = {
@@ -262,22 +266,10 @@ const STORY_REVIEW_SCHEMA = {
   additionalProperties: false,
   properties: {
     briefSatisfied: { type: "boolean" },
-    storyIssues: { type: "array", items: STORY_ISSUE_SCHEMA },
-    chapters: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          chapter: { type: "integer" },
-          needsRepair: { type: "boolean" },
-          issues: { type: "array", items: STORY_ISSUE_SCHEMA },
-        },
-        required: ["chapter", "needsRepair", "issues"],
-      },
-    },
+    checkedChapters: { type: "array", items: { type: "integer" } },
+    issues: { type: "array", items: STORY_REVIEW_ISSUE_SCHEMA },
   },
-  required: ["briefSatisfied", "storyIssues", "chapters"],
+  required: ["briefSatisfied", "checkedChapters", "issues"],
 };
 
 const CONTINUITY_STATE_SCHEMA = {
@@ -1793,11 +1785,13 @@ ${JSON.stringify(isCompleteStory
 OUTPUT FORMAT:
 ${isCompleteStory
     ? `- Return compact JSON only, matching the supplied schema.
-- Set briefSatisfied=false and add storyIssues when the complete story misses or replaces the requested primary subject. Use storyIssues only for whole-story defects that cannot be repaired safely inside one chapter.
-- Include exactly one verdict for every chapter, numbered 1-${chapterCount}.
-- Set needsRepair to true only when the chapter has at least one concrete publish-blocking length, logic, continuity, CEFR or language defect. Otherwise use false and an empty issues array.
+- Set checkedChapters to exactly [${Array.from({ length: chapterCount }, (_, index) => index + 1).join(",")}].
+- Return one flat issues array. Use chapter=0 only when the complete story misses or replaces the requested primary subject and requires complete regeneration; otherwise identify the single chapter that should be repaired.
+- Set briefSatisfied=false when the requested primary subject is missing and include at least one chapter=0 issue. If there are no objective defects, return an empty issues array.
+- Include an issue only for a concrete publish-blocking length, logic, continuity, CEFR or language defect.
 - Every issue must name a category, describe one objective defect, quote one or two exact evidence snippets, and state a precise required fix. Never return a bare excerpt or vague stylistic comment.
-- Give at most 2 concrete issues per chapter and at most 2 storyIssues so the evidence remains compact. Use empty arrays when the text passes.
+- Put the first exact quote in evidence. Put a second exact quote in relatedEvidence only when needed; otherwise return an empty string.
+- Give at most 2 concrete issues per chapter and at most 2 chapter=0 issues so the evidence remains compact.
 - Do not repeat or rewrite the story.`
     : `- First line: one Markdown heading in the form "# German title".
 - Then one blank line followed by 4-6 corrected German story paragraphs separated by blank lines.`}
@@ -1820,41 +1814,65 @@ ${isCompleteStory
           "none",
           900,
         );
-        const verdicts = Array.isArray(rawReview.chapters)
-          ? (rawReview.chapters as JsonObject[]).map(item => ({
-            chapter: Number(item.chapter),
-            needsRepair: item.needsRepair === true,
-            issues: normalizeStoryIssues(item.issues, 2),
-          }))
+        const checkedChapters = Array.isArray(rawReview.checkedChapters)
+          ? [...new Set(rawReview.checkedChapters.map(Number))].sort((a, b) => a - b)
           : [];
-        const chapterNumbers = verdicts.map(item => item.chapter);
-        if (verdicts.length !== chapterCount
-          || new Set(chapterNumbers).size !== chapterCount
-          || chapterNumbers.some(number => number < 1 || number > chapterCount)) {
+        const expectedChapters = Array.from({ length: chapterCount }, (_, index) => index + 1);
+        if (checkedChapters.length !== chapterCount
+          || checkedChapters.some((number, index) => number !== expectedChapters[index])) {
           throw new WorkflowError(
             "invalid_story_review",
             502,
-            `Independent review returned chapters ${chapterNumbers.join(",") || "none"}; expected each chapter 1-${chapterCount} exactly once.`,
+            `Independent review checked chapters ${checkedChapters.join(",") || "none"}; expected ${expectedChapters.join(",")}.`,
           );
         }
-        const verdictWithoutEvidence = verdicts.find(item => item.needsRepair && !item.issues.length);
-        storyIssues = normalizeStoryIssues(rawReview.storyIssues, 2);
-        if (verdictWithoutEvidence || (rawReview.briefSatisfied !== true && !storyIssues.length)) {
+        const rawAuditIssues = Array.isArray(rawReview.issues)
+          ? (rawReview.issues as JsonObject[]).slice(0, chapterCount * 2 + 2)
+          : [];
+        const auditIssues = rawAuditIssues.map(item => {
+          const evidence = [
+            asText(item.evidence, 260),
+            asText(item.relatedEvidence, 260),
+          ].filter(Boolean);
+          return {
+            chapter: Number(item.chapter),
+            issue: normalizeStoryIssue({ ...item, evidence }),
+          };
+        });
+        const malformedIssue = auditIssues.find(item => !item.issue
+          || !Number.isInteger(item.chapter)
+          || item.chapter < 0
+          || item.chapter > chapterCount);
+        if (malformedIssue) {
           throw new WorkflowError(
             "invalid_story_review",
             502,
-            verdictWithoutEvidence
-              ? `Independent review marked chapter ${verdictWithoutEvidence.chapter} for repair without a complete evidence-based issue.`
-              : "Independent review rejected brief alignment without a complete evidence-based story issue.",
+            "Independent review returned an incomplete issue or an invalid chapter number.",
           );
         }
+        storyIssues = auditIssues
+          .filter(item => item.chapter === 0)
+          .map(item => item.issue!);
+        if (rawReview.briefSatisfied !== true && !storyIssues.length) {
+          throw new WorkflowError(
+            "invalid_story_review",
+            502,
+            "Independent review rejected brief alignment without a complete evidence-based chapter=0 issue.",
+          );
+        }
+        reviewIssues = expectedChapters.map(chapter => ({
+          chapter,
+          issues: auditIssues
+            .filter(item => item.chapter === chapter)
+            .map(item => item.issue!),
+        })).filter(item => item.issues.length > 0);
         const completeStoryText = [
           draftSeries.title,
           ...draftSeries.chapters.flatMap(chapter => [chapter.title, ...chapter.text]),
         ].join("\n").normalize("NFC");
         const unsupportedIssue = [
           ...storyIssues,
-          ...verdicts.flatMap(item => item.issues),
+          ...reviewIssues.flatMap(item => item.issues),
         ].find(issue => issue.evidence.some(snippet => !completeStoryText.includes(snippet.normalize("NFC"))));
         if (unsupportedIssue) {
           throw new WorkflowError(
@@ -1863,12 +1881,6 @@ ${isCompleteStory
             `Independent review cited evidence that does not occur verbatim in the story: ${unsupportedIssue.evidence.join(" | ")}`,
           );
         }
-        reviewIssues = verdicts
-          .filter(item => item.needsRepair || item.issues.length > 0)
-          .map(item => ({
-            chapter: item.chapter,
-            issues: item.issues,
-          }));
         reviewed = draftSeries as unknown as JsonObject;
         invalidIndexes = [...new Set([
           ...getInvalidSeriesChapterIndexes(draftSeries),
