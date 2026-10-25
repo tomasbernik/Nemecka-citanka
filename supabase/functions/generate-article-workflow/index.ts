@@ -648,6 +648,7 @@ async function callGroq(
 ): Promise<JsonObject> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 115_000);
+  const providerThinkingLevel = thinkingLevel === "none" ? "low" : thinkingLevel;
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -659,7 +660,7 @@ async function callGroq(
       body: JSON.stringify({
         model,
         messages: [{ role: "user", content: prompt }],
-        reasoning_effort: thinkingLevel,
+        reasoning_effort: providerThinkingLevel,
         reasoning_format: "hidden",
         // Keep enough headroom for the prompt inside Groq's free-tier TPM limit.
         max_completion_tokens: Math.min(maxOutputTokens, 4_000),
@@ -752,6 +753,7 @@ async function callGroqText(
 ): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 115_000);
+  const providerThinkingLevel = thinkingLevel === "none" ? "low" : thinkingLevel;
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -763,7 +765,7 @@ async function callGroqText(
       body: JSON.stringify({
         model,
         messages: [{ role: "user", content: prompt }],
-        reasoning_effort: thinkingLevel,
+        reasoning_effort: providerThinkingLevel,
         reasoning_format: "hidden",
         max_completion_tokens: Math.min(maxOutputTokens, 6_000),
       }),

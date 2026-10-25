@@ -34,6 +34,7 @@ test("uses a different model for the independent review", () => {
     model: "qwen/qwen3.8-27b",
     repairModel: "openai/gpt-oss-120b",
   });
+  assert.equal(selectArticleAiTarget({ phase: "review", attempt: 13, ...config }).model, "qwen/qwen3.8-27b");
 });
 
 test("uses the large writer for targeted repairs after the independent review", () => {

@@ -218,4 +218,5 @@ test("the reviewer ignores stylistic preferences that are not publish-blocking d
 test("the Qwen reviewer uses a supported reasoning effort", () => {
   assert.match(workflowSource, /const effectiveThinkingLevel = isQwen \? "low" : thinkingLevel;/);
   assert.doesNotMatch(workflowSource, /const effectiveThinkingLevel = isQwen \? "none" : thinkingLevel;/);
+  assert.match(workflowSource, /const providerThinkingLevel = thinkingLevel === "none" \? "low" : thinkingLevel;/);
 });
