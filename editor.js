@@ -1595,6 +1595,17 @@ function savePendingStoryGeneration(value) {
   else localStorage.removeItem(STORY_GENERATION_STATE_KEY);
 }
 
+function canAutoResumeStoryGeneration(story, pendingArticleGeneration) {
+  return Boolean(
+    story?.seriesId
+    && (pendingArticleGeneration?.jobId || Number(story.nextChapterAt) > 0)
+  );
+}
+
+function shouldKeepPendingStoryGenerationAfterError(error) {
+  return error?.code === "generation_continues_in_background";
+}
+
 function setArticleCreationMode(mode = "article") {
   articleCreationMode = mode === "story" ? "story" : "article";
   const isStory = articleCreationMode === "story";
@@ -2072,7 +2083,9 @@ async function generateStoryDirectlyWithAi() {
   try {
     await continueStoryGeneration(story);
   } catch (error) {
-    if (error?.code === "generation_cancelled") savePendingStoryGeneration(null);
+    if (!shouldKeepPendingStoryGenerationAfterError(error)) {
+      savePendingStoryGeneration(null);
+    }
     showArticleGenerationError(error);
   } finally {
     articleGenerationRunning = false;
@@ -2160,7 +2173,11 @@ async function cancelPendingArticleGeneration() {
 
 async function resumePendingArticleGeneration() {
   if (articleGenerationRunning) return;
-  if (readPendingStoryGeneration()) {
+  const pendingStory = readPendingStoryGeneration();
+  const pendingArticleGeneration = readPendingArticleGeneration();
+  if (pendingStory && !canAutoResumeStoryGeneration(pendingStory, pendingArticleGeneration)) {
+    savePendingStoryGeneration(null);
+  } else if (pendingStory) {
     await generateStoryDirectlyWithAi();
     return;
   }

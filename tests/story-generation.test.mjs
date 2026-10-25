@@ -10,6 +10,11 @@ const buildStoryChapterBrief = vm.runInContext("buildStoryChapterBrief", context
 const buildStoryChapterContext = vm.runInContext("buildStoryChapterContext", context);
 const applyGeneratedStoryMetadata = vm.runInContext("applyGeneratedStoryMetadata", context);
 const getStoryChapterCooldownSeconds = vm.runInContext("getStoryChapterCooldownSeconds", context);
+const canAutoResumeStoryGeneration = vm.runInContext("canAutoResumeStoryGeneration", context);
+const shouldKeepPendingStoryGenerationAfterError = vm.runInContext(
+  "shouldKeepPendingStoryGenerationAfterError",
+  context
+);
 
 test("the chapter brief stays compact and delegates history to structured context", () => {
   const story = {
@@ -84,6 +89,23 @@ test("chapter cooldown survives a reload and counts down from persisted time", (
   assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 100_001 }, 100_000), 1);
   assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 99_000 }, 100_000), 0);
   assert.equal(getStoryChapterCooldownSeconds({}, 100_000), 0);
+});
+
+test("a story only auto-resumes when server work or a chapter cooldown is pending", () => {
+  const story = { seriesId: "story-1" };
+
+  assert.equal(canAutoResumeStoryGeneration(story, null), false);
+  assert.equal(canAutoResumeStoryGeneration(story, { jobId: "job-1" }), true);
+  assert.equal(canAutoResumeStoryGeneration({ ...story, nextChapterAt: 165_000 }, null), true);
+});
+
+test("only a job still running in the background keeps the pending story", () => {
+  assert.equal(shouldKeepPendingStoryGenerationAfterError({ code: "invalid_materials_output" }), false);
+  assert.equal(shouldKeepPendingStoryGenerationAfterError({ code: "generation_cancelled" }), false);
+  assert.equal(
+    shouldKeepPendingStoryGenerationAfterError({ code: "generation_continues_in_background" }),
+    true
+  );
 });
 
 test("story generation does not request an optional language focus", () => {
