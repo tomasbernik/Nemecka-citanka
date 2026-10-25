@@ -1943,14 +1943,35 @@ function renderStoryGenerationProgress(story, activeIndex = story?.nextChapter |
   }
 }
 
-function showStoryChapterProgress(story, chapterIndex, phase) {
-  const phaseKey = {
-    starting: "generationStartingStatus",
-    draft: "generationDraftStatus",
-    review: "generationReviewStatus",
-    materials: "generationMaterialsStatus",
-    retry: "generationRetryStatus"
-  }[phase] || "generatingArticleStatus";
+function getGenerationProgressStatusKey(phase, details = {}) {
+  if (phase !== "retry") {
+    return {
+      starting: "generationStartingStatus",
+      draft: "generationDraftStatus",
+      review: "generationReviewStatus",
+      materials: "generationMaterialsStatus"
+    }[phase] || "generatingArticleStatus";
+  }
+  const errorCode = String(details?.lastErrorCode || "");
+  if (errorCode === "invalid_story_plan") return "generationPlanRetryStatus";
+  if ([
+    "invalid_ai_output",
+    "invalid_story_output",
+    "invalid_story_review",
+    "invalid_materials_output"
+  ].includes(errorCode)) return "generationValidationRetryStatus";
+  if ([
+    "groq_limit_reached",
+    "groq_failed",
+    "groq_json_failed",
+    "ai_timeout_or_network_error"
+  ].includes(errorCode)) return "generationProviderRetryStatus";
+  if (errorCode === "generation_job_update_failed") return "generationSaveRetryStatus";
+  return "generationGenericRetryStatus";
+}
+
+function showStoryChapterProgress(story, chapterIndex, phase, details = {}) {
+  const phaseKey = getGenerationProgressStatusKey(phase, details);
   const generatingCompleteStory = Number(story.version) >= 3
     && !Array.isArray(story.generatedChapters);
   const progressPrefix = generatingCompleteStory
@@ -2052,7 +2073,7 @@ async function continueStoryGeneration(story) {
       requiredWords: story.requiredWords,
       languageFocus: "",
       storyContext: buildStoryChapterContext(story, chapterIndex),
-      onProgress: phase => showStoryChapterProgress(story, chapterIndex, phase)
+      onProgress: (phase, details) => showStoryChapterProgress(story, chapterIndex, phase, details)
     });
     applyGeneratedStoryMetadata(story, result);
     const article = makeGeneratedStoryChapter(result, story, chapterIndex);
@@ -2101,7 +2122,7 @@ async function continueCompleteStoryGeneration(story) {
       requiredWords: story.requiredWords,
       languageFocus: "",
       storyContext: buildCompleteStoryContext(story),
-      onProgress: phase => showStoryChapterProgress(story, 0, phase)
+      onProgress: (phase, details) => showStoryChapterProgress(story, 0, phase, details)
     });
     const generatedSeries = result?.article || {};
     const chapters = Array.isArray(generatedSeries.chapters) ? generatedSeries.chapters : [];
@@ -2206,14 +2227,8 @@ async function generateStoryDirectlyWithAi() {
   }
 }
 
-function showArticleGenerationProgress(phase) {
-  const statusKey = {
-    starting: "generationStartingStatus",
-    draft: "generationDraftStatus",
-    review: "generationReviewStatus",
-    materials: "generationMaterialsStatus",
-    retry: "generationRetryStatus"
-  }[phase] || "generatingArticleStatus";
+function showArticleGenerationProgress(phase, details = {}) {
+  const statusKey = getGenerationProgressStatusKey(phase, details);
   const backgroundNote = phase === "retry" ? "" : ` ${t("generationRunsInBackground")}`;
   setArticleGenerationStatus(`${t(statusKey)}${backgroundNote}`, "progress");
   updateArticleGenerationControls();

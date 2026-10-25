@@ -13,6 +13,7 @@ const buildCompleteStoryContext = vm.runInContext("buildCompleteStoryContext", c
 const applyGeneratedStoryMetadata = vm.runInContext("applyGeneratedStoryMetadata", context);
 const getStoryChapterCooldownSeconds = vm.runInContext("getStoryChapterCooldownSeconds", context);
 const canAutoResumeStoryGeneration = vm.runInContext("canAutoResumeStoryGeneration", context);
+const getGenerationProgressStatusKey = vm.runInContext("getGenerationProgressStatusKey", context);
 const shouldKeepPendingStoryGenerationAfterError = vm.runInContext(
   "shouldKeepPendingStoryGenerationAfterError",
   context
@@ -120,6 +121,25 @@ test("a story only auto-resumes when server work or a chapter cooldown is pendin
   assert.equal(canAutoResumeStoryGeneration(story, { jobId: "job-1" }), true);
   assert.equal(canAutoResumeStoryGeneration({ ...story, nextChapterAt: 165_000 }, null), true);
   assert.equal(canAutoResumeStoryGeneration({ ...story, generatedChapters: [] }, null), true);
+});
+
+test("retry progress distinguishes plan, validation, provider and save failures", () => {
+  assert.equal(
+    getGenerationProgressStatusKey("retry", { lastErrorCode: "invalid_story_plan" }),
+    "generationPlanRetryStatus"
+  );
+  assert.equal(
+    getGenerationProgressStatusKey("retry", { lastErrorCode: "invalid_materials_output" }),
+    "generationValidationRetryStatus"
+  );
+  assert.equal(
+    getGenerationProgressStatusKey("retry", { lastErrorCode: "groq_limit_reached" }),
+    "generationProviderRetryStatus"
+  );
+  assert.equal(
+    getGenerationProgressStatusKey("retry", { lastErrorCode: "generation_job_update_failed" }),
+    "generationSaveRetryStatus"
+  );
 });
 
 test("only a job still running in the background keeps the pending story", () => {

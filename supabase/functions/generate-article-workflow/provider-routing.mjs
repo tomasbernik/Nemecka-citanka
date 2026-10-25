@@ -18,7 +18,8 @@ export function selectArticleAiTarget({
     || normalizedAttempt === 3
     || normalizedAttempt >= 5;
   const isIndependentReview = phase === "review";
-  const useFallback = fallbackRequested && !(completeStory && phase === "draft");
+  const requiresLargeWriter = completeStory && phase !== "review";
+  const useFallback = fallbackRequested && !requiresLargeWriter;
   const preferredModel = isIndependentReview
     ? (groqReviewModel || groqFallbackModel)
     : groqModel;
