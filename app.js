@@ -1293,7 +1293,11 @@ onChange("settingsArticleLanguageSelect", (e) => {
 window.addEventListener("pagehide", forceStopSpeech);
 window.addEventListener("beforeunload", forceStopSpeech);
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) forceStopSpeech();
+  if (document.hidden) {
+    forceStopSpeech();
+  } else if (readPendingArticleGeneration()?.jobId) {
+    resumePendingArticleGeneration();
+  }
 });
 
 window.addEventListener("beforeinstallprompt", event => {

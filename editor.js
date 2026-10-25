@@ -1798,6 +1798,15 @@ async function deleteArticleFromEditor() {
 
 let articleGenerationRunning = false;
 let articleGenerationCancelling = false;
+let articleGenerationResumeTimer = null;
+
+function schedulePendingArticleGenerationResume() {
+  if (articleGenerationResumeTimer || !readPendingArticleGeneration()?.jobId) return;
+  articleGenerationResumeTimer = window.setTimeout(() => {
+    articleGenerationResumeTimer = null;
+    if (readPendingArticleGeneration()?.jobId) void resumePendingArticleGeneration();
+  }, 5_000);
+}
 
 function updateArticleGenerationControls() {
   const generateButton = $("generateArticleAiBtn");
@@ -2301,6 +2310,9 @@ function showArticleGenerationError(error) {
   if (error?.code === "generation_cancelled") {
     setArticleGenerationStatus(t("generationCancelled"), "success");
     return;
+  }
+  if (error?.code === "generation_continues_in_background") {
+    schedulePendingArticleGenerationResume();
   }
   console.error("AI article generation:", error);
   const providerBusy = ["groq_failed", "gemini_failed"].includes(error?.code)

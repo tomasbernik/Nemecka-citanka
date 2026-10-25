@@ -4,6 +4,7 @@ import vm from "node:vm";
 import { readFile } from "node:fs/promises";
 
 const editorSource = await readFile(new URL("../editor.js", import.meta.url), "utf8");
+const appSource = await readFile(new URL("../app.js", import.meta.url), "utf8");
 const workflowSource = await readFile(
   new URL("../supabase/functions/generate-article-workflow/index.ts", import.meta.url),
   "utf8"
@@ -188,6 +189,14 @@ test("a completed story job can be recovered from its saved request after reload
   assert.equal(recovered.generatedChapters.length, 3);
   assert.equal(recovered.topic, "Eine Liebesgeschichte im Sommer.");
   assert.equal(recovered.nextChapter, 0);
+});
+
+test("a background story job reconnects automatically after polling expires", () => {
+  assert.match(editorSource, /function schedulePendingArticleGenerationResume\(\)/);
+  assert.match(editorSource, /error\?\.code === "generation_continues_in_background"/);
+  assert.match(editorSource, /schedulePendingArticleGenerationResume\(\);/);
+  assert.match(appSource, /else if \(readPendingArticleGeneration\(\)\?\.jobId\)/);
+  assert.match(appSource, /resumePendingArticleGeneration\(\);/);
 });
 
 test("story generation does not request an optional language focus", () => {
