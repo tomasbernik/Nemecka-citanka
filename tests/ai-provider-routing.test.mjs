@@ -36,6 +36,16 @@ test("uses a different model for the independent review", () => {
   });
 });
 
+test("uses the large writer for targeted repairs after the independent review", () => {
+  assert.equal(selectArticleAiTarget({
+    phase: "review",
+    attempt: 5,
+    completeStory: true,
+    reviewCompleted: true,
+    ...config,
+  }).model, "openai/gpt-oss-120b");
+});
+
 test("keeps the large writer model for complete-story writing and materials retries", () => {
   assert.equal(selectArticleAiTarget({
     phase: "draft",

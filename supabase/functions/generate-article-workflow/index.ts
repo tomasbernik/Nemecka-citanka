@@ -201,6 +201,27 @@ const STORY_PLAN_SCHEMA = {
   ],
 };
 
+const STORY_REVIEW_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    chapters: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          chapter: { type: "integer" },
+          needsRepair: { type: "boolean" },
+          issues: { type: "array", items: { type: "string" } },
+        },
+        required: ["chapter", "needsRepair", "issues"],
+      },
+    },
+  },
+  required: ["chapters"],
+};
+
 const CONTINUITY_STATE_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -791,13 +812,17 @@ function callAiText(
   thinkingLevel: "none" | "low" | "medium",
   maxOutputTokens: number,
 ) {
-  const effectiveThinkingLevel = target.model.startsWith("qwen/") ? "none" : thinkingLevel;
+  const isQwen = target.model.startsWith("qwen/");
+  const effectiveThinkingLevel = isQwen ? "none" : thinkingLevel;
+  // Groq's free Qwen tier enforces a 1,000 output-token-per-minute cap.
+  // Keep a small margin so the provider accepts the request.
+  const effectiveMaxOutputTokens = isQwen ? Math.min(maxOutputTokens, 900) : maxOutputTokens;
   return callGroqText(
     target.apiKey,
     target.model,
     prompt,
     effectiveThinkingLevel,
-    maxOutputTokens,
+    effectiveMaxOutputTokens,
   );
 }
 
@@ -1044,11 +1069,16 @@ async function runClaimedPhase(
     : null;
   const isStory = Boolean(storyContext);
   const isCompleteStory = storyContext?.mode === "complete_story";
+  const reviewCompleted = isCompleteStory
+    && phase === "review"
+    && Boolean(job.draft && typeof job.draft === "object"
+      && (job.draft as JsonObject).reviewPassCompleted === true);
   const target = selectArticleAiTarget({
     phase,
     attempt,
     lastErrorCode: asText(job.last_error_code, 80),
     completeStory: isCompleteStory,
+    reviewCompleted,
     ...aiConfig,
   }) as AiTarget | null;
   if (!target) throw new WorkflowError("missing_configuration", 503);
@@ -1255,12 +1285,21 @@ ${isCompleteStory
       : null;
     if (phase === "review") {
       if (isCompleteStory && storedDraft.reviewPassCompleted === true) {
-        const invalidIndexes = getInvalidSeriesChapterIndexes(
+        const storedReviewIssues = Array.isArray(storedDraft.reviewIssues)
+          ? (storedDraft.reviewIssues as JsonObject[]).map(item => ({
+            chapter: Number(item.chapter),
+            issues: asStringArray(item.issues, 4, 240),
+          })).filter(item => item.chapter >= 1 && item.chapter <= chapterCount)
+          : [];
+        const invalidIndexes = [...new Set([
+          ...getInvalidSeriesChapterIndexes(
           draftSeries,
           lengthMin,
           lengthMax,
           chapterCount,
-        );
+          ),
+          ...storedReviewIssues.map(item => item.chapter - 1),
+        ])].sort((a, b) => a - b);
         if (!invalidIndexes.length) {
           await updateJob(url, serviceKey, jobId, userId, {
             status: "materials_queued",
@@ -1280,6 +1319,8 @@ ${isCompleteStory
         const chapter = draftSeries.chapters[repairIndex];
         const previousChapter = draftSeries.chapters[repairIndex - 1];
         const nextChapter = draftSeries.chapters[repairIndex + 1];
+        const chapterReviewIssues = storedReviewIssues
+          .find(item => item.chapter === chapter.number)?.issues || [];
         const preferredMin = Math.max(reviewedChapterRange.min, reviewedChapterRange.max - 30);
         const repairPrompt = `Repair only one German story chapter. Return the complete repaired chapter, not comments and not the other chapters.
 
@@ -1293,6 +1334,7 @@ TARGET:
 - Add only natural detail, action, dialogue or explanation that fits the established plot.
 - Do not introduce a new solution, character, object, conflict or subplot.
 - Use correct German quotation marks and language suitable for ${level}.
+${chapterReviewIssues.length ? `- Correct these independent-review findings: ${chapterReviewIssues.join("; ")}` : ""}
 
 BINDING PLAN:
 ${JSON.stringify(storyPlan)}
@@ -1326,12 +1368,17 @@ OUTPUT FORMAT:
           chapters: draftSeries.chapters.map((item, index) => index === repairIndex ? repairedChapter : item),
           chapterWordRange: reviewedChapterRange,
         };
-        const remainingInvalid = getInvalidSeriesChapterIndexes(
-          repairedSeries,
-          lengthMin,
-          lengthMax,
-          chapterCount,
-        );
+        const remainingReviewIssues = storedReviewIssues
+          .filter(item => item.chapter !== chapter.number);
+        const remainingInvalid = [...new Set([
+          ...getInvalidSeriesChapterIndexes(
+            repairedSeries,
+            lengthMin,
+            lengthMax,
+            chapterCount,
+          ),
+          ...remainingReviewIssues.map(item => item.chapter - 1),
+        ])].sort((a, b) => a - b);
         const repairFinished = remainingInvalid.length === 0;
         await updateJob(url, serviceKey, jobId, userId, repairFinished
           ? {
@@ -1346,7 +1393,12 @@ OUTPUT FORMAT:
           }
           : {
             status: "review_queued",
-            draft: { ...repairedSeries, storyPlan, reviewPassCompleted: true },
+            draft: {
+              ...repairedSeries,
+              storyPlan,
+              reviewPassCompleted: true,
+              reviewIssues: remainingReviewIssues,
+            },
             provider_used: provider,
             model_used: model,
             next_attempt_at: nextGroqSlot(),
@@ -1370,72 +1422,110 @@ OUTPUT FORMAT:
       const lengthAudit = isCompleteStory
         ? draftSeries.chapters.map(chapter => `Chapter ${chapter.number}: ${chapter.wordCount} words`).join("\n")
         : "";
-      const prompt = `Act as an independent meticulous native German editor, continuity checker and CEFR examiner. Another model wrote the supplied story. Judge only what the text actually says, not what its author may have intended. Inspect it against the binding context, then return only the corrected story as plain Markdown, not JSON or comments. Make the smallest changes that fully fix the problems.
+      const prompt = `Act as an independent meticulous native German editor, continuity checker and CEFR examiner. Another model wrote the supplied story. Judge only what the text actually says, not what its author may have intended. ${isCompleteStory ? "Return a compact review; do not rewrite the story." : "Return the corrected story with the smallest changes that fully fix its problems."}
 
 REQUIREMENTS:
-- Target CEFR level: ${level}. Replace words and constructions that are too difficult.
+- Target CEFR level: ${level}. ${isCompleteStory ? "Flag words and constructions that are too difficult." : "Replace words and constructions that are too difficult."}
 - ${isCompleteStory
-    ? `Keep exactly ${chapterCount} chapters and keep every chapter between ${reviewedChapterRange.min} and ${reviewedChapterRange.max} German words.`
+    ? `Review exactly ${chapterCount} chapters. Each chapter must contain ${reviewedChapterRange.min}-${reviewedChapterRange.max} German words.`
     : `Keep between ${lengthMin} and ${lengthMax} German story words.`}
 - Preserve the requested plot: ${topic}
 - Preserve required words when possible and use them correctly: ${requiredWords.join(", ") || "none"}.
 - Preserve and verify the required language feature: ${languageFocus || "none specified"}.
-- Fix grammar, cases, verb placement, collocations, register, dialogue punctuation and unnatural phrasing.
+- ${isCompleteStory ? "Check" : "Fix"} grammar, cases, verb placement, collocations, register, dialogue punctuation and unnatural phrasing.
 - Check chronology and logic. Characters must realistically be able to perform every action.
 - For every disagreement or misunderstanding, paraphrase both positions internally. If they mean the same thing, repair the dialogue or the cause of the conflict.
 - Reject narrator claims that a misunderstanding remains if the preceding dialogue has already resolved every stated difference.
 - Keep names, grammatical gender, professions, goals and intended uses of creative works stable unless the text explicitly explains a change.
 - If somebody brings a forgotten object, explicitly explain how that person obtained it.
 - Check locations, object ownership, system states, unresolved threads, setup/payoff and cause/effect against the continuity contract.
-- Never introduce a new solution while editing. Use only the plan and already established resources.
-- Do not silently change a canonical fact to make the draft work; correct the draft to match the canon.
+- ${isCompleteStory ? "Flag" : "Remove"} any solution that was not set up by the plan or text.
+- ${isCompleteStory ? "Flag" : "Correct"} contradictions with canonical facts.
 - Use correct German quotation marks „...“ without spaces before the closing mark.
 - At A1, replace unnecessarily advanced words with common everyday alternatives.
 - At A2, prefer short main clauses and common vocabulary; avoid dense subordinate clauses, idioms and unexplained technical words.
 - Prefer simple, natural everyday German over literal translations.
-- Count the corrected story before returning it.
-${isCompleteStory ? `- Current chapter word counts:\n${lengthAudit}\n- Expand every short chapter naturally and aim for ${Math.max(reviewedChapterRange.min, reviewedChapterRange.max - 30)}-${reviewedChapterRange.max} words. Do not shorten a valid chapter below the range.` : ""}
+- ${isCompleteStory ? "Count each chapter before returning the review." : "Count the corrected story before returning it."}
+${isCompleteStory ? `- Current chapter word counts:\n${lengthAudit}` : ""}
 ${continuityContract}
 ${storyPlan ? `BINDING WHOLE-STORY PLAN:\n${JSON.stringify(storyPlan)}` : ""}
 
-STORY TO EDIT:
+STORY TO REVIEW:
 ${JSON.stringify(isCompleteStory
     ? { title: draftSeries.title, chapters: draftSeries.chapters }
     : { title: draftArticle.title, text: draftArticle.text })}
 
 OUTPUT FORMAT:
 ${isCompleteStory
-    ? `- First line: the unchanged series title as "# German series title".
-- Return every corrected chapter as "## Kapitel N: German chapter title" with 4-6 paragraphs.
-- Keep the chapter numbering complete and ordered.`
+    ? `- Return compact JSON only, matching the supplied schema.
+- Include exactly one verdict for every chapter, numbered 1-${chapterCount}.
+- Set needsRepair to true for every length, logic, continuity, CEFR or language problem.
+- Give at most 4 short, concrete issues per chapter. Use an empty issues array when it passes.
+- Do not repeat or rewrite the story.`
     : `- First line: one Markdown heading in the form "# German title".
 - Then one blank line followed by 4-6 corrected German story paragraphs separated by blank lines.`}
-- Do not include labels, word counts, explanations, code fences or JSON.`;
-      const rawReviewed = await callAiText(
-        target,
-        prompt,
-        "low",
-        isCompleteStory ? 4_000 : 2_000,
-      );
-      const reviewed = isCompleteStory
-        ? normalizeStorySeriesText(rawReviewed, chapterCount, lengthMin, lengthMax, {
-          draft: true,
-          fallbackTitle: asText(storyPlan?.title || draftSeries.title, 160),
-        })
-        : normalizeStoryText(rawReviewed, lengthMin, lengthMax);
-      const invalidIndexes = isCompleteStory
-        ? getInvalidSeriesChapterIndexes(
-          reviewed as { chapters: Array<{ text: string[]; wordCount?: number }> },
-          lengthMin,
-          lengthMax,
-          chapterCount,
-        )
-        : [];
+${isCompleteStory
+    ? "- Do not include explanations, Markdown or extra keys outside the JSON schema."
+    : "- Do not include labels, word counts, explanations, code fences or JSON."}`;
+      let reviewed: JsonObject;
+      let reviewIssues: Array<{ chapter: number; issues: string[] }> = [];
+      let invalidIndexes: number[] = [];
+      if (isCompleteStory) {
+        const rawReview = await callAi(
+          target,
+          prompt,
+          "complete_story_review",
+          STORY_REVIEW_SCHEMA,
+          "none",
+          900,
+        );
+        const verdicts = Array.isArray(rawReview.chapters)
+          ? (rawReview.chapters as JsonObject[]).map(item => ({
+            chapter: Number(item.chapter),
+            needsRepair: item.needsRepair === true,
+            issues: asStringArray(item.issues, 4, 240),
+          }))
+          : [];
+        const chapterNumbers = verdicts.map(item => item.chapter);
+        if (verdicts.length !== chapterCount
+          || new Set(chapterNumbers).size !== chapterCount
+          || chapterNumbers.some(number => number < 1 || number > chapterCount)) {
+          throw new WorkflowError(
+            "invalid_story_review",
+            502,
+            `Independent review returned chapters ${chapterNumbers.join(",") || "none"}; expected each chapter 1-${chapterCount} exactly once.`,
+          );
+        }
+        reviewIssues = verdicts
+          .filter(item => item.needsRepair || item.issues.length)
+          .map(item => ({
+            chapter: item.chapter,
+            issues: item.issues.length ? item.issues : ["Independent reviewer marked this chapter for repair."],
+          }));
+        reviewed = draftSeries as unknown as JsonObject;
+        invalidIndexes = [...new Set([
+          ...getInvalidSeriesChapterIndexes(
+            draftSeries,
+            lengthMin,
+            lengthMax,
+            chapterCount,
+          ),
+          ...reviewIssues.map(item => item.chapter - 1),
+        ])].sort((a, b) => a - b);
+      } else {
+        const rawReviewed = await callAiText(target, prompt, "low", 2_000);
+        reviewed = normalizeStoryText(rawReviewed, lengthMin, lengthMax);
+      }
       const needsTargetedRepair = invalidIndexes.length > 0;
       await updateJob(url, serviceKey, jobId, userId, needsTargetedRepair
         ? {
           status: "review_queued",
-          draft: { ...(reviewed as JsonObject), storyPlan, reviewPassCompleted: true },
+          draft: {
+            ...reviewed,
+            storyPlan,
+            reviewPassCompleted: true,
+            reviewIssues,
+          },
           provider_used: provider,
           model_used: model,
           next_attempt_at: nextGroqSlot(),

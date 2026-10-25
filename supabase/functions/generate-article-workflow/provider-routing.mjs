@@ -9,6 +9,7 @@ export function selectArticleAiTarget({
   groqFallbackModel,
   groqReviewModel,
   completeStory = false,
+  reviewCompleted = false,
 }) {
   const normalizedAttempt = Number.isFinite(attempt) && attempt > 0 ? Math.floor(attempt) : 1;
   if (!groqKey) return null;
@@ -17,8 +18,8 @@ export function selectArticleAiTarget({
     || lastErrorCode === "groq_limit_reached"
     || normalizedAttempt === 3
     || normalizedAttempt >= 5;
-  const isIndependentReview = phase === "review";
-  const requiresLargeWriter = completeStory && phase !== "review";
+  const isIndependentReview = phase === "review" && !reviewCompleted;
+  const requiresLargeWriter = completeStory && (phase !== "review" || reviewCompleted);
   const useFallback = fallbackRequested && !requiresLargeWriter;
   const preferredModel = isIndependentReview
     ? (groqReviewModel || groqFallbackModel)
