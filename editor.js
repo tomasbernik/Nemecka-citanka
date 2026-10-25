@@ -1598,7 +1598,9 @@ function savePendingStoryGeneration(value) {
 function canAutoResumeStoryGeneration(story, pendingArticleGeneration) {
   return Boolean(
     story?.seriesId
-    && (pendingArticleGeneration?.jobId || Number(story.nextChapterAt) > 0)
+    && (pendingArticleGeneration?.jobId
+      || Array.isArray(story.generatedChapters)
+      || Number(story.nextChapterAt) > 0)
   );
 }
 
@@ -1616,6 +1618,7 @@ function setArticleCreationMode(mode = "article") {
   $("storyGenerationOptions")?.classList.toggle("hidden", !isStory);
   $("storyModeHelp")?.classList.toggle("hidden", !isStory);
   $("articleLanguageFocusRow")?.classList.toggle("hidden", isStory);
+  updateStoryLengthLimits();
   const generateButton = $("generateArticleAiBtn");
   if (generateButton && !articleGenerationRunning) {
     generateButton.textContent = t(isStory ? "generateStoryAi" : "generateArticleAi");
@@ -1814,7 +1817,18 @@ function updateArticleGenerationControls() {
 
 function getStoryChapterCount() {
   const count = Number.parseInt($("storyChapterCountSelect")?.value || "5", 10);
-  return Math.min(8, Math.max(2, Number.isFinite(count) ? count : 5));
+  return count === 3 ? 3 : 5;
+}
+
+function updateStoryLengthLimits() {
+  const lengthSelect = $("articleLengthSelect");
+  if (!lengthSelect) return;
+  const longOption = Array.from(lengthSelect.options).find(option => option.value === "450-550");
+  const restrictLongStory = articleCreationMode === "story" && getStoryChapterCount() === 5;
+  if (longOption) longOption.disabled = restrictLongStory;
+  if (restrictLongStory && lengthSelect.value === "450-550") {
+    lengthSelect.value = "300-350";
+  }
 }
 
 function getStoryArcInstruction(chapterIndex, chapterCount) {
@@ -1862,6 +1876,28 @@ function buildStoryChapterContext(story, chapterIndex) {
       summary: previous.summary,
       ending: previousText.slice(-1_600)
     } : null
+  };
+}
+
+function buildCompleteStoryBrief(story) {
+  return [
+    `Write one continuous German story containing exactly ${story.chapterCount} separately titled chapters.`,
+    story.requestedStoryTitle ? `Requested overall title: ${story.requestedStoryTitle}.` : "",
+    `Overall story brief: ${String(story.topic || "").slice(0, 3_000)}`,
+    "Plan the complete causal arc before writing. Every chapter must advance the same story.",
+    "Keep names, grammatical gender, goals, object ownership, chronology and the meaning of agreements consistent.",
+    "The final chapter must resolve the central conflict and all important open plot lines."
+  ].filter(Boolean).join("\n\n").slice(0, 4_000);
+}
+
+function buildCompleteStoryContext(story) {
+  return {
+    version: 3,
+    mode: "complete_story",
+    chapterCount: story.chapterCount,
+    seriesTitle: story.requestedStoryTitle || story.seriesTitle || "",
+    originalBrief: String(story.topic || "").slice(0, 3_000),
+    plan: story.storyPlan || null
   };
 }
 
@@ -1986,6 +2022,9 @@ function makeGeneratedStoryChapter(result, story, chapterIndex) {
 }
 
 async function continueStoryGeneration(story) {
+  if (Number(story.version) >= 3) {
+    return continueCompleteStoryGeneration(story);
+  }
   setArticleCreationMode("story");
   if ($("storyTitleInput")) $("storyTitleInput").value = story.requestedStoryTitle || story.seriesTitle || "";
   if ($("storyChapterCountSelect")) $("storyChapterCountSelect").value = String(story.chapterCount);
@@ -2037,6 +2076,70 @@ async function continueStoryGeneration(story) {
   );
 }
 
+async function continueCompleteStoryGeneration(story) {
+  setArticleCreationMode("story");
+  if ($("storyTitleInput")) $("storyTitleInput").value = story.requestedStoryTitle || story.seriesTitle || "";
+  if ($("storyChapterCountSelect")) $("storyChapterCountSelect").value = String(story.chapterCount);
+
+  if (!Array.isArray(story.generatedChapters)) {
+    renderStoryGenerationProgress(story, 0);
+    const result = await generateArticleWithAi({
+      topic: buildCompleteStoryBrief(story),
+      level: story.level,
+      category: story.category,
+      minWords: story.minWords,
+      maxWords: story.maxWords,
+      requiredWords: story.requiredWords,
+      languageFocus: "",
+      storyContext: buildCompleteStoryContext(story),
+      onProgress: phase => showStoryChapterProgress(story, 0, phase)
+    });
+    const generatedSeries = result?.article || {};
+    const chapters = Array.isArray(generatedSeries.chapters) ? generatedSeries.chapters : [];
+    if (chapters.length !== story.chapterCount) throw new Error(t("generationEmpty"));
+    story.storyPlan = generatedSeries.storyPlan || story.storyPlan || null;
+    story.seriesTitle = String(
+      generatedSeries.seriesTitle
+      || story.storyPlan?.title
+      || story.requestedStoryTitle
+      || chapters[0]?.title
+      || ""
+    ).trim();
+    story.generatedChapters = chapters;
+    story.nextChapter = 0;
+    savePendingStoryGeneration(story);
+  }
+
+  for (let chapterIndex = story.nextChapter || 0; chapterIndex < story.chapterCount; chapterIndex += 1) {
+    const generated = story.generatedChapters[chapterIndex];
+    if (!generated) throw new Error(t("generationEmpty"));
+    const article = makeGeneratedStoryChapter({ article: generated }, story, chapterIndex);
+    await saveArticle(article);
+    story.completedChapters = [...(story.completedChapters || []), {
+      id: article.id,
+      title: article.title,
+      summary: article.summary,
+      text: article.text
+    }];
+    story.nextChapter = chapterIndex + 1;
+    savePendingStoryGeneration(story);
+    renderStoryGenerationProgress(story, story.nextChapter);
+  }
+
+  savePendingStoryGeneration(null);
+  const lastId = story.completedChapters?.[story.completedChapters.length - 1]?.id;
+  const lastArticle = state.articles.find(article => article.id === lastId);
+  if (lastArticle) {
+    $("articleEditorSelect").value = lastArticle.id;
+    fillArticleEditor(lastArticle);
+  }
+  renderStoryGenerationProgress(story, story.chapterCount);
+  setArticleGenerationStatus(
+    formatText("storyGenerationDone", { title: story.seriesTitle, count: story.chapterCount }),
+    "success"
+  );
+}
+
 async function generateStoryDirectlyWithAi() {
   if (articleGenerationRunning) return;
   const button = $("generateArticleAiBtn");
@@ -2055,7 +2158,7 @@ async function generateStoryDirectlyWithAi() {
     const range = getSelectedArticleLengthRange();
     const requestedStoryTitle = $("storyTitleInput")?.value.trim() || "";
     story = {
-      version: 2,
+      version: 3,
       seriesId: `story-${Date.now().toString(36)}`,
       requestedStoryTitle,
       seriesTitle: requestedStoryTitle,

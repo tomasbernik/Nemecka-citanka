@@ -8,6 +8,8 @@ const context = vm.createContext({});
 vm.runInContext(editorSource, context, { filename: "editor.js" });
 const buildStoryChapterBrief = vm.runInContext("buildStoryChapterBrief", context);
 const buildStoryChapterContext = vm.runInContext("buildStoryChapterContext", context);
+const buildCompleteStoryBrief = vm.runInContext("buildCompleteStoryBrief", context);
+const buildCompleteStoryContext = vm.runInContext("buildCompleteStoryContext", context);
 const applyGeneratedStoryMetadata = vm.runInContext("applyGeneratedStoryMetadata", context);
 const getStoryChapterCooldownSeconds = vm.runInContext("getStoryChapterCooldownSeconds", context);
 const canAutoResumeStoryGeneration = vm.runInContext("canAutoResumeStoryGeneration", context);
@@ -84,6 +86,26 @@ test("generated story metadata is persisted separately from the article", () => 
   assert.equal(story.continuityState, continuityState);
 });
 
+test("new stories request the complete series in one generation job", () => {
+  const story = {
+    version: 3,
+    chapterCount: 5,
+    requestedStoryTitle: "Ein neues Projekt",
+    topic: "Anna und Leo planen eine Ausstellung.",
+    storyPlan: null,
+  };
+
+  const brief = buildCompleteStoryBrief(story);
+  const storyContext = buildCompleteStoryContext(story);
+
+  assert.match(brief, /exactly 5 separately titled chapters/);
+  assert.match(brief, /complete causal arc/);
+  assert.equal(storyContext.mode, "complete_story");
+  assert.equal(storyContext.version, 3);
+  assert.equal(storyContext.chapterCount, 5);
+  assert.equal(storyContext.seriesTitle, "Ein neues Projekt");
+});
+
 test("chapter cooldown survives a reload and counts down from persisted time", () => {
   assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 165_000 }, 100_000), 65);
   assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 100_001 }, 100_000), 1);
@@ -97,6 +119,7 @@ test("a story only auto-resumes when server work or a chapter cooldown is pendin
   assert.equal(canAutoResumeStoryGeneration(story, null), false);
   assert.equal(canAutoResumeStoryGeneration(story, { jobId: "job-1" }), true);
   assert.equal(canAutoResumeStoryGeneration({ ...story, nextChapterAt: 165_000 }, null), true);
+  assert.equal(canAutoResumeStoryGeneration({ ...story, generatedChapters: [] }, null), true);
 });
 
 test("only a job still running in the background keeps the pending story", () => {

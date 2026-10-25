@@ -1062,6 +1062,7 @@ onChange("articleEditorSelect", () => {
 });
 onClick("articleModeBtn", () => setArticleCreationMode("article"));
 onClick("storyModeBtn", () => setArticleCreationMode("story"));
+onChange("storyChapterCountSelect", updateStoryLengthLimits);
 onEvent("articleTitleInput", "input", () => {
   if (!$("articleEditorSelect").value) {
     $("articleIdInput").value = makeArticleId($("articleTitleInput").value);

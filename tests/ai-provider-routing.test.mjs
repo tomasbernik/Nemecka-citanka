@@ -10,6 +10,7 @@ const config = {
   groqKey: "groq-key",
   groqModel: "openai/gpt-oss-120b",
   groqFallbackModel: "openai/gpt-oss-20b",
+  groqReviewModel: "qwen/qwen3.8-27b",
 };
 
 test("keeps at least one full Groq TPM window between large requests", () => {
@@ -17,13 +18,22 @@ test("keeps at least one full Groq TPM window between large requests", () => {
 });
 
 test("starts with the primary Groq model and exposes the repair model", () => {
-  assert.deepEqual(selectArticleAiTarget({ attempt: 1, ...config }), {
+  assert.deepEqual(selectArticleAiTarget({ phase: "draft", attempt: 1, ...config }), {
     provider: "groq",
     apiKey: "groq-key",
     model: "openai/gpt-oss-120b",
     repairModel: "openai/gpt-oss-20b",
   });
   assert.equal(selectArticleAiTarget({ attempt: 2, ...config }).model, "openai/gpt-oss-120b");
+});
+
+test("uses a different model for the independent review", () => {
+  assert.deepEqual(selectArticleAiTarget({ phase: "review", attempt: 1, ...config }), {
+    provider: "groq",
+    apiKey: "groq-key",
+    model: "qwen/qwen3.8-27b",
+    repairModel: "openai/gpt-oss-120b",
+  });
 });
 
 test("alternates to the smaller Groq model for later recovery", () => {

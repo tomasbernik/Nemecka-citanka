@@ -458,7 +458,7 @@
                 <button id="articleModeBtn" class="segmented-filter-btn active" type="button" aria-pressed="true">Článok</button>
                 <button id="storyModeBtn" class="segmented-filter-btn" type="button" aria-pressed="false">Príbeh</button>
               </div>
-              <p id="storyModeHelp" class="muted hidden">AI vytvorí a priebežne uloží všetky kapitoly ako jeden príbeh.</p>
+              <p id="storyModeHelp" class="muted hidden">AI vytvorí všetky kapitoly naraz, celý príbeh skontroluje iným modelom a potom kapitoly uloží. Pri 5 kapitolách je maximum 300–350 slov na kapitolu.</p>
             </div>
             <div id="storyGenerationOptions" class="story-generation-options hidden">
               <label class="field-row editor-helper-inline-row">
@@ -468,13 +468,8 @@
               <label class="field-row editor-helper-inline-row">
                 Počet kapitol
                 <select id="storyChapterCountSelect">
-                  <option value="2">2</option>
                   <option value="3">3</option>
-                  <option value="4">4</option>
                   <option value="5" selected>5</option>
-                  <option value="6">6</option>
-                  <option value="7">7</option>
-                  <option value="8">8</option>
                 </select>
               </label>
               <div id="storyGenerationProgress" class="story-generation-progress hidden" aria-live="polite">

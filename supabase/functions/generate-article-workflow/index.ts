@@ -1,5 +1,9 @@
 import { GROQ_COOLDOWN_SECONDS, selectArticleAiTarget } from "./provider-routing.mjs";
-import { getApproximateWordRange, parseStoryTextOutput } from "./story-text.mjs";
+import {
+  getApproximateWordRange,
+  parseStorySeriesTextOutput,
+  parseStoryTextOutput,
+} from "./story-text.mjs";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -146,7 +150,33 @@ const STORY_PLAN_SCHEMA = {
     title: { type: "string" },
     premise: { type: "string" },
     ending: { type: "string" },
-    characters: { type: "array", items: { type: "string" } },
+    characters: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          name: { type: "string" },
+          gender: { type: "string" },
+          role: { type: "string" },
+          goal: { type: "string" },
+        },
+        required: ["name", "gender", "role", "goal"],
+      },
+    },
+    centralConflict: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        reality: { type: "string" },
+        differingBeliefs: { type: "array", items: { type: "string" } },
+        cause: { type: "string" },
+        resolution: { type: "string" },
+      },
+      required: ["reality", "differingBeliefs", "cause", "resolution"],
+    },
+    objectLedger: { type: "array", items: { type: "string" } },
+    timeline: { type: "array", items: { type: "string" } },
     fixedFacts: { type: "array", items: { type: "string" } },
     chapterPlans: {
       type: "array",
@@ -165,7 +195,10 @@ const STORY_PLAN_SCHEMA = {
       },
     },
   },
-  required: ["title", "premise", "ending", "characters", "fixedFacts", "chapterPlans"],
+  required: [
+    "title", "premise", "ending", "characters", "centralConflict",
+    "objectLedger", "timeline", "fixedFacts", "chapterPlans",
+  ],
 };
 
 const CONTINUITY_STATE_SCHEMA = {
@@ -225,6 +258,47 @@ const normalizeStoryText = (value: unknown, minWords: number, maxWords: number) 
   return normalizeStory(parsed, minWords, maxWords);
 };
 
+const getWholeStoryChapterRange = (minWords: number, maxWords: number, chapterCount: number) => {
+  const maxWordsPerChapter = Math.min(maxWords, Math.floor(1_800 / chapterCount));
+  const minWordsPerChapter = Math.min(minWords, Math.max(180, maxWordsPerChapter - 70));
+  return { min: minWordsPerChapter, max: maxWordsPerChapter };
+};
+
+const normalizeStorySeriesText = (
+  value: unknown,
+  chapterCount: number,
+  minWords: number,
+  maxWords: number,
+) => {
+  const parsed = parseStorySeriesTextOutput(value, chapterCount);
+  if (!parsed) {
+    throw new WorkflowError(
+      "invalid_story_output",
+      502,
+      "AI story did not contain one series title and every numbered chapter in the required Markdown format.",
+    );
+  }
+  const range = getWholeStoryChapterRange(minWords, maxWords, chapterCount);
+  const chapters = parsed.chapters.map((chapter: { number: number; title: string; text: string[] }) => ({
+    ...normalizeStory({ title: chapter.title, text: chapter.text }, range.min, range.max),
+    number: chapter.number,
+  }));
+  return { title: asText(parsed.title, 160), chapters, chapterWordRange: range };
+};
+
+const formatStorySeriesMarkdown = (value: unknown) => {
+  const source = value && typeof value === "object" ? value as JsonObject : {};
+  const title = asText(source.title, 160);
+  const chapters = Array.isArray(source.chapters) ? source.chapters as JsonObject[] : [];
+  return [
+    `# ${title}`,
+    ...chapters.flatMap((chapter, index) => [
+      `## Kapitel ${Number(chapter.number) || index + 1}: ${asText(chapter.title, 160)}`,
+      asStringArray(chapter.text, 12, 4_000).join("\n\n"),
+    ]),
+  ].join("\n\n");
+};
+
 const normalizeStoryPlan = (value: unknown, chapterCount: number) => {
   const source = value && typeof value === "object" ? value as JsonObject : {};
   const chapterPlans = Array.isArray(source.chapterPlans)
@@ -241,11 +315,32 @@ const normalizeStoryPlan = (value: unknown, chapterCount: number) => {
     title: asText(source.title, 160),
     premise: asText(source.premise, 500),
     ending: asText(source.ending, 500),
-    characters: asStringArray(source.characters, 8, 240),
+    characters: Array.isArray(source.characters)
+      ? (source.characters as JsonObject[]).slice(0, 8).map(character => ({
+        name: asText(character.name, 80),
+        gender: asText(character.gender, 40),
+        role: asText(character.role, 160),
+        goal: asText(character.goal, 240),
+      }))
+      : [],
+    centralConflict: source.centralConflict && typeof source.centralConflict === "object"
+      ? {
+        reality: asText((source.centralConflict as JsonObject).reality, 400),
+        differingBeliefs: asStringArray((source.centralConflict as JsonObject).differingBeliefs, 6, 300),
+        cause: asText((source.centralConflict as JsonObject).cause, 400),
+        resolution: asText((source.centralConflict as JsonObject).resolution, 400),
+      }
+      : null,
+    objectLedger: asStringArray(source.objectLedger, 12, 240),
+    timeline: asStringArray(source.timeline, chapterCount + 2, 240),
     fixedFacts: asStringArray(source.fixedFacts, 16, 240),
     chapterPlans,
   };
-  if (!plan.title || !plan.premise || !plan.ending || chapterPlans.length !== chapterCount
+  if (!plan.title || !plan.premise || !plan.ending || !plan.characters.length
+    || plan.characters.some(character => !character.name || !character.gender || !character.role || !character.goal)
+    || !plan.centralConflict?.reality || !plan.centralConflict.cause || !plan.centralConflict.resolution
+    || plan.centralConflict.differingBeliefs.length < 2
+    || plan.timeline.length !== chapterCount || chapterPlans.length !== chapterCount
     || chapterPlans.some((item, index) => item.chapter !== index + 1 || !item.goal || !item.endingState)) {
     throw new WorkflowError("invalid_story_plan", 502, "AI story plan failed validation.");
   }
@@ -269,14 +364,25 @@ const normalizeIncomingStoryContext = (value: unknown) => {
   if (!value || typeof value !== "object") return null;
   const source = value as JsonObject;
   const chapterCount = Math.min(8, Math.max(2, Number(source.chapterCount) || 2));
-  const chapterNumber = Math.min(chapterCount, Math.max(1, Number(source.chapterNumber) || 1));
+  const mode = source.mode === "complete_story" ? "complete_story" : "chapter";
+  if (mode === "complete_story" && chapterCount !== 3 && chapterCount !== 5) {
+    throw new WorkflowError(
+      "invalid_request",
+      400,
+      "Complete stories must contain exactly 3 or 5 chapters.",
+    );
+  }
+  const chapterNumber = mode === "complete_story"
+    ? 0
+    : Math.min(chapterCount, Math.max(1, Number(source.chapterNumber) || 1));
   const previous = source.previousChapter && typeof source.previousChapter === "object"
     ? source.previousChapter as JsonObject
     : null;
   let plan = null;
   if (source.plan) plan = normalizeStoryPlan(source.plan, chapterCount);
   return {
-    version: 2,
+    version: mode === "complete_story" ? 3 : 2,
+    mode,
     chapterNumber,
     chapterCount,
     seriesTitle: asText(source.seriesTitle, 160),
@@ -564,6 +670,7 @@ type AiConfig = {
   groqKey: string;
   groqModel: string;
   groqFallbackModel: string;
+  groqReviewModel: string;
 };
 
 function callAi(
@@ -823,6 +930,7 @@ async function runClaimedPhase(
   const attempt = Number(claim.phase_attempt) || 1;
   const job = await loadJobById(url, serviceKey, jobId);
   const target = selectArticleAiTarget({
+    phase,
     attempt,
     lastErrorCode: asText(job.last_error_code, 80),
     ...aiConfig,
@@ -840,6 +948,7 @@ async function runClaimedPhase(
     ? request.storyContext as JsonObject
     : null;
   const isStory = Boolean(storyContext);
+  const isCompleteStory = storyContext?.mode === "complete_story";
   const languageFocus = isStory ? "" : asText(request.languageFocus, 200);
   const chapterNumber = Number(storyContext?.chapterNumber) || 0;
   const chapterCount = Number(storyContext?.chapterCount) || 0;
@@ -852,13 +961,17 @@ STORY CONTINUITY CONTRACT (authoritative JSON):
 ${JSON.stringify(storyContext)}
 
 CONTINUITY RULES:
-- Follow the plan for chapter ${chapterNumber}; do not borrow decisive events from later chapters.
+${isCompleteStory
+    ? "- Write every chapter in the plan now and preserve the planned order of setup, escalation and payoff."
+    : `- Follow the plan for chapter ${chapterNumber}; do not borrow decisive events from later chapters.`}
 - Never contradict an established fact, location, possession, relationship, resolved thread or causal link.
 - A character may use an object, fact or skill only if the story establishes how it was obtained.
 - Keep repairs, travel and changes of system state in their established locations and explain every transition.
 - Do not solve a problem through a new object, ability or coincidence that was not set up earlier.
 - Preserve open threads until their planned payoff. The final chapter must resolve all important open threads.
 - Important causes and effects must be stated in the text, not merely implied.
+- A misunderstanding exists only when the characters hold genuinely different beliefs or goals. Do not create a conflict by having a character deny and then paraphrase the same idea.
+- Keep every character's name, grammatical gender, profession and goal stable.
 ` : "";
   const phaseStartedAt = Date.now();
   console.info("Article AI attempt started:", { jobId, phase, attempt, provider, model });
@@ -879,7 +992,11 @@ TARGET:
 
 PLAN RULES:
 - Decide the real cause, final solution and ending now.
+- Give every character one unambiguous name, grammatical gender, role and goal. Prefer common names whose gender is clear to a language learner.
+- Define the objective reality and at least two genuinely different character beliefs behind the central conflict.
+- Test the conflict semantically: if both beliefs can be paraphrased as the same intention, redesign it before returning the plan.
 - Set up every object, skill and discovery before it becomes decisive.
+- Record ownership and location of every important object, and record one chronological step per chapter.
 - Give every important mystery or unusual object a payoff.
 - Keep fixed facts, locations and ownership concise and stable.
 - The plan must contain exactly ${chapterCount} ordered chapterPlans numbered 1-${chapterCount}.
@@ -913,16 +1030,21 @@ Return only the requested compact JSON plan.`;
         await logGenerationAttempt(url, serviceKey, {
           jobId, phase, attempt, provider, model, outcome: "retry", willRetry: true,
           durationMs: Date.now() - phaseStartedAt,
-          message: `Story plan stored; chapter queued after ${GROQ_COOLDOWN_SECONDS}-second Groq cooldown.`,
+          message: `Story plan stored; ${isCompleteStory ? "complete story" : "chapter"} queued after ${GROQ_COOLDOWN_SECONDS}-second Groq cooldown.`,
         });
         return;
       }
 
+      const completeStoryRange = isCompleteStory
+        ? getWholeStoryChapterRange(lengthMin, lengthMax, chapterCount)
+        : { min: lengthMin, max: lengthMax };
       const prompt = `You are an expert German teacher and story writer. Create only the German reading story. Do not return JSON.
 
 TARGET:
 - CEFR level: ${level}
-- Story length: ${lengthMin}-${lengthMax} German words; aim for ${Math.round((lengthMin + lengthMax) / 2)}.
+- ${isCompleteStory
+    ? `Write exactly ${chapterCount} chapters. Each chapter must contain ${completeStoryRange.min}-${completeStoryRange.max} German words.`
+    : `Story length: ${lengthMin}-${lengthMax} German words; aim for ${Math.round((lengthMin + lengthMax) / 2)}.`}
 - Category: ${category}
 - User's story brief: ${topic}
 - Required German words or phrases: ${requiredWords.join(", ") || "none"}
@@ -934,6 +1056,9 @@ QUALITY RULES:
 - At A2, use mostly short main clauses and familiar connectors such as "und", "aber", "weil" and "dann". Prefer concrete common words; introduce only necessary technical terms and make their meaning clear from context.
 - Write 4-6 meaningful paragraphs with a coherent beginning, development and ending.
 - Every action must be logically possible. Explain how a character obtains or knows something.
+- Every important reaction in dialogue must follow from what was actually said, not from the author's unstated intention.
+- Before writing a disagreement, silently paraphrase both positions. If they mean the same thing, rewrite them so the disagreement is real.
+- Do not combine an exact weekday with a calendar date unless the plan supplies a verified year. Prefer phrases such as "am nächsten Freitag".
 - Use dialogue only when natural. Write German quotation marks and punctuation correctly, with no spaces before a closing quotation mark.
 - Use required words naturally in a grammatically correct form.
 - If a language feature is specified, use at least three clear, natural examples of exactly that feature in the story.
@@ -944,20 +1069,27 @@ QUALITY RULES:
 ${continuityContract}
 ${storyPlan ? `BINDING WHOLE-STORY PLAN:
 ${JSON.stringify(storyPlan)}
-- Write only chapter ${chapterNumber} according to its chapter plan.
-- Do not use decisive events planned for later chapters.` : ""}
+${storyPlan && !isCompleteStory ? `- Write only chapter ${chapterNumber} according to its chapter plan.
+- Do not use decisive events planned for later chapters.` : ""}` : ""}
 
 OUTPUT FORMAT:
-- First line: one Markdown heading in the form "# German title".
-- Then one blank line followed by 4-6 German story paragraphs separated by blank lines.
+${isCompleteStory
+    ? `- First line: the series title as "# German series title".
+- Then every chapter in order as "## Kapitel 1: German chapter title", "## Kapitel 2: ..." and so on.
+- Put 4-6 meaningful paragraphs under every chapter heading.
+- Do not put any prose outside the series title and numbered chapters.`
+    : `- First line: one Markdown heading in the form "# German title".
+- Then one blank line followed by 4-6 German story paragraphs separated by blank lines.`}
 - Do not include labels, word counts, notes, analysis, code fences or JSON.`;
       const rawDraft = await callAiText(
         target,
         prompt,
         "low",
-        2_000,
+        isCompleteStory ? 4_000 : 2_000,
       );
-      const normalizedDraft = normalizeStoryText(rawDraft, lengthMin, lengthMax);
+      const normalizedDraft = isCompleteStory
+        ? normalizeStorySeriesText(rawDraft, chapterCount, lengthMin, lengthMax)
+        : normalizeStoryText(rawDraft, lengthMin, lengthMax);
       const draft = storyPlan ? { ...normalizedDraft, storyPlan } : normalizedDraft;
       await updateJob(url, serviceKey, jobId, userId, {
         status: "review_queued", draft, provider_used: provider, model_used: model,
@@ -973,23 +1105,41 @@ OUTPUT FORMAT:
     }
 
     const storedDraft = job.draft && typeof job.draft === "object" ? job.draft as JsonObject : {};
-    const draft = normalizeStory(storedDraft, lengthMin, lengthMax);
+    const draft = isCompleteStory
+      ? normalizeStorySeriesText(
+        formatStorySeriesMarkdown(storedDraft),
+        chapterCount,
+        lengthMin,
+        lengthMax,
+      )
+      : normalizeStory(storedDraft, lengthMin, lengthMax);
+    const draftSeries = draft as {
+      title: string;
+      chapters: Array<{ number: number; title: string; text: string[] }>;
+    };
+    const draftArticle = draft as { title: string; text: string[] };
+    const reviewedChapterRange = getWholeStoryChapterRange(lengthMin, lengthMax, chapterCount);
     const storyPlan = isStory
       ? (requestedPlan || (storedDraft.storyPlan
         ? normalizeStoryPlan(storedDraft.storyPlan, chapterCount)
         : null))
       : null;
     if (phase === "review") {
-      const prompt = `Act as a meticulous native German editor, continuity checker and CEFR examiner. Inspect the supplied story against the binding context, then return only the corrected story as plain Markdown, not JSON or comments. Make the smallest changes that fully fix the problems.
+      const prompt = `Act as an independent meticulous native German editor, continuity checker and CEFR examiner. Another model wrote the supplied story. Judge only what the text actually says, not what its author may have intended. Inspect it against the binding context, then return only the corrected story as plain Markdown, not JSON or comments. Make the smallest changes that fully fix the problems.
 
 REQUIREMENTS:
 - Target CEFR level: ${level}. Replace words and constructions that are too difficult.
-- Keep between ${lengthMin} and ${lengthMax} German story words.
+- ${isCompleteStory
+    ? `Keep exactly ${chapterCount} chapters and keep every chapter between ${reviewedChapterRange.min} and ${reviewedChapterRange.max} German words.`
+    : `Keep between ${lengthMin} and ${lengthMax} German story words.`}
 - Preserve the requested plot: ${topic}
 - Preserve required words when possible and use them correctly: ${requiredWords.join(", ") || "none"}.
 - Preserve and verify the required language feature: ${languageFocus || "none specified"}.
 - Fix grammar, cases, verb placement, collocations, register, dialogue punctuation and unnatural phrasing.
 - Check chronology and logic. Characters must realistically be able to perform every action.
+- For every disagreement or misunderstanding, paraphrase both positions internally. If they mean the same thing, repair the dialogue or the cause of the conflict.
+- Reject narrator claims that a misunderstanding remains if the preceding dialogue has already resolved every stated difference.
+- Keep names, grammatical gender, professions, goals and intended uses of creative works stable unless the text explicitly explains a change.
 - If somebody brings a forgotten object, explicitly explain how that person obtained it.
 - Check locations, object ownership, system states, unresolved threads, setup/payoff and cause/effect against the continuity contract.
 - Never introduce a new solution while editing. Use only the plan and already established resources.
@@ -1003,19 +1153,27 @@ ${continuityContract}
 ${storyPlan ? `BINDING WHOLE-STORY PLAN:\n${JSON.stringify(storyPlan)}` : ""}
 
 STORY TO EDIT:
-${JSON.stringify({ title: draft.title, text: draft.text })}
+${JSON.stringify(isCompleteStory
+    ? { title: draftSeries.title, chapters: draftSeries.chapters }
+    : { title: draftArticle.title, text: draftArticle.text })}
 
 OUTPUT FORMAT:
-- First line: one Markdown heading in the form "# German title".
-- Then one blank line followed by 4-6 corrected German story paragraphs separated by blank lines.
+${isCompleteStory
+    ? `- First line: the unchanged series title as "# German series title".
+- Return every corrected chapter as "## Kapitel N: German chapter title" with 4-6 paragraphs.
+- Keep the chapter numbering complete and ordered.`
+    : `- First line: one Markdown heading in the form "# German title".
+- Then one blank line followed by 4-6 corrected German story paragraphs separated by blank lines.`}
 - Do not include labels, word counts, explanations, code fences or JSON.`;
       const rawReviewed = await callAiText(
         target,
         prompt,
         "low",
-        2_000,
+        isCompleteStory ? 4_000 : 2_000,
       );
-      const reviewed = normalizeStoryText(rawReviewed, lengthMin, lengthMax);
+      const reviewed = isCompleteStory
+        ? normalizeStorySeriesText(rawReviewed, chapterCount, lengthMin, lengthMax)
+        : normalizeStoryText(rawReviewed, lengthMin, lengthMax);
       await updateJob(url, serviceKey, jobId, userId, {
         status: "materials_queued", reviewed, provider_used: provider, model_used: model,
         next_attempt_at: nextGroqSlot(), locked_until: null,
@@ -1026,6 +1184,73 @@ OUTPUT FORMAT:
         durationMs: Date.now() - phaseStartedAt,
       });
       kickWorker(url, serviceKey);
+      return;
+    }
+
+    if (isCompleteStory) {
+      if (!storyPlan) throw new WorkflowError("invalid_story_plan", 502, "Complete story is missing its plan.");
+      const reviewedSeries = normalizeStorySeriesText(
+        formatStorySeriesMarkdown(job.reviewed),
+        chapterCount,
+        lengthMin,
+        lengthMax,
+      );
+      const partial = job.article && typeof job.article === "object" ? job.article as JsonObject : {};
+      const completedChapters = Array.isArray(partial.chapters)
+        ? (partial.chapters as JsonObject[]).slice(0, chapterCount)
+        : [];
+      const chapterIndex = completedChapters.length;
+      const chapter = reviewedSeries.chapters[chapterIndex];
+      if (!chapter) throw new WorkflowError("invalid_materials_output", 502, "Missing chapter for materials.");
+      const prompt = `You are a German teacher creating compact learning materials for one chapter of an already approved story. Do not rewrite the story.
+
+LEVEL: ${level}
+SERIES TITLE: ${reviewedSeries.title}
+CHAPTER ${chapter.number} TITLE: ${chapter.title}
+CHAPTER TEXT: ${JSON.stringify(chapter.text)}
+
+Create:
+1. A short German summary suitable for ${level}.
+2. Exactly 5 useful vocabulary entries occurring verbatim in this chapter. Include de, dictionary base, and accurate sk, pl, hu, ru, en and fr translations.
+3. Six to eight clear German true/false statements with accurate boolean answers and a natural mixture of true and false.
+
+Keep the JSON compact. Verify every vocabulary form and every answer against this chapter. Return only the requested JSON.`;
+      const materials = await callAi(
+        target,
+        prompt,
+        "story_chapter_materials",
+        MATERIALS_SCHEMA,
+        "low",
+        2_400,
+      );
+      const articleChapter = validateMaterials(
+        materials,
+        { title: chapter.title, text: chapter.text },
+        { ...request, storyContext: null, languageFocus: "" },
+      );
+      const chapters = [...completedChapters, articleChapter];
+      const article = { seriesTitle: reviewedSeries.title, storyPlan, chapters };
+      const isFinished = chapters.length === chapterCount;
+      await updateJob(url, serviceKey, jobId, userId, {
+        status: isFinished ? "completed" : "materials_queued",
+        article,
+        provider_used: provider,
+        model_used: model,
+        completed_at: isFinished ? new Date().toISOString() : null,
+        next_attempt_at: isFinished ? null : nextGroqSlot(),
+        locked_until: null,
+        last_error: null, last_error_code: null,
+      }, true);
+      await logGenerationAttempt(url, serviceKey, {
+        jobId, phase, attempt, provider, model,
+        outcome: isFinished ? "succeeded" : "retry",
+        willRetry: !isFinished,
+        durationMs: Date.now() - phaseStartedAt,
+        message: isFinished
+          ? `Learning materials completed for all ${chapterCount} chapters.`
+          : `Learning materials completed for chapter ${chapter.number}; next chapter queued.`,
+      });
+      if (!isFinished) kickWorker(url, serviceKey);
       return;
     }
 
@@ -1081,7 +1306,9 @@ Before returning, verify every vocabulary form${includeLanguageFocus ? " and eve
       });
       return;
     }
-    const retry = RETRYABLE_CODES.has(failure.code) && attempt < MAX_PHASE_ATTEMPTS;
+    const allowedAttempts = MAX_PHASE_ATTEMPTS
+      + (isCompleteStory && phase === "materials" ? Math.max(0, chapterCount - 1) : 0);
+    const retry = RETRYABLE_CODES.has(failure.code) && attempt < allowedAttempts;
     console.error("Article worker phase failed:", {
       jobId, phase, attempt, provider, model, retry, code: failure.code, message: failure.message,
     });
@@ -1146,6 +1373,7 @@ Deno.serve(async req => {
     groqKey: Deno.env.get("GROQ_API_KEY") || "",
     groqModel: Deno.env.get("GROQ_ARTICLE_MODEL") || "openai/gpt-oss-120b",
     groqFallbackModel: Deno.env.get("GROQ_ARTICLE_FALLBACK_MODEL") || "openai/gpt-oss-20b",
+    groqReviewModel: Deno.env.get("GROQ_ARTICLE_REVIEW_MODEL") || "qwen/qwen3.8-27b",
   };
   if (!url || !anonKey || !serviceKey || !aiConfig.groqKey) {
     return respond({ error: "missing_configuration" }, 503);

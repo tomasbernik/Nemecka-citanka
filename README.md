@@ -235,29 +235,30 @@ supabase secrets set GROQ_API_KEY="..."
 Modely možno zmeniť bez úpravy kódu:
 
 ```bash
-supabase secrets set GROQ_ARTICLE_MODEL="openai/gpt-oss-120b" GROQ_ARTICLE_FALLBACK_MODEL="openai/gpt-oss-20b"
+supabase secrets set GROQ_ARTICLE_MODEL="openai/gpt-oss-120b" GROQ_ARTICLE_REVIEW_MODEL="qwen/qwen3.8-27b" GROQ_ARTICLE_FALLBACK_MODEL="openai/gpt-oss-20b"
 ```
 
 Pri viac-kapitolovom príbehu sa najprv samostatne vytvorí malá záväzná JSON osnova
-celej série. Samotná kapitola aj jej jazyková a dejová revízia sa potom generujú
-ako obyčajný Markdown text, nie ako veľký JSON objekt. Server z textu bezpečne
-vyberie nadpis a odseky a overí počet slov. JSON zostáva iba tam, kde aplikácia
-potrebuje štruktúrované údaje: pri osnove, slovnej zásobe, otázkach, cvičení a stave
-kontinuity.
+celej série. Všetky tri alebo päť kapitol sa následne vytvoria spoločne v jednom
+Markdown výstupe, aby model videl celý dejový oblúk naraz. Celú sériu potom
+nezávisle skontroluje iný Groq model (`GROQ_ARTICLE_REVIEW_MODEL`) a až opravený
+text sa rozdelí na samostatné kapitoly. Server kontroluje počet, poradie, nadpisy,
+odseky a dĺžku každej kapitoly.
 
 Jazykový jav a jeho cvičenie sa pri viac-kapitolových príbehoch negenerujú. Pri
 samostatnom článku sa pridajú iba vtedy, keď používateľ vyplní voliteľné pole
 „Jazykový jav“; prázdne pole znamená menšiu schému bez `languageFocus`.
 
-Po každej kapitole sa uloží kompaktný stav postáv, predmetov, lokalít, otvorených
-dejových línií a príčinných súvislostí. Nasledujúca kapitola dostane tento stav,
-osnovu, krátke zhrnutia a iba koniec bezprostredne predchádzajúcej kapitoly.
-Všetky fázy používajú nízke reasoning úsilie, aby skryté reasoning tokeny
-nespotrebovali celý priestor pre výsledok. Medzi každými dvoma väčšími Groq
-volaniami je najmenej 65 sekúnd, vrátane prechodov medzi osnovou, kapitolou,
-revíziou a materiálmi. Výstupné limity jednotlivých volaní sú 1 800 až 3 000
-tokenov. Zvolený počet slov je cieľový rozsah; validácia povoľuje odchýlku 10 %
-na oboch stranách, aby sa kvalitný text zbytočne negeneroval znova.
+Osnova osobitne eviduje mená a rody postáv, ich ciele, skutočnú podstatu konfliktu,
+odlišné presvedčenia, predmety s vlastníkmi a časovú os. Revízny model kontroluje
+aj význam dialógov, aby nevzniklo zdanlivé nedorozumenie medzi dvoma rovnakými
+výrokmi. Učebné materiály sa kvôli free limitom generujú postupne pre každú
+kapitolu; nemenia už schválený dej.
+
+Všetky fázy používajú nízke reasoning úsilie. Medzi každými dvoma väčšími Groq
+volaniami je najmenej 65 sekúnd. Príbeh môže mať 3 alebo 5 kapitol. Pri piatich
+kapitolách je dlhý variant v rozhraní vypnutý a maximum je 300–350 slov na
+kapitolu, aby sa celý dej aj jeho revízia zmestili do bezplatného TPM limitu.
 
 Najprv nasaď databázové migrácie a potom funkciu. Auditná tabuľka
 `article_generation_job_events` zaznamenáva pri každom pokuse poskytovateľa,

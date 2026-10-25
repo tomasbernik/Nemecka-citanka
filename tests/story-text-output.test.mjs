@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   getApproximateWordRange,
+  parseStorySeriesTextOutput,
   parseStoryTextOutput,
 } from "../supabase/functions/generate-article-workflow/story-text.mjs";
 
@@ -42,4 +43,51 @@ Er bringt ihn zur Polizei.
 test("rejects output without an explicit title or story body", () => {
   assert.equal(parseStoryTextOutput("Nur ein Absatz ohne Überschrift."), null);
   assert.equal(parseStoryTextOutput("# Nur ein Titel"), null);
+});
+
+test("parses a complete multi-chapter story without mechanically splitting prose", () => {
+  assert.deepEqual(parseStorySeriesTextOutput(`# Ein neuer Anfang
+
+## Kapitel 1: Das Café
+
+Anna sitzt am Fenster.
+
+Leo kommt herein.
+
+Sie sprechen über Fotos.
+
+## Kapitel 2: Die Idee
+
+Leo zeigt seinen Plan.
+
+Anna stellt eine Frage.
+
+Beide finden eine Lösung.
+
+## Kapitel 3: Die Ausstellung
+
+Die Freunde arbeiten zusammen.
+
+Die Besucher hören Musik.
+
+Anna und Leo sind zufrieden.`, 3), {
+    title: "Ein neuer Anfang",
+    chapters: [
+      { number: 1, title: "Das Café", text: ["Anna sitzt am Fenster.", "Leo kommt herein.", "Sie sprechen über Fotos."] },
+      { number: 2, title: "Die Idee", text: ["Leo zeigt seinen Plan.", "Anna stellt eine Frage.", "Beide finden eine Lösung."] },
+      { number: 3, title: "Die Ausstellung", text: ["Die Freunde arbeiten zusammen.", "Die Besucher hören Musik.", "Anna und Leo sind zufrieden."] },
+    ],
+  });
+});
+
+test("rejects a complete story with a missing or misnumbered chapter", () => {
+  assert.equal(parseStorySeriesTextOutput(`# Titel
+
+## Kapitel 1: Anfang
+
+Absatz eins.\n\nAbsatz zwei.\n\nAbsatz drei.
+
+## Kapitel 3: Ende
+
+Absatz eins.\n\nAbsatz zwei.\n\nAbsatz drei.`, 2), null);
 });
