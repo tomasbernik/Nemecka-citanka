@@ -85,3 +85,8 @@ test("chapter cooldown survives a reload and counts down from persisted time", (
   assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 99_000 }, 100_000), 0);
   assert.equal(getStoryChapterCooldownSeconds({}, 100_000), 0);
 });
+
+test("story generation does not request an optional language focus", () => {
+  assert.match(editorSource, /languageFocus:\s*""/);
+  assert.match(editorSource, /articleLanguageFocusRow"\)\?\.classList\.toggle\("hidden", isStory\)/);
+});

@@ -60,6 +60,40 @@ const countWords = (paragraphs: string[]) => paragraphs
   .split(/\s+/u)
   .filter(Boolean).length;
 
+const LANGUAGE_FOCUS_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    requestedFeature: { type: "string" },
+    title: { type: "string" },
+    examples: {
+      type: "array",
+      items: {
+        type: "object",
+        additionalProperties: false,
+        properties: {
+          sentence: { type: "string" },
+          highlight: { type: "string" },
+        },
+        required: ["sentence", "highlight"],
+      },
+    },
+    exercise: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        type: { type: "string", enum: ["multiple_choice"] },
+        prompt: { type: "string" },
+        options: { type: "array", items: { type: "string" } },
+        words: { type: "array", items: { type: "string" } },
+        answer: { type: "string" },
+      },
+      required: ["type", "prompt", "options", "words", "answer"],
+    },
+  },
+  required: ["requestedFeature", "title", "examples", "exercise"],
+};
+
 const MATERIALS_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -95,41 +129,14 @@ const MATERIALS_SCHEMA = {
         required: ["statement", "answer"],
       },
     },
-    languageFocus: {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        requestedFeature: { type: "string" },
-        title: { type: "string" },
-        examples: {
-          type: "array",
-          items: {
-            type: "object",
-            additionalProperties: false,
-            properties: {
-              sentence: { type: "string" },
-              highlight: { type: "string" },
-            },
-            required: ["sentence", "highlight"],
-          },
-        },
-        exercise: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            type: { type: "string", enum: ["multiple_choice"] },
-            prompt: { type: "string" },
-            options: { type: "array", items: { type: "string" } },
-            words: { type: "array", items: { type: "string" } },
-            answer: { type: "string" },
-          },
-          required: ["type", "prompt", "options", "words", "answer"],
-        },
-      },
-      required: ["requestedFeature", "title", "examples", "exercise"],
-    },
   },
-  required: ["summary", "vocabulary", "questions", "languageFocus"],
+  required: ["summary", "vocabulary", "questions"],
+};
+
+const MATERIALS_WITH_LANGUAGE_FOCUS_SCHEMA = {
+  ...MATERIALS_SCHEMA,
+  properties: { ...MATERIALS_SCHEMA.properties, languageFocus: LANGUAGE_FOCUS_SCHEMA },
+  required: [...MATERIALS_SCHEMA.required, "languageFocus"],
 };
 
 const STORY_PLAN_SCHEMA = {
@@ -337,7 +344,6 @@ const validateMaterials = (
     text: story.text,
     vocabulary,
     questions,
-    languageFocus: source.languageFocus,
   };
   const storyText = story.text.join("\n");
   const vocabularyValid = vocabulary.length === 5 && vocabulary.every(item => {
@@ -347,9 +353,20 @@ const validateMaterials = (
   });
   const questionsValid = questions.length >= 6 && questions.length <= 8
     && questions.every(item => asText(item.statement, 500) && typeof item.answer === "boolean");
-  const requestedFeature = asText(request.languageFocus, 200);
-  if (!article.summary || !vocabularyValid || !questionsValid || !hasValidLanguageFocus(article, requestedFeature)) {
-    throw new WorkflowError("invalid_materials_output", 502, "AI learning materials failed validation.");
+  const requestedFeature = request.storyContext ? "" : asText(request.languageFocus, 200);
+  if (requestedFeature) article.languageFocus = source.languageFocus;
+  const failedChecks = [
+    !article.summary && "summary",
+    !vocabularyValid && "vocabulary",
+    !questionsValid && "questions",
+    requestedFeature && !hasValidLanguageFocus(article, requestedFeature) && "languageFocus",
+  ].filter(Boolean);
+  if (failedChecks.length) {
+    throw new WorkflowError(
+      "invalid_materials_output",
+      502,
+      `AI learning materials failed validation: ${failedChecks.join(", ")}.`,
+    );
   }
   if (request.storyContext) {
     article.continuityState = normalizeContinuityState(source.continuityState);
@@ -819,11 +836,11 @@ async function runClaimedPhase(
   const lengthMin = Number(request.lengthMin);
   const lengthMax = Number(request.lengthMax);
   const requiredWords = asStringArray(request.requiredWords, 15, 60);
-  const languageFocus = asText(request.languageFocus, 200);
   const storyContext = request.storyContext && typeof request.storyContext === "object"
     ? request.storyContext as JsonObject
     : null;
   const isStory = Boolean(storyContext);
+  const languageFocus = isStory ? "" : asText(request.languageFocus, 200);
   const chapterNumber = Number(storyContext?.chapterNumber) || 0;
   const chapterCount = Number(storyContext?.chapterCount) || 0;
   const requestedPlan = storyContext?.plan && typeof storyContext.plan === "object"
@@ -1013,27 +1030,33 @@ OUTPUT FORMAT:
     }
 
     const reviewed = normalizeStory(job.reviewed, lengthMin, lengthMax);
+    const includeLanguageFocus = !isStory && Boolean(languageFocus);
     const prompt = `You are a German teacher creating learning materials from an already approved story. Do not rewrite the story.
 
 LEVEL: ${level}
 TITLE: ${reviewed.title}
 STORY PARAGRAPHS: ${JSON.stringify(reviewed.text)}
-REQUIRED LANGUAGE FEATURE: ${languageFocus || "none specified; choose one useful feature"}
 
 Create:
 1. A short German summary suitable for ${level}.
 2. Exactly 5 useful vocabulary entries that occur verbatim in the story. Include de, dictionary base, and accurate sk, pl, hu, ru, en and fr translations.
 3. Six to eight clear German true/false statements with accurate boolean answers and a natural mixture of true and false.
-4. The required language feature above, with 2-3 exact story sentences and an exact highlighted substring. Do not substitute a different feature. Set languageFocus.requestedFeature to exactly ${JSON.stringify(languageFocus)} (an empty string when none was specified).
-5. One unambiguous multiple-choice exercise. The prompt must contain exactly one ___ gap, options must be three distinct choices, and only the answer may correctly complete the intended sentence. Use an empty words array.
-${isStory ? `6. A compact continuityState for the next chapter. Merge the previous state with facts from this approved chapter. Record characters and roles; exact locations and ownership of important objects; established facts; still-open and resolved threads; explicit causal links; and contradictions future chapters must avoid. Never mark a thread resolved unless the approved text resolves it. Do not invent facts.\nPREVIOUS STATE: ${JSON.stringify(storyContext?.state || null)}\nWHOLE-STORY PLAN: ${JSON.stringify(storyPlan)}` : ""}
+${includeLanguageFocus ? `4. A languageFocus for exactly ${JSON.stringify(languageFocus)}, with 2-3 exact story sentences and an exact highlighted substring. Do not substitute a different feature. Set languageFocus.requestedFeature to exactly ${JSON.stringify(languageFocus)}.
+5. One unambiguous multiple-choice exercise inside languageFocus. The prompt must contain exactly one ___ gap, options must be three distinct choices, and only the answer may correctly complete the intended sentence. Use an empty words array.` : "Do not create languageFocus or a language exercise."}
+${isStory ? `4. A compact continuityState for the next chapter. Merge the previous state with facts from this approved chapter. Record characters and roles; exact locations and ownership of important objects; established facts; still-open and resolved threads; explicit causal links; and contradictions future chapters must avoid. Never mark a thread resolved unless the approved text resolves it. Do not invent facts.\nPREVIOUS STATE: ${JSON.stringify(storyContext?.state || null)}\nWHOLE-STORY PLAN: ${JSON.stringify(storyPlan)}` : ""}
 
-Before returning, verify every vocabulary form and every example against the supplied story. Return only the requested JSON.`;
+Before returning, verify every vocabulary form${includeLanguageFocus ? " and every language-focus example" : ""} against the supplied story. Return only the requested JSON.`;
+    const materialsSchema = isStory
+      ? STORY_MATERIALS_SCHEMA
+      : includeLanguageFocus ? MATERIALS_WITH_LANGUAGE_FOCUS_SCHEMA : MATERIALS_SCHEMA;
+    const materialsSchemaName = isStory
+      ? "story_materials"
+      : includeLanguageFocus ? "article_materials_with_focus" : "article_materials";
     const materials = await callAi(
       target,
       prompt,
-      isStory ? "story_materials" : "article_materials",
-      isStory ? STORY_MATERIALS_SCHEMA : MATERIALS_SCHEMA,
+      materialsSchemaName,
+      materialsSchema,
       "low",
       isStory ? 3_000 : 2_400,
     );

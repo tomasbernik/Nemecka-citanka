@@ -245,6 +245,10 @@ vyberie nadpis a odseky a overí počet slov. JSON zostáva iba tam, kde apliká
 potrebuje štruktúrované údaje: pri osnove, slovnej zásobe, otázkach, cvičení a stave
 kontinuity.
 
+Jazykový jav a jeho cvičenie sa pri viac-kapitolových príbehoch negenerujú. Pri
+samostatnom článku sa pridajú iba vtedy, keď používateľ vyplní voliteľné pole
+„Jazykový jav“; prázdne pole znamená menšiu schému bez `languageFocus`.
+
 Po každej kapitole sa uloží kompaktný stav postáv, predmetov, lokalít, otvorených
 dejových línií a príčinných súvislostí. Nasledujúca kapitola dostane tento stav,
 osnovu, krátke zhrnutia a iba koniec bezprostredne predchádzajúcej kapitoly.

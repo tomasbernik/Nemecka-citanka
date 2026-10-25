@@ -1604,6 +1604,7 @@ function setArticleCreationMode(mode = "article") {
   $("storyModeBtn")?.setAttribute("aria-pressed", String(isStory));
   $("storyGenerationOptions")?.classList.toggle("hidden", !isStory);
   $("storyModeHelp")?.classList.toggle("hidden", !isStory);
+  $("articleLanguageFocusRow")?.classList.toggle("hidden", isStory);
   const generateButton = $("generateArticleAiBtn");
   if (generateButton && !articleGenerationRunning) {
     generateButton.textContent = t(isStory ? "generateStoryAi" : "generateArticleAi");
@@ -1990,7 +1991,7 @@ async function continueStoryGeneration(story) {
       minWords: story.minWords,
       maxWords: story.maxWords,
       requiredWords: story.requiredWords,
-      languageFocus: story.languageFocus,
+      languageFocus: "",
       storyContext: buildStoryChapterContext(story, chapterIndex),
       onProgress: phase => showStoryChapterProgress(story, chapterIndex, phase)
     });
@@ -2058,7 +2059,7 @@ async function generateStoryDirectlyWithAi() {
       minWords: range.min,
       maxWords: range.max,
       requiredWords: getArticleRequiredWords(),
-      languageFocus: getArticleLanguageFocusRequirement(),
+      languageFocus: "",
       language: getSelectedArticleLanguage(),
       createdAt: Date.now()
     };
