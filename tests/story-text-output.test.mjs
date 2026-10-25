@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 import {
+  getCompleteStoryWordRange,
   getApproximateWordRange,
   parseStorySeriesTextOutput,
   parseStoryTextOutput,
@@ -10,6 +11,11 @@ import {
 test("allows a ten-percent tolerance around the selected word range", () => {
   assert.deepEqual(getApproximateWordRange(300, 350), { min: 270, max: 385 });
   assert.deepEqual(getApproximateWordRange(100, 150), { min: 90, max: 165 });
+});
+
+test("turns the selected average chapter length into one complete-story word budget", () => {
+  assert.deepEqual(getCompleteStoryWordRange(300, 350, 3), { min: 900, max: 1050 });
+  assert.deepEqual(getCompleteStoryWordRange(300, 350, 5), { min: 1500, max: 1750 });
 });
 
 test("parses a Markdown story into a title and paragraphs", () => {

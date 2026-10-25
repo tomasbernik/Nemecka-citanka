@@ -7,6 +7,13 @@ export function getApproximateWordRange(minWords, maxWords, tolerance = 0.1) {
   };
 }
 
+export function getCompleteStoryWordRange(minWordsPerChapter, maxWordsPerChapter, chapterCount) {
+  return {
+    min: minWordsPerChapter * chapterCount,
+    max: maxWordsPerChapter * chapterCount,
+  };
+}
+
 export function parseStoryTextOutput(value) {
   if (typeof value !== "string") return null;
   const cleaned = value

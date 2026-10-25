@@ -1618,6 +1618,7 @@ function setArticleCreationMode(mode = "article") {
   $("storyGenerationOptions")?.classList.toggle("hidden", !isStory);
   $("storyModeHelp")?.classList.toggle("hidden", !isStory);
   $("articleLanguageFocusRow")?.classList.toggle("hidden", isStory);
+  setLabelText("articleLengthSelect", isStory ? "storyAverageChapterLength" : "articleLength");
   updateStoryLengthLimits();
   const generateButton = $("generateArticleAiBtn");
   if (generateButton && !articleGenerationRunning) {

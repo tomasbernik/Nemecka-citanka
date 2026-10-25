@@ -1,5 +1,6 @@
 import { GROQ_COOLDOWN_SECONDS, selectArticleAiTarget } from "./provider-routing.mjs";
 import {
+  getCompleteStoryWordRange,
   getApproximateWordRange,
   parseStorySeriesTextOutput,
   parseStoryTextOutput,
@@ -285,18 +286,46 @@ const normalizeStoryText = (value: unknown, minWords: number, maxWords: number) 
   return normalizeStory(parsed, minWords, maxWords);
 };
 
-const getWholeStoryChapterRange = (minWords: number, maxWords: number, chapterCount: number) => {
-  const maxWordsPerChapter = Math.min(maxWords, Math.floor(1_800 / chapterCount));
-  const minWordsPerChapter = Math.min(minWords, Math.max(180, maxWordsPerChapter - 70));
-  return { min: minWordsPerChapter, max: maxWordsPerChapter };
+const normalizeStoryChapterText = (value: unknown) => {
+  const parsed = parseStoryTextOutput(value);
+  if (!parsed) {
+    throw new WorkflowError(
+      "invalid_story_output",
+      502,
+      "AI chapter did not contain a Markdown title followed by story paragraphs.",
+    );
+  }
+  const title = asText(parsed.title, 160);
+  const text = asStringArray(parsed.text, 12, 4_000);
+  const invalidQuoteSpacing = /[.!?]\s+[“”]/u.test(text.join("\n"));
+  if (!title || text.length < 4 || invalidQuoteSpacing) {
+    throw new WorkflowError(
+      "invalid_story_output",
+      502,
+      invalidQuoteSpacing
+        ? "AI chapter contains invalid spacing before a German closing quotation mark."
+        : "AI chapter must contain at least 4 meaningful paragraphs.",
+    );
+  }
+  return { title, text, wordCount: countWords(text) };
 };
 
-const getDraftStoryChapterRange = (minWords: number, maxWords: number, chapterCount: number) => {
-  const finalRange = getWholeStoryChapterRange(minWords, maxWords, chapterCount);
-  return {
-    min: Math.min(finalRange.min, 200),
-    max: Math.max(finalRange.max, 410),
-  };
+const getStorySeriesWordStats = (
+  series: { chapters: Array<{ text: string[]; wordCount?: number }> },
+  minWords: number,
+  maxWords: number,
+  chapterCount: number,
+) => {
+  const target = getCompleteStoryWordRange(minWords, maxWords, chapterCount);
+  const accepted = getApproximateWordRange(target.min, target.max);
+  const chapterWordCounts = series.chapters.map(chapter => Number(chapter.wordCount) || countWords(chapter.text));
+  const totalWordCount = chapterWordCounts.reduce((sum, count) => sum + count, 0);
+  const lengthRepairIndex = totalWordCount < accepted.min
+    ? chapterWordCounts.indexOf(Math.min(...chapterWordCounts))
+    : totalWordCount > accepted.max
+      ? chapterWordCounts.indexOf(Math.max(...chapterWordCounts))
+      : -1;
+  return { target, accepted, chapterWordCounts, totalWordCount, lengthRepairIndex };
 };
 
 const normalizeStorySeriesText = (
@@ -314,34 +343,45 @@ const normalizeStorySeriesText = (
       "AI story did not contain one series title and every numbered chapter in the required Markdown format.",
     );
   }
-  const range = getWholeStoryChapterRange(minWords, maxWords, chapterCount);
-  const validationRange = options.draft
-    ? getDraftStoryChapterRange(minWords, maxWords, chapterCount)
-    : range;
-  const chapters = parsed.chapters.map((chapter: { number: number; title: string; text: string[] }) => ({
-    ...normalizeStory(
-      { title: chapter.title, text: chapter.text },
-      validationRange.min,
-      validationRange.max,
-      options.draft ? { minParagraphs: 3, allowQuoteSpacingRepair: true } : {},
-    ),
-    number: chapter.number,
-  }));
-  return { title: asText(parsed.title, 160), chapters, chapterWordRange: range };
+  const minParagraphs = options.draft ? 3 : 4;
+  const chapters = parsed.chapters.map((chapter: { number: number; title: string; text: string[] }) => {
+    const title = asText(chapter.title, 160);
+    const text = asStringArray(chapter.text, 12, 4_000);
+    const wordCount = countWords(text);
+    const invalidQuoteSpacing = /[.!?]\s+[“”]/u.test(text.join("\n"));
+    if (!title || text.length < minParagraphs || (invalidQuoteSpacing && !options.draft)) {
+      throw new WorkflowError(
+        "invalid_story_output",
+        502,
+        invalidQuoteSpacing
+          ? `AI story chapter ${chapter.number} contains invalid spacing before a German closing quotation mark.`
+          : `AI story chapter ${chapter.number} must contain at least ${minParagraphs} meaningful paragraphs.`,
+      );
+    }
+    return { title, text, wordCount, number: chapter.number };
+  });
+  const stats = getStorySeriesWordStats({ chapters }, minWords, maxWords, chapterCount);
+  if (stats.totalWordCount < stats.accepted.min || stats.totalWordCount > stats.accepted.max) {
+    throw new WorkflowError(
+      "invalid_story_output",
+      502,
+      `AI complete story failed validation (${stats.totalWordCount} total words; target ${stats.target.min}-${stats.target.max}, accepted ${stats.accepted.min}-${stats.accepted.max}). Individual chapter lengths may vary.`,
+    );
+  }
+  return {
+    title: asText(parsed.title, 160),
+    chapters,
+    totalWordCount: stats.totalWordCount,
+    storyWordRange: stats.target,
+  };
 };
 
 const getInvalidSeriesChapterIndexes = (
   series: { chapters: Array<{ text: string[]; wordCount?: number }> },
-  minWords: number,
-  maxWords: number,
-  chapterCount: number,
 ) => {
-  const range = getWholeStoryChapterRange(minWords, maxWords, chapterCount);
-  const accepted = getApproximateWordRange(range.min, range.max);
   return series.chapters.flatMap((chapter, index) => {
-    const wordCount = Number(chapter.wordCount) || countWords(chapter.text);
     const invalidQuoteSpacing = /[.!?]\s+[“”]/u.test(chapter.text.join("\n"));
-    return chapter.text.length < 4 || wordCount < accepted.min || wordCount > accepted.max || invalidQuoteSpacing
+    return chapter.text.length < 4 || invalidQuoteSpacing
       ? [index]
       : [];
   });
@@ -1183,18 +1223,15 @@ Return only the requested compact JSON plan.`;
       }
 
       const completeStoryRange = isCompleteStory
-        ? getWholeStoryChapterRange(lengthMin, lengthMax, chapterCount)
+        ? getCompleteStoryWordRange(lengthMin, lengthMax, chapterCount)
         : { min: lengthMin, max: lengthMax };
-      const preferredChapterMin = Math.max(
-        completeStoryRange.min,
-        completeStoryRange.max - 30,
-      );
+      const preferredStoryLength = Math.round((completeStoryRange.min + completeStoryRange.max) / 2);
       const prompt = `You are an expert German teacher and story writer. Create only the German reading story. Do not return JSON.
 
 TARGET:
 - CEFR level: ${level}
 - ${isCompleteStory
-    ? `Write exactly ${chapterCount} chapters. Each chapter must contain ${completeStoryRange.min}-${completeStoryRange.max} German words. Aim for ${preferredChapterMin}-${completeStoryRange.max} words in every chapter; do not stop near or below the lower boundary.`
+    ? `Write exactly ${chapterCount} chapters with ${completeStoryRange.min}-${completeStoryRange.max} German words in total; aim for about ${preferredStoryLength}. The selected ${lengthMin}-${lengthMax} words is an average per chapter, not a hard chapter limit. Let individual chapters be naturally shorter or longer according to their dramatic role while keeping the complete story inside the total range.`
     : `Story length: ${lengthMin}-${lengthMax} German words; aim for ${Math.round((lengthMin + lengthMax) / 2)}.`}
 - Category: ${category}
 - User's story brief: ${topic}
@@ -1205,7 +1242,7 @@ QUALITY RULES:
 - Use natural, grammatically correct German and vocabulary genuinely suitable for ${level}.
 - Prefer short, clear sentences. For A1, avoid idioms, literary words and advanced subordinate clauses.
 - At A2, use mostly short main clauses and familiar connectors such as "und", "aber", "weil" and "dann". Prefer concrete common words; introduce only necessary technical terms and make their meaning clear from context.
-- Write 4-6 meaningful paragraphs with a coherent beginning, development and ending.
+- ${isCompleteStory ? "Write 4-6 meaningful paragraphs in every chapter." : "Write 4-6 meaningful paragraphs with a coherent beginning, development and ending."}
 - Every action must be logically possible. Explain how a character obtains or knows something.
 - Every important reaction in dialogue must follow from what was actually said, not from the author's unstated intention.
 - Before writing a disagreement, silently paraphrase both positions. If they mean the same thing, rewrite them so the disagreement is real.
@@ -1240,7 +1277,7 @@ ${isCompleteStory
         target,
         prompt,
         "low",
-        isCompleteStory ? 6_000 : 2_000,
+        isCompleteStory ? 4_000 : 2_000,
       );
       const normalizedDraft = isCompleteStory
         ? normalizeStorySeriesText(rawDraft, chapterCount, lengthMin, lengthMax, {
@@ -1277,7 +1314,14 @@ ${isCompleteStory
       chapters: Array<{ number: number; title: string; text: string[]; wordCount: number }>;
     };
     const draftArticle = draft as { title: string; text: string[] };
-    const reviewedChapterRange = getWholeStoryChapterRange(lengthMin, lengthMax, chapterCount);
+    const reviewedStoryRange = getCompleteStoryWordRange(lengthMin, lengthMax, chapterCount);
+    const reviewedStoryAcceptedRange = getApproximateWordRange(
+      reviewedStoryRange.min,
+      reviewedStoryRange.max,
+    );
+    const draftWordStats = isCompleteStory
+      ? getStorySeriesWordStats(draftSeries, lengthMin, lengthMax, chapterCount)
+      : null;
     const storyPlan = isStory
       ? (requestedPlan || (storedDraft.storyPlan
         ? normalizeStoryPlan(storedDraft.storyPlan, chapterCount)
@@ -1292,12 +1336,10 @@ ${isCompleteStory
           })).filter(item => item.chapter >= 1 && item.chapter <= chapterCount)
           : [];
         const invalidIndexes = [...new Set([
-          ...getInvalidSeriesChapterIndexes(
-          draftSeries,
-          lengthMin,
-          lengthMax,
-          chapterCount,
-          ),
+          ...getInvalidSeriesChapterIndexes(draftSeries),
+          ...(draftWordStats && draftWordStats.lengthRepairIndex >= 0
+            ? [draftWordStats.lengthRepairIndex]
+            : []),
           ...storedReviewIssues.map(item => item.chapter - 1),
         ])].sort((a, b) => a - b);
         if (!invalidIndexes.length) {
@@ -1321,14 +1363,19 @@ ${isCompleteStory
         const nextChapter = draftSeries.chapters[repairIndex + 1];
         const chapterReviewIssues = storedReviewIssues
           .find(item => item.chapter === chapter.number)?.issues || [];
-        const preferredMin = Math.max(reviewedChapterRange.min, reviewedChapterRange.max - 30);
+        const currentStats = getStorySeriesWordStats(draftSeries, lengthMin, lengthMax, chapterCount);
+        const totalLengthInstruction = currentStats.lengthRepairIndex === repairIndex
+          ? currentStats.totalWordCount < currentStats.accepted.min
+            ? `- The complete story currently has only ${currentStats.totalWordCount} words. Add enough natural detail to bring the complete story into the accepted total range ${currentStats.accepted.min}-${currentStats.accepted.max}.`
+            : `- The complete story currently has ${currentStats.totalWordCount} words. Condense this chapter enough to bring the complete story into the accepted total range ${currentStats.accepted.min}-${currentStats.accepted.max}.`
+          : `- Keep approximately the current chapter length (${chapter.wordCount} words) so the complete story remains within its total word budget.`;
         const repairPrompt = `Repair only one German story chapter. Return the complete repaired chapter, not comments and not the other chapters.
 
 TARGET:
 - CEFR level: ${level}
 - Keep the title unchanged: ${chapter.title}
-- Required range: ${reviewedChapterRange.min}-${reviewedChapterRange.max} German words.
-- Aim for ${preferredMin}-${reviewedChapterRange.max} words, safely above the lower boundary.
+- The target for the complete ${chapterCount}-chapter story is ${reviewedStoryRange.min}-${reviewedStoryRange.max} German words in total; ${reviewedStoryAcceptedRange.min}-${reviewedStoryAcceptedRange.max} is the accepted approximate range. Individual chapter lengths may vary naturally.
+${totalLengthInstruction}
 - Use 4-6 meaningful paragraphs.
 - Preserve every event, fact, character, object and causal link from the chapter and binding plan.
 - Add only natural detail, action, dialogue or explanation that fits the established plot.
@@ -1353,11 +1400,7 @@ OUTPUT FORMAT:
 - Then 4-6 complete paragraphs separated by blank lines.
 - No word count, explanation, labels, code fences or JSON.`;
         const rawRepair = await callAiText(target, repairPrompt, "low", 2_000);
-        const repairedText = normalizeStoryText(
-          rawRepair,
-          reviewedChapterRange.min,
-          reviewedChapterRange.max,
-        );
+        const repairedText = normalizeStoryChapterText(rawRepair);
         const repairedChapter = {
           ...repairedText,
           title: chapter.title,
@@ -1366,17 +1409,21 @@ OUTPUT FORMAT:
         const repairedSeries = {
           title: draftSeries.title,
           chapters: draftSeries.chapters.map((item, index) => index === repairIndex ? repairedChapter : item),
-          chapterWordRange: reviewedChapterRange,
+          storyWordRange: reviewedStoryRange,
         };
         const remainingReviewIssues = storedReviewIssues
           .filter(item => item.chapter !== chapter.number);
+        const repairedWordStats = getStorySeriesWordStats(
+          repairedSeries,
+          lengthMin,
+          lengthMax,
+          chapterCount,
+        );
         const remainingInvalid = [...new Set([
-          ...getInvalidSeriesChapterIndexes(
-            repairedSeries,
-            lengthMin,
-            lengthMax,
-            chapterCount,
-          ),
+          ...getInvalidSeriesChapterIndexes(repairedSeries),
+          ...(repairedWordStats.lengthRepairIndex >= 0
+            ? [repairedWordStats.lengthRepairIndex]
+            : []),
           ...remainingReviewIssues.map(item => item.chapter - 1),
         ])].sort((a, b) => a - b);
         const repairFinished = remainingInvalid.length === 0;
@@ -1420,14 +1467,17 @@ OUTPUT FORMAT:
       }
 
       const lengthAudit = isCompleteStory
-        ? draftSeries.chapters.map(chapter => `Chapter ${chapter.number}: ${chapter.wordCount} words`).join("\n")
+        ? [
+          `Complete story: ${draftWordStats?.totalWordCount || 0} words`,
+          ...draftSeries.chapters.map(chapter => `Chapter ${chapter.number}: ${chapter.wordCount} words`),
+        ].join("\n")
         : "";
       const prompt = `Act as an independent meticulous native German editor, continuity checker and CEFR examiner. Another model wrote the supplied story. Judge only what the text actually says, not what its author may have intended. ${isCompleteStory ? "Return a compact review; do not rewrite the story." : "Return the corrected story with the smallest changes that fully fix its problems."}
 
 REQUIREMENTS:
 - Target CEFR level: ${level}. ${isCompleteStory ? "Flag words and constructions that are too difficult." : "Replace words and constructions that are too difficult."}
 - ${isCompleteStory
-    ? `Review exactly ${chapterCount} chapters. Each chapter must contain ${reviewedChapterRange.min}-${reviewedChapterRange.max} German words.`
+    ? `Review exactly ${chapterCount} chapters. The target is ${reviewedStoryRange.min}-${reviewedStoryRange.max} German words in total and the accepted approximate range is ${reviewedStoryAcceptedRange.min}-${reviewedStoryAcceptedRange.max}. Flag length only when the complete story is outside the accepted range. Individual chapters may be shorter or longer and must not be flagged merely for differing from the selected average.`
     : `Keep between ${lengthMin} and ${lengthMax} German story words.`}
 - Preserve the requested plot: ${topic}
 - Preserve required words when possible and use them correctly: ${requiredWords.join(", ") || "none"}.
@@ -1445,8 +1495,8 @@ REQUIREMENTS:
 - At A1, replace unnecessarily advanced words with common everyday alternatives.
 - At A2, prefer short main clauses and common vocabulary; avoid dense subordinate clauses, idioms and unexplained technical words.
 - Prefer simple, natural everyday German over literal translations.
-- ${isCompleteStory ? "Count each chapter before returning the review." : "Count the corrected story before returning it."}
-${isCompleteStory ? `- Current chapter word counts:\n${lengthAudit}` : ""}
+- ${isCompleteStory ? "Check the complete-story total; chapter counts are diagnostic only." : "Count the corrected story before returning it."}
+${isCompleteStory ? `- Current word counts:\n${lengthAudit}` : ""}
 ${continuityContract}
 ${storyPlan ? `BINDING WHOLE-STORY PLAN:\n${JSON.stringify(storyPlan)}` : ""}
 
@@ -1504,12 +1554,10 @@ ${isCompleteStory
           }));
         reviewed = draftSeries as unknown as JsonObject;
         invalidIndexes = [...new Set([
-          ...getInvalidSeriesChapterIndexes(
-            draftSeries,
-            lengthMin,
-            lengthMax,
-            chapterCount,
-          ),
+          ...getInvalidSeriesChapterIndexes(draftSeries),
+          ...(draftWordStats && draftWordStats.lengthRepairIndex >= 0
+            ? [draftWordStats.lengthRepairIndex]
+            : []),
           ...reviewIssues.map(item => item.chapter - 1),
         ])].sort((a, b) => a - b);
       } else {
