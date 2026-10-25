@@ -248,7 +248,11 @@ kontinuity.
 Po každej kapitole sa uloží kompaktný stav postáv, predmetov, lokalít, otvorených
 dejových línií a príčinných súvislostí. Nasledujúca kapitola dostane tento stav,
 osnovu, krátke zhrnutia a iba koniec bezprostredne predchádzajúcej kapitoly.
-Výstupné limity jednotlivých volaní sú 1 800 až 3 000 tokenov.
+Všetky fázy používajú nízke reasoning úsilie, aby skryté reasoning tokeny
+nespotrebovali celý priestor pre výsledok. Medzi každými dvoma väčšími Groq
+volaniami je najmenej 65 sekúnd, vrátane prechodov medzi osnovou, kapitolou,
+revíziou a materiálmi. Výstupné limity jednotlivých volaní sú 1 800 až 3 000
+tokenov.
 
 Najprv nasaď databázové migrácie a potom funkciu. Auditná tabuľka
 `article_generation_job_events` zaznamenáva pri každom pokuse poskytovateľa,

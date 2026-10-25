@@ -1,4 +1,4 @@
-import { selectArticleAiTarget } from "./provider-routing.mjs";
+import { GROQ_COOLDOWN_SECONDS, selectArticleAiTarget } from "./provider-routing.mjs";
 import { parseStoryTextOutput } from "./story-text.mjs";
 
 const cors = {
@@ -51,6 +51,8 @@ const retryAfterSecondsFromResponse = (response: Response) => {
   const date = Date.parse(value);
   return Number.isFinite(date) ? Math.max(0, Math.ceil((date - Date.now()) / 1_000)) : null;
 };
+
+const nextGroqSlot = () => new Date(Date.now() + GROQ_COOLDOWN_SECONDS * 1_000).toISOString();
 
 const countWords = (paragraphs: string[]) => paragraphs
   .join(" ")
@@ -505,8 +507,21 @@ async function callGroqText(
       );
     }
     const body = await response.json();
+    const finishReason = asText(body.choices?.[0]?.finish_reason, 40) || "unknown";
+    const promptTokens = Number(body.usage?.prompt_tokens) || 0;
+    const completionTokens = Number(body.usage?.completion_tokens) || 0;
+    const reasoningTokens = Number(body.usage?.completion_tokens_details?.reasoning_tokens) || 0;
     const output = asText(body.choices?.[0]?.message?.content, 20_000);
-    if (!output) throw new WorkflowError("invalid_ai_output", 502, "Groq returned an empty text response.");
+    console.info("Groq text completion metrics:", {
+      model, finishReason, promptTokens, completionTokens, reasoningTokens, hasVisibleText: Boolean(output),
+    });
+    if (!output) {
+      throw new WorkflowError(
+        "invalid_ai_output",
+        502,
+        `Groq returned an empty text response (finish_reason=${finishReason}, prompt_tokens=${promptTokens}, completion_tokens=${completionTokens}, reasoning_tokens=${reasoningTokens}).`,
+      );
+    }
     return output;
   } catch (error) {
     if (error instanceof WorkflowError) throw error;
@@ -771,12 +786,10 @@ async function hasValidWorkerSecret(url: string, serviceKey: string, candidate: 
 }
 
 const retryDelaySeconds = (attempt: number, failure: WorkflowError) => {
-  const standardDelay = [20, 45, 90, 120][Math.min(Math.max(attempt - 1, 0), 3)];
+  const standardDelay = [65, 65, 90, 120][Math.min(Math.max(attempt - 1, 0), 3)];
   const providerDelay = failure.retryAfterSeconds || 0;
-  // Groq's TPM window is shared by all phases. A full minute prevents a fast
-  // retry from colliding with tokens consumed by the preceding phase.
-  const rateLimitDelay = failure.code === "groq_limit_reached" ? 65 : 0;
-  return Math.max(standardDelay, providerDelay, rateLimitDelay);
+  // Every generated or rejected response consumes the model's rolling TPM budget.
+  return Math.max(standardDelay, providerDelay, GROQ_COOLDOWN_SECONDS);
 };
 
 async function runClaimedPhase(
@@ -866,11 +879,24 @@ Return only the requested compact JSON plan.`;
         );
         storyPlan = normalizeStoryPlan(rawPlan, chapterCount);
         await updateJob(url, serviceKey, jobId, userId, {
+          status: "draft_queued",
           request_payload: {
             ...request,
             storyContext: { ...storyContext, plan: storyPlan },
           },
+          provider_used: provider,
+          model_used: model,
+          next_attempt_at: nextGroqSlot(),
+          locked_until: null,
+          last_error: null,
+          last_error_code: null,
         }, true);
+        await logGenerationAttempt(url, serviceKey, {
+          jobId, phase, attempt, provider, model, outcome: "retry", willRetry: true,
+          durationMs: Date.now() - phaseStartedAt,
+          message: `Story plan stored; chapter queued after ${GROQ_COOLDOWN_SECONDS}-second Groq cooldown.`,
+        });
+        return;
       }
 
       const prompt = `You are an expert German teacher and story writer. Create only the German reading story. Do not return JSON.
@@ -909,14 +935,14 @@ OUTPUT FORMAT:
       const rawDraft = await callAiText(
         target,
         prompt,
-        mustCreatePlan ? "low" : "medium",
-        2_600,
+        "low",
+        2_000,
       );
       const normalizedDraft = normalizeStoryText(rawDraft, lengthMin, lengthMax);
       const draft = storyPlan ? { ...normalizedDraft, storyPlan } : normalizedDraft;
       await updateJob(url, serviceKey, jobId, userId, {
         status: "review_queued", draft, provider_used: provider, model_used: model,
-        next_attempt_at: new Date().toISOString(), locked_until: null,
+        next_attempt_at: nextGroqSlot(), locked_until: null,
         last_error: null, last_error_code: null,
       }, true);
       await logGenerationAttempt(url, serviceKey, {
@@ -967,13 +993,13 @@ OUTPUT FORMAT:
       const rawReviewed = await callAiText(
         target,
         prompt,
-        "medium",
-        2_600,
+        "low",
+        2_000,
       );
       const reviewed = normalizeStoryText(rawReviewed, lengthMin, lengthMax);
       await updateJob(url, serviceKey, jobId, userId, {
         status: "materials_queued", reviewed, provider_used: provider, model_used: model,
-        next_attempt_at: new Date().toISOString(), locked_until: null,
+        next_attempt_at: nextGroqSlot(), locked_until: null,
         last_error: null, last_error_code: null,
       }, true);
       await logGenerationAttempt(url, serviceKey, {
@@ -1006,7 +1032,7 @@ Before returning, verify every vocabulary form and every example against the sup
       prompt,
       isStory ? "story_materials" : "article_materials",
       isStory ? STORY_MATERIALS_SCHEMA : MATERIALS_SCHEMA,
-      "medium",
+      "low",
       isStory ? 3_000 : 2_400,
     );
     const article = validateMaterials(materials, reviewed, request, storyPlan);

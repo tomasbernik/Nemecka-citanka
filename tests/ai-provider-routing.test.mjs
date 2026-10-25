@@ -1,13 +1,20 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { selectArticleAiTarget } from "../supabase/functions/generate-article-workflow/provider-routing.mjs";
+import {
+  GROQ_COOLDOWN_SECONDS,
+  selectArticleAiTarget,
+} from "../supabase/functions/generate-article-workflow/provider-routing.mjs";
 
 const config = {
   groqKey: "groq-key",
   groqModel: "openai/gpt-oss-120b",
   groqFallbackModel: "openai/gpt-oss-20b",
 };
+
+test("keeps at least one full Groq TPM window between large requests", () => {
+  assert.equal(GROQ_COOLDOWN_SECONDS, 65);
+});
 
 test("starts with the primary Groq model and exposes the repair model", () => {
   assert.deepEqual(selectArticleAiTarget({ attempt: 1, ...config }), {
