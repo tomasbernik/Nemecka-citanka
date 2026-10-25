@@ -1,6 +1,19 @@
 // UI text added after the first translation rollout. Keep these languages complete
 // so a selected interface language never falls back to English or Slovak.
 Object.entries({
+  de: { recoverArticleGeneration: "Generierung über ID wiederherstellen", recoverArticleGenerationPrompt: "Füge die ID des abgeschlossenen Generierungsauftrags ein:" },
+  sk: { recoverArticleGeneration: "Obnoviť generovanie podľa ID", recoverArticleGenerationPrompt: "Vlož ID dokončenej úlohy generovania:" },
+  en: { recoverArticleGeneration: "Recover generation by ID", recoverArticleGenerationPrompt: "Enter the completed generation job ID:" },
+  ru: { recoverArticleGeneration: "Восстановить генерацию по ID", recoverArticleGenerationPrompt: "Введите ID завершённой задачи генерации:" },
+  pl: { recoverArticleGeneration: "Odzyskaj generowanie według ID", recoverArticleGenerationPrompt: "Wprowadź ID ukończonego zadania generowania:" },
+  hu: { recoverArticleGeneration: "Generálás visszaállítása ID alapján", recoverArticleGenerationPrompt: "Add meg a befejezett generálási feladat ID-jét:" },
+  ro: { recoverArticleGeneration: "Recuperează generarea după ID", recoverArticleGenerationPrompt: "Introdu ID-ul sarcinii de generare finalizate:" },
+  it: { recoverArticleGeneration: "Recupera generazione tramite ID", recoverArticleGenerationPrompt: "Inserisci l’ID dell’attività di generazione completata:" },
+  fr: { recoverArticleGeneration: "Récupérer la génération par ID", recoverArticleGenerationPrompt: "Saisissez l’ID de la tâche de génération terminée :" },
+  tr: { recoverArticleGeneration: "Oluşturmayı ID ile kurtar", recoverArticleGenerationPrompt: "Tamamlanan oluşturma görevinin ID’sini girin:" }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
   en: {
     manualJsonImport: "Manual JSON import",
     nextClickedWord: "Next word →",

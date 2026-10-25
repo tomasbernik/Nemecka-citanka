@@ -1819,6 +1819,7 @@ Deno.serve(async req => {
         jobId,
         status: job.status,
         article: job.article || null,
+        request: job.request_payload || null,
         lastError: job.last_error || null,
         lastErrorCode: job.last_error_code || null,
         nextAttemptAt: job.next_attempt_at || null,

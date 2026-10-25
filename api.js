@@ -296,6 +296,27 @@ async function resumeArticleGenerationWithAi({ onProgress } = {}) {
   return waitForArticleGeneration(accessToken, pending.jobId, onProgress);
 }
 
+async function recoverArticleGenerationWithAi(jobId) {
+  const normalizedJobId = String(jobId || "").trim();
+  if (!normalizedJobId) throw new Error("generation_job_not_found");
+  if (!isRemoteNetworkAvailable()) throw new Error(t("generationOffline"));
+  const accessToken = await getFreshAuthAccessToken();
+  if (!accessToken) throw new Error(t("generationSignIn"));
+  const result = await requestArticleGenerationPhase(
+    accessToken,
+    "status",
+    { jobId: normalizedJobId },
+    ARTICLE_GENERATION_STATUS_TIMEOUT_MS
+  );
+  if (result.status !== "completed" || !result.article) {
+    const error = new Error(result.lastError || result.lastErrorCode || "generation_not_completed");
+    error.code = result.lastErrorCode || "generation_not_completed";
+    error.jobId = normalizedJobId;
+    throw error;
+  }
+  return result;
+}
+
 async function cancelArticleGenerationWithAi() {
   const pending = readPendingArticleGeneration();
   if (!pending?.jobId) return { cancelled: false, status: "not_found" };

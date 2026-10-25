@@ -621,6 +621,7 @@ function updateStaticTexts() {
   setText("copyArticlePromptBtn", "copyArticlePrompt");
   setText("generateArticleAiBtn", "generateArticleAi");
   setText("cancelArticleGenerationBtn", "cancelArticleGeneration");
+  setText("recoverArticleGenerationBtn", "recoverArticleGeneration");
   setText("copyArticleJsonPromptBtn", "copyArticleJsonPrompt");
   setText("copyImagePromptBtn", "copyImagePrompt");
   $("articleImageDialog")?.setAttribute("aria-label", t("articleImage"));
@@ -1135,6 +1136,7 @@ onClick("copyImagePromptBtn", async () => {
 });
 onClick("generateArticleAiBtn", generateArticleDirectlyWithAi);
 onClick("cancelArticleGenerationBtn", cancelPendingArticleGeneration);
+onClick("recoverArticleGenerationBtn", recoverCompletedArticleGenerationById);
 onClick("importArticleBtn", importArticleToEditor);
 onClick("copyTranslationPromptBtn", () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied")));
 

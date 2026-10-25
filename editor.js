@@ -1800,8 +1800,10 @@ let articleGenerationCancelling = false;
 
 function updateArticleGenerationControls() {
   const generateButton = $("generateArticleAiBtn");
+  const recoverButton = $("recoverArticleGenerationBtn");
   const cancelButton = $("cancelArticleGenerationBtn");
   if (generateButton) generateButton.disabled = articleGenerationRunning;
+  if (recoverButton) recoverButton.disabled = articleGenerationRunning;
   if ($("articleModeBtn")) $("articleModeBtn").disabled = articleGenerationRunning;
   if ($("storyModeBtn")) $("storyModeBtn").disabled = articleGenerationRunning;
   if ($("storyTitleInput")) $("storyTitleInput").disabled = articleGenerationRunning;
@@ -2379,6 +2381,42 @@ async function resumePendingArticleGeneration() {
   } finally {
     articleGenerationRunning = false;
     button.textContent = originalText;
+    updateArticleGenerationControls();
+  }
+}
+
+async function recoverCompletedArticleGenerationById() {
+  if (articleGenerationRunning) return;
+  const jobId = prompt(t("recoverArticleGenerationPrompt"), "")?.trim();
+  if (!jobId) return;
+  const button = $("recoverArticleGenerationBtn");
+  articleGenerationRunning = true;
+  updateArticleGenerationControls();
+  const originalText = button?.textContent || "";
+  if (button) button.textContent = t("generationStartingStatus");
+  try {
+    const result = await recoverArticleGenerationWithAi(jobId);
+    const pending = {
+      jobId,
+      signature: JSON.stringify(result.request || {}),
+      createdAt: Date.now()
+    };
+    const recoveredStory = recoverCompletedStoryGeneration(
+      pending,
+      result,
+      getSelectedArticleLanguage()
+    );
+    if (recoveredStory) {
+      savePendingStoryGeneration(recoveredStory);
+      await continueCompleteStoryGeneration(recoveredStory);
+    } else {
+      applyGeneratedArticleResult(result);
+    }
+  } catch (error) {
+    showArticleGenerationError(error);
+  } finally {
+    articleGenerationRunning = false;
+    if (button) button.textContent = originalText;
     updateArticleGenerationControls();
   }
 }
