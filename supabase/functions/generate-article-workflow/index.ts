@@ -395,70 +395,6 @@ const validateMaterials = (
   return article;
 };
 
-async function callGemini(
-  apiKey: string,
-  model: string,
-  prompt: string,
-  responseJsonSchema: JsonObject,
-  thinkingLevel: "low" | "medium",
-  maxOutputTokens: number,
-) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 115_000);
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-      {
-        method: "POST",
-        signal: controller.signal,
-        headers: { "x-goog-api-key": apiKey, "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: {
-            thinkingConfig: { thinkingLevel },
-            responseMimeType: "application/json",
-            responseJsonSchema,
-            maxOutputTokens,
-          },
-        }),
-      },
-    );
-    if (!response.ok) {
-      const raw = await response.text();
-      let providerMessage = "";
-      try {
-        providerMessage = asText(JSON.parse(raw)?.error?.message, 400);
-      } catch {
-        providerMessage = asText(raw, 400);
-      }
-      console.error("Gemini workflow error:", { status: response.status, body: raw.slice(0, 2_000) });
-      throw new WorkflowError(
-        response.status === 429 ? "gemini_limit_reached" : "gemini_failed",
-        502,
-        providerMessage || `Gemini HTTP ${response.status}`,
-        response.status,
-      );
-    }
-    const body = await response.json();
-    const output = body.candidates?.[0]?.content?.parts
-      ?.map((part: { text?: string }) => part.text || "")
-      .join("") || "";
-    try {
-      return JSON.parse(output) as JsonObject;
-    } catch {
-      throw new WorkflowError("invalid_ai_output", 502, "Gemini returned invalid JSON.");
-    }
-  } catch (error) {
-    if (error instanceof WorkflowError) throw error;
-    if (error instanceof DOMException && error.name === "AbortError") {
-      throw new WorkflowError("ai_timeout_or_network_error", 504, "Gemini did not respond within 115 seconds.");
-    }
-    throw new WorkflowError("ai_timeout_or_network_error", 504, asText(String(error), 300));
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 async function callGroq(
   apiKey: string,
   model: string,
@@ -467,7 +403,9 @@ async function callGroq(
   responseJsonSchema: JsonObject,
   thinkingLevel: "low" | "medium",
   maxOutputTokens: number,
-) {
+  repairModel = "",
+  allowRepair = true,
+): Promise<JsonObject> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 115_000);
   try {
@@ -498,14 +436,31 @@ async function callGroq(
     if (!response.ok) {
       const raw = await response.text();
       let providerMessage = "";
+      let providerError: JsonObject = {};
       try {
-        providerMessage = asText(JSON.parse(raw)?.error?.message, 400);
+        providerError = JSON.parse(raw)?.error || {};
+        providerMessage = asText(providerError.message, 400);
       } catch {
         providerMessage = asText(raw, 400);
       }
       console.error("Groq workflow error:", { model, status: response.status, body: raw.slice(0, 2_000) });
       const jsonGenerationFailed = response.status === 400
         && /failed to generate json|failed_generation/iu.test(`${providerMessage} ${raw}`);
+      const failedGeneration = asText(providerError.failed_generation, 12_000);
+      if (jsonGenerationFailed && allowRepair && repairModel && failedGeneration) {
+        console.info("Repairing invalid Groq JSON with fallback model:", { model, repairModel, schemaName });
+        return callGroq(
+          apiKey,
+          repairModel,
+          `Repair the following incomplete or invalid JSON. Preserve all usable content, do not add commentary, and return only data matching the required JSON schema.\n\nINVALID JSON:\n${failedGeneration}`,
+          schemaName,
+          responseJsonSchema,
+          "low",
+          maxOutputTokens,
+          "",
+          false,
+        );
+      }
       throw new WorkflowError(
         response.status === 429
           ? "groq_limit_reached"
@@ -521,6 +476,20 @@ async function callGroq(
     try {
       return JSON.parse(output) as JsonObject;
     } catch {
+      if (allowRepair && repairModel && output) {
+        console.info("Repairing unparsable Groq response with fallback model:", { model, repairModel, schemaName });
+        return callGroq(
+          apiKey,
+          repairModel,
+          `Repair the following incomplete or invalid JSON. Preserve all usable content, do not add commentary, and return only data matching the required JSON schema.\n\nINVALID JSON:\n${asText(output, 12_000)}`,
+          schemaName,
+          responseJsonSchema,
+          "low",
+          maxOutputTokens,
+          "",
+          false,
+        );
+      }
       throw new WorkflowError("invalid_ai_output", 502, "Groq returned invalid JSON.");
     }
   } catch (error) {
@@ -535,17 +504,16 @@ async function callGroq(
 }
 
 type AiTarget = {
-  provider: "groq" | "gemini";
+  provider: "groq";
   apiKey: string;
   model: string;
+  repairModel: string;
 };
 
 type AiConfig = {
   groqKey: string;
   groqModel: string;
-  geminiKey: string;
-  geminiPrimaryModel: string;
-  geminiFallbackModel: string;
+  groqFallbackModel: string;
 };
 
 function callAi(
@@ -556,24 +524,16 @@ function callAi(
   thinkingLevel: "low" | "medium",
   maxOutputTokens: number,
 ) {
-  return target.provider === "groq"
-    ? callGroq(
-      target.apiKey,
-      target.model,
-      prompt,
-      schemaName,
-      responseJsonSchema,
-      thinkingLevel,
-      maxOutputTokens,
-    )
-    : callGemini(
-      target.apiKey,
-      target.model,
-      prompt,
-      responseJsonSchema,
-      thinkingLevel,
-      maxOutputTokens,
-    );
+  return callGroq(
+    target.apiKey,
+    target.model,
+    prompt,
+    schemaName,
+    responseJsonSchema,
+    thinkingLevel,
+    maxOutputTokens,
+    target.repairModel,
+  );
 }
 
 async function restRequest(
@@ -688,12 +648,12 @@ const ACTIVE_STATUSES = new Set([
   "materials_queued", "materials_running",
 ]);
 const RETRYABLE_CODES = new Set([
-  "groq_limit_reached", "groq_failed", "groq_json_failed", "gemini_limit_reached", "gemini_failed",
+  "groq_limit_reached", "groq_failed", "groq_json_failed",
   "ai_timeout_or_network_error",
   "invalid_ai_output", "invalid_story_output", "invalid_story_plan", "invalid_story_review",
   "invalid_materials_output",
 ]);
-const MAX_PHASE_ATTEMPTS = 7;
+const MAX_PHASE_ATTEMPTS = 5;
 
 async function logCancelledAttempt(
   url: string,
@@ -780,7 +740,7 @@ async function hasValidWorkerSecret(url: string, serviceKey: string, candidate: 
 }
 
 const retryDelaySeconds = (attempt: number, failure: WorkflowError) => {
-  const standardDelay = [30, 60, 120, 120, 180, 240][Math.min(Math.max(attempt - 1, 0), 5)];
+  const standardDelay = [20, 45, 90, 120][Math.min(Math.max(attempt - 1, 0), 3)];
   const providerDelay = failure.retryAfterSeconds || 0;
   // Groq's TPM window is shared by all phases. A full minute prevents a fast
   // retry from colliding with tokens consumed by the preceding phase.
@@ -1070,11 +1030,9 @@ Deno.serve(async req => {
   const aiConfig: AiConfig = {
     groqKey: Deno.env.get("GROQ_API_KEY") || "",
     groqModel: Deno.env.get("GROQ_ARTICLE_MODEL") || "openai/gpt-oss-120b",
-    geminiKey: Deno.env.get("GEMINI_API_KEY") || "",
-    geminiPrimaryModel: Deno.env.get("GEMINI_ARTICLE_MODEL") || "gemini-3.8-flash",
-    geminiFallbackModel: Deno.env.get("GEMINI_ARTICLE_FALLBACK_MODEL") || "gemini-3.6-flash",
+    groqFallbackModel: Deno.env.get("GROQ_ARTICLE_FALLBACK_MODEL") || "openai/gpt-oss-20b",
   };
-  if (!url || !anonKey || !serviceKey || (!aiConfig.groqKey && !aiConfig.geminiKey)) {
+  if (!url || !anonKey || !serviceKey || !aiConfig.groqKey) {
     return respond({ error: "missing_configuration" }, 503);
   }
 

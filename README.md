@@ -220,23 +220,22 @@ Poznámka: Toto je jednoduchý súkromný režim pre dvoch ľudí. PINy sú ulo�
 
 ## AI generovanie článkov
 
-Aktívna Edge Function `generate-article-workflow` používa prednostne Groq. Bežne
-začína modelom `openai/gpt-oss-120b`; ak Groq nedokáže vytvoriť požadovaný JSON,
-hneď prepne na Gemini. Pri dočasnom preťažení používa Gemini 3.8 Flash, Gemini 3.6
-Flash a jeden neskorší obnovovací pokus cez Groq. Jedna fáza môže mať najviac sedem
-odložených pokusov. Ak niektorý API kľúč nie je nastavený, workflow pokračuje s
-dostupným poskytovateľom.
+Aktívna Edge Function `generate-article-workflow` používa iba Groq. Bežne začína
+modelom `openai/gpt-oss-120b`; pri neplatnom JSON ho okamžite skúsi opraviť modelom
+`openai/gpt-oss-20b`. Pri ďalšom zlyhaní strieda hlavný a menší Groq model. Jedna
+fáza môže mať najviac päť odložených pokusov, aby používateľ zbytočne nečakal na
+dlhodobo preťaženého externého poskytovateľa.
 
 Pred nasadením funkcie nastav secrets:
 
 ```bash
-supabase secrets set GROQ_API_KEY="..." GEMINI_API_KEY="..."
+supabase secrets set GROQ_API_KEY="..."
 ```
 
 Modely možno zmeniť bez úpravy kódu:
 
 ```bash
-supabase secrets set GROQ_ARTICLE_MODEL="openai/gpt-oss-120b" GEMINI_ARTICLE_MODEL="gemini-3.8-flash" GEMINI_ARTICLE_FALLBACK_MODEL="gemini-3.6-flash"
+supabase secrets set GROQ_ARTICLE_MODEL="openai/gpt-oss-120b" GROQ_ARTICLE_FALLBACK_MODEL="openai/gpt-oss-20b"
 ```
 
 Pri viac-kapitolovom príbehu vytvorí prvá fáza spolu s prvou kapitolou aj záväznú

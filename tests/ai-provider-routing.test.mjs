@@ -6,55 +6,41 @@ import { selectArticleAiTarget } from "../supabase/functions/generate-article-wo
 const config = {
   groqKey: "groq-key",
   groqModel: "openai/gpt-oss-120b",
-  geminiKey: "gemini-key",
-  geminiPrimaryModel: "gemini-3.8-flash",
-  geminiFallbackModel: "gemini-3.6-flash",
+  groqFallbackModel: "openai/gpt-oss-20b",
 };
 
-test("prefers Groq for the first two attempts", () => {
+test("starts with the primary Groq model and exposes the repair model", () => {
   assert.deepEqual(selectArticleAiTarget({ attempt: 1, ...config }), {
     provider: "groq",
     apiKey: "groq-key",
     model: "openai/gpt-oss-120b",
+    repairModel: "openai/gpt-oss-20b",
   });
-  assert.equal(selectArticleAiTarget({ attempt: 2, ...config }).provider, "groq");
+  assert.equal(selectArticleAiTarget({ attempt: 2, ...config }).model, "openai/gpt-oss-120b");
 });
 
-test("falls back to Gemini primary and then fallback model", () => {
-  assert.deepEqual(selectArticleAiTarget({ attempt: 3, ...config }), {
-    provider: "gemini",
-    apiKey: "gemini-key",
-    model: "gemini-3.8-flash",
-  });
-  assert.equal(selectArticleAiTarget({ attempt: 4, ...config }).model, "gemini-3.8-flash");
-  assert.equal(selectArticleAiTarget({ attempt: 5, ...config }).model, "gemini-3.6-flash");
-  assert.equal(selectArticleAiTarget({ attempt: 6, ...config }).provider, "groq");
-  assert.equal(selectArticleAiTarget({ attempt: 7, ...config }).model, "gemini-3.6-flash");
+test("alternates to the smaller Groq model for later recovery", () => {
+  assert.equal(selectArticleAiTarget({ attempt: 3, ...config }).model, "openai/gpt-oss-20b");
+  assert.equal(selectArticleAiTarget({ attempt: 4, ...config }).model, "openai/gpt-oss-120b");
+  assert.equal(selectArticleAiTarget({ attempt: 5, ...config }).model, "openai/gpt-oss-20b");
 });
 
-test("switches immediately to Gemini after Groq cannot produce the JSON schema", () => {
+test("switches immediately to the smaller Groq model after an invalid JSON response", () => {
   assert.equal(selectArticleAiTarget({
     attempt: 2,
     lastErrorCode: "groq_json_failed",
     ...config,
-  }).provider, "gemini");
+  }).model, "openai/gpt-oss-20b");
 });
 
-test("gives Groq one protected retry after a temporary TPM limit", () => {
+test("switches model after a temporary Groq TPM limit", () => {
   assert.equal(selectArticleAiTarget({
-    attempt: 3,
+    attempt: 2,
     lastErrorCode: "groq_limit_reached",
     ...config,
-  }).provider, "groq");
-  assert.equal(selectArticleAiTarget({
-    attempt: 4,
-    lastErrorCode: "groq_limit_reached",
-    ...config,
-  }).provider, "gemini");
+  }).model, "openai/gpt-oss-20b");
 });
 
-test("continues with the configured provider when only one API key exists", () => {
-  assert.equal(selectArticleAiTarget({ attempt: 1, ...config, groqKey: "" }).provider, "gemini");
-  assert.equal(selectArticleAiTarget({ attempt: 5, ...config, geminiKey: "" }).provider, "groq");
-  assert.equal(selectArticleAiTarget({ attempt: 1, ...config, groqKey: "", geminiKey: "" }), null);
+test("requires Groq because Gemini is not part of automatic routing", () => {
+  assert.equal(selectArticleAiTarget({ attempt: 1, ...config, groqKey: "" }), null);
 });
