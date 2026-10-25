@@ -31,4 +31,3 @@ export function parseStoryTextOutput(value) {
 
   return { title: cleanLine(titleMatch[1]), text };
 }
-

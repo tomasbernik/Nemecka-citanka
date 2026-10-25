@@ -35,4 +35,3 @@ test("rejects output without an explicit title or story body", () => {
   assert.equal(parseStoryTextOutput("Nur ein Absatz ohne Überschrift."), null);
   assert.equal(parseStoryTextOutput("# Nur ein Titel"), null);
 });
-
