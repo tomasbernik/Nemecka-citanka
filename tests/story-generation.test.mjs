@@ -4,6 +4,10 @@ import vm from "node:vm";
 import { readFile } from "node:fs/promises";
 
 const editorSource = await readFile(new URL("../editor.js", import.meta.url), "utf8");
+const workflowSource = await readFile(
+  new URL("../supabase/functions/generate-article-workflow/index.ts", import.meta.url),
+  "utf8"
+);
 const context = vm.createContext({});
 vm.runInContext(editorSource, context, { filename: "editor.js" });
 const buildStoryChapterBrief = vm.runInContext("buildStoryChapterBrief", context);
@@ -189,4 +193,24 @@ test("a completed story job can be recovered from its saved request after reload
 test("story generation does not request an optional language focus", () => {
   assert.match(editorSource, /languageFocus:\s*""/);
   assert.match(editorSource, /articleLanguageFocusRow"\)\?\.classList\.toggle\("hidden", isStory\)/);
+});
+
+test("a targeted review can load an intermediate story outside the total word range", () => {
+  assert.match(
+    workflowSource,
+    /allowTotalLengthRepair:\s*storedDraft\.reviewPassCompleted\s*===\s*true/
+  );
+  assert.match(workflowSource, /!options\.allowTotalLengthRepair/);
+});
+
+test("targeted repairs use the whole story and receive one bounded final audit", () => {
+  assert.match(workflowSource, /COMPLETE STORY CONTEXT:/);
+  assert.match(workflowSource, /reviewAuditCount\s*<\s*2/);
+  assert.match(workflowSource, /complete story queued for final independent audit/);
+  assert.match(workflowSource, /reviewPassCompleted:\s*false/);
+});
+
+test("the reviewer ignores stylistic preferences that are not publish-blocking defects", () => {
+  assert.match(workflowSource, /Do not request a repair merely for natural repetition/);
+  assert.match(workflowSource, /concrete publish-blocking length, logic, continuity, CEFR or language defect/);
 });

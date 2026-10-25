@@ -333,7 +333,7 @@ const normalizeStorySeriesText = (
   chapterCount: number,
   minWords: number,
   maxWords: number,
-  options: { draft?: boolean; fallbackTitle?: string } = {},
+  options: { draft?: boolean; fallbackTitle?: string; allowTotalLengthRepair?: boolean } = {},
 ) => {
   const parsed = parseStorySeriesTextOutput(value, chapterCount, options.fallbackTitle || "");
   if (!parsed) {
@@ -361,7 +361,8 @@ const normalizeStorySeriesText = (
     return { title, text, wordCount, number: chapter.number };
   });
   const stats = getStorySeriesWordStats({ chapters }, minWords, maxWords, chapterCount);
-  if (stats.totalWordCount < stats.accepted.min || stats.totalWordCount > stats.accepted.max) {
+  if (!options.allowTotalLengthRepair
+    && (stats.totalWordCount < stats.accepted.min || stats.totalWordCount > stats.accepted.max)) {
     throw new WorkflowError(
       "invalid_story_output",
       502,
@@ -1306,7 +1307,16 @@ ${isCompleteStory
         chapterCount,
         lengthMin,
         lengthMax,
-        { draft: true, fallbackTitle: asText(storedDraft.title || requestedPlan?.title, 160) },
+        {
+          draft: true,
+          fallbackTitle: asText(storedDraft.title || requestedPlan?.title, 160),
+          // Once the independent review has started targeted repairs, an
+          // intermediate edit may temporarily move the story outside the
+          // total range. Let the repair phase load it so it can select a
+          // chapter to expand or condense. Final material generation still
+          // normalizes without this exception and therefore remains strict.
+          allowTotalLengthRepair: storedDraft.reviewPassCompleted === true,
+        },
       )
       : normalizeStory(storedDraft, lengthMin, lengthMax);
     const draftSeries = draft as {
@@ -1327,6 +1337,13 @@ ${isCompleteStory
         ? normalizeStoryPlan(storedDraft.storyPlan, chapterCount)
         : null))
       : null;
+    const reviewAuditCount = isCompleteStory
+      ? Math.max(
+        0,
+        Number(storedDraft.reviewAuditCount)
+          || (storedDraft.reviewPassCompleted === true ? 1 : 0),
+      )
+      : 0;
     if (phase === "review") {
       if (isCompleteStory && storedDraft.reviewPassCompleted === true) {
         const storedReviewIssues = Array.isArray(storedDraft.reviewIssues)
@@ -1359,11 +1376,15 @@ ${isCompleteStory
 
         const repairIndex = invalidIndexes[0];
         const chapter = draftSeries.chapters[repairIndex];
-        const previousChapter = draftSeries.chapters[repairIndex - 1];
-        const nextChapter = draftSeries.chapters[repairIndex + 1];
         const chapterReviewIssues = storedReviewIssues
           .find(item => item.chapter === chapter.number)?.issues || [];
         const currentStats = getStorySeriesWordStats(draftSeries, lengthMin, lengthMax, chapterCount);
+        const otherChaptersWordCount = currentStats.totalWordCount - chapter.wordCount;
+        const allowedChapterMin = Math.max(80, currentStats.accepted.min - otherChaptersWordCount);
+        const allowedChapterMax = Math.max(
+          allowedChapterMin,
+          currentStats.accepted.max - otherChaptersWordCount,
+        );
         const totalLengthInstruction = currentStats.lengthRepairIndex === repairIndex
           ? currentStats.totalWordCount < currentStats.accepted.min
             ? `- The complete story currently has only ${currentStats.totalWordCount} words. Add enough natural detail to bring the complete story into the accepted total range ${currentStats.accepted.min}-${currentStats.accepted.max}.`
@@ -1376,6 +1397,7 @@ TARGET:
 - Keep the title unchanged: ${chapter.title}
 - The target for the complete ${chapterCount}-chapter story is ${reviewedStoryRange.min}-${reviewedStoryRange.max} German words in total; ${reviewedStoryAcceptedRange.min}-${reviewedStoryAcceptedRange.max} is the accepted approximate range. Individual chapter lengths may vary naturally.
 ${totalLengthInstruction}
+- The repaired chapter itself must contain ${allowedChapterMin}-${allowedChapterMax} words so the unchanged chapters plus this repair remain inside the accepted complete-story range.
 - Use 4-6 meaningful paragraphs.
 - Preserve every event, fact, character, object and causal link from the chapter and binding plan.
 - Add only natural detail, action, dialogue or explanation that fits the established plot.
@@ -1386,14 +1408,10 @@ ${chapterReviewIssues.length ? `- Correct these independent-review findings: ${c
 BINDING PLAN:
 ${JSON.stringify(storyPlan)}
 
-PREVIOUS CHAPTER ENDING:
-${previousChapter ? JSON.stringify(previousChapter.text.slice(-1)) : "none"}
+COMPLETE STORY CONTEXT:
+${JSON.stringify({ title: draftSeries.title, chapters: draftSeries.chapters })}
 
-CHAPTER TO REPAIR (${chapter.wordCount} words):
-${JSON.stringify({ title: chapter.title, text: chapter.text })}
-
-NEXT CHAPTER BEGINNING:
-${nextChapter ? JSON.stringify(nextChapter.text.slice(0, 1)) : "none"}
+REPAIR ONLY CHAPTER ${chapter.number} (${chapter.wordCount} words). Use the other chapters only as immutable context.
 
 OUTPUT FORMAT:
 - First line: "# ${chapter.title}"
@@ -1427,23 +1445,42 @@ OUTPUT FORMAT:
           ...remainingReviewIssues.map(item => item.chapter - 1),
         ])].sort((a, b) => a - b);
         const repairFinished = remainingInvalid.length === 0;
+        const needsFinalAudit = repairFinished && reviewAuditCount < 2;
         await updateJob(url, serviceKey, jobId, userId, repairFinished
-          ? {
-            status: "materials_queued",
-            reviewed: repairedSeries,
-            provider_used: provider,
-            model_used: model,
-            next_attempt_at: nextGroqSlot(),
-            locked_until: null,
-            last_error: null,
-            last_error_code: null,
-          }
+          ? needsFinalAudit
+            ? {
+              status: "review_queued",
+              draft: {
+                ...repairedSeries,
+                storyPlan,
+                reviewPassCompleted: false,
+                reviewAuditCount,
+                reviewIssues: [],
+              },
+              provider_used: provider,
+              model_used: model,
+              next_attempt_at: nextGroqSlot(),
+              locked_until: null,
+              last_error: null,
+              last_error_code: null,
+            }
+            : {
+              status: "materials_queued",
+              reviewed: repairedSeries,
+              provider_used: provider,
+              model_used: model,
+              next_attempt_at: nextGroqSlot(),
+              locked_until: null,
+              last_error: null,
+              last_error_code: null,
+            }
           : {
             status: "review_queued",
             draft: {
               ...repairedSeries,
               storyPlan,
               reviewPassCompleted: true,
+              reviewAuditCount,
               reviewIssues: remainingReviewIssues,
             },
             provider_used: provider,
@@ -1455,11 +1492,13 @@ OUTPUT FORMAT:
           }, true);
         await logGenerationAttempt(url, serviceKey, {
           jobId, phase, attempt, provider, model,
-          outcome: repairFinished ? "succeeded" : "retry",
-          willRetry: !repairFinished,
+          outcome: repairFinished && !needsFinalAudit ? "succeeded" : "retry",
+          willRetry: !repairFinished || needsFinalAudit,
           durationMs: Date.now() - phaseStartedAt,
           message: repairFinished
-            ? `Targeted repair completed for chapter ${chapter.number}; all chapters now pass validation.`
+            ? needsFinalAudit
+              ? `Targeted repairs completed; complete story queued for final independent audit.`
+              : `Targeted repair completed for chapter ${chapter.number}; all chapters now pass validation.`
             : `Targeted repair completed for chapter ${chapter.number}; ${remainingInvalid.length} chapter(s) remain.`,
         });
         kickWorker(url, serviceKey);
@@ -1495,6 +1534,7 @@ REQUIREMENTS:
 - At A1, replace unnecessarily advanced words with common everyday alternatives.
 - At A2, prefer short main clauses and common vocabulary; avoid dense subordinate clauses, idioms and unexplained technical words.
 - Prefer simple, natural everyday German over literal translations.
+- Flag only objective, publish-blocking defects in grammar, CEFR level, logic or continuity. Do not request a repair merely for natural repetition, simple imagery, a stylistic preference, or a word that is valid at the target level.
 - ${isCompleteStory ? "Check the complete-story total; chapter counts are diagnostic only." : "Count the corrected story before returning it."}
 ${isCompleteStory ? `- Current word counts:\n${lengthAudit}` : ""}
 ${continuityContract}
@@ -1509,7 +1549,7 @@ OUTPUT FORMAT:
 ${isCompleteStory
     ? `- Return compact JSON only, matching the supplied schema.
 - Include exactly one verdict for every chapter, numbered 1-${chapterCount}.
-- Set needsRepair to true for every length, logic, continuity, CEFR or language problem.
+- Set needsRepair to true only when the chapter has at least one concrete publish-blocking length, logic, continuity, CEFR or language defect. Otherwise use false and an empty issues array.
 - Give at most 4 short, concrete issues per chapter. Use an empty issues array when it passes.
 - Do not repeat or rewrite the story.`
     : `- First line: one Markdown heading in the form "# German title".
@@ -1565,6 +1605,7 @@ ${isCompleteStory
         reviewed = normalizeStoryText(rawReviewed, lengthMin, lengthMax);
       }
       const needsTargetedRepair = invalidIndexes.length > 0;
+      const completedAuditCount = isCompleteStory ? reviewAuditCount + 1 : reviewAuditCount;
       await updateJob(url, serviceKey, jobId, userId, needsTargetedRepair
         ? {
           status: "review_queued",
@@ -1572,6 +1613,7 @@ ${isCompleteStory
             ...reviewed,
             storyPlan,
             reviewPassCompleted: true,
+            reviewAuditCount: completedAuditCount,
             reviewIssues,
           },
           provider_used: provider,
@@ -1592,7 +1634,7 @@ ${isCompleteStory
         willRetry: needsTargetedRepair,
         durationMs: Date.now() - phaseStartedAt,
         message: needsTargetedRepair
-          ? `Independent review completed; ${invalidIndexes.length} chapter(s) queued for targeted repair.`
+          ? `${reviewAuditCount > 0 ? "Final" : "Independent"} review completed; ${invalidIndexes.length} chapter(s) queued for targeted repair.`
           : undefined,
       });
       kickWorker(url, serviceKey);
@@ -1729,7 +1771,7 @@ Before returning, verify every vocabulary form${includeLanguageFocus ? " and eve
     }
     const allowedAttempts = MAX_PHASE_ATTEMPTS
       + (isCompleteStory && phase === "draft" ? 1 : 0)
-      + (isCompleteStory && phase === "review" ? chapterCount + 1 : 0)
+      + (isCompleteStory && phase === "review" ? (chapterCount * 2) + 3 : 0)
       + (isCompleteStory && phase === "materials" ? Math.max(0, chapterCount - 1) : 0);
     const retry = RETRYABLE_CODES.has(failure.code) && attempt < allowedAttempts;
     console.error("Article worker phase failed:", {
