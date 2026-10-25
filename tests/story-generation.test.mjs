@@ -214,11 +214,19 @@ test("a targeted review can load an intermediate story outside the total word ra
 
 test("targeted repairs use the whole story and must pass a later independent audit", () => {
   assert.match(workflowSource, /COMPLETE STORY CONTEXT:/);
-  assert.match(workflowSource, /const MAX_STORY_AUDITS = 3/);
+  assert.match(workflowSource, /const MAX_PLAN_REVIEWS = 3/);
+  assert.match(workflowSource, /const MAX_STORY_AUDITS = 4/);
   assert.match(workflowSource, /complete story queued for independent verification/);
   assert.match(workflowSource, /reviewPassCompleted:\s*false/);
   assert.doesNotMatch(workflowSource, /all chapters now pass validation/);
   assert.match(workflowSource, /story_quality_failed/);
+});
+
+test("a targeted repair can correct a chapter-title defect without freely renaming chapters", () => {
+  assert.match(workflowSource, /const titleRepairRequired = chapterReviewIssues\.some/);
+  assert.match(workflowSource, /The review found a defect in the chapter title/);
+  assert.match(workflowSource, /title: titleRepairRequired \? repairedText\.title : chapter\.title/);
+  assert.doesNotMatch(workflowSource, /Keep the title unchanged:/);
 });
 
 test("the story plan has a binding brief contract and an independent brief review", () => {

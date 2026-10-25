@@ -1094,7 +1094,9 @@ const RETRYABLE_CODES = new Set([
   "invalid_materials_output", "generation_job_update_failed",
 ]);
 const MAX_PHASE_ATTEMPTS = 5;
-const MAX_STORY_AUDITS = 3;
+const MAX_PLAN_REVIEWS = 3;
+// Three repair rounds need a fourth, read-only audit to verify the final edit.
+const MAX_STORY_AUDITS = 4;
 
 async function logCancelledAttempt(
   url: string,
@@ -1377,7 +1379,7 @@ Return passes=true only if the plan unmistakably delivers the brief. For every f
         const planPasses = rawPlanReview.passes === true && planIssues.length === 0;
         if (!planPasses) {
           const completedPlanReviewCount = planReviewCount + 1;
-          if (completedPlanReviewCount >= MAX_STORY_AUDITS) {
+          if (completedPlanReviewCount >= MAX_PLAN_REVIEWS) {
             throw new WorkflowError(
               "story_quality_failed",
               422,
@@ -1621,6 +1623,12 @@ ${isCompleteStory
         const chapter = draftSeries.chapters[repairIndex];
         const chapterReviewIssues = storedReviewIssues
           .find(item => item.chapter === chapter.number)?.issues || [];
+        const titleRepairRequired = chapterReviewIssues.some(issue =>
+          /(?:chapter\s+title|title|kapitel(?:-|\s*)titel)/iu.test(issue.description)
+          || issue.evidence.some(snippet =>
+            chapter.title.includes(snippet) || snippet.includes(chapter.title)
+          )
+        );
         const currentStats = getStorySeriesWordStats(draftSeries, lengthMin, lengthMax, chapterCount);
         const otherChaptersWordCount = currentStats.totalWordCount - chapter.wordCount;
         const allowedChapterMin = Math.max(80, currentStats.accepted.min - otherChaptersWordCount);
@@ -1637,16 +1645,18 @@ ${isCompleteStory
 
 TARGET:
 - CEFR level: ${level}
-- Keep the title unchanged: ${chapter.title}
+- ${titleRepairRequired
+    ? `The review found a defect in the chapter title. Correct only that defect in ${JSON.stringify(chapter.title)} and return the corrected title.`
+    : `Keep the chapter title exactly unchanged: ${chapter.title}`}
 - The target for the complete ${chapterCount}-chapter story is ${reviewedStoryRange.min}-${reviewedStoryRange.max} German words in total; ${reviewedStoryAcceptedRange.min}-${reviewedStoryAcceptedRange.max} is the accepted approximate range. Individual chapter lengths may vary naturally.
 ${totalLengthInstruction}
 - The repaired chapter itself must contain ${allowedChapterMin}-${allowedChapterMax} words so the unchanged chapters plus this repair remain inside the accepted complete-story range.
 - Use 4-6 meaningful paragraphs.
-- Preserve every event, fact, character, object and causal link from the chapter and binding plan.
+- Preserve every valid event, fact, character, object and causal link from the chapter and binding plan. A supplied review finding overrides this rule where the cited text itself is defective.
 - Add only natural detail, action, dialogue or explanation that fits the established plot.
-- Do not introduce a new solution, character, object, conflict or subplot.
+- Do not introduce a new solution, character, object, conflict or subplot. You may add the smallest earlier setup needed for an existing object or event that the review says appears without introduction.
 - Use correct German quotation marks and language suitable for ${level}.
-- Correct every supplied finding literally and verify each cited sentence before returning the chapter.
+- Correct every supplied finding with the smallest sufficient edit. Before returning, check every finding again against the complete repaired chapter, including its title.
 ${chapterReviewIssues.length ? `
 INDEPENDENT-REVIEW FINDINGS THAT MUST ALL BE RESOLVED:
 ${formatStoryIssues(chapterReviewIssues)}` : ""}
@@ -1660,14 +1670,14 @@ ${JSON.stringify({ title: draftSeries.title, chapters: draftSeries.chapters })}
 REPAIR ONLY CHAPTER ${chapter.number} (${chapter.wordCount} words). Use the other chapters only as immutable context.
 
 OUTPUT FORMAT:
-- First line: "# ${chapter.title}"
+- First line: one Markdown heading containing ${titleRepairRequired ? "the corrected German chapter title" : JSON.stringify(chapter.title)}.
 - Then 4-6 complete paragraphs separated by blank lines.
 - No word count, explanation, labels, code fences or JSON.`;
         const rawRepair = await callAiText(target, repairPrompt, "low", 2_000);
         const repairedText = normalizeStoryChapterText(rawRepair);
         const repairedChapter = {
           ...repairedText,
-          title: chapter.title,
+          title: titleRepairRequired ? repairedText.title : chapter.title,
           number: chapter.number,
         };
         const repairedSeries = {
