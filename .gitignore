@@ -3,3 +3,9 @@
 .codex-edge-mobile*/
 .codex-mobile-*.png
 .codex-preview-server.pid
+
+# Local Codex task attachments
+.codex-remote-attachments/
+
+# Local Supabase CLI state
+supabase/.temp/
