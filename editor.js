@@ -1874,6 +1874,10 @@ function getStoryArcInstruction(chapterIndex, chapterCount) {
 
 function buildStoryChapterBrief(story, chapterIndex) {
   const chapterPlan = story.storyPlan?.chapterPlans?.[chapterIndex] || null;
+  const forbiddenTitles = [
+    story.seriesTitle,
+    ...(story.completedChapters || []).map(chapter => chapter.title)
+  ].filter(Boolean);
 
   return [
     `Write chapter ${chapterIndex + 1} of ${story.chapterCount} of one continuous story.`,
@@ -1883,7 +1887,9 @@ function buildStoryChapterBrief(story, chapterIndex) {
     chapterPlan ? `Short chapter direction: ${JSON.stringify(chapterPlan)}` : "",
     "Keep all names, relationships, facts, chronology and unresolved events consistent.",
     "Do not invent a conflict, misunderstanding or romantic obstacle unless it follows naturally from the requested topic and earlier chapters.",
-    "Do not retell earlier chapters. Give this chapter its own short German title without a chapter number.",
+    "Do not retell earlier chapters. Give this chapter a unique, content-specific short German title.",
+    "The title must differ meaningfully from the series title and all previous chapter titles. Never add Kapitel, Teil, a chapter number or a numeric suffix to disguise a repeated title.",
+    forbiddenTitles.length ? `Forbidden titles: ${JSON.stringify(forbiddenTitles)}` : "",
     chapterIndex > 0 ? "Continue directly and naturally from the preceding events." : ""
   ].filter(Boolean).join("\n\n").slice(0, 3_000);
 }

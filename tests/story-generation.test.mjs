@@ -43,6 +43,9 @@ test("the chapter brief stays compact and leaves full history in structured cont
   assert.match(brief, /Overall story brief/);
   assert.doesNotMatch(brief, /PREVIOUS_CHAPTER_FULL_TEXT/);
   assert.doesNotMatch(brief, /OLD_FULL_TEXT_SHOULD_NOT_BE_INCLUDED/);
+  assert.match(brief, /unique, content-specific short German title/);
+  assert.match(brief, /Der geheimnisvolle Brief/);
+  assert.match(brief, /Die Reise/);
   assert.ok(brief.length <= 3_000);
 });
 
