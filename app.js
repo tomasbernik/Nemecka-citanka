@@ -1051,6 +1051,7 @@ onClick("editArticleDetailsBtn", () => {
   document.querySelector(".editor-helper")?.scrollIntoView({ behavior: "smooth", block: "start" });
 });
 onClick("deleteArticleBtn", deleteArticleFromEditor);
+onClick("deleteStoryBtn", deleteStoryFromEditor);
 onClick("assignArticleBtn", assignSelectedArticleToStudents);
 onEvent("articleAssignmentList", "change", handleArticleAssignmentChange);
 onClick("assignCurrentArticleBtn", toggleCurrentArticleAssignmentPanel);

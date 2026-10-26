@@ -458,7 +458,7 @@
                 <button id="articleModeBtn" class="segmented-filter-btn active" type="button" aria-pressed="true">Článok</button>
                 <button id="storyModeBtn" class="segmented-filter-btn" type="button" aria-pressed="false">Príbeh</button>
               </div>
-              <p id="storyModeHelp" class="muted hidden">AI vytvorí všetky kapitoly naraz, celý príbeh skontroluje iným modelom a potom kapitoly uloží. Pri 5 kapitolách je maximum 300–350 slov na kapitolu.</p>
+              <p id="storyModeHelp" class="muted hidden">AI vytvára kapitoly postupne. Pri každej ďalšej kapitole dostane stručnú osnovu a úplný text všetkých predchádzajúcich kapitol.</p>
             </div>
             <div id="storyGenerationOptions" class="story-generation-options hidden">
               <label class="field-row editor-helper-inline-row">
@@ -608,6 +608,7 @@
             <button id="saveArticleBtn" class="primary-btn hidden" type="button">Uložiť článok</button>
             <button id="editArticleDetailsBtn" class="secondary-btn hidden" type="button">Prerobiť článok</button>
             <button id="deleteArticleBtn" class="secondary-btn danger hidden" type="button">Vymazať článok</button>
+            <button id="deleteStoryBtn" class="secondary-btn danger hidden" type="button">Vymazať príbeh</button>
           </div>
           <section id="articleAssignmentPanel" class="assignment-panel hidden">
             <p class="eyebrow">Zadanie</p>
@@ -717,7 +718,7 @@
   <script src="translations/ui.js?v=139"></script>
   <script src="translations/auth.js?v=135"></script>
   <script src="translations/new-languages.js?v=137"></script>
-  <script src="translations/ui-completions.js?v=9"></script>
+  <script src="translations/ui-completions.js?v=10"></script>
   <script src="translations/prompts.js?v=121"></script>
   <script src="i18n.js?v=117"></script>
   <script src="auth.js?v=134"></script>

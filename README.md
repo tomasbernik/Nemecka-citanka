@@ -238,22 +238,21 @@ Modely možno zmeniť bez úpravy kódu:
 supabase secrets set GROQ_ARTICLE_MODEL="openai/gpt-oss-120b" GROQ_ARTICLE_REVIEW_MODEL="qwen/qwen3.8-27b" GROQ_ARTICLE_FALLBACK_MODEL="openai/gpt-oss-20b"
 ```
 
-Pri viac-kapitolovom príbehu sa najprv samostatne vytvorí malá záväzná JSON osnova
-celej série. Všetky tri alebo päť kapitol sa následne vytvoria spoločne v jednom
-Markdown výstupe, aby model videl celý dejový oblúk naraz. Celú sériu potom
-nezávisle skontroluje iný Groq model (`GROQ_ARTICLE_REVIEW_MODEL`) a až opravený
-text sa rozdelí na samostatné kapitoly. Server kontroluje počet, poradie, nadpisy,
-odseky a dĺžku každej kapitoly.
+Pri viac-kapitolovom príbehu sa najprv vytvorí iba krátka a pružná JSON osnova:
+názov, východisková situácia, smer zakončenia a jedna stručná veta pre každú
+kapitolu. Kapitoly sa potom generujú postupne. Pri tvorbe každej ďalšej kapitoly
+model dostane túto osnovu aj úplný text všetkých už hotových kapitol. Samostatná
+revízia každej kapitoly kontroluje logiku, chronológiu, význam dialógov a úroveň
+jazyka ešte pred jej uložením.
 
 Jazykový jav a jeho cvičenie sa pri viac-kapitolových príbehoch negenerujú. Pri
 samostatnom článku sa pridajú iba vtedy, keď používateľ vyplní voliteľné pole
 „Jazykový jav“; prázdne pole znamená menšiu schému bez `languageFocus`.
 
-Osnova osobitne eviduje mená a rody postáv, ich ciele, skutočnú podstatu konfliktu,
-odlišné presvedčenia, predmety s vlastníkmi a časovú os. Revízny model kontroluje
-aj význam dialógov, aby nevzniklo zdanlivé nedorozumenie medzi dvoma rovnakými
-výrokmi. Učebné materiály sa kvôli free limitom generujú postupne pre každú
-kapitolu; nemenia už schválený dej.
+Prompt nevyžaduje konflikt, nedorozumenie, romantickú prekážku ani dramatický
+zvrat, ak ich prirodzene nevyžaduje téma používateľa. Popri plnom texte sa medzi
+kapitolami prenáša aj kompaktný stav postáv, miest, predmetov, faktov a otvorených
+udalostí. Učebné materiály sa generujú oddelene a nemenia už schválený dej.
 
 Prvý draft má miernejšiu minimálnu dĺžku, aby sa celý použiteľný príbeh
 nezahodil pre jednu krátku kapitolu. Nezávislá revízia dostane presné počty

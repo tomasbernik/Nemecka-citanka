@@ -185,7 +185,7 @@ function showInviteCodeDialog() {
   $("inviteCodeValue").textContent = invite.code;
   $("inviteCodeValidity").textContent = t("inviteValidOneHour");
   $("inviteCodeExpiresAt").textContent = formatText("inviteExpiresAt", {
-    time: new Date(invite.expiresAt).toLocaleString(getUiLanguage())
+    time: new Date(invite.expiresAt).toLocaleString(getUiLanguage(), { timeZone: APP_TIME_ZONE })
   });
   $("inviteCodeStatus").textContent = "";
   updateInviteCountdown();

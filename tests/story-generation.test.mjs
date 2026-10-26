@@ -25,7 +25,7 @@ const shouldKeepPendingStoryGenerationAfterError = vm.runInContext(
   context
 );
 
-test("the chapter brief stays compact and delegates history to structured context", () => {
+test("the chapter brief stays compact and leaves full history in structured context", () => {
   const story = {
     topic: "Anna follows a mysterious letter through Berlin.",
     seriesTitle: "Der geheimnisvolle Brief",
@@ -46,7 +46,7 @@ test("the chapter brief stays compact and delegates history to structured contex
   assert.ok(brief.length <= 3_000);
 });
 
-test("the final chapter is explicitly instructed to resolve open plot lines", () => {
+test("the final chapter concludes existing events without forcing a new conflict", () => {
   const brief = buildStoryChapterBrief({
     topic: "A simple mystery",
     seriesTitle: "Das Rätsel",
@@ -55,10 +55,11 @@ test("the final chapter is explicitly instructed to resolve open plot lines", ()
   }, 4);
 
   assert.match(brief, /final chapter/i);
-  assert.match(brief, /Resolve the central problem/);
+  assert.match(brief, /Naturally conclude the events already opened/);
+  assert.match(brief, /Do not introduce a new major conflict/);
 });
 
-test("story context carries the binding plan, continuity state and only the previous ending", () => {
+test("story context carries the plan, continuity state and every previous chapter in full", () => {
   const story = {
     topic: "A station crew repairs a cooling system.",
     seriesTitle: "Aurora",
@@ -76,9 +77,9 @@ test("story context carries the binding plan, continuity state and only the prev
   assert.equal(storyContext.chapterNumber, 3);
   assert.equal(storyContext.plan.title, "Aurora");
   assert.equal(storyContext.state.openThreads[0], "Replace the pipe");
-  assert.match(storyContext.earlierSummaries, /Chapter 1 \(Alarm\): The pipe breaks\./);
-  assert.match(storyContext.previousChapter.ending, /PREVIOUS_ENDING/);
-  assert.doesNotMatch(storyContext.previousChapter.ending, /OLD_FULL_TEXT/);
+  assert.equal(storyContext.previousChapters.length, 2);
+  assert.equal(storyContext.previousChapters[0].text[0], "OLD_FULL_TEXT");
+  assert.equal(storyContext.previousChapters[1].text[1], "PREVIOUS_ENDING");
 });
 
 test("generated story metadata is persisted separately from the article", () => {
@@ -93,7 +94,7 @@ test("generated story metadata is persisted separately from the article", () => 
   assert.equal(story.continuityState, continuityState);
 });
 
-test("new stories request the complete series in one generation job", () => {
+test("new stories use sequential chapter generation", () => {
   const story = {
     version: 3,
     chapterCount: 5,
@@ -102,15 +103,14 @@ test("new stories request the complete series in one generation job", () => {
     storyPlan: null,
   };
 
-  const brief = buildCompleteStoryBrief(story);
-  const storyContext = buildCompleteStoryContext(story);
+  const brief = buildStoryChapterBrief(story, 0);
+  const storyContext = buildStoryChapterContext(story, 0);
 
-  assert.match(brief, /exactly 5 separately titled chapters/);
-  assert.match(brief, /complete causal arc/);
-  assert.equal(storyContext.mode, "complete_story");
-  assert.equal(storyContext.version, 3);
+  assert.match(brief, /Write chapter 1 of 5/);
+  assert.match(brief, /Do not invent a conflict/);
+  assert.equal(storyContext.version, 2);
   assert.equal(storyContext.chapterCount, 5);
-  assert.equal(storyContext.seriesTitle, "Ein neues Projekt");
+  assert.equal(storyContext.previousChapters.length, 0);
 });
 
 test("chapter cooldown survives a reload and counts down from persisted time", () => {
@@ -235,13 +235,12 @@ test("a targeted repair can correct a chapter-title defect without freely renami
   assert.doesNotMatch(workflowSource, /Keep the title unchanged:/);
 });
 
-test("the story plan has a binding brief contract and an independent brief review", () => {
-  assert.match(workflowSource, /briefContract:/);
-  assert.match(workflowSource, /primaryPromise/);
-  assert.match(workflowSource, /PLAN_REVIEW_SCHEMA/);
-  assert.match(workflowSource, /story_plan_review/);
-  assert.match(workflowSource, /For romance or love, plan at least two suitable romantic leads/);
-  assert.match(workflowSource, /A hotel, travel or booking problem alone does not satisfy a love story/);
+test("the story plan is short and does not force conflict or misunderstanding", () => {
+  assert.match(workflowSource, /endingDirection/);
+  assert.match(workflowSource, /direction/);
+  assert.match(workflowSource, /Do not add a conflict, misunderstanding, romance, mystery or dramatic twist/);
+  assert.doesNotMatch(workflowSource, /centralConflict:/);
+  assert.doesNotMatch(workflowSource, /briefContract:/);
 });
 
 test("story review findings require evidence and verify the original brief", () => {

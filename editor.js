@@ -1515,6 +1515,9 @@ function updateArticleEditorFlow() {
   $("articleEditorFloatingActions").classList.toggle("hidden", !isReadyToSave || !hasUnsavedChanges);
   $("editArticleDetailsBtn").classList.toggle("hidden", !isEditing || isExpanded);
   $("deleteArticleBtn").classList.toggle("hidden", !(selectedArticle && canDeleteArticle(selectedArticle)));
+  $("deleteStoryBtn")?.classList.toggle("hidden", !(
+    selectedArticle?.seriesId && canDeleteArticle(selectedArticle)
+  ));
   renderArticleInlineHighlightPreview();
 }
 
@@ -1796,6 +1799,25 @@ async function deleteArticleFromEditor() {
   }
 }
 
+async function deleteStoryFromEditor() {
+  const article = state.articles.find(item => item.id === $("articleEditorSelect").value);
+  if (!article?.seriesId || !canDeleteArticle(article)) return;
+  const chapters = state.articles.filter(item => item.seriesId === article.seriesId);
+  const message = formatText("confirmDeleteStory", {
+    title: article.seriesTitle || article.title,
+    count: chapters.length
+  });
+  if (!confirm(message)) return;
+
+  try {
+    await scheduleArticleSeriesDeletion(article.seriesId);
+    fillArticleEditor(null);
+    $("articleEditorStatus").textContent = t("storyDeletionScheduled");
+  } catch (error) {
+    $("articleEditorStatus").textContent = error.message;
+  }
+}
+
 let articleGenerationRunning = false;
 let articleGenerationCancelling = false;
 let articleGenerationResumeTimer = null;
@@ -1844,10 +1866,10 @@ function updateStoryLengthLimits() {
 }
 
 function getStoryArcInstruction(chapterIndex, chapterCount) {
-  if (chapterIndex === 0) return "Introduce the main characters, situation and central problem. Do not resolve the main problem yet.";
-  if (chapterIndex === chapterCount - 1) return "This is the final chapter. Resolve the central problem and the important open plot lines with a satisfying ending.";
-  if (chapterIndex === chapterCount - 2) return "Move decisively toward the climax, but leave the central problem for the final chapter.";
-  return "Develop the conflict, reveal something new and end with a natural reason to continue.";
+  if (chapterIndex === 0) return "Begin the requested story naturally. Establish only the people, place and situation that the story needs.";
+  if (chapterIndex === chapterCount - 1) return "This is the final chapter. Naturally conclude the events already opened. Do not introduce a new major conflict or unsupported promises about the distant future.";
+  if (chapterIndex === chapterCount - 2) return "Continue the established story and prepare a natural ending without forcing a climax.";
+  return "Continue the established story naturally. Add only events that fit the topic and what has already happened.";
 }
 
 function buildStoryChapterBrief(story, chapterIndex) {
@@ -1858,8 +1880,9 @@ function buildStoryChapterBrief(story, chapterIndex) {
     story.seriesTitle ? `Overall story title: ${story.seriesTitle}.` : "",
     `Overall story brief: ${String(story.topic || "").slice(0, 1_600)}`,
     `Chapter role: ${getStoryArcInstruction(chapterIndex, story.chapterCount)}`,
-    chapterPlan ? `Binding chapter plan: ${JSON.stringify(chapterPlan)}` : "",
-    "Keep all names, relationships, facts, chronology and unresolved plot lines consistent.",
+    chapterPlan ? `Short chapter direction: ${JSON.stringify(chapterPlan)}` : "",
+    "Keep all names, relationships, facts, chronology and unresolved events consistent.",
+    "Do not invent a conflict, misunderstanding or romantic obstacle unless it follows naturally from the requested topic and earlier chapters.",
     "Do not retell earlier chapters. Give this chapter its own short German title without a chapter number.",
     chapterIndex > 0 ? "Continue directly and naturally from the preceding events." : ""
   ].filter(Boolean).join("\n\n").slice(0, 3_000);
@@ -1867,11 +1890,6 @@ function buildStoryChapterBrief(story, chapterIndex) {
 
 function buildStoryChapterContext(story, chapterIndex) {
   const completed = Array.isArray(story.completedChapters) ? story.completedChapters : [];
-  const previous = completed[completed.length - 1] || null;
-  const earlierSummaries = completed.map((chapter, index) =>
-    `Chapter ${index + 1} (${chapter.title}): ${chapter.summary}`
-  ).join("\n").slice(-1_600);
-  const previousText = previous ? String((previous.text || []).join("\n")) : "";
 
   return {
     version: 2,
@@ -1882,12 +1900,11 @@ function buildStoryChapterContext(story, chapterIndex) {
     arcInstruction: getStoryArcInstruction(chapterIndex, story.chapterCount),
     plan: story.storyPlan || null,
     state: story.continuityState || null,
-    earlierSummaries,
-    previousChapter: previous ? {
-      title: previous.title,
-      summary: previous.summary,
-      ending: previousText.slice(-1_600)
-    } : null
+    previousChapters: completed.map((chapter, index) => ({
+      chapter: index + 1,
+      title: chapter.title,
+      text: Array.isArray(chapter.text) ? chapter.text : []
+    }))
   };
 }
 
@@ -1896,9 +1913,9 @@ function buildCompleteStoryBrief(story) {
     `Write one continuous German story containing exactly ${story.chapterCount} separately titled chapters.`,
     story.requestedStoryTitle ? `Requested overall title: ${story.requestedStoryTitle}.` : "",
     `Overall story brief: ${String(story.topic || "").slice(0, 3_000)}`,
-    "Plan the complete causal arc before writing. Every chapter must advance the same story.",
+    "Use only a short, flexible plan. Every chapter should continue the same story naturally.",
     "Keep names, grammatical gender, goals, object ownership, chronology and the meaning of agreements consistent.",
-    "The final chapter must resolve the central conflict and all important open plot lines."
+    "The final chapter should naturally conclude events already opened, without inventing a new conflict."
   ].filter(Boolean).join("\n\n").slice(0, 4_000);
 }
 
@@ -2244,7 +2261,7 @@ async function generateStoryDirectlyWithAi() {
     const range = getSelectedArticleLengthRange();
     const requestedStoryTitle = $("storyTitleInput")?.value.trim() || "";
     story = {
-      version: 3,
+      version: 2,
       seriesId: `story-${Date.now().toString(36)}`,
       requestedStoryTitle,
       seriesTitle: requestedStoryTitle,

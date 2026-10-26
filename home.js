@@ -257,7 +257,10 @@ function buildArticleOrganizationSection() {
             <article class="series-management-card">
               <div class="management-row-heading">
                 <strong>${escapeHtml(entry.title)}</strong>
-                <button class="text-btn" type="button" data-dissolve-series="${escapeHtml(entry.id)}">${escapeHtml(t("dissolveSeries"))}</button>
+                <div class="management-actions">
+                  <button class="text-btn" type="button" data-dissolve-series="${escapeHtml(entry.id)}">${escapeHtml(t("dissolveSeries"))}</button>
+                  <button class="text-btn danger" type="button" data-delete-series="${escapeHtml(entry.id)}" data-series-title="${escapeHtml(entry.title)}" data-chapter-count="${entry.articles.length}">${escapeHtml(t("deleteStory"))}</button>
+                </div>
               </div>
               <ol class="chapter-management-list">
                 ${entry.articles.map((article, index) => `
@@ -277,6 +280,44 @@ function buildArticleOrganizationSection() {
         </div>
       ` : ""}
       <p id="articleOrganizationStatus" class="muted"></p>
+    </section>
+  `;
+}
+
+function buildDeletedStorySection(articles) {
+  const groups = new Map();
+  articles.forEach(article => {
+    if (!article.seriesId) return;
+    if (!groups.has(article.seriesId)) groups.set(article.seriesId, []);
+    groups.get(article.seriesId).push(article);
+  });
+  const stories = [...groups.entries()].map(([seriesId, chapters]) => ({
+    seriesId,
+    chapters,
+    title: chapters[0]?.seriesTitle || chapters[0]?.title || seriesId,
+    purgeAfter: chapters.map(chapter => chapter.purgeAfter).filter(Boolean).sort()[0] || null
+  }));
+
+  return `
+    <section class="management-section deleted-story-section">
+      <h3>${escapeHtml(t("deletedStories"))} <span class="management-count">${stories.length}</span></h3>
+      <p class="muted">${escapeHtml(t("deletedStoriesHelp"))}</p>
+      <div class="management-list">
+        ${stories.length ? stories.map(story => `
+          <article class="management-row">
+            <div>
+              <strong>${escapeHtml(story.title)}</strong>
+              <p class="muted">${escapeHtml(formatText("storyScheduledForDeletion", {
+                count: story.chapters.length,
+                time: formatDateTime(story.purgeAfter)
+              }))}</p>
+            </div>
+            <div class="management-actions">
+              <button class="secondary-btn compact" type="button" data-restore-series="${escapeHtml(story.seriesId)}">${escapeHtml(t("restoreStory"))}</button>
+            </div>
+          </article>
+        `).join("") : `<p class="muted">${escapeHtml(t("noDeletedStories"))}</p>`}
+      </div>
     </section>
   `;
 }
@@ -361,6 +402,7 @@ async function renderAdminOverview() {
   const root = $("adminOverview");
   if (!root || !isPublisherAccount()) return;
   const teacherRequests = await loadTeacherRequests();
+  const deletedStoryArticles = await loadDeletedStoryArticles();
   const articles = [...state.articles].sort((a, b) => String(b.updatedAt || "").localeCompare(String(a.updatedAt || "")));
   const pending = articles.filter(article => ["draft", "pending"].includes(article.approvalStatus));
   const awaitingPublication = articles.filter(article => article.approvalStatus === "approved" && !article.published);
@@ -370,6 +412,7 @@ async function renderAdminOverview() {
   root.innerHTML = [
     buildTeacherRequestSection(teacherRequests),
     buildArticleOrganizationSection(),
+    buildDeletedStorySection(deletedStoryArticles),
     buildAdminArticleSection(t("articleNew"), pending),
     buildAdminArticleSection(t("approvedAwaitingPublication"), awaitingPublication),
     buildAdminArticleSection(t("publishedArticles"), published),
@@ -380,7 +423,7 @@ async function renderAdminOverview() {
 }
 
 async function handleAdminOverviewClick(event) {
-  const button = event.target.closest("[data-article-id], [data-teacher-profile-id], [data-order-move], [data-create-series], [data-dissolve-series], [data-toggle-article-order]");
+  const button = event.target.closest("[data-article-id], [data-teacher-profile-id], [data-order-move], [data-create-series], [data-dissolve-series], [data-delete-series], [data-restore-series], [data-toggle-article-order]");
   if (!button || !isPublisherAccount()) return;
   button.disabled = true;
   try {
@@ -412,6 +455,15 @@ async function handleAdminOverviewClick(event) {
       await createArticleSeries(title, articleIds);
     } else if (button.dataset.dissolveSeries) {
       await dissolveArticleSeries(button.dataset.dissolveSeries);
+    } else if (button.dataset.deleteSeries) {
+      const message = formatText("confirmDeleteStory", {
+        title: button.dataset.seriesTitle || "",
+        count: button.dataset.chapterCount || ""
+      });
+      if (!window.confirm(message)) return;
+      await scheduleArticleSeriesDeletion(button.dataset.deleteSeries);
+    } else if (button.dataset.restoreSeries) {
+      await restoreArticleSeries(button.dataset.restoreSeries);
     } else if (button.hasAttribute("data-remove-from-series")) {
       await removeArticleFromSeries(button.dataset.articleId);
     } else if (button.dataset.teacherProfileId) {
@@ -459,6 +511,7 @@ function formatPracticeType(type) {
 function formatDateTime(value) {
   if (!value) return "";
   return new Date(value).toLocaleString(getUiLanguage(), {
+    timeZone: APP_TIME_ZONE,
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",

@@ -51,13 +51,24 @@ async function seedLocalArticlesToRemote() {
 }
 
 async function loadRemoteArticles() {
-  let publishedRows;
-  try {
-    publishedRows = await supabaseRequest("app_articles?select=*&published=eq.true&approval_status=eq.approved&order=display_order.asc.nullslast,updated_at.desc,title.asc");
-  } catch (error) {
-    if (!error?.message?.includes("display_order")) throw error;
-    publishedRows = await supabaseRequest("app_articles?select=*&published=eq.true&approval_status=eq.approved&order=updated_at.desc,title.asc");
+  let publishedRows = null;
+  let publishedError = null;
+  const publishedQueries = [
+    "app_articles?select=*&published=eq.true&approval_status=eq.approved&deleted_at=is.null&order=display_order.asc.nullslast,updated_at.desc,title.asc",
+    "app_articles?select=*&published=eq.true&approval_status=eq.approved&deleted_at=is.null&order=updated_at.desc,title.asc",
+    "app_articles?select=*&published=eq.true&approval_status=eq.approved&order=display_order.asc.nullslast,updated_at.desc,title.asc",
+    "app_articles?select=*&published=eq.true&approval_status=eq.approved&order=updated_at.desc,title.asc"
+  ];
+  for (const query of publishedQueries) {
+    try {
+      publishedRows = await supabaseRequest(query);
+      break;
+    } catch (error) {
+      publishedError = error;
+      if (!/deleted_at|display_order/.test(error?.message || "")) throw error;
+    }
   }
+  if (!publishedRows && publishedError) throw publishedError;
   let manageableRows = [];
 
   if (state.authUser) {
@@ -271,12 +282,20 @@ function normalizeArticle(article) {
     chapterOrder: chapterOrder !== null && chapterOrder !== undefined && Number.isFinite(Number(chapterOrder))
       ? Number(chapterOrder)
       : null,
+    deletedAt: article.deletedAt || article.deleted_at || null,
+    purgeAfter: article.purgeAfter || article.purge_after || null,
     published: article.published !== false
   };
 }
 
 function canViewArticle(article, profile = state.currentProfile) {
-  return Boolean(article?.published && article.visibility === "public" && article.approvalStatus === "approved");
+  return Boolean(
+    article
+    && !article.deletedAt
+    && article.published
+    && article.visibility === "public"
+    && article.approvalStatus === "approved"
+  );
 }
 
 function isInCurrentTeacherGroup(profile, teamId = null) {
@@ -506,6 +525,8 @@ function rowToArticle(row) {
     seriesId: row.series_id || null,
     seriesTitle: row.series_title || null,
     chapterOrder: row.chapter_order ?? null,
+    deletedAt: row.deleted_at || null,
+    purgeAfter: row.purge_after || null,
     updatedAt: row.updated_at || null,
     published: row.published === true
   };
@@ -633,6 +654,46 @@ async function removeArticleFromSeries(articleId) {
   }
   await saveCachedArticles(state.articles);
   renderArticles();
+}
+
+async function scheduleArticleSeriesDeletion(seriesId) {
+  if (!seriesId) return [];
+  const rows = await supabaseRequest("rpc/app_schedule_story_deletion", {
+    method: "POST",
+    body: JSON.stringify({ target_series_id: seriesId })
+  });
+  const scheduled = Array.isArray(rows) ? rows : [];
+  const deletedIds = new Set(scheduled.map(row => row.id));
+  state.articles = state.articles.filter(article => !deletedIds.has(article.id));
+  await saveCachedArticles(state.articles);
+  renderLevelFilters();
+  renderArticles();
+  renderArticleEditorList();
+  return scheduled;
+}
+
+async function restoreArticleSeries(seriesId) {
+  if (!seriesId || !isPublisherAccount()) return [];
+  const rows = await supabaseRequest("rpc/app_restore_story", {
+    method: "POST",
+    body: JSON.stringify({ target_series_id: seriesId })
+  });
+  await loadArticles();
+  return Array.isArray(rows) ? rows : [];
+}
+
+async function loadDeletedStoryArticles() {
+  if (!isPublisherAccount()) return [];
+  try {
+    const rows = await supabaseRequest("rpc/app_deleted_story_articles", {
+      method: "POST",
+      body: "{}"
+    });
+    return (rows || []).map(row => normalizeArticle(rowToArticle(row)));
+  } catch (error) {
+    console.info("Deleted story lookup skipped:", error.message);
+    return [];
+  }
 }
 
 async function saveArticle(article) {
