@@ -716,7 +716,9 @@ async function callGroq(
 ): Promise<JsonObject> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 115_000);
-  const providerThinkingLevel = thinkingLevel === "none" ? "low" : thinkingLevel;
+  const providerThinkingLevel = model.startsWith("qwen/") && thinkingLevel === "none"
+    ? "none"
+    : thinkingLevel === "none" ? "low" : thinkingLevel;
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -821,7 +823,9 @@ async function callGroqText(
 ): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 115_000);
-  const providerThinkingLevel = thinkingLevel === "none" ? "low" : thinkingLevel;
+  const providerThinkingLevel = model.startsWith("qwen/") && thinkingLevel === "none"
+    ? "none"
+    : thinkingLevel === "none" ? "low" : thinkingLevel;
   try {
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
@@ -924,11 +928,13 @@ function callAiText(
   maxOutputTokens: number,
 ) {
   const isQwen = target.model.startsWith("qwen/");
-  // Qwen accepts only low/medium/high, while GPT-OSS also accepts none.
-  const effectiveThinkingLevel = isQwen ? "low" : thinkingLevel;
-  // Groq's free Qwen tier enforces a 1,000 output-token-per-minute cap.
-  // Keep a small margin so the provider accepts the request.
-  const effectiveMaxOutputTokens = isQwen ? Math.min(maxOutputTokens, 900) : maxOutputTokens;
+  // Qwen 3.8 supports instruct mode without reasoning. A compact editorial
+  // audit needs visible findings, not a hidden reasoning trace that consumes
+  // the whole completion budget. GPT-OSS does not support `none`.
+  const effectiveThinkingLevel = isQwen ? "none" : thinkingLevel;
+  // Keep the review comfortably inside Groq's token-per-minute budget while
+  // allowing enough room for the requested visible line protocol.
+  const effectiveMaxOutputTokens = isQwen ? Math.min(maxOutputTokens, 1_800) : maxOutputTokens;
   return callGroqText(
     target.apiKey,
     target.model,

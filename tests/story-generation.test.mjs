@@ -269,10 +269,10 @@ test("isolated higher-level vocabulary does not block an otherwise suitable stor
   assert.match(workflowSource, /prioritize it as useful learning vocabulary/);
 });
 
-test("the Qwen reviewer uses a supported reasoning effort", () => {
-  assert.match(workflowSource, /const effectiveThinkingLevel = isQwen \? "low" : thinkingLevel;/);
-  assert.doesNotMatch(workflowSource, /const effectiveThinkingLevel = isQwen \? "none" : thinkingLevel;/);
-  assert.match(workflowSource, /const providerThinkingLevel = thinkingLevel === "none" \? "low" : thinkingLevel;/);
+test("the Qwen reviewer preserves its visible output budget by disabling reasoning", () => {
+  assert.match(workflowSource, /const effectiveThinkingLevel = isQwen \? "none" : thinkingLevel;/);
+  assert.match(workflowSource, /Math\.min\(maxOutputTokens, 1_800\)/);
+  assert.match(workflowSource, /model\.startsWith\("qwen\/"\) && thinkingLevel === "none"/);
 });
 
 test("an empty Qwen review preserves its error code and gives the fallback more output room", () => {
