@@ -1,4 +1,8 @@
-import { GROQ_COOLDOWN_SECONDS, selectArticleAiTarget } from "./provider-routing.mjs";
+import { selectArticleAiTarget } from "./provider-routing.mjs";
+import {
+  getGroqRateLimitSchedule,
+  getNonRateLimitRetryDelaySeconds,
+} from "./rate-limit.mjs";
 import {
   getCompleteStoryWordRange,
   getApproximateWordRange,
@@ -28,20 +32,20 @@ class WorkflowError extends Error {
   code: string;
   status: number;
   providerStatus: number | null;
-  retryAfterSeconds: number | null;
+  retryAtMs: number | null;
 
   constructor(
     code: string,
     status = 502,
     message = code,
     providerStatus: number | null = null,
-    retryAfterSeconds: number | null = null,
+    retryAtMs: number | null = null,
   ) {
     super(message);
     this.code = code;
     this.status = status;
     this.providerStatus = providerStatus;
-    this.retryAfterSeconds = retryAfterSeconds;
+    this.retryAtMs = retryAtMs;
   }
 }
 
@@ -53,16 +57,7 @@ const asStringArray = (value: unknown, maxItems: number, maxLength: number) =>
     ? value.slice(0, maxItems).map(item => asText(item, maxLength)).filter(Boolean)
     : [];
 
-const retryAfterSecondsFromResponse = (response: Response) => {
-  const value = response.headers.get("retry-after")?.trim() || "";
-  if (!value) return null;
-  const seconds = Number(value);
-  if (Number.isFinite(seconds) && seconds >= 0) return Math.ceil(seconds);
-  const date = Date.parse(value);
-  return Number.isFinite(date) ? Math.max(0, Math.ceil((date - Date.now()) / 1_000)) : null;
-};
-
-const nextGroqSlot = () => new Date(Date.now() + GROQ_COOLDOWN_SECONDS * 1_000).toISOString();
+type RateLimitObserver = (schedule: ReturnType<typeof getGroqRateLimitSchedule>) => void;
 
 const countWords = (paragraphs: string[]) => paragraphs
   .join(" ")
@@ -637,6 +632,7 @@ async function callGroq(
   maxOutputTokens: number,
   repairModel = "",
   allowRepair = true,
+  onRateLimit?: RateLimitObserver,
 ): Promise<JsonObject> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 115_000);
@@ -668,6 +664,8 @@ async function callGroq(
         },
       }),
     });
+    const rateLimitSchedule = getGroqRateLimitSchedule(response.headers, response.status);
+    onRateLimit?.(rateLimitSchedule);
     if (!response.ok) {
       const raw = await response.text();
       let providerMessage = "";
@@ -681,6 +679,12 @@ async function callGroq(
       console.error("Groq workflow error:", { model, status: response.status, body: raw.slice(0, 2_000) });
       const jsonGenerationFailed = response.status === 400
         && /failed to generate json|failed_generation/iu.test(`${providerMessage} ${raw}`);
+      const rateLimitReached = response.status === 429
+        || /rate.?limit|tokens per minute|requests per minute|\bTPM\b|\bRPM\b/iu.test(`${providerMessage} ${raw}`);
+      const failureRateLimitSchedule = rateLimitReached
+        ? getGroqRateLimitSchedule(response.headers, 429)
+        : rateLimitSchedule;
+      if (rateLimitReached) onRateLimit?.(failureRateLimitSchedule);
       const failedGeneration = asText(providerError.failed_generation, 12_000);
       if (jsonGenerationFailed && allowRepair && repairModel && failedGeneration) {
         console.info("Repairing invalid Groq JSON with fallback model:", { model, repairModel, schemaName });
@@ -694,16 +698,17 @@ async function callGroq(
           maxOutputTokens,
           "",
           false,
+          onRateLimit,
         );
       }
       throw new WorkflowError(
-        response.status === 429
+        rateLimitReached
           ? "groq_limit_reached"
           : jsonGenerationFailed ? "groq_json_failed" : "groq_failed",
         502,
         providerMessage || `Groq HTTP ${response.status}`,
         response.status,
-        retryAfterSecondsFromResponse(response),
+        failureRateLimitSchedule.exhausted ? failureRateLimitSchedule.nextAttemptAtMs : null,
       );
     }
     const body = await response.json();
@@ -723,6 +728,7 @@ async function callGroq(
           maxOutputTokens,
           "",
           false,
+          onRateLimit,
         );
       }
       throw new WorkflowError("invalid_ai_output", 502, "Groq returned invalid JSON.");
@@ -744,6 +750,7 @@ async function callGroqText(
   prompt: string,
   thinkingLevel: "none" | "low" | "medium",
   maxOutputTokens: number,
+  onRateLimit?: RateLimitObserver,
 ): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 115_000);
@@ -766,6 +773,8 @@ async function callGroqText(
         max_completion_tokens: Math.min(maxOutputTokens, 6_000),
       }),
     });
+    const rateLimitSchedule = getGroqRateLimitSchedule(response.headers, response.status);
+    onRateLimit?.(rateLimitSchedule);
     if (!response.ok) {
       const raw = await response.text();
       let providerMessage = "";
@@ -775,12 +784,18 @@ async function callGroqText(
         providerMessage = asText(raw, 400);
       }
       console.error("Groq text workflow error:", { model, status: response.status, body: raw.slice(0, 2_000) });
+      const rateLimitReached = response.status === 429
+        || /rate.?limit|tokens per minute|requests per minute|\bTPM\b|\bRPM\b/iu.test(`${providerMessage} ${raw}`);
+      const failureRateLimitSchedule = rateLimitReached
+        ? getGroqRateLimitSchedule(response.headers, 429)
+        : rateLimitSchedule;
+      if (rateLimitReached) onRateLimit?.(failureRateLimitSchedule);
       throw new WorkflowError(
-        response.status === 429 ? "groq_limit_reached" : "groq_failed",
+        rateLimitReached ? "groq_limit_reached" : "groq_failed",
         502,
         providerMessage || `Groq HTTP ${response.status}`,
         response.status,
-        retryAfterSecondsFromResponse(response),
+        failureRateLimitSchedule.exhausted ? failureRateLimitSchedule.nextAttemptAtMs : null,
       );
     }
     const body = await response.json();
@@ -816,6 +831,7 @@ type AiTarget = {
   apiKey: string;
   model: string;
   repairModel: string;
+  onRateLimit?: RateLimitObserver;
 };
 
 type AiConfig = {
@@ -842,6 +858,8 @@ function callAi(
     thinkingLevel,
     maxOutputTokens,
     target.repairModel,
+    true,
+    target.onRateLimit,
   );
 }
 
@@ -865,6 +883,7 @@ function callAiText(
     prompt,
     effectiveThinkingLevel,
     effectiveMaxOutputTokens,
+    target.onRateLimit,
   );
 }
 
@@ -1084,13 +1103,6 @@ async function hasValidWorkerSecret(url: string, serviceKey: string, candidate: 
   return response.ok && await response.json() === true;
 }
 
-const retryDelaySeconds = (attempt: number, failure: WorkflowError) => {
-  const standardDelay = [65, 65, 90, 120][Math.min(Math.max(attempt - 1, 0), 3)];
-  const providerDelay = failure.retryAfterSeconds || 0;
-  // Every generated or rejected response consumes the model's rolling TPM budget.
-  return Math.max(standardDelay, providerDelay, GROQ_COOLDOWN_SECONDS);
-};
-
 async function runClaimedPhase(
   url: string,
   serviceKey: string,
@@ -1122,6 +1134,20 @@ async function runClaimedPhase(
     && phase === "review"
     && Boolean(job.draft && typeof job.draft === "object"
       && (job.draft as JsonObject).reviewPassCompleted === true);
+  const blockedModels = new Map<string, number>();
+  const observeRateLimit = (targetModel: string, schedule: ReturnType<typeof getGroqRateLimitSchedule>) => {
+    if (schedule.exhausted && schedule.nextAttemptAtMs > Date.now()) {
+      blockedModels.set(targetModel, schedule.nextAttemptAtMs);
+    } else {
+      blockedModels.delete(targetModel);
+    }
+  };
+  const nextAiAttemptAt = (targetModel?: string) => {
+    const blockedUntil = targetModel
+      ? blockedModels.get(targetModel)
+      : Math.max(0, ...blockedModels.values());
+    return new Date(blockedUntil || Date.now()).toISOString();
+  };
   const target = selectArticleAiTarget({
     phase,
     attempt,
@@ -1131,6 +1157,7 @@ async function runClaimedPhase(
     ...aiConfig,
   }) as AiTarget | null;
   if (!target) throw new WorkflowError("missing_configuration", 503);
+  target.onRateLimit = schedule => observeRateLimit(target.model, schedule);
   const { provider, model } = target;
   const languageFocus = isStory ? "" : asText(request.languageFocus, 200);
   const chapterNumber = Number(storyContext?.chapterNumber) || 0;
@@ -1217,7 +1244,7 @@ Return only the requested compact JSON plan.`;
           },
           provider_used: provider,
           model_used: model,
-          next_attempt_at: nextGroqSlot(),
+          next_attempt_at: nextAiAttemptAt(),
           locked_until: null,
           last_error: null,
           last_error_code: null,
@@ -1225,8 +1252,9 @@ Return only the requested compact JSON plan.`;
         await logGenerationAttempt(url, serviceKey, {
           jobId, phase, attempt, provider, model, outcome: "retry", willRetry: true,
           durationMs: Date.now() - phaseStartedAt,
-          message: `Story plan stored; ${isCompleteStory ? "complete story" : "chapter"} queued after ${GROQ_COOLDOWN_SECONDS}-second Groq cooldown.`,
+          message: `Story plan stored; ${isCompleteStory ? "complete story" : "chapter"} queued at the earliest safe Groq slot.`,
         });
+        kickWorker(url, serviceKey);
         return;
       }
 
@@ -1240,6 +1268,7 @@ Return only the requested compact JSON plan.`;
           ...aiConfig,
         }) as AiTarget | null;
         if (!planReviewTarget) throw new WorkflowError("missing_configuration", 503);
+        planReviewTarget.onRateLimit = schedule => observeRateLimit(planReviewTarget.model, schedule);
         const planReviewPrompt = `Act as an independent commissioning editor. Verify that a proposed story plan faithfully delivers the user's actual requested story before any prose is written.
 
 USER'S BINDING STORY BRIEF:
@@ -1297,7 +1326,7 @@ Return passes=true only if the plan unmistakably delivers the brief. For every f
             },
             provider_used: planReviewTarget.provider,
             model_used: planReviewTarget.model,
-            next_attempt_at: nextGroqSlot(),
+            next_attempt_at: nextAiAttemptAt(),
             locked_until: null,
             last_error: asText(failureMessage, 800),
             last_error_code: "invalid_story_plan",
@@ -1314,6 +1343,7 @@ Return passes=true only if the plan unmistakably delivers the brief. For every f
             errorCode: "invalid_story_plan",
             message: failureMessage,
           });
+          kickWorker(url, serviceKey);
           return;
         }
 
@@ -1326,7 +1356,7 @@ Return passes=true only if the plan unmistakably delivers the brief. For every f
           },
           provider_used: planReviewTarget.provider,
           model_used: planReviewTarget.model,
-          next_attempt_at: nextGroqSlot(),
+          next_attempt_at: nextAiAttemptAt(),
           locked_until: null,
           last_error: null,
           last_error_code: null,
@@ -1340,8 +1370,9 @@ Return passes=true only if the plan unmistakably delivers the brief. For every f
           outcome: "retry",
           willRetry: true,
           durationMs: Date.now() - phaseStartedAt,
-          message: `Story plan passed independent brief review; complete story queued after ${GROQ_COOLDOWN_SECONDS}-second Groq cooldown.`,
+          message: `Story plan passed independent brief review; complete story queued at the earliest safe Groq slot.`,
         });
+        kickWorker(url, serviceKey);
         return;
       }
 
@@ -1420,7 +1451,7 @@ ${isCompleteStory
         : normalizedDraft;
       await updateJob(url, serviceKey, jobId, userId, {
         status: "review_queued", draft, provider_used: provider, model_used: model,
-        next_attempt_at: nextGroqSlot(), locked_until: null,
+        next_attempt_at: nextAiAttemptAt(), locked_until: null,
         last_error: null, last_error_code: null,
       }, true);
       await logGenerationAttempt(url, serviceKey, {
@@ -1502,7 +1533,7 @@ ${isCompleteStory
             },
             provider_used: provider,
             model_used: model,
-            next_attempt_at: nextGroqSlot(),
+            next_attempt_at: nextAiAttemptAt(),
             locked_until: null,
             last_error: null,
             last_error_code: null,
@@ -1610,7 +1641,7 @@ OUTPUT FORMAT:
             },
             provider_used: provider,
             model_used: model,
-            next_attempt_at: nextGroqSlot(),
+            next_attempt_at: nextAiAttemptAt(),
             locked_until: null,
             last_error: null,
             last_error_code: null,
@@ -1626,7 +1657,7 @@ OUTPUT FORMAT:
             },
             provider_used: provider,
             model_used: model,
-            next_attempt_at: nextGroqSlot(),
+            next_attempt_at: nextAiAttemptAt(),
             locked_until: null,
             last_error: null,
             last_error_code: null,
@@ -1863,7 +1894,7 @@ ${isCompleteStory
           },
           provider_used: provider,
           model_used: model,
-          next_attempt_at: nextGroqSlot(),
+          next_attempt_at: nextAiAttemptAt(),
           locked_until: null,
           last_error: asText(
             `Complete story missed the binding brief and must be regenerated: ${formatStoryIssues(storyIssues)}`,
@@ -1899,14 +1930,14 @@ ${isCompleteStory
           },
           provider_used: provider,
           model_used: model,
-          next_attempt_at: nextGroqSlot(),
+          next_attempt_at: nextAiAttemptAt(),
           locked_until: null,
           last_error: null,
           last_error_code: null,
         }
         : {
           status: "materials_queued", reviewed, provider_used: provider, model_used: model,
-          next_attempt_at: nextGroqSlot(), locked_until: null,
+          next_attempt_at: nextAiAttemptAt(), locked_until: null,
           last_error: null, last_error_code: null,
         }, true);
       await logGenerationAttempt(url, serviceKey, {
@@ -1981,7 +2012,7 @@ Keep the JSON compact. Verify every vocabulary form and every answer against thi
         // The database column is NOT NULL. Completed jobs are ignored by the
         // claimant based on status, so retaining a timestamp is both valid and
         // prevents the final chapter save from failing.
-        next_attempt_at: isFinished ? new Date().toISOString() : nextGroqSlot(),
+        next_attempt_at: nextAiAttemptAt(),
         locked_until: null,
         last_error: null, last_error_code: null,
       }, true);
@@ -2032,7 +2063,7 @@ Before returning, verify every vocabulary form${includeLanguageFocus ? " and eve
     const article = validateMaterials(materials, reviewed, request, storyPlan);
     await updateJob(url, serviceKey, jobId, userId, {
       status: "completed", article, provider_used: provider, model_used: model,
-      completed_at: new Date().toISOString(), locked_until: null,
+      completed_at: new Date().toISOString(), next_attempt_at: nextAiAttemptAt(model), locked_until: null,
       last_error: null, last_error_code: null,
     }, true);
     await logGenerationAttempt(url, serviceKey, {
@@ -2055,6 +2086,18 @@ Before returning, verify every vocabulary form${includeLanguageFocus ? " and eve
       + (isCompleteStory && phase === "review" ? (chapterCount * 2) + 3 : 0)
       + (isCompleteStory && phase === "materials" ? Math.max(0, chapterCount - 1) : 0);
     const retry = RETRYABLE_CODES.has(failure.code) && attempt < allowedAttempts;
+    const retryTarget = retry ? selectArticleAiTarget({
+      phase,
+      attempt: attempt + 1,
+      lastErrorCode: failure.code,
+      completeStory: isCompleteStory,
+      reviewCompleted,
+      ...aiConfig,
+    }) as AiTarget | null : null;
+    const switchesModel = Boolean(retryTarget?.model && retryTarget.model !== model);
+    const retryAtMs = failure.code === "groq_limit_reached"
+      ? (switchesModel ? Date.now() : (failure.retryAtMs || Date.now()))
+      : Date.now() + getNonRateLimitRetryDelaySeconds(attempt, failure.code) * 1_000;
     console.error("Article worker phase failed:", {
       jobId, phase, attempt, provider, model, retry, code: failure.code, message: failure.message,
     });
@@ -2062,7 +2105,7 @@ Before returning, verify every vocabulary form${includeLanguageFocus ? " and eve
       await updateJob(url, serviceKey, jobId, userId, retry
         ? {
           status: `${phase}_queued`,
-          next_attempt_at: new Date(Date.now() + retryDelaySeconds(attempt, failure) * 1_000).toISOString(),
+          next_attempt_at: new Date(retryAtMs).toISOString(),
           locked_until: null,
           last_error: failure.message,
           last_error_code: failure.code,
@@ -2096,6 +2139,7 @@ Before returning, verify every vocabulary form${includeLanguageFocus ? " and eve
       willRetry: retry,
       message: failure.message,
     });
+    if (retry && retryAtMs <= Date.now()) kickWorker(url, serviceKey);
   }
 }
 

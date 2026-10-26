@@ -159,7 +159,7 @@ test("new sequential stories require a whole-story audit before they are saved",
   assert.match(workflowSource, /A final story audit requires the existing plan and every completed chapter in full/);
 });
 
-test("chapter cooldown survives a reload and counts down from persisted time", () => {
+test("a server-provided next attempt time survives reload and counts down", () => {
   assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 165_000 }, 100_000), 65);
   assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 100_001 }, 100_000), 1);
   assert.equal(getStoryChapterCooldownSeconds({ nextChapterAt: 99_000 }, 100_000), 0);
@@ -186,7 +186,7 @@ test("retry progress distinguishes plan, validation, provider and save failures"
   );
   assert.equal(
     getGenerationProgressStatusKey("retry", { lastErrorCode: "groq_limit_reached" }),
-    "generationProviderRetryStatus"
+    "generationRateLimitRetryStatus"
   );
   assert.equal(
     getGenerationProgressStatusKey("retry", { lastErrorCode: "generation_job_update_failed" }),

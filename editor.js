@@ -2054,6 +2054,7 @@ function getGenerationProgressStatusKey(phase, details = {}) {
     }[phase] || "generatingArticleStatus";
   }
   const errorCode = String(details?.lastErrorCode || "");
+  if (errorCode === "groq_limit_reached") return "generationRateLimitRetryStatus";
   if (errorCode === "invalid_story_plan") return "generationPlanRetryStatus";
   if ([
     "invalid_ai_output",
@@ -2062,7 +2063,6 @@ function getGenerationProgressStatusKey(phase, details = {}) {
     "invalid_materials_output"
   ].includes(errorCode)) return "generationValidationRetryStatus";
   if ([
-    "groq_limit_reached",
     "groq_failed",
     "groq_json_failed",
     "ai_timeout_or_network_error"
@@ -2078,12 +2078,14 @@ function showStoryChapterProgress(story, chapterIndex, phase, details = {}) {
   const progressPrefix = generatingCompleteStory
     ? t("generatingStory")
     : formatText("storyChapterProgress", { current: chapterIndex + 1, total: story.chapterCount });
-  setArticleGenerationStatus(`${progressPrefix} ${t(phaseKey)}`, "progress");
+  const seconds = Math.max(0, Math.ceil((Date.parse(details?.nextAttemptAt || "") - Date.now()) / 1_000)) || 0;
+  const status = phaseKey === "generationRateLimitRetryStatus"
+    ? formatText(phaseKey, { seconds })
+    : t(phaseKey);
+  setArticleGenerationStatus(`${progressPrefix} ${status}`, "progress");
   renderStoryGenerationProgress(story, chapterIndex);
   updateArticleGenerationControls();
 }
-
-const STORY_CHAPTER_COOLDOWN_MS = 65_000;
 
 function getStoryChapterCooldownSeconds(story, now = Date.now()) {
   const nextChapterAt = Number(story?.nextChapterAt) || 0;
@@ -2236,7 +2238,12 @@ async function continueStoryGeneration(story) {
     }
     story.nextChapter = chapterIndex + 1;
     if (story.nextChapter < story.chapterCount) {
-      story.nextChapterAt = Date.now() + STORY_CHAPTER_COOLDOWN_MS;
+      const nextAttemptAt = Date.parse(result?.nextAttemptAt || "");
+      if (Number.isFinite(nextAttemptAt) && nextAttemptAt > Date.now()) {
+        story.nextChapterAt = nextAttemptAt;
+      } else {
+        delete story.nextChapterAt;
+      }
     }
     savePendingStoryGeneration(story);
     renderStoryGenerationProgress(story, story.nextChapter);
@@ -2410,7 +2417,11 @@ async function generateStoryDirectlyWithAi() {
 function showArticleGenerationProgress(phase, details = {}) {
   const statusKey = getGenerationProgressStatusKey(phase, details);
   const backgroundNote = phase === "retry" ? "" : ` ${t("generationRunsInBackground")}`;
-  setArticleGenerationStatus(`${t(statusKey)}${backgroundNote}`, "progress");
+  const seconds = Math.max(0, Math.ceil((Date.parse(details?.nextAttemptAt || "") - Date.now()) / 1_000)) || 0;
+  const status = statusKey === "generationRateLimitRetryStatus"
+    ? formatText(statusKey, { seconds })
+    : t(statusKey);
+  setArticleGenerationStatus(`${status}${backgroundNote}`, "progress");
   updateArticleGenerationControls();
 }
 

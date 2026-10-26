@@ -1,5 +1,3 @@
-export const GROQ_COOLDOWN_SECONDS = 65;
-
 export function selectArticleAiTarget({
   phase,
   attempt,
