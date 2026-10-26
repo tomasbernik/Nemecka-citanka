@@ -992,6 +992,7 @@ onClick("adminOverviewTabBtn", async () => {
 });
 onClick("toggleArticleModerationBtn", toggleArticleModeration);
 onEvent("articleModerationList", "click", handleArticleModerationClick);
+onEvent("teacherStoryManagement", "click", handleTeacherStoryManagementClick);
 onEvent("adminOverview", "click", handleAdminOverviewClick);
 onEvent("teacherOverview", "click", handleTeacherOverviewClick);
 onEvent("teacherOverview", "change", handleTeacherOverviewChange);

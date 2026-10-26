@@ -609,6 +609,9 @@ async function createArticleSeries(title, articleIds) {
     .filter(Boolean)
     .sort(compareArticleDisplayOrder);
   if (selected.length < 2) throw new Error(t("seriesNeedsTwoArticles"));
+  if (!isPublisherAccount() && selected.some(article => !canEditArticle(article))) {
+    throw new Error(t("adminOnlyAction"));
+  }
   if (new Set(selected.map(getArticleLanguage)).size > 1) throw new Error(t("seriesNeedsSameLanguage"));
   const existingDisplayOrders = selected
     .map(article => article.displayOrder)
@@ -618,7 +621,7 @@ async function createArticleSeries(title, articleIds) {
     seriesId,
     seriesTitle: cleanTitle,
     chapterOrder,
-    displayOrder
+    ...(isPublisherAccount() ? { displayOrder } : {})
   })));
   await saveCachedArticles(state.articles);
   renderArticles();

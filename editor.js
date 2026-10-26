@@ -1759,6 +1759,7 @@ async function saveArticleFromEditor() {
     const savedArticle = state.articles.find(item => item.id === article.id) || article;
     state.editorExpanded = false;
     fillArticleEditor(savedArticle);
+    renderTeacherStoryManagement();
     $("articleEditorStatus").textContent = t("articleSaved");
   } catch (error) {
     $("articleEditorStatus").textContent = error.message.includes("Supabase Storage")
@@ -1795,6 +1796,7 @@ async function deleteArticleFromEditor() {
     renderArticles();
     renderArticleCategoryOptionsMulti();
     renderArticleEditorList();
+    renderTeacherStoryManagement();
     $("articleEditorStatus").textContent = t("articleDeleted");
   } catch (error) {
     $("articleEditorStatus").textContent = error.message;

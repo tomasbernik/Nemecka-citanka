@@ -51,7 +51,10 @@ function setTeacherPanel(panel) {
   $("teacherStudentsTabBtn").classList.toggle("quiet", !showStudents);
   $("adminOverviewTabBtn").classList.toggle("quiet", !showAdmin);
   if (!showArticles) setArticleModerationExpanded(false);
-  if (showArticles) renderArticleModerationQueue();
+  if (showArticles) {
+    renderArticleModerationQueue();
+    renderTeacherStoryManagement();
+  }
   renderGamification();
   renderMobileBottomNav(getActiveViewId());
   renderOnboarding();
@@ -136,6 +139,117 @@ function renderArticleModerationQueue() {
         </article>
       `).join("")
     : `<p class="muted">${escapeHtml(t("noArticlesAwaitingApproval"))}</p>`;
+}
+
+function renderTeacherStoryManagement() {
+  const root = $("teacherStoryManagement");
+  if (!root) return;
+
+  const canManageStories = !isPublisherAccount()
+    && hasTeacherLicense()
+    && isProfileOwnedByCurrentAuth();
+  root.classList.toggle("hidden", !canManageStories);
+  if (!canManageStories) {
+    root.innerHTML = "";
+    return;
+  }
+
+  const ownArticles = getEditableArticles().sort(compareArticleDisplayOrder);
+  const availableArticles = ownArticles.filter(article => !article.seriesId);
+  const seriesEntries = getArticleDisplayEntries(ownArticles).filter(entry => entry.type === "series");
+
+  root.innerHTML = `
+    <div class="series-creator">
+      <h3>${escapeHtml(t("createArticleSeries"))}</h3>
+      <p class="muted">${escapeHtml(t("createArticleSeriesHelp"))}</p>
+      <label class="field-row">
+        ${escapeHtml(t("seriesTitle"))}
+        <input id="teacherArticleSeriesTitleInput" maxlength="120" placeholder="${escapeHtml(t("seriesTitlePlaceholder"))}">
+      </label>
+      <div class="series-article-picker">
+        ${availableArticles.length ? availableArticles.map(article => `
+          <label class="series-article-option">
+            <input type="checkbox" name="teacher-article-series-member" value="${escapeHtml(article.id)}">
+            <span><strong>${escapeHtml(article.title)}</strong><small>${escapeHtml(getArticleLanguageLabel(getArticleLanguage(article)))}</small></span>
+          </label>
+        `).join("") : `<p class="muted">${escapeHtml(t("noUngroupedArticles"))}</p>`}
+      </div>
+      <button class="primary-btn compact" type="button" data-teacher-create-series ${availableArticles.length < 2 ? "disabled" : ""}>${escapeHtml(t("createSeries"))}</button>
+    </div>
+
+    ${seriesEntries.length ? `
+      <div class="series-management-list">
+        <h3>${escapeHtml(t("existingSeries"))}</h3>
+        ${seriesEntries.map(entry => `
+          <article class="series-management-card">
+            <div class="management-row-heading">
+              <strong>${escapeHtml(entry.title)}</strong>
+              <button class="text-btn" type="button" data-teacher-dissolve-series="${escapeHtml(entry.id)}">${escapeHtml(t("dissolveSeries"))}</button>
+            </div>
+            <ol class="chapter-management-list">
+              ${entry.articles.map((article, index) => `
+                <li>
+                  <span>${escapeHtml(article.title)}</span>
+                  <div class="management-actions">
+                    <button class="secondary-btn compact move-to-start-btn" type="button" data-teacher-chapter-move="top" data-article-id="${escapeHtml(article.id)}" ${index === 0 ? "disabled" : ""} title="${escapeHtml(t("moveToTop"))}" aria-label="${escapeHtml(t("moveToTop"))}">⇈</button>
+                    <button class="secondary-btn compact" type="button" data-teacher-chapter-move="-1" data-article-id="${escapeHtml(article.id)}" ${index === 0 ? "disabled" : ""} aria-label="${escapeHtml(t("moveUp"))}">↑</button>
+                    <button class="secondary-btn compact" type="button" data-teacher-chapter-move="1" data-article-id="${escapeHtml(article.id)}" ${index === entry.articles.length - 1 ? "disabled" : ""} aria-label="${escapeHtml(t("moveDown"))}">↓</button>
+                    <button class="text-btn" type="button" data-teacher-remove-from-series data-article-id="${escapeHtml(article.id)}">${escapeHtml(t("removeFromSeries"))}</button>
+                  </div>
+                </li>
+              `).join("")}
+            </ol>
+          </article>
+        `).join("")}
+      </div>
+    ` : ""}
+    <p id="teacherStoryManagementStatus" class="muted"></p>
+  `;
+}
+
+async function handleTeacherStoryManagementClick(event) {
+  const button = event.target.closest("[data-teacher-create-series], [data-teacher-dissolve-series], [data-teacher-chapter-move], [data-teacher-remove-from-series]");
+  if (!button || isPublisherAccount() || !hasTeacherLicense() || !isProfileOwnedByCurrentAuth()) return;
+  button.disabled = true;
+  try {
+    if (button.hasAttribute("data-teacher-create-series")) {
+      const title = $("teacherArticleSeriesTitleInput")?.value || "";
+      const articleIds = [...document.querySelectorAll('input[name="teacher-article-series-member"]:checked')]
+        .map(input => input.value);
+      await createArticleSeries(title, articleIds);
+    } else if (button.dataset.teacherDissolveSeries) {
+      const chapters = state.articles.filter(article => article.seriesId === button.dataset.teacherDissolveSeries);
+      if (!chapters.length || chapters.some(article => !canEditArticle(article))) throw new Error(t("adminOnlyAction"));
+      await dissolveArticleSeries(button.dataset.teacherDissolveSeries);
+    } else if (button.dataset.teacherChapterMove) {
+      const article = state.articles.find(item => item.id === button.dataset.articleId);
+      if (!canEditArticle(article)) throw new Error(t("adminOnlyAction"));
+      const chapters = state.articles.filter(item => item.seriesId === article?.seriesId).sort(compareChapterOrder);
+      if (chapters.some(chapter => !canEditArticle(chapter))) throw new Error(t("adminOnlyAction"));
+      const index = chapters.findIndex(item => item.id === article?.id);
+      const targetIndex = button.dataset.teacherChapterMove === "top"
+        ? 0
+        : index + Number(button.dataset.teacherChapterMove);
+      if (index >= 0 && targetIndex >= 0 && targetIndex < chapters.length) {
+        const [movedChapter] = chapters.splice(index, 1);
+        chapters.splice(targetIndex, 0, movedChapter);
+        await Promise.all(chapters.map((chapter, chapterOrder) => updateArticleOrganization(chapter.id, { chapterOrder })));
+        await saveCachedArticles(state.articles);
+        renderArticles();
+      }
+    } else if (button.hasAttribute("data-teacher-remove-from-series")) {
+      const article = state.articles.find(item => item.id === button.dataset.articleId);
+      if (!canEditArticle(article)) throw new Error(t("adminOnlyAction"));
+      await removeArticleFromSeries(button.dataset.articleId);
+    }
+    renderArticleEditorList();
+    renderTeacherStoryManagement();
+  } catch (error) {
+    const status = $("teacherStoryManagementStatus");
+    if (status) status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
 }
 
 async function handleArticleModerationClick(event) {
