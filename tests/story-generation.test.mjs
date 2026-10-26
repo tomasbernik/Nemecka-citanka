@@ -274,3 +274,8 @@ test("the Qwen reviewer uses a supported reasoning effort", () => {
   assert.doesNotMatch(workflowSource, /const effectiveThinkingLevel = isQwen \? "none" : thinkingLevel;/);
   assert.match(workflowSource, /const providerThinkingLevel = thinkingLevel === "none" \? "low" : thinkingLevel;/);
 });
+
+test("an empty Qwen review preserves its error code and gives the fallback more output room", () => {
+  assert.match(workflowSource, /if \(error instanceof WorkflowError\) throw error;/);
+  assert.match(workflowSource, /callAiText\(target, prompt, "none", 1_800\)/);
+});

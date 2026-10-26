@@ -17,13 +17,15 @@ export function selectArticleAiTarget({
   const isIndependentReview = phase === "review" && !reviewCompleted;
   const fallbackRequested = lastErrorCode === "groq_json_failed"
     || lastErrorCode === "groq_limit_reached"
+    || lastErrorCode === "invalid_ai_output"
+    || lastErrorCode === "invalid_story_review"
     || (!isIndependentReview && (normalizedAttempt === 3 || normalizedAttempt >= 5));
   const requiresLargeWriter = completeStory && (phase !== "review" || reviewCompleted);
   const useFallback = fallbackRequested && !requiresLargeWriter;
   const preferredModel = isIndependentReview
     ? (groqReviewModel || groqFallbackModel)
     : groqModel;
-  const fallbackModel = isIndependentReview ? groqModel : groqFallbackModel;
+  const fallbackModel = groqFallbackModel;
   return {
     provider: "groq",
     apiKey: groqKey,

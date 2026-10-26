@@ -32,9 +32,24 @@ test("uses a different model for the independent review", () => {
     provider: "groq",
     apiKey: "groq-key",
     model: "qwen/qwen3.8-27b",
-    repairModel: "openai/gpt-oss-120b",
+    repairModel: "openai/gpt-oss-20b",
   });
   assert.equal(selectArticleAiTarget({ phase: "review", attempt: 13, ...config }).model, "qwen/qwen3.8-27b");
+});
+
+test("switches an empty or malformed independent review to the non-Qwen fallback", () => {
+  assert.equal(selectArticleAiTarget({
+    phase: "review",
+    attempt: 2,
+    lastErrorCode: "invalid_ai_output",
+    ...config,
+  }).model, "openai/gpt-oss-20b");
+  assert.equal(selectArticleAiTarget({
+    phase: "review",
+    attempt: 2,
+    lastErrorCode: "invalid_story_review",
+    ...config,
+  }).model, "openai/gpt-oss-20b");
 });
 
 test("uses the large writer for targeted repairs after the independent review", () => {

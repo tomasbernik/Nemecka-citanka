@@ -1804,9 +1804,12 @@ ${isCompleteStory
         let rawReview: JsonObject;
         try {
           rawReview = parseStoryReviewText(
-            await callAiText(target, prompt, "none", 900),
+            // Qwen is capped to 900 inside callAiText. A fallback reviewer
+            // receives more room so visible output remains after reasoning.
+            await callAiText(target, prompt, "none", 1_800),
           ) as JsonObject;
         } catch (error) {
+          if (error instanceof WorkflowError) throw error;
           throw new WorkflowError(
             "invalid_story_review",
             502,
