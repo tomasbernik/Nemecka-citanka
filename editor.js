@@ -1612,8 +1612,10 @@ function shouldKeepPendingStoryGenerationAfterError(error) {
 }
 
 function setArticleCreationMode(mode = "article") {
-  articleCreationMode = mode === "story" ? "story" : "article";
+  const canGenerateStory = isPublisherAccount();
+  articleCreationMode = canGenerateStory && mode === "story" ? "story" : "article";
   const isStory = articleCreationMode === "story";
+  $("articleCreationModeControls")?.classList.toggle("hidden", !canGenerateStory);
   $("articleModeBtn")?.classList.toggle("active", !isStory);
   $("storyModeBtn")?.classList.toggle("active", isStory);
   $("articleModeBtn")?.setAttribute("aria-pressed", String(!isStory));
@@ -2250,6 +2252,7 @@ async function continueCompleteStoryGeneration(story) {
 }
 
 async function generateStoryDirectlyWithAi() {
+  if (!isPublisherAccount()) return;
   if (articleGenerationRunning) return;
   const button = $("generateArticleAiBtn");
   let story = readPendingStoryGeneration();

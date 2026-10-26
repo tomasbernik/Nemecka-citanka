@@ -2128,8 +2128,10 @@ Deno.serve(async req => {
     headers: { apikey: anonKey, Authorization: `Bearer ${jwt}` },
   });
   if (!auth.ok) return respond({ error: "login_required" }, 401);
-  const userId = asText((await auth.json())?.id, 80);
+  const authUser = await auth.json();
+  const userId = asText(authUser?.id, 80);
   if (!userId) return respond({ error: "login_required" }, 401);
+  const isPublisher = asText(authUser?.email, 320).toLowerCase() === "tomas.bernik@gmail.com";
 
   let jobId = asText(payload.jobId, 80);
   try {
@@ -2187,6 +2189,9 @@ Deno.serve(async req => {
     const requiredWords = asStringArray(payload.requiredWords, 15, 60);
     const languageFocus = asText(payload.languageFocus, 200);
     const storyContext = normalizeIncomingStoryContext(payload.storyContext);
+    if (storyContext && !isPublisher) {
+      throw new WorkflowError("admin_only", 403, "Multi-chapter story generation is temporarily available only to the administrator.");
+    }
     if (!topic || !["A1", "A2", "A2-B1", "B1", "B2", "C1"].includes(level)
       || !Number.isInteger(lengthMin) || !Number.isInteger(lengthMax)
       || lengthMin < 100 || lengthMax > 800 || lengthMax < lengthMin) {
