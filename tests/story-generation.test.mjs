@@ -13,6 +13,7 @@ const context = vm.createContext({});
 vm.runInContext(editorSource, context, { filename: "editor.js" });
 const buildStoryChapterBrief = vm.runInContext("buildStoryChapterBrief", context);
 const buildStoryChapterContext = vm.runInContext("buildStoryChapterContext", context);
+const buildFinalStoryAuditContext = vm.runInContext("buildFinalStoryAuditContext", context);
 const buildCompleteStoryBrief = vm.runInContext("buildCompleteStoryBrief", context);
 const buildCompleteStoryContext = vm.runInContext("buildCompleteStoryContext", context);
 const applyGeneratedStoryMetadata = vm.runInContext("applyGeneratedStoryMetadata", context);
@@ -85,6 +86,38 @@ test("story context carries the plan, continuity state and every previous chapte
   assert.equal(storyContext.previousChapters[1].text[1], "PREVIOUS_ENDING");
 });
 
+test("the final audit receives the plan and every completed chapter in full", () => {
+  const story = {
+    seriesId: "story-1",
+    seriesTitle: "Ein neuer Anfang im Café",
+    topic: "Lena und Jonas lernen sich kennen.",
+    chapterCount: 3,
+    storyPlan: {
+      title: "Ein neuer Anfang im Café",
+      premise: "Eine neue Freundschaft beginnt.",
+      endingDirection: "Sie verabreden sich.",
+      chapterPlans: [
+        { chapter: 1, direction: "Treffen" },
+        { chapter: 2, direction: "Gespräch" },
+        { chapter: 3, direction: "Verabredung" }
+      ]
+    },
+    generatedChapters: [
+      { title: "Treffen", text: ["CHAPTER_ONE_FULL_TEXT"] },
+      { title: "Musik", text: ["CHAPTER_TWO_FULL_TEXT"] },
+      { title: "Der Plan", text: ["CHAPTER_THREE_FULL_TEXT"] }
+    ]
+  };
+
+  const audit = buildFinalStoryAuditContext(story);
+
+  assert.equal(audit.mode, "audit_story");
+  assert.equal(audit.plan.title, story.storyPlan.title);
+  assert.equal(audit.chapters.length, 3);
+  assert.equal(audit.chapters[0].text[0], "CHAPTER_ONE_FULL_TEXT");
+  assert.equal(audit.chapters[2].text[0], "CHAPTER_THREE_FULL_TEXT");
+});
+
 test("generated story metadata is persisted separately from the article", () => {
   const story = { seriesTitle: "", storyPlan: null, continuityState: null };
   const plan = { title: "Aurora", chapterPlans: [{ chapter: 1 }] };
@@ -114,6 +147,16 @@ test("new stories use sequential chapter generation", () => {
   assert.equal(storyContext.version, 2);
   assert.equal(storyContext.chapterCount, 5);
   assert.equal(storyContext.previousChapters.length, 0);
+});
+
+test("new sequential stories require a whole-story audit before they are saved", () => {
+  assert.match(editorSource, /finalAuditRequired:\s*true/);
+  assert.match(editorSource, /storyContext:\s*buildFinalStoryAuditContext\(story\)/);
+  assert.match(editorSource, /await saveAuditedStoryChapters\(story, auditResult\)/);
+  assert.match(editorSource, /const preserveCompletedDraftForAudit/);
+  assert.match(workflowSource, /source\.mode === "audit_story"/);
+  assert.match(workflowSource, /status: initialAuditDraft \? "review_queued" : "draft_queued"/);
+  assert.match(workflowSource, /A final story audit requires the existing plan and every completed chapter in full/);
 });
 
 test("chapter cooldown survives a reload and counts down from persisted time", () => {
@@ -256,6 +299,11 @@ test("story review findings require evidence and verify the original brief", () 
   assert.match(workflowSource, /evidence that does not occur verbatim in the story/);
   assert.match(workflowSource, /Track every important object and document by identity/);
   assert.match(workflowSource, /leaving a building and then still being inside its lift/);
+  assert.match(workflowSource, /silently build a start\/end state table for every chapter/);
+  assert.match(workflowSource, /still sitting there/);
+  assert.match(workflowSource, /Cross-check heute, morgen, gestern, weekdays, nächster Freitag/);
+  assert.match(workflowSource, /Flag English or other accidental foreign-language fragments/);
+  assert.match(workflowSource, /scheduling clarity or the author's instructions/);
 });
 
 test("the reviewer ignores stylistic preferences that are not publish-blocking defects", () => {

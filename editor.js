@@ -1916,6 +1916,26 @@ function buildStoryChapterContext(story, chapterIndex) {
   };
 }
 
+function buildFinalStoryAuditContext(story) {
+  const chapters = Array.isArray(story.generatedChapters)
+    ? story.generatedChapters
+    : [];
+  return {
+    version: 3,
+    mode: "audit_story",
+    seriesId: story.seriesId || "",
+    chapterCount: story.chapterCount,
+    seriesTitle: story.seriesTitle || story.requestedStoryTitle || "",
+    originalBrief: String(story.topic || "").slice(0, 3_000),
+    plan: story.storyPlan || null,
+    chapters: chapters.map((chapter, index) => ({
+      chapter: index + 1,
+      title: chapter.title,
+      text: Array.isArray(chapter.text) ? chapter.text : []
+    }))
+  };
+}
+
 function buildCompleteStoryBrief(story) {
   return [
     `Write one continuous German story containing exactly ${story.chapterCount} separately titled chapters.`,
@@ -1949,7 +1969,7 @@ function recoverCompletedStoryGeneration(pendingGeneration, result, language = "
     return null;
   }
   const context = request?.storyContext;
-  if (context?.mode !== "complete_story") return null;
+  if (!["complete_story", "audit_story"].includes(context?.mode)) return null;
   const chapterCount = Number(context.chapterCount) || generated.chapters.length;
   if (generated.chapters.length !== chapterCount) return null;
   const requestedStoryTitle = String(context.seriesTitle || "").trim();
@@ -2132,6 +2152,42 @@ function makeGeneratedStoryChapter(result, story, chapterIndex) {
   });
 }
 
+async function saveAuditedStoryChapters(story, result) {
+  const generatedSeries = result?.article || {};
+  const chapters = Array.isArray(generatedSeries.chapters) ? generatedSeries.chapters : [];
+  if (chapters.length !== story.chapterCount) throw new Error(t("generationEmpty"));
+  story.storyPlan = generatedSeries.storyPlan || story.storyPlan || null;
+  story.seriesTitle = String(
+    generatedSeries.seriesTitle
+    || story.storyPlan?.title
+    || story.seriesTitle
+    || story.requestedStoryTitle
+    || ""
+  ).trim();
+
+  const savedChapters = Array.isArray(story.finalSavedChapters)
+    ? [...story.finalSavedChapters]
+    : [];
+  for (let chapterIndex = savedChapters.length; chapterIndex < story.chapterCount; chapterIndex += 1) {
+    const article = makeGeneratedStoryChapter(
+      { article: chapters[chapterIndex] },
+      story,
+      chapterIndex
+    );
+    await saveArticle(article);
+    savedChapters.push({
+      id: article.id,
+      title: article.title,
+      summary: article.summary,
+      text: article.text
+    });
+    story.finalSavedChapters = savedChapters;
+    savePendingStoryGeneration(story);
+  }
+  story.completedChapters = savedChapters;
+  story.finalAuditCompleted = true;
+}
+
 async function continueStoryGeneration(story) {
   if (Number(story.version) >= 3) {
     return continueCompleteStoryGeneration(story);
@@ -2157,20 +2213,55 @@ async function continueStoryGeneration(story) {
       onProgress: (phase, details) => showStoryChapterProgress(story, chapterIndex, phase, details)
     });
     applyGeneratedStoryMetadata(story, result);
-    const article = makeGeneratedStoryChapter(result, story, chapterIndex);
-    await saveArticle(article);
-    story.completedChapters = [...(story.completedChapters || []), {
-      id: article.id,
-      title: article.title,
-      summary: article.summary,
-      text: article.text
-    }];
+    if (story.finalAuditRequired === true) {
+      const generated = JSON.parse(JSON.stringify(result.article || {}));
+      delete generated.storyPlan;
+      delete generated.continuityState;
+      if (!story.seriesTitle) story.seriesTitle = generated.title;
+      story.generatedChapters = [...(story.generatedChapters || []), generated];
+      story.completedChapters = [...(story.completedChapters || []), {
+        title: generated.title,
+        summary: generated.summary,
+        text: generated.text
+      }];
+    } else {
+      const article = makeGeneratedStoryChapter(result, story, chapterIndex);
+      await saveArticle(article);
+      story.completedChapters = [...(story.completedChapters || []), {
+        id: article.id,
+        title: article.title,
+        summary: article.summary,
+        text: article.text
+      }];
+    }
     story.nextChapter = chapterIndex + 1;
     if (story.nextChapter < story.chapterCount) {
       story.nextChapterAt = Date.now() + STORY_CHAPTER_COOLDOWN_MS;
     }
     savePendingStoryGeneration(story);
     renderStoryGenerationProgress(story, story.nextChapter);
+  }
+
+  if (story.finalAuditRequired === true && !story.finalAuditCompleted) {
+    savePendingStoryGeneration(story);
+    showStoryChapterProgress(story, Math.max(0, story.chapterCount - 1), "review");
+    const auditResult = await generateArticleWithAi({
+      topic: story.topic,
+      level: story.level,
+      category: story.category,
+      minWords: story.minWords,
+      maxWords: story.maxWords,
+      requiredWords: story.requiredWords,
+      languageFocus: "",
+      storyContext: buildFinalStoryAuditContext(story),
+      onProgress: (phase, details) => showStoryChapterProgress(
+        story,
+        Math.max(0, story.chapterCount - 1),
+        phase,
+        details
+      )
+    });
+    await saveAuditedStoryChapters(story, auditResult);
   }
 
   savePendingStoryGeneration(null);
@@ -2278,6 +2369,10 @@ async function generateStoryDirectlyWithAi() {
       chapterCount: getStoryChapterCount(),
       nextChapter: 0,
       completedChapters: [],
+      generatedChapters: [],
+      finalAuditRequired: true,
+      finalAuditCompleted: false,
+      finalSavedChapters: [],
       storyPlan: null,
       continuityState: null,
       level: $("articleLevelInput").value.trim(),
@@ -2298,7 +2393,10 @@ async function generateStoryDirectlyWithAi() {
   try {
     await continueStoryGeneration(story);
   } catch (error) {
-    if (!shouldKeepPendingStoryGenerationAfterError(error)) {
+    const preserveCompletedDraftForAudit = story.finalAuditRequired === true
+      && story.nextChapter >= story.chapterCount
+      && story.finalAuditCompleted !== true;
+    if (!preserveCompletedDraftForAudit && !shouldKeepPendingStoryGenerationAfterError(error)) {
       savePendingStoryGeneration(null);
     }
     showArticleGenerationError(error);

@@ -457,15 +457,18 @@ const normalizeIncomingStoryContext = (value: unknown) => {
   if (!value || typeof value !== "object") return null;
   const source = value as JsonObject;
   const chapterCount = Math.min(8, Math.max(2, Number(source.chapterCount) || 2));
-  const mode = source.mode === "complete_story" ? "complete_story" : "chapter";
-  if (mode === "complete_story" && chapterCount !== 3 && chapterCount !== 5) {
+  const mode = source.mode === "complete_story"
+    ? "complete_story"
+    : source.mode === "audit_story" ? "audit_story" : "chapter";
+  const isWholeStoryMode = mode === "complete_story" || mode === "audit_story";
+  if (isWholeStoryMode && chapterCount !== 3 && chapterCount !== 5) {
     throw new WorkflowError(
       "invalid_request",
       400,
       "Complete stories must contain exactly 3 or 5 chapters.",
     );
   }
-  const chapterNumber = mode === "complete_story"
+  const chapterNumber = isWholeStoryMode
     ? 0
     : Math.min(chapterCount, Math.max(1, Number(source.chapterNumber) || 1));
   const previous = source.previousChapter && typeof source.previousChapter === "object"
@@ -480,8 +483,23 @@ const normalizeIncomingStoryContext = (value: unknown) => {
     : [];
   let plan = null;
   if (source.plan) plan = normalizeStoryPlan(source.plan, chapterCount);
+  const chapters = mode === "audit_story" && Array.isArray(source.chapters)
+    ? (source.chapters as JsonObject[]).slice(0, chapterCount).map((chapter, index) => ({
+      number: index + 1,
+      title: asText(chapter.title, 160),
+      text: asStringArray(chapter.text, 12, 4_000),
+    }))
+    : [];
+  if (mode === "audit_story" && (!plan || chapters.length !== chapterCount
+    || chapters.some(chapter => !chapter.title || chapter.text.length < 4))) {
+    throw new WorkflowError(
+      "invalid_request",
+      400,
+      "A final story audit requires the existing plan and every completed chapter in full.",
+    );
+  }
   return {
-    version: mode === "complete_story" ? 3 : 2,
+    version: isWholeStoryMode ? 3 : 2,
     mode,
     chapterNumber,
     chapterCount,
@@ -491,6 +509,7 @@ const normalizeIncomingStoryContext = (value: unknown) => {
     plan,
     state: source.state ? normalizeContinuityState(source.state) : null,
     earlierSummaries: asText(source.earlierSummaries, 1_600),
+    chapters,
     previousChapters,
     previousChapter: previous ? {
       title: asText(previous.title, 160),
@@ -1097,7 +1116,8 @@ async function runClaimedPhase(
   const storyBrief = isStory
     ? asText(storyContext?.originalBrief, 6_000) || topic
     : topic;
-  const isCompleteStory = storyContext?.mode === "complete_story";
+  const isCompleteStory = storyContext?.mode === "complete_story"
+    || storyContext?.mode === "audit_story";
   const reviewCompleted = isCompleteStory
     && phase === "review"
     && Boolean(job.draft && typeof job.draft === "object"
@@ -1644,6 +1664,14 @@ REQUIREMENTS:
 - Preserve and verify the required language feature: ${languageFocus || "none specified"}.
 - ${isCompleteStory ? "Check" : "Fix"} grammar, cases, verb placement, collocations, register, dialogue punctuation and unnatural phrasing.
 - Check chronology and logic. Characters must realistically be able to perform every action.
+- Before deciding that a complete story passes, silently build a start/end state table for every chapter: absolute or relative time, location, posture/activity of each present character, active conversation, work/break status, important objects, food and drink, and agreed future appointments.
+- Compare the end state of every chapter directly with the start state of the next one. Flag any unexplained reset, including a character standing up or leaving and then being described as still sitting there, a finished conversation continuing without a new transition, or an employee suddenly joining a long private conversation without a stated break.
+- Normalize every temporal expression into one shared sequence. Cross-check heute, morgen, gestern, weekdays, nächster Freitag and phrases such as später or am Abend against every appointment. Flag irrelevant or contradictory time references even when each sentence is individually grammatical.
+- Track orders and consumable objects. If food or drink is ordered, offered or consumed again, the text must establish whether it is the original item or a new one.
+- Check that pronouns unambiguously match the present characters and their grammatical gender.
+- Flag English or other accidental foreign-language fragments in German narration or dialogue.
+- Flag narrator sentences that explain writing structure, scheduling clarity or the author's instructions instead of narrating the story.
+- In a complete story, every chapter title must be content-specific, mutually distinct, different from the series title, and must not be a mechanical Kapitel/Teil/number variant.
 - For every paragraph, silently track each character's location before the action, the transition, and the location afterward. Flag impossible sequences such as leaving a building and then still being inside its lift, or choosing stairs while already travelling in a lift.
 - Track every important object and document by identity, content, owner and transfer. Flag a key handed over twice, a document whose content changes, or an object used before it is obtained.
 - Track what each character has seen, heard and verified. Do not accept a claimed explanation unless the text actually establishes it.
@@ -2218,14 +2246,25 @@ Deno.serve(async req => {
     if (!quota.ok) throw new WorkflowError("quota_not_configured", 503);
     if (await quota.json() !== true) throw new WorkflowError("daily_limit_reached", 429);
 
+    const initialAuditDraft = storyContext?.mode === "audit_story"
+      ? {
+        title: asText(storyContext.seriesTitle, 160) || asText(storyContext.plan?.title, 160),
+        chapters: storyContext.chapters,
+        storyPlan: storyContext.plan,
+        reviewPassCompleted: false,
+        reviewAuditCount: 0,
+        reviewIssues: [],
+      }
+      : null;
     const created = await restRequest(url, serviceKey, "article_generation_jobs?select=id,status", {
       method: "POST",
       headers: { Prefer: "return=representation" },
       body: JSON.stringify({
         user_id: userId,
-        status: "draft_queued",
+        status: initialAuditDraft ? "review_queued" : "draft_queued",
         request_payload: requestPayload,
         request_key: key,
+        draft: initialAuditDraft,
         next_attempt_at: new Date().toISOString(),
       }),
     });
