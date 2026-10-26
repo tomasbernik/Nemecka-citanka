@@ -246,10 +246,10 @@ test("the story plan has a binding brief contract and an independent brief revie
 
 test("story review findings require evidence and verify the original brief", () => {
   assert.match(workflowSource, /briefSatisfied/);
-  assert.match(workflowSource, /STORY_REVIEW_ISSUE_SCHEMA/);
+  assert.match(workflowSource, /parseStoryReviewText/);
   assert.match(workflowSource, /checkedChapters/);
-  assert.match(workflowSource, /Return one flat issues array/);
-  assert.match(workflowSource, /include at least one chapter=0 issue/);
+  assert.match(workflowSource, /Return compact plain text using exactly the line protocol below/);
+  assert.match(workflowSource, /include at least one CHAPTER: 0 issue/);
   assert.match(workflowSource, /quote one or two exact evidence snippets/);
   assert.match(workflowSource, /evidence that does not occur verbatim in the story/);
   assert.match(workflowSource, /Track every important object and document by identity/);

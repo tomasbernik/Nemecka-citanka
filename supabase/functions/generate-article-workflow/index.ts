@@ -5,6 +5,7 @@ import {
   parseStorySeriesTextOutput,
   parseStoryTextOutput,
 } from "./story-text.mjs";
+import { parseStoryReviewText } from "./story-review.mjs";
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
@@ -237,39 +238,6 @@ const PLAN_REVIEW_SCHEMA = {
     },
   },
   required: ["passes", "issues"],
-};
-
-const STORY_REVIEW_ISSUE_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    chapter: { type: "integer" },
-    category: {
-      type: "string",
-      enum: [
-        "brief", "logic", "location", "timeline", "object_state", "knowledge",
-        "continuity", "causality", "language", "cefr", "safety", "length",
-      ],
-    },
-    description: { type: "string" },
-    evidence: { type: "string" },
-    relatedEvidence: { type: "string" },
-    requiredFix: { type: "string" },
-  },
-  required: [
-    "chapter", "category", "description", "evidence", "relatedEvidence", "requiredFix",
-  ],
-};
-
-const STORY_REVIEW_SCHEMA = {
-  type: "object",
-  additionalProperties: false,
-  properties: {
-    briefSatisfied: { type: "boolean" },
-    checkedChapters: { type: "array", items: { type: "integer" } },
-    issues: { type: "array", items: STORY_REVIEW_ISSUE_SCHEMA },
-  },
-  required: ["briefSatisfied", "checkedChapters", "issues"],
 };
 
 const CONTINUITY_STATE_SCHEMA = {
@@ -1801,19 +1769,29 @@ ${JSON.stringify(isCompleteStory
 
 OUTPUT FORMAT:
 ${isCompleteStory
-    ? `- Return compact JSON only, matching the supplied schema.
-- Set checkedChapters to exactly [${Array.from({ length: chapterCount }, (_, index) => index + 1).join(",")}].
-- Return one flat issues array. Use chapter=0 only when the complete story misses or replaces the requested primary subject and requires complete regeneration; otherwise identify the single chapter that should be repaired.
-- Set briefSatisfied=false when the requested primary subject is missing and include at least one chapter=0 issue. If there are no objective defects, return an empty issues array.
+    ? `- Return compact plain text using exactly the line protocol below. Do not return JSON or Markdown.
+- Write BRIEF: PASS or BRIEF: FAIL.
+- Write CHECKED: ${Array.from({ length: chapterCount }, (_, index) => index + 1).join(",")} exactly.
+- After those two lines, return zero or more ISSUE blocks in this exact form:
+ISSUE:
+CHAPTER: 1
+CATEGORY: logic
+DESCRIPTION: one concise objective defect
+EVIDENCE: one exact single-line quote from the story
+RELATED_EVIDENCE: a second exact single-line quote, or leave empty
+FIX: one precise required change
+END_ISSUE
+- Use CHAPTER: 0 only when the complete story misses or replaces the requested primary subject and requires complete regeneration; otherwise identify the single chapter that should be repaired.
+- Write BRIEF: FAIL when the requested primary subject is missing and include at least one CHAPTER: 0 issue. If there are no objective defects, stop after the CHECKED line.
 - Include an issue only for a concrete publish-blocking length, logic, continuity, CEFR or language defect.
 - Every issue must name a category, describe one objective defect, quote one or two exact evidence snippets, and state a precise required fix. Never return a bare excerpt or vague stylistic comment.
-- Put the first exact quote in evidence. Put a second exact quote in relatedEvidence only when needed; otherwise return an empty string.
+- CATEGORY must be one of: brief, logic, location, timeline, object_state, knowledge, continuity, causality, language, cefr, safety, length.
 - Give at most 2 concrete issues per chapter and at most 2 chapter=0 issues so the evidence remains compact.
 - Do not repeat or rewrite the story.`
     : `- First line: one Markdown heading in the form "# German title".
 - Then one blank line followed by 4-6 corrected German story paragraphs separated by blank lines.`}
 ${isCompleteStory
-    ? "- Do not include explanations, Markdown or extra keys outside the JSON schema."
+    ? "- Do not include explanations, Markdown, JSON, or lines outside the specified protocol."
     : "- Do not include labels, word counts, explanations, code fences or JSON."}`;
       let reviewed: JsonObject;
       let reviewIssues: Array<{
@@ -1823,14 +1801,18 @@ ${isCompleteStory
       let storyIssues: ReturnType<typeof normalizeStoryIssues> = [];
       let invalidIndexes: number[] = [];
       if (isCompleteStory) {
-        const rawReview = await callAi(
-          target,
-          prompt,
-          "complete_story_review",
-          STORY_REVIEW_SCHEMA,
-          "none",
-          900,
-        );
+        let rawReview: JsonObject;
+        try {
+          rawReview = parseStoryReviewText(
+            await callAiText(target, prompt, "none", 900),
+          ) as JsonObject;
+        } catch (error) {
+          throw new WorkflowError(
+            "invalid_story_review",
+            502,
+            `Independent review returned an invalid line protocol: ${asText(String(error), 240)}`,
+          );
+        }
         const checkedChapters = Array.isArray(rawReview.checkedChapters)
           ? [...new Set(rawReview.checkedChapters.map(Number))].sort((a, b) => a - b)
           : [];
