@@ -1566,8 +1566,6 @@ function fillArticleEditor(article) {
 
 function resetManualJsonImport() {
   $("articleImportInput").value = "";
-  const details = document.querySelector(".manual-json-import");
-  if (details) details.open = false;
 }
 
 function clearArticleCreationHelperInputs() {
@@ -1584,6 +1582,7 @@ function clearArticleCreationHelperInputs() {
 }
 
 let articleCreationMode = "article";
+let articleCreationMethod = "automatic";
 
 function readPendingStoryGeneration() {
   try {
@@ -1611,6 +1610,20 @@ function shouldKeepPendingStoryGenerationAfterError(error) {
   return ["generation_continues_in_background", "login_required"].includes(error?.code);
 }
 
+function setArticleCreationMethod(method = "automatic") {
+  const isStory = articleCreationMode === "story";
+  articleCreationMethod = !isStory && method === "manual" ? "manual" : "automatic";
+  const isManual = articleCreationMethod === "manual";
+  $("articleCreationMethodControls")?.classList.toggle("hidden", isStory);
+  $("automaticArticleCreationBtn")?.classList.toggle("active", !isManual);
+  $("manualArticleCreationBtn")?.classList.toggle("active", isManual);
+  $("automaticArticleCreationBtn")?.setAttribute("aria-pressed", String(!isManual));
+  $("manualArticleCreationBtn")?.setAttribute("aria-pressed", String(isManual));
+  $("automaticArticleCreationPanel")?.classList.toggle("hidden", isManual);
+  $("manualArticleCreationPanel")?.classList.toggle("hidden", !isManual);
+  $("automaticArticleCreationHelp")?.classList.toggle("hidden", isStory);
+}
+
 function setArticleCreationMode(mode = "article") {
   const canGenerateStory = isPublisherAccount();
   articleCreationMode = canGenerateStory && mode === "story" ? "story" : "article";
@@ -1625,6 +1638,7 @@ function setArticleCreationMode(mode = "article") {
   $("articleLanguageFocusRow")?.classList.toggle("hidden", isStory);
   setLabelText("articleLengthSelect", isStory ? "storyAverageChapterLength" : "articleLength");
   updateStoryLengthLimits();
+  setArticleCreationMethod(isStory ? "automatic" : articleCreationMethod);
   const generateButton = $("generateArticleAiBtn");
   if (generateButton && !articleGenerationRunning) {
     generateButton.textContent = t(isStory ? "generateStoryAi" : "generateArticleAi");
@@ -1836,12 +1850,12 @@ function schedulePendingArticleGenerationResume() {
 
 function updateArticleGenerationControls() {
   const generateButton = $("generateArticleAiBtn");
-  const recoverButton = $("recoverArticleGenerationBtn");
   const cancelButton = $("cancelArticleGenerationBtn");
   if (generateButton) generateButton.disabled = articleGenerationRunning;
-  if (recoverButton) recoverButton.disabled = articleGenerationRunning;
   if ($("articleModeBtn")) $("articleModeBtn").disabled = articleGenerationRunning;
   if ($("storyModeBtn")) $("storyModeBtn").disabled = articleGenerationRunning;
+  if ($("automaticArticleCreationBtn")) $("automaticArticleCreationBtn").disabled = articleGenerationRunning;
+  if ($("manualArticleCreationBtn")) $("manualArticleCreationBtn").disabled = articleGenerationRunning;
   if ($("storyTitleInput")) $("storyTitleInput").disabled = articleGenerationRunning;
   if ($("storyChapterCountSelect")) $("storyChapterCountSelect").disabled = articleGenerationRunning;
   if (!cancelButton) return;

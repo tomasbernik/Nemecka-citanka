@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=147">
+  <link rel="stylesheet" href="style.css?v=148">
 </head>
 <body>
   <div id="app">
@@ -517,28 +517,62 @@
               Slová alebo frázy, jedno na riadok
               <textarea id="articleRequiredWordsInput" class="editor-textarea compact"></textarea>
             </label>
-            <div class="editor-actions">
-              <button id="generateArticleAiBtn" class="secondary-btn" type="button">✨ Vygenerovať článok pomocou AI</button>
-              <button id="cancelArticleGenerationBtn" class="secondary-btn quiet hidden" type="button">Zrušiť generovanie</button>
-              <button id="recoverArticleGenerationBtn" class="secondary-btn quiet" type="button">Obnoviť generovanie podľa ID</button>
-              <button id="copyArticlePromptBtn" class="secondary-btn" type="button">Kopírovať prompt pre text</button>
-              <button id="copyArticleJsonPromptBtn" class="secondary-btn quiet" type="button">Kopírovať prompt na JSON</button>
-            </div>
-            <p id="articleGenerationStatus" class="generation-status" role="status" aria-live="polite" tabindex="-1"></p>
-            <label id="generatedPromptWrap" class="field-row hidden">
-              Vygenerovaný prompt
-              <textarea id="generatedPromptOutput" class="editor-textarea tall" readonly></textarea>
-            </label>
-            <details class="manual-json-import">
-              <summary id="manualJsonImportSummary">Manuálny import JSON</summary>
-              <label class="field-row">
-                Hotový článok z ChatGPT vo formáte JSON
-                <textarea id="articleImportInput" class="editor-textarea tall" placeholder='{"title":"...","summary":"...","text":["..."],"vocabulary":[...],"inlineVocabulary":[...],"questions":[...]}'></textarea>
-              </label>
-              <div class="editor-actions">
-                <button id="importArticleBtn" class="secondary-btn" type="button">Vložiť do editora</button>
+            <div id="articleCreationMethodControls" class="article-creation-method">
+              <span id="articleCreationMethodLabel" class="article-creation-mode-label">Spôsob vytvorenia</span>
+              <div class="segmented-filter compact" role="group" aria-labelledby="articleCreationMethodLabel">
+                <button id="automaticArticleCreationBtn" class="segmented-filter-btn active" type="button" aria-pressed="true">Automaticky v aplikácii</button>
+                <button id="manualArticleCreationBtn" class="segmented-filter-btn" type="button" aria-pressed="false">Pomocou vlastného AI chatu</button>
               </div>
-            </details>
+            </div>
+
+            <div id="automaticArticleCreationPanel" class="article-creation-panel">
+              <p id="automaticArticleCreationHelp" class="muted article-creation-help">Aplikácia vytvorí článok, slovíčka, otázky aj cvičenie automaticky.</p>
+              <div class="editor-actions article-primary-action">
+                <button id="generateArticleAiBtn" class="primary-btn" type="button">✨ Vytvoriť článok</button>
+                <button id="cancelArticleGenerationBtn" class="secondary-btn quiet hidden" type="button">Zrušiť generovanie</button>
+              </div>
+              <p id="articleGenerationStatus" class="generation-status" role="status" aria-live="polite" tabindex="-1"></p>
+            </div>
+
+            <div id="manualArticleCreationPanel" class="manual-ai-flow hidden">
+              <p id="manualAiChatHelp" class="muted">Skopíruj jednotlivé zadania do svojho AI chatu podľa uvedeného poradia.</p>
+
+              <section class="manual-ai-step">
+                <span class="manual-ai-step-number" aria-hidden="true">1</span>
+                <div>
+                  <h3 id="manualAiStep1Title">Vytvor text článku</h3>
+                  <p id="manualAiStep1Help" class="muted">Skopíruj zadanie a vlož ho do svojho AI chatu.</p>
+                  <button id="copyArticlePromptBtn" class="secondary-btn" type="button">Kopírovať zadanie na vytvorenie článku</button>
+                </div>
+              </section>
+
+              <section class="manual-ai-step">
+                <span class="manual-ai-step-number" aria-hidden="true">2</span>
+                <div>
+                  <h3 id="manualAiStep2Title">Priprav článok pre aplikáciu</h3>
+                  <p id="manualAiStep2Help" class="muted">Po vytvorení textu vlož toto zadanie do rovnakého AI chatu.</p>
+                  <button id="copyArticleJsonPromptBtn" class="secondary-btn" type="button">Kopírovať zadanie na spracovanie článku</button>
+                </div>
+              </section>
+
+              <section class="manual-ai-step">
+                <span class="manual-ai-step-number" aria-hidden="true">3</span>
+                <div>
+                  <h3 id="manualAiStep3Title">Vlož výsledok</h3>
+                  <p id="manualAiStep3Help" class="muted">Skopíruj celý výsledok z AI chatu a vlož ho sem.</p>
+                  <label class="field-row manual-ai-result-field">
+                    Výsledok od AI asistenta
+                    <textarea id="articleImportInput" class="editor-textarea tall" placeholder='{"title":"...","summary":"...","text":["..."],"vocabulary":[...],"inlineVocabulary":[...],"questions":[...]}'></textarea>
+                  </label>
+                  <button id="importArticleBtn" class="primary-btn" type="button">Načítať článok do editora</button>
+                </div>
+              </section>
+
+              <label id="generatedPromptWrap" class="field-row hidden">
+                Zadanie pre AI chat
+                <textarea id="generatedPromptOutput" class="editor-textarea tall" readonly></textarea>
+              </label>
+            </div>
           </section>
 
           <div id="articleContentStep" class="editor-step hidden">
@@ -578,7 +612,7 @@
               <input id="articleImageInput" type="file" accept="image/*">
             </label>
             <div class="editor-actions">
-              <button id="copyImagePromptBtn" class="secondary-btn quiet" type="button">Kopírovať prompt pre obrázok</button>
+              <button id="copyImagePromptBtn" class="secondary-btn quiet" type="button">Kopírovať zadanie na vytvorenie obrázka</button>
             </div>
             <p id="articleImageStatus" class="muted image-upload-status"></p>
           </div>
@@ -719,7 +753,7 @@
   <script src="translations/ui.js?v=139"></script>
   <script src="translations/auth.js?v=135"></script>
   <script src="translations/new-languages.js?v=137"></script>
-  <script src="translations/ui-completions.js?v=10"></script>
+  <script src="translations/ui-completions.js?v=11"></script>
   <script src="translations/prompts.js?v=121"></script>
   <script src="i18n.js?v=117"></script>
   <script src="auth.js?v=134"></script>
@@ -729,8 +763,8 @@
   <script src="articles.js?v=140"></script>
   <script src="reader.js?v=141"></script>
   <script src="games.js?v=127"></script>
-  <script src="editor.js?v=153"></script>
+  <script src="editor.js?v=154"></script>
   <script src="home.js?v=141"></script>
-  <script src="app.js?v=154"></script>
+  <script src="app.js?v=155"></script>
 </body>
 </html>

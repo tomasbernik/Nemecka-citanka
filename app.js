@@ -618,15 +618,24 @@ function updateStaticTexts() {
   setOptionText("articleLengthSelect", "220-260", "articleLengthShort");
   setOptionText("articleLengthSelect", "300-350", "articleLengthMedium");
   setOptionText("articleLengthSelect", "450-550", "articleLengthLong");
+  setText("articleCreationMethodLabel", "articleCreationMethod");
+  setText("automaticArticleCreationBtn", "automaticArticleCreation");
+  setText("manualArticleCreationBtn", "manualArticleCreation");
+  setText("automaticArticleCreationHelp", "automaticArticleCreationHelp");
+  setText("manualAiChatHelp", "manualAiChatHelp");
+  setText("manualAiStep1Title", "manualAiStep1Title");
+  setText("manualAiStep1Help", "manualAiStep1Help");
+  setText("manualAiStep2Title", "manualAiStep2Title");
+  setText("manualAiStep2Help", "manualAiStep2Help");
+  setText("manualAiStep3Title", "manualAiStep3Title");
+  setText("manualAiStep3Help", "manualAiStep3Help");
   setText("copyArticlePromptBtn", "copyArticlePrompt");
   setText("generateArticleAiBtn", "generateArticleAi");
   setText("cancelArticleGenerationBtn", "cancelArticleGeneration");
-  setText("recoverArticleGenerationBtn", "recoverArticleGeneration");
   setText("copyArticleJsonPromptBtn", "copyArticleJsonPrompt");
   setText("copyImagePromptBtn", "copyImagePrompt");
   $("articleImageDialog")?.setAttribute("aria-label", t("articleImage"));
   setLabelText("articleImportInput", "articleImportJson");
-  setText("manualJsonImportSummary", "manualJsonImport");
   setText("importArticleBtn", "importArticle");
   setText("copyTranslationPromptBtn", "copyTranslationPrompt");
   setLabelText("generatedPromptOutput", "generatedPrompt");
@@ -1065,6 +1074,8 @@ onChange("articleEditorSelect", () => {
 });
 onClick("articleModeBtn", () => setArticleCreationMode("article"));
 onClick("storyModeBtn", () => setArticleCreationMode("story"));
+onClick("automaticArticleCreationBtn", () => setArticleCreationMethod("automatic"));
+onClick("manualArticleCreationBtn", () => setArticleCreationMethod("manual"));
 onChange("storyChapterCountSelect", updateStoryLengthLimits);
 onEvent("articleTitleInput", "input", () => {
   if (!$("articleEditorSelect").value) {
@@ -1138,7 +1149,6 @@ onClick("copyImagePromptBtn", async () => {
 });
 onClick("generateArticleAiBtn", generateArticleDirectlyWithAi);
 onClick("cancelArticleGenerationBtn", cancelPendingArticleGeneration);
-onClick("recoverArticleGenerationBtn", recoverCompletedArticleGenerationById);
 onClick("importArticleBtn", importArticleToEditor);
 onClick("copyTranslationPromptBtn", () => copyTextToClipboard(buildTranslationPrompt(), t("promptTranslationCopied")));
 

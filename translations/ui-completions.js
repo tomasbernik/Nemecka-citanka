@@ -536,3 +536,96 @@ Object.entries({
   fr: "L’IA crée les chapitres l’un après l’autre. Pour chaque nouveau chapitre, elle reçoit le plan court et le texte intégral de tous les chapitres précédents.",
   tr: "Yapay zekâ bölümleri sırayla oluşturur. Her yeni bölüm için kısa planı ve önceki tüm bölümlerin tam metnini alır."
 }).forEach(([language, storyModeHelp]) => assignUiText(language, { storyModeHelp }));
+
+Object.entries({
+  de: {
+    articleCreationMethod: "Erstellungsart", automaticArticleCreation: "Automatisch in der App", manualArticleCreation: "Mit deinem eigenen KI-Chat",
+    automaticArticleCreationHelp: "Die App erstellt den Artikel, den Wortschatz, die Fragen und die Übung automatisch.", manualAiChatHelp: "Kopiere die Aufgaben in der angegebenen Reihenfolge in deinen KI-Chat.",
+    manualAiStep1Title: "Artikeltext erstellen", manualAiStep1Help: "Kopiere die Aufgabe und füge sie in deinen KI-Chat ein.",
+    manualAiStep2Title: "Artikel für die App vorbereiten", manualAiStep2Help: "Füge diese Aufgabe nach dem erstellten Artikeltext in denselben KI-Chat ein.",
+    manualAiStep3Title: "Ergebnis einfügen", manualAiStep3Help: "Kopiere das vollständige Ergebnis aus dem KI-Chat und füge es hier ein.",
+    generateArticleAi: "✨ Artikel erstellen", copyArticlePrompt: "Aufgabe zum Erstellen des Artikels kopieren", copyArticleJsonPrompt: "Aufgabe zur Verarbeitung des Artikels kopieren",
+    articleImportJson: "Ergebnis aus dem KI-Chat", importArticle: "Artikel in den Editor laden", generatedPrompt: "Aufgabe für den KI-Chat", copyImagePrompt: "Aufgabe zum Erstellen eines Bildes kopieren"
+  },
+  sk: {
+    articleCreationMethod: "Spôsob vytvorenia", automaticArticleCreation: "Automaticky v aplikácii", manualArticleCreation: "Pomocou vlastného AI chatu",
+    automaticArticleCreationHelp: "Aplikácia vytvorí článok, slovíčka, otázky aj cvičenie automaticky.", manualAiChatHelp: "Skopíruj jednotlivé zadania do svojho AI chatu podľa uvedeného poradia.",
+    manualAiStep1Title: "Vytvor text článku", manualAiStep1Help: "Skopíruj zadanie a vlož ho do svojho AI chatu.",
+    manualAiStep2Title: "Priprav článok pre aplikáciu", manualAiStep2Help: "Po vytvorení textu vlož toto zadanie do rovnakého AI chatu.",
+    manualAiStep3Title: "Vlož výsledok", manualAiStep3Help: "Skopíruj celý výsledok z AI chatu a vlož ho sem.",
+    generateArticleAi: "✨ Vytvoriť článok", copyArticlePrompt: "Kopírovať zadanie na vytvorenie článku", copyArticleJsonPrompt: "Kopírovať zadanie na spracovanie článku",
+    articleImportJson: "Výsledok z AI chatu", importArticle: "Načítať článok do editora", generatedPrompt: "Zadanie pre AI chat", copyImagePrompt: "Kopírovať zadanie na vytvorenie obrázka"
+  },
+  en: {
+    articleCreationMethod: "Creation method", automaticArticleCreation: "Automatically in the app", manualArticleCreation: "With your own AI chat",
+    automaticArticleCreationHelp: "The app automatically creates the article, vocabulary, questions and exercise.", manualAiChatHelp: "Copy the instructions to your AI chat in the order shown.",
+    manualAiStep1Title: "Create the article text", manualAiStep1Help: "Copy the instruction and paste it into your AI chat.",
+    manualAiStep2Title: "Prepare the article for the app", manualAiStep2Help: "After the article text is created, paste this instruction into the same AI chat.",
+    manualAiStep3Title: "Paste the result", manualAiStep3Help: "Copy the complete result from the AI chat and paste it here.",
+    generateArticleAi: "✨ Create article", copyArticlePrompt: "Copy instruction to create the article", copyArticleJsonPrompt: "Copy instruction to process the article",
+    articleImportJson: "Result from the AI chat", importArticle: "Load article into the editor", generatedPrompt: "Instruction for the AI chat", copyImagePrompt: "Copy instruction to create an image"
+  },
+  ru: {
+    articleCreationMethod: "Способ создания", automaticArticleCreation: "Автоматически в приложении", manualArticleCreation: "С помощью своего ИИ-чата",
+    automaticArticleCreationHelp: "Приложение автоматически создаст статью, словарь, вопросы и упражнение.", manualAiChatHelp: "Копируйте задания в свой ИИ-чат в указанном порядке.",
+    manualAiStep1Title: "Создайте текст статьи", manualAiStep1Help: "Скопируйте задание и вставьте его в свой ИИ-чат.",
+    manualAiStep2Title: "Подготовьте статью для приложения", manualAiStep2Help: "После создания текста вставьте это задание в тот же ИИ-чат.",
+    manualAiStep3Title: "Вставьте результат", manualAiStep3Help: "Скопируйте полный результат из ИИ-чата и вставьте его сюда.",
+    generateArticleAi: "✨ Создать статью", copyArticlePrompt: "Копировать задание для создания статьи", copyArticleJsonPrompt: "Копировать задание для обработки статьи",
+    articleImportJson: "Результат из ИИ-чата", importArticle: "Загрузить статью в редактор", generatedPrompt: "Задание для ИИ-чата", copyImagePrompt: "Копировать задание для создания изображения"
+  },
+  pl: {
+    articleCreationMethod: "Sposób tworzenia", automaticArticleCreation: "Automatycznie w aplikacji", manualArticleCreation: "Za pomocą własnego czatu AI",
+    automaticArticleCreationHelp: "Aplikacja automatycznie utworzy artykuł, słownictwo, pytania i ćwiczenie.", manualAiChatHelp: "Kopiuj polecenia do swojego czatu AI w podanej kolejności.",
+    manualAiStep1Title: "Utwórz tekst artykułu", manualAiStep1Help: "Skopiuj polecenie i wklej je do swojego czatu AI.",
+    manualAiStep2Title: "Przygotuj artykuł dla aplikacji", manualAiStep2Help: "Po utworzeniu tekstu wklej to polecenie do tego samego czatu AI.",
+    manualAiStep3Title: "Wklej wynik", manualAiStep3Help: "Skopiuj cały wynik z czatu AI i wklej go tutaj.",
+    generateArticleAi: "✨ Utwórz artykuł", copyArticlePrompt: "Kopiuj polecenie utworzenia artykułu", copyArticleJsonPrompt: "Kopiuj polecenie przetworzenia artykułu",
+    articleImportJson: "Wynik z czatu AI", importArticle: "Wczytaj artykuł do edytora", generatedPrompt: "Polecenie dla czatu AI", copyImagePrompt: "Kopiuj polecenie utworzenia obrazu"
+  },
+  hu: {
+    articleCreationMethod: "Létrehozási mód", automaticArticleCreation: "Automatikusan az alkalmazásban", manualArticleCreation: "Saját MI-csevegővel",
+    automaticArticleCreationHelp: "Az alkalmazás automatikusan elkészíti a cikket, a szókincset, a kérdéseket és a gyakorlatot.", manualAiChatHelp: "Másold a feladatokat a saját MI-csevegődbe a megadott sorrendben.",
+    manualAiStep1Title: "A cikk szövegének elkészítése", manualAiStep1Help: "Másold ki a feladatot, és illeszd be az MI-csevegődbe.",
+    manualAiStep2Title: "A cikk előkészítése az alkalmazáshoz", manualAiStep2Help: "A szöveg elkészülte után illeszd ezt a feladatot ugyanabba az MI-csevegőbe.",
+    manualAiStep3Title: "Az eredmény beillesztése", manualAiStep3Help: "Másold ki a teljes eredményt az MI-csevegőből, és illeszd be ide.",
+    generateArticleAi: "✨ Cikk létrehozása", copyArticlePrompt: "Cikkírási feladat másolása", copyArticleJsonPrompt: "Cikkfeldolgozási feladat másolása",
+    articleImportJson: "Eredmény az MI-csevegőből", importArticle: "Cikk betöltése a szerkesztőbe", generatedPrompt: "Feladat az MI-csevegőnek", copyImagePrompt: "Képkészítési feladat másolása"
+  },
+  ro: {
+    articleCreationMethod: "Mod de creare", automaticArticleCreation: "Automat în aplicație", manualArticleCreation: "Cu propriul chat AI",
+    automaticArticleCreationHelp: "Aplicația creează automat articolul, vocabularul, întrebările și exercițiul.", manualAiChatHelp: "Copiază instrucțiunile în chatul tău AI în ordinea indicată.",
+    manualAiStep1Title: "Creează textul articolului", manualAiStep1Help: "Copiază instrucțiunea și insereaz-o în chatul tău AI.",
+    manualAiStep2Title: "Pregătește articolul pentru aplicație", manualAiStep2Help: "După crearea textului, inserează această instrucțiune în același chat AI.",
+    manualAiStep3Title: "Inserează rezultatul", manualAiStep3Help: "Copiază rezultatul complet din chatul AI și inserează-l aici.",
+    generateArticleAi: "✨ Creează articolul", copyArticlePrompt: "Copiază instrucțiunea pentru crearea articolului", copyArticleJsonPrompt: "Copiază instrucțiunea pentru procesarea articolului",
+    articleImportJson: "Rezultat din chatul AI", importArticle: "Încarcă articolul în editor", generatedPrompt: "Instrucțiune pentru chatul AI", copyImagePrompt: "Copiază instrucțiunea pentru crearea imaginii"
+  },
+  it: {
+    articleCreationMethod: "Metodo di creazione", automaticArticleCreation: "Automaticamente nell’app", manualArticleCreation: "Con la tua chat IA",
+    automaticArticleCreationHelp: "L’app crea automaticamente l’articolo, il vocabolario, le domande e l’esercizio.", manualAiChatHelp: "Copia le istruzioni nella tua chat IA nell’ordine indicato.",
+    manualAiStep1Title: "Crea il testo dell’articolo", manualAiStep1Help: "Copia l’istruzione e incollala nella tua chat IA.",
+    manualAiStep2Title: "Prepara l’articolo per l’app", manualAiStep2Help: "Dopo la creazione del testo, incolla questa istruzione nella stessa chat IA.",
+    manualAiStep3Title: "Incolla il risultato", manualAiStep3Help: "Copia il risultato completo dalla chat IA e incollalo qui.",
+    generateArticleAi: "✨ Crea articolo", copyArticlePrompt: "Copia l’istruzione per creare l’articolo", copyArticleJsonPrompt: "Copia l’istruzione per elaborare l’articolo",
+    articleImportJson: "Risultato dalla chat IA", importArticle: "Carica l’articolo nell’editor", generatedPrompt: "Istruzione per la chat IA", copyImagePrompt: "Copia l’istruzione per creare un’immagine"
+  },
+  fr: {
+    articleCreationMethod: "Mode de création", automaticArticleCreation: "Automatiquement dans l’application", manualArticleCreation: "Avec ton propre chat IA",
+    automaticArticleCreationHelp: "L’application crée automatiquement l’article, le vocabulaire, les questions et l’exercice.", manualAiChatHelp: "Copie les consignes dans ton chat IA dans l’ordre indiqué.",
+    manualAiStep1Title: "Créer le texte de l’article", manualAiStep1Help: "Copie la consigne et colle-la dans ton chat IA.",
+    manualAiStep2Title: "Préparer l’article pour l’application", manualAiStep2Help: "Une fois le texte créé, colle cette consigne dans le même chat IA.",
+    manualAiStep3Title: "Coller le résultat", manualAiStep3Help: "Copie le résultat complet du chat IA et colle-le ici.",
+    generateArticleAi: "✨ Créer l’article", copyArticlePrompt: "Copier la consigne pour créer l’article", copyArticleJsonPrompt: "Copier la consigne pour traiter l’article",
+    articleImportJson: "Résultat du chat IA", importArticle: "Charger l’article dans l’éditeur", generatedPrompt: "Consigne pour le chat IA", copyImagePrompt: "Copier la consigne pour créer une image"
+  },
+  tr: {
+    articleCreationMethod: "Oluşturma yöntemi", automaticArticleCreation: "Uygulamada otomatik", manualArticleCreation: "Kendi yapay zekâ sohbetinle",
+    automaticArticleCreationHelp: "Uygulama makaleyi, kelimeleri, soruları ve alıştırmayı otomatik olarak oluşturur.", manualAiChatHelp: "Talimatları gösterilen sırayla kendi yapay zekâ sohbetine kopyala.",
+    manualAiStep1Title: "Makale metnini oluştur", manualAiStep1Help: "Talimatı kopyala ve yapay zekâ sohbetine yapıştır.",
+    manualAiStep2Title: "Makaleyi uygulama için hazırla", manualAiStep2Help: "Metin oluşturulduktan sonra bu talimatı aynı yapay zekâ sohbetine yapıştır.",
+    manualAiStep3Title: "Sonucu yapıştır", manualAiStep3Help: "Yapay zekâ sohbetindeki sonucun tamamını kopyalayıp buraya yapıştır.",
+    generateArticleAi: "✨ Makale oluştur", copyArticlePrompt: "Makale oluşturma talimatını kopyala", copyArticleJsonPrompt: "Makale işleme talimatını kopyala",
+    articleImportJson: "Yapay zekâ sohbetinden sonuç", importArticle: "Makaleyi düzenleyiciye yükle", generatedPrompt: "Yapay zekâ sohbeti için talimat", copyImagePrompt: "Görsel oluşturma talimatını kopyala"
+  }
+}).forEach(([language, text]) => assignUiText(language, text));

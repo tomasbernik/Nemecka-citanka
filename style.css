@@ -1061,7 +1061,8 @@ body.image-dialog-open {
   grid-column: 1 / -1;
 }
 
-.article-creation-mode .segmented-filter {
+.article-creation-mode .segmented-filter,
+.article-creation-method .segmented-filter {
   margin: 6px 0 0;
 }
 
@@ -1070,6 +1071,103 @@ body.image-dialog-open {
   color: var(--muted);
   font-size: 0.88rem;
   font-weight: 900;
+}
+
+.article-creation-method,
+.article-creation-panel,
+.manual-ai-flow {
+  grid-column: 1 / -1;
+}
+
+.article-creation-method {
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.article-creation-method .segmented-filter {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: 100%;
+}
+
+.article-creation-method .segmented-filter-btn {
+  min-height: 44px;
+  white-space: normal;
+}
+
+.article-creation-panel,
+.manual-ai-flow {
+  margin-top: 6px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--card);
+}
+
+.article-creation-panel.hidden,
+.manual-ai-flow.hidden {
+  display: none;
+}
+
+.article-creation-help,
+.manual-ai-flow > .muted {
+  margin: 0 0 12px;
+}
+
+.article-primary-action {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.article-primary-action .primary-btn {
+  width: 100%;
+  min-height: 48px;
+}
+
+.manual-ai-flow {
+  display: grid;
+  gap: 12px;
+}
+
+.manual-ai-step {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(127, 127, 127, 0.04);
+}
+
+.manual-ai-step-number {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-contrast, #071521);
+  font-weight: 900;
+}
+
+.manual-ai-step h3 {
+  margin: 2px 0 4px;
+  font-size: 1rem;
+}
+
+.manual-ai-step p {
+  margin: 0 0 12px;
+}
+
+.manual-ai-step .secondary-btn,
+.manual-ai-step .primary-btn {
+  width: 100%;
+  min-height: 44px;
+}
+
+.manual-ai-result-field {
+  margin: 2px 0 12px;
 }
 
 .story-generation-options {
@@ -1119,6 +1217,10 @@ body.image-dialog-open {
 
 @media (max-width: 620px) {
   .story-generation-options {
+    grid-template-columns: 1fr;
+  }
+
+  .article-creation-method .segmented-filter {
     grid-template-columns: 1fr;
   }
 }
