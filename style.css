@@ -559,6 +559,12 @@ h3 { font-size: 1.1rem; }
   line-height: 1.45;
 }
 
+.character-counter {
+  align-self: flex-end;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 .badges {
   display: flex;
   flex-wrap: wrap;

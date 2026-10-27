@@ -192,7 +192,8 @@ function trimCategoryLabelsForCache(categoryLabels = {}, language) {
 function trimVocabularyItemForCache(item = {}, language) {
   const trimmed = {
     de: item.de || "",
-    base: item.base || ""
+    base: item.base || "",
+    occurrence: item.occurrence || ""
   };
 
   if (item[language]) {

@@ -57,6 +57,7 @@ function mergeVocabularyTranslations(existingItems = [], parsedItems = [], langu
       ...translations,
       de: item.de,
       base: item.base || existing.base || "",
+      occurrence: item.occurrence || existing.occurrence || "",
       ...(item[language] ? { [language]: item[language] } : {})
     };
   });
@@ -74,6 +75,7 @@ function appendVocabularyTranslations(existingItems = [], parsedItems = [], lang
       ...translations,
       de: item.de || existing.de,
       base: item.base || existing.base || "",
+      occurrence: item.occurrence || existing.occurrence || "",
       ...(item[language] ? { [language]: item[language] } : {})
     });
   });
@@ -92,7 +94,8 @@ function normalizeVocabularyImportItem(item) {
   if (!item || typeof item !== "object") return null;
   const normalized = {
     de: (item.de || item.german || item.word || item.phrase || "").trim(),
-    base: (item.base || item.lemma || item.basic || item.grundform || "").trim()
+    base: (item.base || item.lemma || item.basic || item.grundform || "").trim(),
+    occurrence: (item.occurrence || item.usedForm || item.used_form || "").trim()
   };
   VOCABULARY_LANGUAGE_CODES.forEach(code => {
     normalized[code] = (item[code] || "").trim();
@@ -786,17 +789,28 @@ function getTeachingLanguagePromptInfo() {
       };
 }
 
-function getArticleJsonPromptInstructions(level) {
+function getArticleJsonPromptInstructions(level, languageFocus = "") {
   const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
   const isFrench = getUiLanguage() === "fr";
   const teachingLanguage = getTeachingLanguagePromptInfo();
-  const vocabularyExample = `{\"de\":\"slovo alebo fráza z textu\",\"base\":\"základný tvar\",${PROMPT_TRANSLATION_LANGUAGE_CODES
+  const vocabularyExample = `{\"de\":\"tvar zobrazený študentovi\",\"base\":\"základný tvar\",\"occurrence\":\"presný súvislý výskyt v texte\",${PROMPT_TRANSLATION_LANGUAGE_CODES
     .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.lineFormat || code} preklad\"`)
     .join(",")}}`;
+  const languageFocusJsonLines = languageFocus ? [
+    "  \"languageFocus\": {",
+    `    \"requestedFeature\": ${JSON.stringify(languageFocus)},`,
+    "    \"title\": \"name of exactly this language feature\",",
+    "    \"examples\": [{\"sentence\":\"exact full sentence from the text\",\"highlight\":\"exact substring of that sentence\"}],",
+    "    \"exercise\": {\"type\":\"multiple_choice\",\"prompt\":\"sentence with exactly one ___ gap\",\"options\":[\"option 1\",\"option 2\",\"option 3\"],\"words\":[],\"answer\":\"option 1\"}",
+    "  }"
+  ] : [];
+  const languageFocusInstruction = languageFocus
+    ? `Create languageFocus only for ${JSON.stringify(languageFocus)}. Set requestedFeature to exactly that value, use 2-3 exact sentences from the text with exact highlights, and create exactly one unambiguous multiple-choice exercise.`
+    : "Do not create languageFocus or a language exercise.";
 
   if (isGerman) {
-    const vocabulary = `{"de":"Wort oder Phrase aus dem Text","base":"Grundform",${PROMPT_TRANSLATION_LANGUAGE_CODES.map(code => `"${code}":"Übersetzung auf ${NATIVE_LANGUAGES[code]?.label || code}"`).join(",")}}`;
+    const vocabulary = `{"de":"Lernform aus dem Text","base":"Grundform","occurrence":"exakter zusammenhängender Textausschnitt",${PROMPT_TRANSLATION_LANGUAGE_CODES.map(code => `"${code}":"Übersetzung auf ${NATIVE_LANGUAGES[code]?.label || code}"`).join(",")}}`;
     return [
       "", "JSON-Schema:", "{",
       `  \"title\": \"${teachingLanguage.germanTitle}\",`,
@@ -806,19 +820,22 @@ function getArticleJsonPromptInstructions(level) {
       `  \"summary\": \"${teachingLanguage.germanDescription}\",`,
       "  \"text\": [\"Absatz 1\", \"Absatz 2\", \"Absatz 3\", \"Absatz 4\"],",
       "  \"vocabulary\": [", `    ${vocabulary}`, "  ],",
-      "  \"questions\": [", `    {\"statement\":\"${teachingLanguage.germanStatement}\",\"answer\":true}`, "  ]", "}", "",
+      "  \"questions\": [", `    {\"statement\":\"${teachingLanguage.germanStatement}\",\"answer\":true}`, `  ]${languageFocus ? "," : ""}`,
+      ...languageFocusJsonLines, "}", "",
       `Verwende den unten eingefügten ${teachingLanguage.germanAccusative} Text exakt. Formuliere ihn nicht um, kürze ihn nicht und ändere seine Länge nicht.`,
       "Teile den Text absatzweise in das Feld \"text\" auf.",
-      `Füge genau 5 ${teachingLanguage.germanPlural} Wörter oder Phrasen zu \"vocabulary\" hinzu, die zum Niveau ${level} passen, natürlich im Text vorkommen und als neuer Wortschatz nützlich sind.`,
+      "Die summary muss aus 1 bis 2 kurzen Sätzen mit höchstens 300 Zeichen bestehen.",
+      `Füge genau 5 ${teachingLanguage.germanPlural} Wörter oder Phrasen zu \"vocabulary\" hinzu, die zum Niveau ${level} passen und als neuer Wortschatz nützlich sind. occurrence muss Zeichen für Zeichen als zusammenhängender Ausschnitt im Text vorkommen. de ist die lernfreundliche Anzeigeform; bei trennbaren Verben zum Beispiel \"steht … auf\". base enthält die Wörterbuchform, zum Beispiel \"aufstehen\".`,
       `Füge 6 bis 8 ${teachingLanguage.germanPlural} Richtig/Falsch-Aussagen mit einer natürlichen Mischung aus richtigen und falschen Antworten zu \"questions\" hinzu.`,
       `Füge für jede Kategorie oder jedes Thema Übersetzungen in diesen Sprachen zu \"categoryLabels\" hinzu: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
-      `Alle Einträge in vocabulary müssen diese Schlüssel enthalten: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+      languageFocusInstruction,
+      `Alle Einträge in vocabulary müssen diese Schlüssel enthalten: de, base, occurrence, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
       "Verwende für \"base\" die Wörterbuchform: bei Substantiven mit bestimmtem Artikel im Nominativ Singular, bei Verben den Infinitiv und bei Adjektiven die Grundform."
     ];
   }
 
   if (isEnglish) {
-    const englishVocabularyExample = `{\"de\":\"word or phrase from the text\",\"base\":\"dictionary form\",${PROMPT_TRANSLATION_LANGUAGE_CODES
+    const englishVocabularyExample = `{\"de\":\"learner-facing form\",\"base\":\"dictionary form\",\"occurrence\":\"exact contiguous occurrence in the text\",${PROMPT_TRANSLATION_LANGUAGE_CODES
       .map(code => `\"${code}\":\"${NATIVE_LANGUAGES[code]?.label || code} translation\"`)
       .join(",")}}`;
 
@@ -837,21 +854,24 @@ function getArticleJsonPromptInstructions(level) {
       "  ],",
       "  \"questions\": [",
       `    {\"statement\":\"${teachingLanguage.english} true/false sentence\",\"answer\":true}`,
-      "  ]",
+      `  ]${languageFocus ? "," : ""}`,
+      ...languageFocusJsonLines,
       "}",
       "",
       "Use the pasted text below exactly as it is. Do not rewrite it, shorten it, or change the length.",
       "Split the text into the \"text\" array by paragraphs.",
-      `Add exactly 5 ${teachingLanguage.english} words or phrases to \"vocabulary\" that fit level ${level} and are typically not already lower-level words. They must appear naturally in the text and should be useful new vocabulary for this level.`,
+      "The summary must be 1-2 short sentences and at most 300 characters.",
+      `Add exactly 5 ${teachingLanguage.english} words or phrases to \"vocabulary\" that fit level ${level} and are useful new vocabulary. occurrence must appear character-for-character as one contiguous substring of the text. de is the learner-facing form; for a separable verb use a form such as \"steht … auf\". Put the dictionary form, such as \"aufstehen\", in base.`,
       `Add 6 to 8 ${teachingLanguage.english} true/false statements to \"questions\" with a mix of true and false answers. The answers must not follow a regular true/false/true/false or false/true/false/true pattern; the order should feel natural and may include two identical answers in a row.`,
       `Add translations for every category or topic to \"categoryLabels\" for these languages: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}. The object key must exactly match the value in \"category\"; if multiple categories are separated by |, add each one separately.`,
-      `All vocabulary items must have these keys: de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+      languageFocusInstruction,
+      `All vocabulary items must have these keys: de, base, occurrence, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
       "For \"base\", use the dictionary form: for a noun, include the definite article and nominative singular, for example \"der Mann\"; for a verb, use the infinitive, for example \"gehen\"; for an adjective, use the base form, for example \"freundlich\". If \"de\" is already the base form or is a whole phrase, \"base\" may be the same as \"de\"."
     ];
   }
 
   if (isFrench) {
-    const frenchVocabularyExample = `{"de":"mot ou expression du texte","base":"forme du dictionnaire",${PROMPT_TRANSLATION_LANGUAGE_CODES
+    const frenchVocabularyExample = `{"de":"forme affichée à l’apprenant","base":"forme du dictionnaire","occurrence":"extrait contigu exact du texte",${PROMPT_TRANSLATION_LANGUAGE_CODES
       .map(code => `"${code}":"traduction en ${NATIVE_LANGUAGES[code]?.label || code}"`)
       .join(",")}}`;
 
@@ -864,13 +884,16 @@ function getArticleJsonPromptInstructions(level) {
       "  \"summary\": \"brève description de l’article\",",
       "  \"text\": [\"paragraphe 1\", \"paragraphe 2\", \"paragraphe 3\", \"paragraphe 4\"],",
       "  \"vocabulary\": [", `    ${frenchVocabularyExample}`, "  ],",
-      "  \"questions\": [", "    {\"statement\":\"affirmation vraie ou fausse\",\"answer\":true}", "  ]", "}", "",
+      "  \"questions\": [", "    {\"statement\":\"affirmation vraie ou fausse\",\"answer\":true}", `  ]${languageFocus ? "," : ""}`,
+      ...languageFocusJsonLines, "}", "",
       "Utilise exactement le texte collé ci-dessous. Ne le reformule pas, ne le raccourcis pas et ne modifie pas sa longueur.",
       "Répartis les paragraphes dans le tableau \"text\".",
-      `Ajoute exactement 5 mots ou expressions utiles de niveau ${level} dans "vocabulary". Ils doivent apparaître naturellement dans le texte.`,
+      "Le résumé doit contenir 1 à 2 phrases courtes et au maximum 300 caractères.",
+      `Ajoute exactement 5 mots ou expressions utiles de niveau ${level} dans "vocabulary". occurrence doit être un extrait contigu exact du texte. de est la forme affichée à l’apprenant ; pour un verbe séparable, utilise par exemple "steht … auf". Mets la forme du dictionnaire, par exemple "aufstehen", dans base.`,
       "Ajoute 6 à 8 affirmations vraies ou fausses dans \"questions\", avec un ordre naturel et sans alternance régulière.",
       `Ajoute les traductions de chaque catégorie dans "categoryLabels" pour ces langues : ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
-      `Chaque élément de "vocabulary" doit contenir les clés suivantes : de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+      languageFocusInstruction,
+      `Chaque élément de "vocabulary" doit contenir les clés suivantes : de, base, occurrence, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
       "Dans \"base\", utilise la forme du dictionnaire : article défini et nominatif singulier pour un nom, infinitif pour un verbe et forme de base pour un adjectif."
     ];
   }
@@ -890,21 +913,18 @@ function getArticleJsonPromptInstructions(level) {
     "  ],",
     "  \"questions\": [",
     `    {\"statement\":\"${teachingLanguage.slovakStatement}\",\"answer\":true}`,
-    "  ],",
-    "  \"languageFocus\": {",
-    "    \"title\": \"názov jedného jazykového javu\",",
-    "    \"examples\": [{\"sentence\":\"presná veta z textu\",\"highlight\":\"presná časť na zvýraznenie\"}],",
-    "    \"exercise\": {\"type\":\"multiple_choice\",\"prompt\":\"veta s ___\",\"options\":[\"možnosť 1\",\"možnosť 2\",\"možnosť 3\"],\"answer\":\"možnosť 1\"}",
-    "  }",
+    `  ]${languageFocus ? "," : ""}`,
+    ...languageFocusJsonLines,
     "}",
     "",
     "Použi nižšie vložený text presne tak, ako je. Neprepisuj ho, neskracuj ho a nemen dĺžku textu.",
     "Text rozdeľ do poľa \"text\" podľa odsekov.",
-    `Do "vocabulary" pridaj presne 5 slov alebo fráz vo vyučovanom jazyku (${getArticleLanguageLabel(getSelectedArticleLanguage())}), ktoré patria na úroveň ${level}, ale typicky ešte nepatria do nižšej úrovne. Musia sa prirodzene objaviť v texte a majú sa učiť ako nové slovíčka tejto úrovne.`,
+    "Summary musí mať 1 až 2 krátke vety a najviac 300 znakov.",
+    `Do "vocabulary" pridaj presne 5 slov alebo fráz vo vyučovanom jazyku (${getArticleLanguageLabel(getSelectedArticleLanguage())}), ktoré patria na úroveň ${level} a sú užitočné ako nové slovíčka. occurrence musí byť znak po znaku presný súvislý úsek textu. de je tvar zobrazený študentovi; pri odlučiteľnom slovese napríklad "steht … auf". Do base daj slovníkový tvar, napríklad "aufstehen".`,
     `Do \"questions\" pridaj 6 až 8 pravda/nepravda viet vo vyučovanom jazyku (${getArticleLanguageLabel(getSelectedArticleLanguage())}) s mixom true a false. Odpovede nesmú byť v pravidelnom poradí true/false/true/false ani false/true/false/true; poradie musí pôsobiť prirodzene a môže mať aj dve rovnaké odpovede za sebou.`,
-    `Do \"languageFocus\" vyber jeden užitočný jazykový jav primeraný úrovni ${level}. Nepridávaj teoretické vysvetlenie. Pridaj 2 až 3 príklady, pričom \"sentence\" musí byť presná celá veta z textu a \"highlight\" presná časť tejto vety. Pridaj práve jedno krátke cvičenie. Pre tvary použi type \"multiple_choice\" s tromi možnosťami a odpoveďou, ktorá je presne jednou z možností. Pre slovosled môžeš použiť type \"word_order\" s poľom \"words\" a hotovou správnou vetou v \"answer\".`,
+    languageFocus ? `Do \"languageFocus\" spracuj výhradne jazykový jav ${JSON.stringify(languageFocus)}. requestedFeature musí byť presne ${JSON.stringify(languageFocus)}. Pridaj 2 až 3 príklady, pričom sentence musí byť presná celá veta z textu a highlight presná časť tejto vety. Pridaj práve jedno jednoznačné cvičenie type multiple_choice s práve jednou medzerou ___, tromi rozdielnymi možnosťami, prázdnym poľom words a odpoveďou zhodnou s jednou možnosťou.` : "Nevytváraj languageFocus ani jazykové cvičenie.",
     `Do \"categoryLabels\" pridaj pre každú kategóriu alebo tému preklady do týchto jazykov: ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}. Kľúč objektu musí presne zodpovedať hodnote v poli \"category\"; ak je viac kategórií oddelených znakom |, pridaj každú zvlášť.`,
-    `Všetky položky vocabulary musia mať kľúče de, base, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
+    `Všetky položky vocabulary musia mať kľúče de, base, occurrence, ${PROMPT_TRANSLATION_LANGUAGE_CODES.join(", ")}.`,
     "Do \"base\" daj základný slovníkový tvar: pri podstatnom mene s určitým členom a v nominatíve jednotného čísla, napríklad \"der Mann\"; pri slovese infinitív, napríklad \"gehen\"; pri prídavnom mene základný tvar, napríklad \"freundlich\". Ak je \"de\" už základný tvar alebo ide o celú frázu, môže byť \"base\" rovnaké ako \"de\"."
   ];
 }
@@ -981,6 +1001,7 @@ function buildArticleJsonPrompt() {
   const category = getArticleEditorCategory();
   const title = $("articleTitleInput").value.trim();
   const summary = $("articleSummaryInput").value.trim();
+  const languageFocus = getArticleLanguageFocusRequirement();
   const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
   const teachingLanguage = getTeachingLanguagePromptInfo();
@@ -994,7 +1015,7 @@ function buildArticleJsonPrompt() {
       title ? `Verwende diesen Titel, wenn er passt: ${title}` : `Erstelle einen kurzen ${teachingLanguage.germanAccusative} Titel.`,
       summary ? `Verwende diese Kurzbeschreibung, wenn sie passt: ${summary}` : `Erstelle eine kurze ${teachingLanguage.germanPlural} Beschreibung.`,
       category ? `Kategorie: ${category}.` : "",
-      ...getArticleJsonPromptInstructions(level), "",
+      ...getArticleJsonPromptInstructions(level, languageFocus), "",
       text ? `Fertiger ${teachingLanguage.germanTitle.replace("Artikeltitel", "Text")}:` : `Der fertige ${teachingLanguage.germanTitle.replace("Artikeltitel", "Text")} ist deine letzte Antwort in diesem Chat. Verwende exakt diese Antwort.`,
       text
     ].filter(Boolean).join("\n");
@@ -1007,7 +1028,7 @@ function buildArticleJsonPrompt() {
       title ? `Use this title if it fits: ${title}` : `Create a short ${teachingLanguage.english} title.`,
       summary ? `Use this short description if it fits: ${summary}` : `Create a short ${teachingLanguage.english} description.`,
       category ? `Category: ${category}.` : "",
-      ...getArticleJsonPromptInstructions(level),
+      ...getArticleJsonPromptInstructions(level, languageFocus),
       "",
       text
         ? `Finished ${teachingLanguage.english} text:`
@@ -1022,7 +1043,7 @@ function buildArticleJsonPrompt() {
     title ? `Ak sa hodí, použi tento názov: ${title}` : `Vytvor krátky ${teachingLanguage.slovak} názov.`,
     summary ? `Ak sa hodí, použi tento krátky popis: ${summary}` : `Vytvor krátky ${teachingLanguage.slovak} popis.`,
     category ? `Kategória: ${category}.` : "",
-    ...getArticleJsonPromptInstructions(level),
+    ...getArticleJsonPromptInstructions(level, languageFocus),
     "",
     text
       ? `Hotový text v jazyku ${getArticleLanguageLabel(getSelectedArticleLanguage())}:`
@@ -1422,6 +1443,13 @@ function getArticleLanguageFocusRequirement() {
   return $("articleLanguageFocusInput")?.value.trim() || "";
 }
 
+function updateArticleSummaryCounter() {
+  const input = $("articleSummaryInput");
+  const counter = $("articleSummaryCounter");
+  if (!input || !counter) return;
+  counter.textContent = `${input.value.length}/${ARTICLE_SUMMARY_MAX_LENGTH}`;
+}
+
 function updateArticleRequiredWordsMode() {
   const enabled = wantsRequiredWords();
   $("articleRequiredWordsWrap")?.classList.toggle("hidden", !enabled);
@@ -1482,6 +1510,7 @@ function rememberArticleLevel() {
 }
 
 function updateArticleEditorFlow() {
+  updateArticleSummaryCounter();
   const isEditing = Boolean($("articleEditorSelect")?.value);
   const selectedArticle = state.articles.find(item => item.id === $("articleEditorSelect")?.value) || null;
   const isExpanded = !isEditing || state.editorExpanded;

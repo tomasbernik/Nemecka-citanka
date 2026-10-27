@@ -51,6 +51,7 @@ class WorkflowError extends Error {
 
 const asText = (value: unknown, max = 500) =>
   typeof value === "string" ? value.trim().slice(0, max) : "";
+const ARTICLE_SUMMARY_MAX_LENGTH = 300;
 
 const asStringArray = (value: unknown, maxItems: number, maxLength: number) =>
   Array.isArray(value)
@@ -112,6 +113,7 @@ const MATERIALS_SCHEMA = {
         properties: {
           de: { type: "string" },
           base: { type: "string" },
+          occurrence: { type: "string" },
           sk: { type: "string" },
           pl: { type: "string" },
           hu: { type: "string" },
@@ -119,7 +121,7 @@ const MATERIALS_SCHEMA = {
           en: { type: "string" },
           fr: { type: "string" },
         },
-        required: ["de", "base", "sk", "pl", "hu", "ru", "en", "fr"],
+        required: ["de", "base", "occurrence", "sk", "pl", "hu", "ru", "en", "fr"],
       },
     },
     questions: {
@@ -540,7 +542,7 @@ const hasValidLanguageFocus = (article: JsonObject, requestedFeature = "") => {
   const answer = asText(exercise.answer, 500);
   const options = asStringArray(exercise.options, 3, 120);
   return asText(exercise.type, 30) === "multiple_choice"
-    && prompt.includes("___")
+    && (prompt.match(/___/gu) || []).length === 1
     && options.length === 3
     && new Set(options).size === 3
     && options.filter(option => option === answer).length === 1
@@ -559,20 +561,28 @@ const validateMaterials = (
   const questions = Array.isArray(source.questions) ? source.questions as JsonObject[] : [];
   const storyText = story.text.join("\n");
   const normalizedStoryText = storyText.normalize("NFC");
+  const summary = typeof source.summary === "string" ? source.summary.trim() : "";
   const normalizedVocabulary = vocabulary.map(item => {
-    const usedForm = asText(item.de, 120).normalize("NFC");
-    if (!usedForm || normalizedStoryText.includes(usedForm)) return item;
+    const displayForm = asText(item.de, 120);
+    const occurrence = (asText(item.occurrence, 240) || displayForm).normalize("NFC");
+    if (!occurrence || normalizedStoryText.includes(occurrence)) {
+      return { ...item, de: displayForm, occurrence };
+    }
     const caseInsensitiveIndex = normalizedStoryText.toLocaleLowerCase("de-DE")
-      .indexOf(usedForm.toLocaleLowerCase("de-DE"));
+      .indexOf(occurrence.toLocaleLowerCase("de-DE"));
     return caseInsensitiveIndex >= 0
-      ? { ...item, de: normalizedStoryText.slice(caseInsensitiveIndex, caseInsensitiveIndex + usedForm.length) }
-      : item;
+      ? {
+        ...item,
+        de: displayForm,
+        occurrence: normalizedStoryText.slice(caseInsensitiveIndex, caseInsensitiveIndex + occurrence.length),
+      }
+      : { ...item, de: displayForm, occurrence };
   });
   const article: JsonObject = {
     title: story.title,
     level: request.level,
     category: request.category,
-    summary: asText(source.summary, 800),
+    summary,
     text: story.text,
     vocabulary: normalizedVocabulary,
     questions,
@@ -580,13 +590,15 @@ const validateMaterials = (
   const vocabularyIssues = [
     vocabulary.length !== 5 && `expected 5 entries, received ${vocabulary.length}`,
     ...normalizedVocabulary.flatMap((item, index) => {
-      const usedForm = asText(item.de, 120);
+      const displayForm = asText(item.de, 120);
+      const occurrence = asText(item.occurrence, 240);
       const missingTranslations = ["base", "sk", "pl", "hu", "ru", "en", "fr"]
         .filter(key => !asText(item[key], 160));
       return [
-        !usedForm && `entry ${index + 1} missing de`,
-        usedForm && !normalizedStoryText.includes(usedForm.normalize("NFC"))
-          && `entry ${index + 1} de value ${JSON.stringify(usedForm)} does not occur in the chapter`,
+        !displayForm && `entry ${index + 1} missing de`,
+        !occurrence && `entry ${index + 1} missing occurrence`,
+        occurrence && !normalizedStoryText.includes(occurrence.normalize("NFC"))
+          && `entry ${index + 1} occurrence ${JSON.stringify(occurrence)} does not occur in the chapter`,
         missingTranslations.length
           && `entry ${index + 1} missing ${missingTranslations.join("/")}`,
       ];
@@ -594,8 +606,9 @@ const validateMaterials = (
   ].filter(Boolean);
   const vocabularyValid = normalizedVocabulary.length === 5 && !vocabularyIssues.length
     && normalizedVocabulary.every(item => {
-    const usedForm = asText(item.de, 120);
-    return usedForm && normalizedStoryText.includes(usedForm.normalize("NFC"))
+    const displayForm = asText(item.de, 120);
+    const occurrence = asText(item.occurrence, 240);
+    return displayForm && occurrence && normalizedStoryText.includes(occurrence.normalize("NFC"))
       && ["base", "sk", "pl", "hu", "ru", "en", "fr"].every(key => asText(item[key], 160));
   });
   const questionsValid = questions.length >= 6 && questions.length <= 8
@@ -604,6 +617,8 @@ const validateMaterials = (
   if (requestedFeature) article.languageFocus = source.languageFocus;
   const failedChecks = [
     !article.summary && "summary",
+    article.summary && article.summary.length > ARTICLE_SUMMARY_MAX_LENGTH
+      && `summary exceeds ${ARTICLE_SUMMARY_MAX_LENGTH} characters`,
     !vocabularyValid && `vocabulary (${vocabularyIssues.join("; ")})`,
     !questionsValid && "questions",
     requestedFeature && !hasValidLanguageFocus(article, requestedFeature) && "languageFocus",
@@ -1976,17 +1991,17 @@ CHAPTER ${chapter.number} TITLE: ${chapter.title}
 CHAPTER TEXT: ${JSON.stringify(chapter.text)}
 
 Create:
-1. A short German summary suitable for ${level}.
-2. Exactly 5 useful vocabulary entries occurring verbatim in this chapter. If the chapter contains an occasional word or expression above ${level}, prioritize it as useful learning vocabulary. Copy each de value as one exact contiguous substring, including capitalization and inflection. Put the dictionary form separately in base. Include accurate sk, pl, hu, ru, en and fr translations.
+1. A short German summary suitable for ${level}: 1-2 sentences and at most ${ARTICLE_SUMMARY_MAX_LENGTH} characters.
+2. Exactly 5 useful vocabulary entries. For each entry, de is the learner-facing form, base is the dictionary form, and occurrence is one exact contiguous substring copied character-for-character from this chapter. For a separable verb, use a clear learner-facing de form such as "steht … auf", base "aufstehen", and the exact contiguous wording from the chapter in occurrence. If the chapter contains an occasional word or expression above ${level}, prioritize it as useful learning vocabulary. Include accurate sk, pl, hu, ru, en and fr translations.
 3. Six to eight clear German true/false statements with accurate boolean answers and a natural mixture of true and false.
 
-Do not invent or normalize the de value. Before returning, search for every de value character-for-character in CHAPTER TEXT and replace any value that is absent.
+Do not invent or normalize occurrence. Before returning, search for every occurrence character-for-character in CHAPTER TEXT and replace any value that is absent.
 ${job.last_error_code === "invalid_materials_output" && job.last_error ? `
 PREVIOUS MATERIALS FAILED VALIDATION:
 ${asText(job.last_error, 800)}
 Correct every listed defect in the new JSON.` : ""}
 
-Keep the JSON compact. Verify every vocabulary form and every answer against this chapter. Return only the requested JSON.`;
+Keep the JSON compact. Verify every vocabulary occurrence and every answer against this chapter. Return only the requested JSON.`;
       const materials = await callAi(
         target,
         prompt,
@@ -2038,14 +2053,14 @@ TITLE: ${reviewed.title}
 STORY PARAGRAPHS: ${JSON.stringify(reviewed.text)}
 
 Create:
-1. A short German summary suitable for ${level}.
-2. Exactly 5 useful vocabulary entries that occur verbatim in the story. Include de, dictionary base, and accurate sk, pl, hu, ru, en and fr translations.
+1. A short German summary suitable for ${level}: 1-2 sentences and at most ${ARTICLE_SUMMARY_MAX_LENGTH} characters.
+2. Exactly 5 useful vocabulary entries. For each entry, de is the learner-facing form, base is the dictionary form, and occurrence is one exact contiguous substring copied character-for-character from the story. For a separable verb, use a clear learner-facing de form such as "steht … auf", base "aufstehen", and the exact contiguous wording from the story in occurrence. Include accurate sk, pl, hu, ru, en and fr translations.
 3. Six to eight clear German true/false statements with accurate boolean answers and a natural mixture of true and false.
 ${includeLanguageFocus ? `4. A languageFocus for exactly ${JSON.stringify(languageFocus)}, with 2-3 exact story sentences and an exact highlighted substring. Do not substitute a different feature. Set languageFocus.requestedFeature to exactly ${JSON.stringify(languageFocus)}.
 5. One unambiguous multiple-choice exercise inside languageFocus. The prompt must contain exactly one ___ gap, options must be three distinct choices, and only the answer may correctly complete the intended sentence. Use an empty words array.` : "Do not create languageFocus or a language exercise."}
 ${isStory ? `4. A compact continuityState for the next chapter. Merge the previous state with facts from this approved chapter. Record characters and roles; exact locations and ownership of important objects; established facts; still-open and resolved threads; explicit causal links; and contradictions future chapters must avoid. Never mark a thread resolved unless the approved text resolves it. Do not invent facts.\nPREVIOUS STATE: ${JSON.stringify(storyContext?.state || null)}\nWHOLE-STORY PLAN: ${JSON.stringify(storyPlan)}` : ""}
 
-Before returning, verify every vocabulary form${includeLanguageFocus ? " and every language-focus example" : ""} against the supplied story. Return only the requested JSON.`;
+Before returning, verify every vocabulary occurrence${includeLanguageFocus ? " and every language-focus example" : ""} against the supplied story. Return only the requested JSON.`;
     const materialsSchema = isStory
       ? STORY_MATERIALS_SCHEMA
       : includeLanguageFocus ? MATERIALS_WITH_LANGUAGE_FOCUS_SCHEMA : MATERIALS_SCHEMA;
