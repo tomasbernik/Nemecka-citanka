@@ -550,14 +550,26 @@ function togglePauseReading() {
 
 function markCurrentArticleRead(source = "manual") {
   const article = state.currentArticle;
-  if (!article || state.profileData.readIds.includes(article.id)) return;
+  if (!article) return;
 
-  state.profileData.readIds.push(article.id);
+  const assignment = getAssignmentForArticle(article.id);
+  const repeatedAssignmentPending = Boolean(
+    assignment?.requiresNewCompletion && !isAssignmentCompleted(assignment)
+  );
+  if (state.profileData.readIds.includes(article.id) && !repeatedAssignmentPending) return;
+
+  if (!state.profileData.readIds.includes(article.id)) state.profileData.readIds.push(article.id);
+  if (repeatedAssignmentPending) {
+    state.profileData.completedAssignmentIds = [
+      ...new Set([...(state.profileData.completedAssignmentIds || []), getAssignmentKey(assignment)])
+    ];
+  }
   saveProfileData();
   logAppEvent("article_marked_read", {
     articleId: article.id,
     articleTitle: article.title,
-    source
+    source,
+    assignmentKey: assignment ? getAssignmentKey(assignment) : null
   });
   updateMarkReadButtons(source === "auto" ? t("markedRead") : t("readDone"));
   renderCategories();
@@ -708,7 +720,10 @@ async function openArticle(id) {
   startMistakeGame();
   startWordSearchGame();
 
-  updateMarkReadButtons(state.profileData.readIds.includes(article.id) ? t("readDone") : t("markRead"));
+  const completionDone = assignment
+    ? isAssignmentCompleted(assignment)
+    : state.profileData.readIds.includes(article.id);
+  updateMarkReadButtons(completionDone ? t("readDone") : t("markRead"));
   renderOnboarding();
   scrollToPageTop();
 }

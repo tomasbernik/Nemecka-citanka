@@ -453,6 +453,11 @@ function buildTeacherHierarchy() {
           ? groupStudents.map(student => `<li>${escapeHtml(student.name)}</li>`).join("")
           : `<li class="muted">${escapeHtml(t("noStudentsInGroup"))}</li>`}
         </ul>
+        ${teacher.id !== state.currentProfile?.id ? `
+          <div class="editor-actions">
+            <button class="text-btn danger-text" type="button" data-delete-teacher="${escapeHtml(teacher.id)}" data-teacher-name="${escapeHtml(teacher.name)}">${escapeHtml(t("deleteTeacherAccount"))}</button>
+          </div>
+        ` : ""}
       </article>
     `;
   });
@@ -537,7 +542,7 @@ async function renderAdminOverview() {
 }
 
 async function handleAdminOverviewClick(event) {
-  const button = event.target.closest("[data-article-id], [data-teacher-profile-id], [data-order-move], [data-create-series], [data-dissolve-series], [data-delete-series], [data-restore-series], [data-toggle-article-order]");
+  const button = event.target.closest("[data-article-id], [data-teacher-profile-id], [data-delete-teacher], [data-order-move], [data-create-series], [data-dissolve-series], [data-delete-series], [data-restore-series], [data-toggle-article-order]");
   if (!button || !isPublisherAccount()) return;
   button.disabled = true;
   try {
@@ -580,6 +585,20 @@ async function handleAdminOverviewClick(event) {
       await restoreArticleSeries(button.dataset.restoreSeries);
     } else if (button.hasAttribute("data-remove-from-series")) {
       await removeArticleFromSeries(button.dataset.articleId);
+    } else if (button.dataset.deleteTeacher) {
+      const teacherName = button.dataset.teacherName || "";
+      const confirmation = window.prompt(formatText("deleteTeacherAccountConfirm", { name: teacherName })) || "";
+      if (confirmation.trim() !== teacherName) {
+        if (confirmation) window.alert(t("deleteTeacherAccountNameMismatch"));
+        return;
+      }
+      await supabaseRequest("rpc/app_admin_delete_teacher_account", {
+        method: "POST",
+        body: JSON.stringify({ target_profile_id: button.dataset.deleteTeacher })
+      });
+      await loadProfiles();
+      await loadTeams();
+      window.alert(t("teacherAccountDeleted"));
     } else if (button.dataset.teacherProfileId) {
       const approved = Boolean(button.dataset.licenseTier);
       await supabaseRequest("rpc/app_review_teacher_request", {
@@ -788,6 +807,52 @@ async function handleTeacherOverviewClick(event) {
     return;
   }
 
+  const assignmentButton = event.target.closest("[data-assignment-action]");
+  if (assignmentButton) {
+    const profile = state.profiles.find(item => item.id === assignmentButton.dataset.profileId);
+    const article = state.articles.find(item => item.id === assignmentButton.dataset.articleId);
+    const teamId = assignmentButton.dataset.teamId;
+    if (!profile || !article || !teamId) return;
+
+    const reassign = assignmentButton.dataset.assignmentAction === "reassign";
+    const messageKey = reassign ? "reassignAssignmentConfirm" : "cancelAssignmentConfirm";
+    if (!window.confirm(formatText(messageKey, { title: article.title, name: profile.name }))) return;
+
+    assignmentButton.disabled = true;
+    setTeacherOverviewStatus(t("savingChanges"));
+    try {
+      if (reassign) {
+        await supabaseRequest("rpc/app_reassign_article_assignment", {
+          method: "POST",
+          body: JSON.stringify({
+            target_team_id: teamId,
+            target_profile_id: profile.id,
+            target_article_id: article.id
+          })
+        });
+        await sendAssignmentPushNotification({ article, student: profile, teamId }).catch(error => {
+          console.info("Assignment push notification skipped:", error.message);
+        });
+      } else {
+        await supabaseRequest("rpc/app_set_article_assignment", {
+          method: "POST",
+          body: JSON.stringify({
+            target_team_id: teamId,
+            target_profile_id: profile.id,
+            target_article_id: article.id,
+            target_assigned: false
+          })
+        });
+      }
+      await renderTeacherOverview();
+      setTeacherOverviewStatus(t(reassign ? "assignmentReassigned" : "assignmentCancelled"));
+    } catch (error) {
+      assignmentButton.disabled = false;
+      setTeacherOverviewStatus(error.message, true);
+    }
+    return;
+  }
+
   const actionButton = event.target.closest("[data-student-action]");
   if (!actionButton) return;
   const profileId = actionButton.dataset.profileId;
@@ -929,19 +994,32 @@ async function renderTeacherOverview() {
     `;
   };
 
-  const buildAssignmentItem = item => {
+  const buildAssignmentItem = (item, profile) => {
     const title = item.article?.title || item.assignment.articleTitle || item.assignment.articleId;
     const assignedAt = item.assignment.assignedAt
       ? `<span>${escapeHtml(formatText("assignedAt", { date: formatDateTime(item.assignment.assignedAt) }))}</span>`
       : "";
     const progress = item.status.total ? `${item.status.done}/${item.status.total}` : "0/0";
+    const canManageAssignment = Boolean(
+      item.article
+      && item.assignment.teamId
+      && managedTeams.some(team => team.id === item.assignment.teamId)
+    );
+    const action = canManageAssignment
+      ? item.status.key === "completed"
+        ? `<button class="text-btn" type="button" data-assignment-action="reassign" data-profile-id="${escapeHtml(profile.id)}" data-team-id="${escapeHtml(item.assignment.teamId)}" data-article-id="${escapeHtml(item.assignment.articleId)}">${escapeHtml(t("reassignAssignment"))}</button>`
+        : `<button class="text-btn danger-text" type="button" data-assignment-action="cancel" data-profile-id="${escapeHtml(profile.id)}" data-team-id="${escapeHtml(item.assignment.teamId)}" data-article-id="${escapeHtml(item.assignment.articleId)}">${escapeHtml(t("cancelAssignment"))}</button>`
+      : "";
     return `
       <li class="dashboard-assignment-item">
-        <span>
-          <strong>${escapeHtml(title)}</strong>
-          <span class="dashboard-pill status-${escapeHtml(item.status.key)}">${escapeHtml(item.status.label)}</span>
-        </span>
-        <small>${assignedAt}${assignedAt ? " &bull; " : ""}${escapeHtml(labels.tasks)} ${escapeHtml(progress)}</small>
+        <div class="dashboard-assignment-main">
+          <span>
+            <strong>${escapeHtml(title)}</strong>
+            <span class="dashboard-pill status-${escapeHtml(item.status.key)}">${escapeHtml(item.status.label)}</span>
+          </span>
+          <small>${assignedAt}${assignedAt ? " &bull; " : ""}${escapeHtml(labels.tasks)} ${escapeHtml(progress)}</small>
+        </div>
+        ${action}
       </li>
     `;
   };
@@ -1053,13 +1131,13 @@ async function renderTeacherOverview() {
             <section>
               <h4>${escapeHtml(labels.unfinishedAssignments)}</h4>
               ${summary.openAssignments.length
-                ? `<ul class="dashboard-assignment-list">${summary.openAssignments.map(buildAssignmentItem).join("")}</ul>`
+                ? `<ul class="dashboard-assignment-list">${summary.openAssignments.map(item => buildAssignmentItem(item, summary.profile)).join("")}</ul>`
                 : `<p class="muted">${escapeHtml(labels.noOpenAssignments)}</p>`}
             </section>
             <section>
               <h4>${escapeHtml(labels.doneAssignments)}</h4>
               ${summary.doneAssignments.length
-                ? `<ul class="dashboard-assignment-list">${summary.doneAssignments.map(buildAssignmentItem).join("")}</ul>`
+                ? `<ul class="dashboard-assignment-list">${summary.doneAssignments.map(item => buildAssignmentItem(item, summary.profile)).join("")}</ul>`
                 : `<p class="muted">${escapeHtml(labels.noDoneAssignments)}</p>`}
             </section>
           </div>

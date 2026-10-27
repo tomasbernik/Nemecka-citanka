@@ -146,8 +146,7 @@ function countClickedVocabulary(data = state.profileData) {
 }
 
 function countCompletedAssignments(data = state.profileData) {
-  const readIds = new Set(data.readIds || []);
-  return getAssignments(data).filter(assignment => readIds.has(assignment.articleId)).length;
+  return getAssignments(data).filter(assignment => isAssignmentCompleted(assignment, data)).length;
 }
 
 function getGamificationStats(data = state.profileData) {
@@ -320,6 +319,7 @@ function mergeProfileDataPreservingRemoteAssignments(localData, remoteData) {
     : getAssignments(localData);
   merged.seenAssignmentIds = mergeUniqueValues(localData?.seenAssignmentIds, remoteData?.seenAssignmentIds);
   merged.openedAssignmentIds = mergeUniqueValues(localData?.openedAssignmentIds, remoteData?.openedAssignmentIds);
+  merged.completedAssignmentIds = mergeUniqueValues(localData?.completedAssignmentIds, remoteData?.completedAssignmentIds);
 
   return merged;
 }
@@ -353,6 +353,14 @@ function getAssignmentKey(assignment) {
   return `${assignment.articleId}:${assignment.assignedAt || ""}`;
 }
 
+function isAssignmentCompleted(assignment, data = state.profileData) {
+  if (!assignment) return false;
+  if (assignment.requiresNewCompletion) {
+    return (data.completedAssignmentIds || []).includes(getAssignmentKey(assignment));
+  }
+  return (data.readIds || []).includes(assignment.articleId);
+}
+
 function isArticleAssignedToProfile(articleId, data = state.profileData) {
   return getAssignments(data).some(assignment => assignment.articleId === articleId);
 }
@@ -371,7 +379,8 @@ function getArticleForAssignment(assignment) {
 
 function getAssignmentStatus(assignment, data = state.profileData) {
   const article = getArticleForAssignment(assignment);
-  if ((data.readIds || []).includes(assignment.articleId)) return t("assignmentCompleted");
+  if (isAssignmentCompleted(assignment, data)) return t("assignmentCompleted");
+  if (assignment.requiresNewCompletion && !(data.openedAssignmentIds || []).includes(getAssignmentKey(assignment))) return t("assignmentNew");
   if (article && getArticleTaskProgress(article, data).done > 0) return t("assignmentInProgress");
   if ((data.openedAssignmentIds || []).includes(getAssignmentKey(assignment))) return t("assignmentOpened");
   return t("assignmentNew");
@@ -386,9 +395,10 @@ function getAssignmentStatusInfo(assignment, data = state.profileData) {
   }
 
   const progress = getArticleTaskProgress(article, data);
-  const isRead = (data.readIds || []).includes(assignment.articleId);
+  const isRead = isAssignmentCompleted(assignment, data);
   const isOpened = (data.openedAssignmentIds || []).includes(getAssignmentKey(assignment));
   if (isRead) return { key: "completed", label: t("assignmentCompleted"), detail: formatText("tasksProgress", progress), ...progress };
+  if (assignment.requiresNewCompletion && !isOpened) return { key: "new", label: t("assignmentNew"), detail: t("assignmentNewDetail"), ...progress };
   if (progress.done > 0) return { key: "in-progress", label: t("assignmentInProgress"), detail: formatText("tasksProgress", progress), ...progress };
   if (isOpened) return { key: "opened", label: t("assignmentOpened"), detail: t("assignmentOpenedDetail"), ...progress };
   return { key: "new", label: t("assignmentNew"), detail: t("assignmentNewDetail"), ...progress };
@@ -424,16 +434,15 @@ function getSortedAssignments() {
   return getAssignments()
     .map(assignment => ({ ...assignment, article: getArticleForAssignment(assignment) }))
     .sort((a, b) => {
-      const aDone = (state.profileData.readIds || []).includes(a.articleId);
-      const bDone = (state.profileData.readIds || []).includes(b.articleId);
+      const aDone = isAssignmentCompleted(a);
+      const bDone = isAssignmentCompleted(b);
       if (aDone !== bDone) return aDone ? 1 : -1;
       return String(b.assignedAt || "").localeCompare(String(a.assignedAt || ""));
     });
 }
 
 function getOpenSortedAssignments() {
-  const readIds = new Set(state.profileData.readIds || []);
-  return getSortedAssignments().filter(assignment => !readIds.has(assignment.articleId));
+  return getSortedAssignments().filter(assignment => !isAssignmentCompleted(assignment));
 }
 
 function hasUnseenAssignments() {

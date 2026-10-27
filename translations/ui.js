@@ -1445,6 +1445,81 @@ Object.entries({
 
 Object.entries({
   de: {
+    deleteClass: "Klasse löschen",
+    deleteClassConfirm: "Die Klasse {name} und ihre Zuweisungen werden gelöscht. Die Konten und Lernfortschritte der Lernenden bleiben erhalten. Gib zur Bestätigung genau {name} ein.",
+    deleteClassNameMismatch: "Der eingegebene Klassenname stimmt nicht überein.",
+    classDeleted: "Die Klasse wurde gelöscht.",
+    deleteTeacherAccount: "Lehrkraftkonto löschen",
+    deleteTeacherAccountConfirm: "Das Konto von {name} und alle zugehörigen Klassen werden endgültig gelöscht. Konten und Lernfortschritte der Lernenden bleiben erhalten. Gib zur Bestätigung genau {name} ein.",
+    deleteTeacherAccountNameMismatch: "Der eingegebene Name stimmt nicht überein.",
+    teacherAccountDeleted: "Das Lehrkraftkonto wurde endgültig gelöscht.",
+    cancelAssignment: "Aufgabe zurückziehen",
+    cancelAssignmentConfirm: "Die noch nicht abgeschlossene Aufgabe „{title}“ für {name} zurückziehen? Der bisherige Lernfortschritt bleibt erhalten.",
+    assignmentCancelled: "Die Aufgabe wurde zurückgezogen.",
+    reassignAssignment: "Erneut zuweisen",
+    reassignAssignmentConfirm: "„{title}“ erneut {name} zuweisen? Die bisherigen Ergebnisse bleiben im Lernfortschritt erhalten.",
+    assignmentReassigned: "Der Artikel wurde als neue Aufgabe erneut zugewiesen."
+  },
+  sk: {
+    deleteClass: "Vymazať triedu",
+    deleteClassConfirm: "Trieda {name} a jej zadania sa vymažú. Účty žiakov a ich študijný postup zostanú zachované. Na potvrdenie napíš presne {name}.",
+    deleteClassNameMismatch: "Zadaný názov triedy sa nezhoduje.",
+    classDeleted: "Trieda bola vymazaná.",
+    deleteTeacherAccount: "Vymazať účet učiteľa",
+    deleteTeacherAccountConfirm: "Účet učiteľa {name} a všetky jeho triedy sa natrvalo vymažú. Účty žiakov a ich študijný postup zostanú zachované. Na potvrdenie napíš presne {name}.",
+    deleteTeacherAccountNameMismatch: "Zadané meno sa nezhoduje.",
+    teacherAccountDeleted: "Účet učiteľa bol natrvalo vymazaný.",
+    cancelAssignment: "Zrušiť zadanie",
+    cancelAssignmentConfirm: "Zrušiť ešte nesplnené zadanie „{title}“ pre študenta {name}? Doterajší študijný postup zostane zachovaný.",
+    assignmentCancelled: "Zadanie bolo zrušené.",
+    reassignAssignment: "Prideliť znova",
+    reassignAssignmentConfirm: "Prideliť článok „{title}“ študentovi {name} znova? Doterajšie výsledky zostanú zachované.",
+    assignmentReassigned: "Článok bol znova pridelený ako nové zadanie."
+  },
+  ru: {
+    deleteClass: "Удалить класс", deleteClassConfirm: "Класс {name} и его задания будут удалены. Учетные записи и прогресс учеников сохранятся. Для подтверждения введите точно {name}.", deleteClassNameMismatch: "Название класса не совпадает.", classDeleted: "Класс удален.",
+    deleteTeacherAccount: "Удалить учетную запись учителя", deleteTeacherAccountConfirm: "Учетная запись {name} и все ее классы будут удалены навсегда. Учетные записи и прогресс учеников сохранятся. Для подтверждения введите точно {name}.", deleteTeacherAccountNameMismatch: "Имя не совпадает.", teacherAccountDeleted: "Учетная запись учителя удалена.",
+    cancelAssignment: "Отменить задание", cancelAssignmentConfirm: "Отменить незавершенное задание «{title}» для {name}? Текущий прогресс сохранится.", assignmentCancelled: "Задание отменено.", reassignAssignment: "Назначить снова", reassignAssignmentConfirm: "Снова назначить «{title}» ученику {name}? Предыдущие результаты сохранятся.", assignmentReassigned: "Статья снова назначена как новое задание."
+  },
+  pl: {
+    deleteClass: "Usuń klasę", deleteClassConfirm: "Klasa {name} i jej zadania zostaną usunięte. Konta i postępy uczniów zostaną zachowane. Aby potwierdzić, wpisz dokładnie {name}.", deleteClassNameMismatch: "Nazwa klasy nie jest zgodna.", classDeleted: "Klasa została usunięta.",
+    deleteTeacherAccount: "Usuń konto nauczyciela", deleteTeacherAccountConfirm: "Konto {name} i wszystkie jego klasy zostaną trwale usunięte. Konta i postępy uczniów zostaną zachowane. Aby potwierdzić, wpisz dokładnie {name}.", deleteTeacherAccountNameMismatch: "Wpisana nazwa nie jest zgodna.", teacherAccountDeleted: "Konto nauczyciela zostało usunięte.",
+    cancelAssignment: "Anuluj zadanie", cancelAssignmentConfirm: "Anulować niezakończone zadanie „{title}” dla {name}? Dotychczasowy postęp zostanie zachowany.", assignmentCancelled: "Zadanie zostało anulowane.", reassignAssignment: "Przypisz ponownie", reassignAssignmentConfirm: "Ponownie przypisać „{title}” uczniowi {name}? Poprzednie wyniki zostaną zachowane.", assignmentReassigned: "Artykuł został ponownie przypisany jako nowe zadanie."
+  },
+  hu: {
+    deleteClass: "Osztály törlése", deleteClassConfirm: "A(z) {name} osztály és feladatai törlődnek. A tanulói fiókok és az előrehaladás megmaradnak. Megerősítésként írd be pontosan: {name}.", deleteClassNameMismatch: "Az osztály neve nem egyezik.", classDeleted: "Az osztály törölve.",
+    deleteTeacherAccount: "Tanári fiók törlése", deleteTeacherAccountConfirm: "{name} fiókja és minden osztálya végleg törlődik. A tanulói fiókok és az előrehaladás megmaradnak. Megerősítésként írd be pontosan: {name}.", deleteTeacherAccountNameMismatch: "A megadott név nem egyezik.", teacherAccountDeleted: "A tanári fiók törölve.",
+    cancelAssignment: "Feladat visszavonása", cancelAssignmentConfirm: "Visszavonod a(z) „{title}” befejezetlen feladatot {name} számára? Az eddigi előrehaladás megmarad.", assignmentCancelled: "A feladat visszavonva.", reassignAssignment: "Újra kiosztás", reassignAssignmentConfirm: "Újra kiosztod a(z) „{title}” cikket {name} számára? A korábbi eredmények megmaradnak.", assignmentReassigned: "A cikk új feladatként ismét ki lett osztva."
+  },
+  ro: {
+    deleteClass: "Șterge clasa", deleteClassConfirm: "Clasa {name} și temele ei vor fi șterse. Conturile și progresul elevilor vor fi păstrate. Pentru confirmare, scrie exact {name}.", deleteClassNameMismatch: "Numele clasei nu corespunde.", classDeleted: "Clasa a fost ștearsă.",
+    deleteTeacherAccount: "Șterge contul profesorului", deleteTeacherAccountConfirm: "Contul lui {name} și toate clasele asociate vor fi șterse definitiv. Conturile și progresul elevilor vor fi păstrate. Pentru confirmare, scrie exact {name}.", deleteTeacherAccountNameMismatch: "Numele introdus nu corespunde.", teacherAccountDeleted: "Contul profesorului a fost șters.",
+    cancelAssignment: "Anulează tema", cancelAssignmentConfirm: "Anulezi tema nefinalizată „{title}” pentru {name}? Progresul existent va fi păstrat.", assignmentCancelled: "Tema a fost anulată.", reassignAssignment: "Atribuie din nou", reassignAssignmentConfirm: "Atribui din nou „{title}” elevului {name}? Rezultatele anterioare vor fi păstrate.", assignmentReassigned: "Articolul a fost atribuit din nou ca temă nouă."
+  },
+  it: {
+    deleteClass: "Elimina classe", deleteClassConfirm: "La classe {name} e i suoi compiti verranno eliminati. Gli account e i progressi degli studenti saranno conservati. Per confermare, digita esattamente {name}.", deleteClassNameMismatch: "Il nome della classe non corrisponde.", classDeleted: "La classe è stata eliminata.",
+    deleteTeacherAccount: "Elimina account docente", deleteTeacherAccountConfirm: "L'account di {name} e tutte le sue classi verranno eliminati definitivamente. Gli account e i progressi degli studenti saranno conservati. Per confermare, digita esattamente {name}.", deleteTeacherAccountNameMismatch: "Il nome inserito non corrisponde.", teacherAccountDeleted: "L'account docente è stato eliminato.",
+    cancelAssignment: "Annulla compito", cancelAssignmentConfirm: "Annullare il compito non completato “{title}” per {name}? I progressi esistenti saranno conservati.", assignmentCancelled: "Il compito è stato annullato.", reassignAssignment: "Assegna di nuovo", reassignAssignmentConfirm: "Assegnare di nuovo “{title}” a {name}? I risultati precedenti saranno conservati.", assignmentReassigned: "L'articolo è stato assegnato di nuovo come nuovo compito."
+  },
+  en: {
+    deleteClass: "Delete class", deleteClassConfirm: "The class {name} and its assignments will be deleted. Student accounts and learning progress will be kept. Type exactly {name} to confirm.", deleteClassNameMismatch: "The class name does not match.", classDeleted: "The class was deleted.",
+    deleteTeacherAccount: "Delete teacher account", deleteTeacherAccountConfirm: "The account for {name} and all of its classes will be permanently deleted. Student accounts and learning progress will be kept. Type exactly {name} to confirm.", deleteTeacherAccountNameMismatch: "The entered name does not match.", teacherAccountDeleted: "The teacher account was permanently deleted.",
+    cancelAssignment: "Cancel assignment", cancelAssignmentConfirm: "Cancel the unfinished assignment “{title}” for {name}? Existing learning progress will be kept.", assignmentCancelled: "The assignment was cancelled.", reassignAssignment: "Assign again", reassignAssignmentConfirm: "Assign “{title}” to {name} again? Previous results will be kept.", assignmentReassigned: "The article was assigned again as a new assignment."
+  },
+  fr: {
+    deleteClass: "Supprimer la classe", deleteClassConfirm: "La classe {name} et ses devoirs seront supprimés. Les comptes et la progression des élèves seront conservés. Pour confirmer, saisis exactement {name}.", deleteClassNameMismatch: "Le nom de la classe ne correspond pas.", classDeleted: "La classe a été supprimée.",
+    deleteTeacherAccount: "Supprimer le compte enseignant", deleteTeacherAccountConfirm: "Le compte de {name} et toutes ses classes seront définitivement supprimés. Les comptes et la progression des élèves seront conservés. Pour confirmer, saisis exactement {name}.", deleteTeacherAccountNameMismatch: "Le nom saisi ne correspond pas.", teacherAccountDeleted: "Le compte enseignant a été supprimé.",
+    cancelAssignment: "Annuler le devoir", cancelAssignmentConfirm: "Annuler le devoir non terminé « {title} » pour {name} ? La progression existante sera conservée.", assignmentCancelled: "Le devoir a été annulé.", reassignAssignment: "Attribuer à nouveau", reassignAssignmentConfirm: "Attribuer à nouveau « {title} » à {name} ? Les résultats précédents seront conservés.", assignmentReassigned: "L’article a été attribué à nouveau comme nouveau devoir."
+  },
+  tr: {
+    deleteClass: "Sınıfı sil", deleteClassConfirm: "{name} sınıfı ve ödevleri silinecek. Öğrenci hesapları ve ilerlemeleri korunacak. Onaylamak için tam olarak {name} yazın.", deleteClassNameMismatch: "Sınıf adı eşleşmiyor.", classDeleted: "Sınıf silindi.",
+    deleteTeacherAccount: "Öğretmen hesabını sil", deleteTeacherAccountConfirm: "{name} hesabı ve tüm sınıfları kalıcı olarak silinecek. Öğrenci hesapları ve ilerlemeleri korunacak. Onaylamak için tam olarak {name} yazın.", deleteTeacherAccountNameMismatch: "Girilen ad eşleşmiyor.", teacherAccountDeleted: "Öğretmen hesabı silindi.",
+    cancelAssignment: "Ödevi iptal et", cancelAssignmentConfirm: "{name} için tamamlanmamış “{title}” ödevi iptal edilsin mi? Mevcut ilerleme korunacak.", assignmentCancelled: "Ödev iptal edildi.", reassignAssignment: "Yeniden ata", reassignAssignmentConfirm: "“{title}” {name} adlı öğrenciye yeniden atansın mı? Önceki sonuçlar korunacak.", assignmentReassigned: "Makale yeni bir ödev olarak yeniden atandı."
+  }
+}).forEach(([language, text]) => assignUiText(language, text));
+
+Object.entries({
+  de: {
     showArticlesAwaitingApproval: "Artikel zur Freigabe anzeigen",
     hideArticlesAwaitingApproval: "Artikel zur Freigabe ausblenden",
     chapterRead: "Gelesen",

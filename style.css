@@ -2190,16 +2190,35 @@ body.image-dialog-open {
 }
 
 .dashboard-assignment-item {
-  display: grid;
-  gap: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 9px 10px;
   background: var(--bg);
 }
 
-.dashboard-assignment-item > span {
+.dashboard-assignment-main {
+  display: grid;
+  gap: 3px;
   min-width: 0;
+}
+
+.dashboard-assignment-item .text-btn {
+  flex: 0 0 auto;
+}
+
+@media (max-width: 560px) {
+  .dashboard-assignment-item {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-assignment-item .text-btn {
+    align-self: flex-start;
+  }
 }
 
 .dashboard-article-body {

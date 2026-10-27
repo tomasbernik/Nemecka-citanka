@@ -95,6 +95,7 @@ function renderTeamManagement() {
           <button class="secondary-btn quiet" type="button" data-team-action="rename">${escapeHtml(t("renameTeam"))}</button>
           <button class="primary-btn" type="button" data-team-action="invite">${escapeHtml(t("createInviteCode"))}</button>
           <button class="text-btn" type="button" data-team-action="cancel-invite">${escapeHtml(t("cancelInviteCode"))}</button>
+          ${isPublisherAccount() ? `<button class="text-btn danger-text" type="button" data-team-action="delete">${escapeHtml(t("deleteClass"))}</button>` : ""}
         </div>
         <p class="muted">${escapeHtml(formatText("teamMemberCount", { count: members.length }))}</p>
         <ul class="team-member-list">${memberRows || `<li class="muted">${escapeHtml(t("noTeamMembers"))}</li>`}</ul>
@@ -153,6 +154,19 @@ async function handleTeamManagementClick(event) {
     } else if (action === "cancel-invite") {
       await cancelInviteForTeam(teamId);
       status.textContent = t("inviteCancelled");
+    } else if (action === "delete" && isPublisherAccount()) {
+      const team = state.teams.find(item => item.id === teamId);
+      if (!team) return;
+      const confirmation = window.prompt(formatText("deleteClassConfirm", { name: team.name })) || "";
+      if (confirmation.trim() !== team.name) {
+        if (confirmation) status.textContent = t("deleteClassNameMismatch");
+        return;
+      }
+      await supabaseRequest("rpc/app_admin_delete_team", {
+        method: "POST",
+        body: JSON.stringify({ target_team_id: teamId })
+      });
+      status.textContent = t("classDeleted");
     }
     await loadProfiles();
     await loadTeams();

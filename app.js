@@ -317,6 +317,7 @@ function emptyProfileData() {
     assignments: [],
     seenAssignmentIds: [],
     openedAssignmentIds: [],
+    completedAssignmentIds: [],
     onboarding: {}
   };
 }
