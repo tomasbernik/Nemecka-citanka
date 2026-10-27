@@ -5,12 +5,13 @@ import vm from "node:vm";
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), "utf8");
 
-const [games, reader, home, teams, migration] = await Promise.all([
+const [games, reader, home, teams, migration, permissionsMigration] = await Promise.all([
   read("games.js"),
   read("reader.js"),
   read("home.js"),
   read("teams.js"),
-  read("supabase/migrations/20261027120000_assignment_rounds_and_admin_deletion.sql")
+  read("supabase/migrations/20261027120000_assignment_rounds_and_admin_deletion.sql"),
+  read("supabase/migrations/20261027130000_restrict_admin_assignment_rpcs.sql")
 ]);
 
 test("a repeated assignment needs completion for its new assignment key", () => {
@@ -110,4 +111,10 @@ test("class and teacher deletion preserve student accounts while cleaning assign
   assert.match(migration, /jsonb_array_elements[\s\S]*data -> 'assignments'/);
   assert.doesNotMatch(migration, /delete from public\.app_profiles[\s\S]*role = 'student'/);
   assert.match(migration, /owner_profile_id becomes null/);
+});
+
+test("sensitive assignment and deletion RPCs are unavailable to anonymous users", () => {
+  assert.match(permissionsMigration, /app_reassign_article_assignment\(uuid, text, text\) from public, anon/);
+  assert.match(permissionsMigration, /app_admin_delete_team\(uuid\) from public, anon/);
+  assert.match(permissionsMigration, /app_admin_delete_teacher_account\(text\) from public, anon/);
 });
