@@ -292,10 +292,15 @@ function renderNativeLanguageSelect(selectId, value = DEFAULT_NATIVE_LANGUAGE) {
   const select = $(selectId);
   if (!select) return;
 
-  select.innerHTML = Object.entries(NATIVE_LANGUAGES)
-    .map(([code, language]) => `<option value="${code}">${escapeHtml(language.label)}</option>`)
+  const selectedValue = isSupportedNativeLanguage(value) ? value : DEFAULT_PRELOGIN_LANGUAGE;
+  const preservedLegacyOption = isSupportedNativeLanguage(selectedValue)
+    && !isSelectableNativeLanguage(selectedValue)
+    ? `<option value="${selectedValue}" hidden>${escapeHtml(NATIVE_LANGUAGES[selectedValue].label)}</option>`
+    : "";
+  select.innerHTML = preservedLegacyOption + SELECTABLE_NATIVE_LANGUAGE_CODES
+    .map(code => `<option value="${code}">${escapeHtml(NATIVE_LANGUAGES[code].label)}</option>`)
     .join("");
-  select.value = isSupportedNativeLanguage(value) ? value : DEFAULT_NATIVE_LANGUAGE;
+  select.value = selectedValue;
 }
 
 function renderNativeLanguageControls() {
@@ -403,7 +408,7 @@ function renderAccessControls() {
 }
 
 async function updateCurrentProfileNativeLanguage(language) {
-  if (!state.currentProfile || !isSupportedNativeLanguage(language)) return;
+  if (!state.currentProfile || !isSelectableNativeLanguage(language)) return;
 
   setStoredProfileLanguage(state.currentProfile.id, language);
   state.currentProfile.nativeLanguage = language;

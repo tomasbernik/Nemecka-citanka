@@ -50,6 +50,7 @@ const ARTICLE_LANGUAGES = {
 };
 const VOCABULARY_LANGUAGE_CODES = ["sk", "ru", "pl", "hu", "ro", "it", "en", "fr", "tr"];
 const PROMPT_TRANSLATION_LANGUAGE_CODES = ["sk", "pl", "hu", "ru", "en", "fr"];
+const SELECTABLE_NATIVE_LANGUAGE_CODES = [...PROMPT_TRANSLATION_LANGUAGE_CODES];
 const NATIVE_LANGUAGES = {
   de: { label: "Deutsch", promptName: "Deutsch", lineFormat: "auf Deutsch", locale: "de" },
   sk: { label: "Slovenčina", promptName: "slovenčiny", lineFormat: "slovensky", locale: "sk" },

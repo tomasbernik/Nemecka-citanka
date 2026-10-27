@@ -129,6 +129,10 @@ function isSupportedNativeLanguage(language) {
   return Boolean(NATIVE_LANGUAGES[language]);
 }
 
+function isSelectableNativeLanguage(language) {
+  return SELECTABLE_NATIVE_LANGUAGE_CODES.includes(language);
+}
+
 function getNativeLanguage(profile = state.currentProfile) {
   return isSupportedNativeLanguage(profile?.nativeLanguage)
     ? profile.nativeLanguage
@@ -1160,6 +1164,7 @@ onEvent("authPasswordInput", "keydown", event => {
 });
 
 onChange("loginNativeLanguageSelect", (event) => {
+  if (!isSelectableNativeLanguage(event.target.value)) return;
   state.preLoginLanguage = event.target.value;
   localStorage.setItem(PRELOGIN_LANGUAGE_KEY, state.preLoginLanguage);
   updateStaticTexts();

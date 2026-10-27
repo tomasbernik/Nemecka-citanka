@@ -768,7 +768,7 @@ async function createAuthReaderProfile() {
     pin: makeRandomPin(),
     role: "student",
     teacherGroupId: id,
-    nativeLanguage: isSupportedNativeLanguage(state.preLoginLanguage)
+    nativeLanguage: isSelectableNativeLanguage(state.preLoginLanguage)
       ? state.preLoginLanguage
       : DEFAULT_PRELOGIN_LANGUAGE,
     authUserId: state.authUser.id,
