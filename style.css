@@ -1323,6 +1323,12 @@ body.image-dialog-open {
   min-height: 220px;
 }
 
+.editor-textarea.manual-ai-result-textarea {
+  height: 130px;
+  min-height: 130px;
+  overflow-y: auto;
+}
+
 #articlePromptInput {
   min-height: 112px;
 }

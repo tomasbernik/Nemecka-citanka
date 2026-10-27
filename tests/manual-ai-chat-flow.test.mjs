@@ -3,11 +3,12 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 const read = path => readFile(new URL(`../${path}`, import.meta.url), "utf8");
-const [html, app, editor, translations] = await Promise.all([
+const [html, app, editor, translations, styles] = await Promise.all([
   read("index.html"),
   read("app.js"),
   read("editor.js"),
   read("translations/ui-completions.js"),
+  read("style.css"),
 ]);
 
 test("article creation offers automatic and own-AI-chat modes", () => {
@@ -29,6 +30,8 @@ test("the own-AI-chat flow presents the agreed three steps without technical but
   assert.match(html, /id="copyArticleJsonPromptBtn"/);
   assert.match(html, /id="manualAiStep2Status"[^>]*role="status"[^>]*aria-live="polite"/);
   assert.match(html, /id="articleImportInput"/);
+  assert.match(html, /id="articleImportInput"[^>]*class="editor-textarea manual-ai-result-textarea"/);
+  assert.match(styles, /\.editor-textarea\.manual-ai-result-textarea\s*{[^}]*height:\s*130px;[^}]*min-height:\s*130px;/s);
   assert.match(translations, /manualArticleCreation: "Pomocou vlastného AI chatu"/);
   assert.match(translations, /copyArticlePrompt: "Kopírovať zadanie na vytvorenie článku"/);
   assert.match(translations, /copyArticleJsonPrompt: "Kopírovať zadanie na spracovanie článku"/);
