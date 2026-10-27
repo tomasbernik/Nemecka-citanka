@@ -9,7 +9,7 @@
   <link rel="apple-touch-icon" href="icons/icon-v2-192.png">
   <link rel="manifest" href="manifest.json">
   <script src="theme.js?v=117"></script>
-  <link rel="stylesheet" href="style.css?v=149">
+  <link rel="stylesheet" href="style.css?v=150">
 </head>
 <body>
   <div id="app">
@@ -543,6 +543,7 @@
                   <h3 id="manualAiStep1Title">Vytvor text článku</h3>
                   <p id="manualAiStep1Help" class="muted">Skopíruj zadanie a vlož ho do svojho AI chatu.</p>
                   <button id="copyArticlePromptBtn" class="secondary-btn" type="button">Kopírovať zadanie na vytvorenie článku</button>
+                  <p id="manualAiStep1Status" class="generation-status manual-ai-copy-status" role="status" aria-live="polite"></p>
                 </div>
               </section>
 
@@ -550,8 +551,9 @@
                 <span class="manual-ai-step-number" aria-hidden="true">2</span>
                 <div>
                   <h3 id="manualAiStep2Title">Priprav článok pre aplikáciu</h3>
-                  <p id="manualAiStep2Help" class="muted">Po vytvorení textu vlož toto zadanie do rovnakého AI chatu.</p>
+                  <p id="manualAiStep2Help" class="muted">Hneď po vytvorení článku vlož toto zadanie do rovnakého AI chatu. AI použije text zo svojej predchádzajúcej odpovede.</p>
                   <button id="copyArticleJsonPromptBtn" class="secondary-btn" type="button">Kopírovať zadanie na spracovanie článku</button>
+                  <p id="manualAiStep2Status" class="generation-status manual-ai-copy-status" role="status" aria-live="polite"></p>
                 </div>
               </section>
 
@@ -754,7 +756,7 @@
   <script src="translations/ui.js?v=139"></script>
   <script src="translations/auth.js?v=135"></script>
   <script src="translations/new-languages.js?v=137"></script>
-  <script src="translations/ui-completions.js?v=11"></script>
+  <script src="translations/ui-completions.js?v=12"></script>
   <script src="translations/prompts.js?v=121"></script>
   <script src="i18n.js?v=117"></script>
   <script src="auth.js?v=135"></script>
@@ -764,8 +766,8 @@
   <script src="articles.js?v=141"></script>
   <script src="reader.js?v=141"></script>
   <script src="games.js?v=127"></script>
-  <script src="editor.js?v=157"></script>
+  <script src="editor.js?v=158"></script>
   <script src="home.js?v=141"></script>
-  <script src="app.js?v=156"></script>
+  <script src="app.js?v=157"></script>
 </body>
 </html>

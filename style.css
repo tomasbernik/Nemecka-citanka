@@ -1172,6 +1172,10 @@ body.image-dialog-open {
   min-height: 44px;
 }
 
+.manual-ai-step .manual-ai-copy-status {
+  margin: 10px 0 0;
+}
+
 .manual-ai-result-field {
   margin: 2px 0 12px;
 }

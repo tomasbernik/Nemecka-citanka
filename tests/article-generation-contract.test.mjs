@@ -41,15 +41,13 @@ test("manual JSON prompt omits languageFocus unless the creator requested it", (
   assert.match(withFocus, /type multiple_choice/);
 });
 
-test("manual JSON instructions reference the previous chat response only when no text is attached", () => {
-  const attachedTextInstructions = getArticleJsonPromptInstructions("A2").join("\n");
-  const previousResponseInstructions = getArticleJsonPromptInstructions("A2", "", true).join("\n");
+test("manual JSON instructions always use the previous response from the same AI chat", () => {
+  const instructions = getArticleJsonPromptInstructions("A2").join("\n");
 
-  assert.match(attachedTextInstructions, /nižšie vložený text/);
-  assert.doesNotMatch(attachedTextInstructions, /bezprostredne predchádzajúcej odpovede/);
-  assert.match(previousResponseInstructions, /bezprostredne predchádzajúcej odpovede v tomto chate/);
-  assert.doesNotMatch(previousResponseInstructions, /nižšie vložený text/);
-  assert.match(editorSource, /const usePreviousChatResponse = !text/);
+  assert.match(instructions, /bezprostredne predchádzajúcej odpovede v tomto chate/);
+  assert.doesNotMatch(instructions, /nižšie vložený text/);
+  assert.doesNotMatch(editorSource, /const usePreviousChatResponse = !text/);
+  assert.doesNotMatch(editorSource, /Hotový text v jazyku.*:/);
   assert.match(editorSource, /Zdrojovým textom je tvoja bezprostredne predchádzajúca odpoveď/);
 });
 

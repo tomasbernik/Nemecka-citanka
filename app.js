@@ -1140,11 +1140,11 @@ onClick("addSelectedInlineBtn", () => {
   updateArticleEditorFlow();
 });
 onClick("copyArticlePromptBtn", async () => {
-  await copyTextToClipboard(buildArticlePrompt(), t("promptArticleCopied"));
+  await copyTextToClipboard(buildArticlePrompt(), t("promptArticleCopied"), "manualAiStep1Status");
   updateArticleEditorFlow();
 });
 onClick("copyArticleJsonPromptBtn", async () => {
-  await copyTextToClipboard(buildArticleJsonPrompt(), t("promptArticleJsonCopied"));
+  await copyTextToClipboard(buildArticleJsonPrompt(), t("promptArticleJsonCopied"), "manualAiStep2Status");
   updateArticleEditorFlow();
 });
 onClick("copyImagePromptBtn", async () => {
