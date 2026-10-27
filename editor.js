@@ -789,7 +789,7 @@ function getTeachingLanguagePromptInfo() {
       };
 }
 
-function getArticleJsonPromptInstructions(level, languageFocus = "") {
+function getArticleJsonPromptInstructions(level, languageFocus = "", usePreviousChatResponse = false) {
   const isGerman = getUiLanguage() === "de";
   const isEnglish = getUiLanguage() === "en";
   const isFrench = getUiLanguage() === "fr";
@@ -822,7 +822,9 @@ function getArticleJsonPromptInstructions(level, languageFocus = "") {
       "  \"vocabulary\": [", `    ${vocabulary}`, "  ],",
       "  \"questions\": [", `    {\"statement\":\"${teachingLanguage.germanStatement}\",\"answer\":true}`, `  ]${languageFocus ? "," : ""}`,
       ...languageFocusJsonLines, "}", "",
-      `Verwende den unten eingefügten ${teachingLanguage.germanAccusative} Text exakt. Formuliere ihn nicht um, kürze ihn nicht und ändere seine Länge nicht.`,
+      usePreviousChatResponse
+        ? "Verwende exakt den Text aus deiner unmittelbar vorherigen Antwort in diesem Chat. Formuliere ihn nicht um, kürze ihn nicht und ändere seine Länge nicht."
+        : `Verwende den unten eingefügten ${teachingLanguage.germanAccusative} Text exakt. Formuliere ihn nicht um, kürze ihn nicht und ändere seine Länge nicht.`,
       "Teile den Text absatzweise in das Feld \"text\" auf.",
       "Die summary muss aus 2 bis 3 kurzen Sätzen mit höchstens 300 Zeichen bestehen.",
       `Füge genau 5 ${teachingLanguage.germanPlural} Wörter oder Phrasen zu \"vocabulary\" hinzu, die zum Niveau ${level} passen und als neuer Wortschatz nützlich sind. occurrence muss Zeichen für Zeichen als zusammenhängender Ausschnitt im Text vorkommen. de ist die lernfreundliche Anzeigeform; bei trennbaren Verben zum Beispiel \"steht … auf\". base enthält die Wörterbuchform, zum Beispiel \"aufstehen\".`,
@@ -858,7 +860,9 @@ function getArticleJsonPromptInstructions(level, languageFocus = "") {
       ...languageFocusJsonLines,
       "}",
       "",
-      "Use the pasted text below exactly as it is. Do not rewrite it, shorten it, or change the length.",
+      usePreviousChatResponse
+        ? "Use the text from your immediately previous response in this chat exactly as it is. Do not rewrite it, shorten it, or change the length."
+        : "Use the pasted text below exactly as it is. Do not rewrite it, shorten it, or change the length.",
       "Split the text into the \"text\" array by paragraphs.",
       "The summary must be 2-3 short sentences and at most 300 characters.",
       `Add exactly 5 ${teachingLanguage.english} words or phrases to \"vocabulary\" that fit level ${level} and are useful new vocabulary. occurrence must appear character-for-character as one contiguous substring of the text. de is the learner-facing form; for a separable verb use a form such as \"steht … auf\". Put the dictionary form, such as \"aufstehen\", in base.`,
@@ -886,7 +890,9 @@ function getArticleJsonPromptInstructions(level, languageFocus = "") {
       "  \"vocabulary\": [", `    ${frenchVocabularyExample}`, "  ],",
       "  \"questions\": [", "    {\"statement\":\"affirmation vraie ou fausse\",\"answer\":true}", `  ]${languageFocus ? "," : ""}`,
       ...languageFocusJsonLines, "}", "",
-      "Utilise exactement le texte collé ci-dessous. Ne le reformule pas, ne le raccourcis pas et ne modifie pas sa longueur.",
+      usePreviousChatResponse
+        ? "Utilise exactement le texte de ta réponse immédiatement précédente dans ce chat. Ne le reformule pas, ne le raccourcis pas et ne modifie pas sa longueur."
+        : "Utilise exactement le texte collé ci-dessous. Ne le reformule pas, ne le raccourcis pas et ne modifie pas sa longueur.",
       "Répartis les paragraphes dans le tableau \"text\".",
       "Le résumé doit contenir 2 à 3 phrases courtes et au maximum 300 caractères.",
       `Ajoute exactement 5 mots ou expressions utiles de niveau ${level} dans "vocabulary". occurrence doit être un extrait contigu exact du texte. de est la forme affichée à l’apprenant ; pour un verbe séparable, utilise par exemple "steht … auf". Mets la forme du dictionnaire, par exemple "aufstehen", dans base.`,
@@ -917,7 +923,9 @@ function getArticleJsonPromptInstructions(level, languageFocus = "") {
     ...languageFocusJsonLines,
     "}",
     "",
-    "Použi nižšie vložený text presne tak, ako je. Neprepisuj ho, neskracuj ho a nemen dĺžku textu.",
+    usePreviousChatResponse
+      ? "Použi presne text zo svojej bezprostredne predchádzajúcej odpovede v tomto chate. Neprepisuj ho, neskracuj ho a nemeň jeho dĺžku."
+      : "Použi nižšie vložený text presne tak, ako je. Neprepisuj ho, neskracuj ho a nemeň jeho dĺžku.",
     "Text rozdeľ do poľa \"text\" podľa odsekov.",
     "Summary musí mať 2 až 3 krátke vety a najviac 300 znakov.",
     `Do "vocabulary" pridaj presne 5 slov alebo fráz vo vyučovanom jazyku (${getArticleLanguageLabel(getSelectedArticleLanguage())}), ktoré patria na úroveň ${level} a sú užitočné ako nové slovíčka. occurrence musí byť znak po znaku presný súvislý úsek textu. de je tvar zobrazený študentovi; pri odlučiteľnom slovese napríklad "steht … auf". Do base daj slovníkový tvar, napríklad "aufstehen".`,
@@ -997,6 +1005,7 @@ function buildArticlePrompt() {
 
 function buildArticleJsonPrompt() {
   const text = $("articleTextInput").value.trim();
+  const usePreviousChatResponse = !text;
   const level = $("articleLevelInput").value.trim() || "A2-B1";
   const category = getArticleEditorCategory();
   const title = $("articleTitleInput").value.trim();
@@ -1011,12 +1020,14 @@ function buildArticleJsonPrompt() {
   if (isGerman) {
     return [
       `Wandle diesen fertigen ${teachingLanguage.germanAccusative} Text in JSON für die Lese-App um.`,
-      "Wichtig: Verwende den eingefügten Text exakt. Formuliere ihn nicht um, kürze oder erweitere ihn nicht.",
+      usePreviousChatResponse
+        ? "Wichtig: Verwende exakt den Text aus deiner unmittelbar vorherigen Antwort in diesem Chat. Formuliere ihn nicht um, kürze oder erweitere ihn nicht."
+        : "Wichtig: Verwende den eingefügten Text exakt. Formuliere ihn nicht um, kürze oder erweitere ihn nicht.",
       title ? `Verwende diesen Titel, wenn er passt: ${title}` : `Erstelle einen kurzen ${teachingLanguage.germanAccusative} Titel.`,
       summary ? `Verwende diese Kurzbeschreibung, wenn sie passt: ${summary}` : `Erstelle eine kurze ${teachingLanguage.germanPlural} Beschreibung.`,
       category ? `Kategorie: ${category}.` : "",
-      ...getArticleJsonPromptInstructions(level, languageFocus), "",
-      text ? `Fertiger ${teachingLanguage.germanTitle.replace("Artikeltitel", "Text")}:` : `Der fertige ${teachingLanguage.germanTitle.replace("Artikeltitel", "Text")} ist deine letzte Antwort in diesem Chat. Verwende exakt diese Antwort.`,
+      ...getArticleJsonPromptInstructions(level, languageFocus, usePreviousChatResponse), "",
+      text ? `Fertiger ${teachingLanguage.germanTitle.replace("Artikeltitel", "Text")}:` : "Der Quelltext ist deine unmittelbar vorherige Antwort in diesem Chat. Verwende exakt diese Antwort.",
       text
     ].filter(Boolean).join("\n");
   }
@@ -1024,30 +1035,34 @@ function buildArticleJsonPrompt() {
   if (isEnglish) {
     return [
       `Convert this finished ${teachingLanguage.english} text into JSON for the reading app.`,
-      "Important: use the pasted text exactly. Do not rewrite it, shorten it, expand it, or change the wording.",
+      usePreviousChatResponse
+        ? "Important: use the text from your immediately previous response in this chat exactly. Do not rewrite it, shorten it, expand it, or change the wording."
+        : "Important: use the pasted text exactly. Do not rewrite it, shorten it, expand it, or change the wording.",
       title ? `Use this title if it fits: ${title}` : `Create a short ${teachingLanguage.english} title.`,
       summary ? `Use this short description if it fits: ${summary}` : `Create a short ${teachingLanguage.english} description.`,
       category ? `Category: ${category}.` : "",
-      ...getArticleJsonPromptInstructions(level, languageFocus),
+      ...getArticleJsonPromptInstructions(level, languageFocus, usePreviousChatResponse),
       "",
       text
         ? `Finished ${teachingLanguage.english} text:`
-        : `The finished ${teachingLanguage.english} text is your last answer in this chat. Use exactly that last answer.`,
+        : "The source text is your immediately previous response in this chat. Use exactly that response.",
       text
     ].filter(Boolean).join("\n");
   }
 
   return [
     `Premeň tento hotový ${teachingLanguage.slovak} text na JSON pre čítankovú appku.`,
-    "Dôležité: vložený text použi presne. Neprepisuj ho, neskracuj ho, nerozširuj ho a nemeň formulácie.",
+    usePreviousChatResponse
+      ? "Dôležité: použi presne text zo svojej bezprostredne predchádzajúcej odpovede v tomto chate. Neprepisuj ho, neskracuj ho, nerozširuj ho a nemeň formulácie."
+      : "Dôležité: vložený text použi presne. Neprepisuj ho, neskracuj ho, nerozširuj ho a nemeň formulácie.",
     title ? `Ak sa hodí, použi tento názov: ${title}` : `Vytvor krátky ${teachingLanguage.slovak} názov.`,
     summary ? `Ak sa hodí, použi tento krátky popis: ${summary}` : `Vytvor krátky ${teachingLanguage.slovak} popis.`,
     category ? `Kategória: ${category}.` : "",
-    ...getArticleJsonPromptInstructions(level, languageFocus),
+    ...getArticleJsonPromptInstructions(level, languageFocus, usePreviousChatResponse),
     "",
     text
       ? `Hotový text v jazyku ${getArticleLanguageLabel(getSelectedArticleLanguage())}:`
-      : `Hotový text v jazyku ${getArticleLanguageLabel(getSelectedArticleLanguage())} je tvoja posledná odpoveď v tomto chate. Použi práve túto poslednú odpoveď.`,
+      : "Zdrojovým textom je tvoja bezprostredne predchádzajúca odpoveď v tomto chate. Použi ju presne.",
     text
   ].filter(Boolean).join("\n");
 }
