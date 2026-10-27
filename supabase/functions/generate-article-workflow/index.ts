@@ -1991,7 +1991,7 @@ CHAPTER ${chapter.number} TITLE: ${chapter.title}
 CHAPTER TEXT: ${JSON.stringify(chapter.text)}
 
 Create:
-1. A short German summary suitable for ${level}: 1-2 sentences and at most ${ARTICLE_SUMMARY_MAX_LENGTH} characters.
+1. A short German summary suitable for ${level}: 2-3 sentences and at most ${ARTICLE_SUMMARY_MAX_LENGTH} characters.
 2. Exactly 5 useful vocabulary entries. For each entry, de is the learner-facing form, base is the dictionary form, and occurrence is one exact contiguous substring copied character-for-character from this chapter. For a separable verb, use a clear learner-facing de form such as "steht … auf", base "aufstehen", and the exact contiguous wording from the chapter in occurrence. If the chapter contains an occasional word or expression above ${level}, prioritize it as useful learning vocabulary. Include accurate sk, pl, hu, ru, en and fr translations.
 3. Six to eight clear German true/false statements with accurate boolean answers and a natural mixture of true and false.
 
@@ -2053,7 +2053,7 @@ TITLE: ${reviewed.title}
 STORY PARAGRAPHS: ${JSON.stringify(reviewed.text)}
 
 Create:
-1. A short German summary suitable for ${level}: 1-2 sentences and at most ${ARTICLE_SUMMARY_MAX_LENGTH} characters.
+1. A short German summary suitable for ${level}: 2-3 sentences and at most ${ARTICLE_SUMMARY_MAX_LENGTH} characters.
 2. Exactly 5 useful vocabulary entries. For each entry, de is the learner-facing form, base is the dictionary form, and occurrence is one exact contiguous substring copied character-for-character from the story. For a separable verb, use a clear learner-facing de form such as "steht … auf", base "aufstehen", and the exact contiguous wording from the story in occurrence. Include accurate sk, pl, hu, ru, en and fr translations.
 3. Six to eight clear German true/false statements with accurate boolean answers and a natural mixture of true and false.
 ${includeLanguageFocus ? `4. A languageFocus for exactly ${JSON.stringify(languageFocus)}, with 2-3 exact story sentences and an exact highlighted substring. Do not substitute a different feature. Set languageFocus.requestedFeature to exactly ${JSON.stringify(languageFocus)}.
