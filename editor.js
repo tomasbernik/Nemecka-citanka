@@ -1881,7 +1881,14 @@ function schedulePendingArticleGenerationResume() {
 function updateArticleGenerationControls() {
   const generateButton = $("generateArticleAiBtn");
   const cancelButton = $("cancelArticleGenerationBtn");
-  if (generateButton) generateButton.disabled = articleGenerationRunning;
+  if (generateButton) {
+    // Keep this control interactive while a job is running. A native disabled
+    // button emits no click event, which made an active or stale background
+    // job look like a completely unresponsive UI. The click handler can now
+    // reveal the current progress instead.
+    generateButton.disabled = false;
+    generateButton.setAttribute("aria-busy", String(articleGenerationRunning));
+  }
   if ($("articleModeBtn")) $("articleModeBtn").disabled = articleGenerationRunning;
   if ($("storyModeBtn")) $("storyModeBtn").disabled = articleGenerationRunning;
   if ($("automaticArticleCreationBtn")) $("automaticArticleCreationBtn").disabled = articleGenerationRunning;
@@ -2634,6 +2641,7 @@ async function generateArticleDirectlyWithAi() {
   // unexpected editor-state error occurs, the catch below can now surface it
   // instead of leaving the button looking unresponsive.
   setArticleGenerationStatus(t("generationStartingStatus"), "progress");
+  $("articleGenerationStatus")?.scrollIntoView({ behavior: "smooth", block: "nearest" });
 
   try {
     const topic = $("articlePromptInput")?.value.trim() || "";

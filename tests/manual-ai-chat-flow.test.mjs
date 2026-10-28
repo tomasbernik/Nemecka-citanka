@@ -63,3 +63,13 @@ test("automatic article creation surfaces preflight failures instead of failing 
   );
   assert.match(flow, /catch \(error\) \{\s*showArticleGenerationError\(error\);/s);
 });
+
+test("the generate button stays interactive while background generation is active", () => {
+  assert.doesNotMatch(editor, /generateButton\.disabled = articleGenerationRunning/);
+  assert.match(editor, /generateButton\.disabled = false/);
+  assert.match(editor, /generateButton\.setAttribute\("aria-busy", String\(articleGenerationRunning\)\)/);
+  assert.match(
+    editor,
+    /articleGenerationStatus"\)\?\.scrollIntoView\(\{ behavior: "smooth", block: "nearest" \}\)/
+  );
+});
