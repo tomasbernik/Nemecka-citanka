@@ -21,6 +21,16 @@ test("article creation offers automatic and own-AI-chat modes", () => {
   assert.match(editor, /function setArticleCreationMethod\(method = "automatic"\)/);
 });
 
+test("automatic creation keeps the primary generate action close and visually prominent", () => {
+  const panelStart = html.indexOf('id="automaticArticleCreationPanel"');
+  const panelEnd = html.indexOf('id="manualArticleCreationPanel"', panelStart);
+  const panel = html.slice(panelStart, panelEnd);
+
+  assert.ok(panel.indexOf('id="generateArticleAiBtn"') < panel.indexOf('id="automaticArticleCreationHelp"'));
+  assert.match(panel, /id="generateArticleAiBtn" class="primary-btn article-generate-cta"/);
+  assert.match(styles, /\.article-primary-action \.article-generate-cta\s*{[^}]*min-height:\s*54px;[^}]*background:\s*var\(--accent\);[^}]*box-shadow:/s);
+});
+
 test("the own-AI-chat flow presents the agreed three steps without technical button labels", () => {
   assert.match(html, /id="manualAiStep1Title"/);
   assert.match(html, /id="manualAiStep2Title"/);
