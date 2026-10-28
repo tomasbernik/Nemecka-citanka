@@ -2618,39 +2618,52 @@ async function recoverCompletedArticleGenerationById() {
 }
 
 async function generateArticleDirectlyWithAi() {
-  if (articleGenerationRunning) return;
+  if (articleGenerationRunning) {
+    showArticleGenerationProgress("starting", { resumed: true });
+    return;
+  }
   if (articleCreationMode === "story") {
     await generateStoryDirectlyWithAi();
     return;
   }
   const button = $("generateArticleAiBtn");
+  const originalText = button?.textContent || "";
+  let generationStarted = false;
 
-  const topic = $("articlePromptInput").value.trim();
-  const level = $("articleLevelInput").value;
-  const category = getArticleEditorCategory();
-  const range = getSelectedArticleLengthRange();
-  const requiredWords = getArticleRequiredWords();
-  const languageFocus = getArticleLanguageFocusRequirement();
-
-  if (!topic) {
-    setArticleGenerationStatus(t("articleTopicRequired"), "error");
-    $("articlePromptInput").focus();
-    return;
-  }
-
-  if ($("articleEditorSelect").value ||
-      $("articleTextInput").value.trim()) {
-    const confirmed = confirm(t("replaceArticleConfirm"));
-    if (!confirmed) return;
-  }
-
-  articleGenerationRunning = true;
-  updateArticleGenerationControls();
-  const originalText = button.textContent;
-  button.textContent = t("generatingArticle");
-  showArticleGenerationProgress("starting");
+  // Give immediate feedback before reading the rest of the editor. If an
+  // unexpected editor-state error occurs, the catch below can now surface it
+  // instead of leaving the button looking unresponsive.
+  setArticleGenerationStatus(t("generationStartingStatus"), "progress");
 
   try {
+    const topic = $("articlePromptInput")?.value.trim() || "";
+    const level = $("articleLevelInput")?.value || "";
+    const category = getArticleEditorCategory();
+    const range = getSelectedArticleLengthRange();
+    const requiredWords = getArticleRequiredWords();
+    const languageFocus = getArticleLanguageFocusRequirement();
+
+    if (!topic) {
+      setArticleGenerationStatus(t("articleTopicRequired"), "error");
+      $("articlePromptInput")?.focus();
+      return;
+    }
+
+    if ($("articleEditorSelect")?.value ||
+        $("articleTextInput")?.value.trim()) {
+      const confirmed = confirm(t("replaceArticleConfirm"));
+      if (!confirmed) {
+        setArticleGenerationStatus();
+        return;
+      }
+    }
+
+    articleGenerationRunning = true;
+    generationStarted = true;
+    updateArticleGenerationControls();
+    if (button) button.textContent = t("generatingArticle");
+    showArticleGenerationProgress("starting");
+
     const result = await generateArticleWithAi({
       topic,
       level,
@@ -2665,8 +2678,10 @@ async function generateArticleDirectlyWithAi() {
   } catch (error) {
     showArticleGenerationError(error);
   } finally {
-    articleGenerationRunning = false;
-    button.textContent = originalText;
-    updateArticleGenerationControls();
+    if (generationStarted) {
+      articleGenerationRunning = false;
+      if (button) button.textContent = originalText;
+      updateArticleGenerationControls();
+    }
   }
 }

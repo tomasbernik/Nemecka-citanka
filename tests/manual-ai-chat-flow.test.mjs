@@ -50,3 +50,16 @@ test("manual recovery by ID is removed from the ordinary editor while automatic 
   assert.match(editor, /async function resumePendingArticleGeneration\(\)/);
   assert.match(editor, /schedulePendingArticleGenerationResume\(\)/);
 });
+
+test("automatic article creation surfaces preflight failures instead of failing silently", () => {
+  const start = editor.indexOf("async function generateArticleDirectlyWithAi()");
+  const flow = editor.slice(start);
+
+  assert.ok(start >= 0, "automatic article generation function is present");
+  assert.match(flow, /setArticleGenerationStatus\(t\("generationStartingStatus"\), "progress"\)/);
+  assert.ok(
+    flow.indexOf("try {") < flow.indexOf("getArticleEditorCategory()"),
+    "editor preflight runs inside the guarded block"
+  );
+  assert.match(flow, /catch \(error\) \{\s*showArticleGenerationError\(error\);/s);
+});
